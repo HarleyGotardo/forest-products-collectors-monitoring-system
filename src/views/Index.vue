@@ -17,7 +17,7 @@ const handleLogin = async () => {
     const { user } = data
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('approval_flag')
+      .select('approval_flag') 
       .eq('id', user.id)
       .single()
 
