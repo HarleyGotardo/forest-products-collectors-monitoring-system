@@ -1,29 +1,29 @@
-# fitness-application
+Here is a README file based on your manuscript:  
 
-This template should help get you started developing with Vue 3 in Vite.
+---
 
-## Recommended IDE Setup
+# Development of a Web-Based Monitoring System for the Forest Product Collectors of the Visayas State University  
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Project Overview  
+This project aims to develop a **Web-Based Monitoring System** for the **forest product collectors** at Visayas State University (VSU) in Baybay City, Leyte. The system provides an efficient platform for recording, tracking, and managing forest product collection activities while ensuring regulatory compliance.  
 
-## Customize configuration
+## Features  
+- **User Authentication** – Secure login for administrators, forest product collectors, and other stakeholders.  
+- **Forest Product Management** – Record and track various forest products being collected.  
+- **Collector Database** – Store and manage profiles of registered forest product collectors.  
+- **Request and Approval System** – Streamline the approval process for collecting forest products.  
+- **Mapping Integration** – Utilize mapping APIs to visualize collection sites.  
+- **Reports and Analytics** – Generate reports on collection trends, collector activities, and system usage.  
+- **Notifications and Alerts** – Notify users about pending approvals, expirations, and system updates.  
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+## Technologies Used  
+- **Frontend**: Vue.js, Tailwind CSS  
+- **Backend**: Supabase
+- **Database**: PostgreSQL
+- **Mapping APIs**: Leaflet
+- **Version Control**: Git and GitHub  
 
-## Project Setup
+## Contributors  
+- **Harley S. Gotardo** – Developer, Researcher  
 
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+---
