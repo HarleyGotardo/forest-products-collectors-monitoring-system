@@ -145,7 +145,7 @@ const goToSignUpPage = () => {
               <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full">            
                 <img src="@/assets/verify.png" alt="Verify Icon" class="w-full h-full object-contain" />
               </div>
-              <h3 class="text-base sm:text-lg md:text-xl font-bold text-center sm:text-left">Track Forest Product Collection Records</h3>
+              <h3 class="text-base sm:text-lg md:text-xl font-bold text-center sm:text-left">TRACK FOREST PRODUCT COLLECTION RECORDS</h3>
             </div>
             <p class="text-sm sm:text-base text-gray-600 text-justify">Log and monitor forest product collection with precision. Keep detailed records of quantities, types, and collection dates.</p>
           </div>
@@ -155,7 +155,7 @@ const goToSignUpPage = () => {
               <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full">            
                 <img src="@/assets/location.png" alt="Location Icon" class="w-full h-full object-contain" />
               </div>
-              <h3 class="text-base sm:text-lg md:text-xl font-bold text-center sm:text-left">Locate Forest Products</h3>
+              <h3 class="text-base sm:text-lg md:text-xl font-bold text-center sm:text-left">LOCATE FOREST PRODUCTS</h3>
             </div>
             <p class="text-sm sm:text-base text-gray-600 text-justify">Pinpoint and map exact locations of forest product sources. Facilitate easy tracking and spatial analysis.</p>
           </div>
@@ -165,7 +165,7 @@ const goToSignUpPage = () => {
               <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full">            
                 <img src="@/assets/registered.png" alt="Register Icon" class="w-full h-full object-contain" />
               </div>
-              <h3 class="text-base sm:text-lg md:text-xl font-bold text-center sm:text-left">Register Collectors</h3>
+              <h3 class="text-base sm:text-lg md:text-xl font-bold text-center sm:text-left">REGISTER COLLECTORS</h3>
             </div>
             <p class="text-sm sm:text-base text-gray-600 text-justify">Maintain a comprehensive database of authorized forest product collectors with complete details.</p>
           </div>
