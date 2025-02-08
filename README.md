@@ -1,7 +1,3 @@
-Here is a README file based on your manuscript:  
-
----
-
 # Development of a Web-Based Monitoring System for the Forest Product Collectors of the Visayas State University  
 
 ## Project Overview  
