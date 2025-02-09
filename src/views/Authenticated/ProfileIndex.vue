@@ -4,70 +4,11 @@ import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 import { format } from 'date-fns'
 import defaultProfileImage from '@/assets/profile.png'
+import { getUser, fetchUserDetails } from '@/router/routeGuard'
 
-const user = ref(null)
-const error = ref(null)
 const newProfileImage = ref(null)
 const showImageModal = ref(false)
 const loading = ref(false)
-const isLoadingProfile = ref(true) // Track loading state for profile data
-
-const fetchUserProfile = async () => {
-  isLoadingProfile.value = true
-  const { data: authUser, error: authError } = await supabase.auth.getUser()
-  if (authError) {
-    error.value = authError.message
-    isLoadingProfile.value = false
-    return
-  }
-
-  if (authUser && authUser.user) {
-    let { data, error: fetchError } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        email_address,
-        profile_picture,
-        updated_at,
-        created_at,
-        role_id
-      `)
-      .eq('id', authUser.user.id)
-      .single()
-
-    if (fetchError) {
-      error.value = fetchError.message
-    } else {
-      if (data.profile_picture) {
-        try {
-          const profilePictureData = JSON.parse(data.profile_picture)
-          data.profile_picture = profilePictureData.data.publicUrl
-        } catch (e) {
-          console.error('Error parsing profile_picture:', e)
-        }
-      }
-
-      // Fetch role name
-      const { data: roleData, error: roleError } = await supabase
-        .from('roles')
-        .select('name')
-        .eq('id', data.role_id)
-        .single()
-
-      if (roleError) {
-        error.value = roleError.message
-      } else {
-        data.role = roleData
-        user.value = data
-      }
-    }
-  } else {
-    error.value = 'User not authenticated'
-  }
-  isLoadingProfile.value = false
-}
 
 const handleImageChange = (event) => {
   newProfileImage.value = event.target.files[0]
@@ -75,15 +16,15 @@ const handleImageChange = (event) => {
 
 const handleImageSubmit = async () => {
   if (!newProfileImage.value) {
-    error.value = 'Please select an image'
+    Swal.fire('Error', 'Please select an image', 'error')
     return
   }
 
   loading.value = true
 
   // Delete previous profile picture if it exists
-  if (user.value.profile_picture) {
-    const previousImagePath = user.value.profile_picture.split('/').pop()
+  if (getUser().profile_picture) {
+    const previousImagePath = getUser().profile_picture.split('/').pop()
     await supabase
       .storage
       .from('nature_cart_images')
@@ -94,7 +35,7 @@ const handleImageSubmit = async () => {
   const formattedDate = format(currentDate, 'yyyy-MM-dd HH:mm:ss')
 
   // Upload new image to Supabase bucket using S3 protocol
-  const imageName = `${user.value.id}_${Date.now()}_${newProfileImage.value.name}`
+  const imageName = `${getUser().id}_${Date.now()}_${newProfileImage.value.name}`
   const { data: uploadData, error: uploadError } = await supabase
     .storage
     .from('nature_cart_images')
@@ -107,7 +48,7 @@ const handleImageSubmit = async () => {
     })
 
   if (uploadError) {
-    error.value = uploadError.message
+    Swal.fire('Error', uploadError.message, 'error')
     loading.value = false
     return
   }
@@ -121,10 +62,10 @@ const handleImageSubmit = async () => {
   const { error: updateError } = await supabase
     .from('profiles')
     .update({ profile_picture: JSON.stringify(imageUrl), updated_at: formattedDate })
-    .eq('id', user.value.id)
+    .eq('id', getUser().id)
 
   if (updateError) {
-    error.value = updateError.message
+    Swal.fire('Error', updateError.message, 'error')
     loading.value = false
     return
   }
@@ -138,16 +79,16 @@ const handleImageSubmit = async () => {
   }).then(() => {
     showImageModal.value = false
     loading.value = false
-    fetchUserProfile()
+    fetchUserDetails()
   })
 }
 
 const profilePictureUrl = computed(() => {
-  return user.value && user.value.profile_picture ? user.value.profile_picture : defaultProfileImage
+  return getUser().profile_picture ? getUser().profile_picture : defaultProfileImage
 })
 
-onMounted(() => {
-  fetchUserProfile()
+onMounted(async () => {
+  await fetchUserDetails()
 })
 </script>
 
@@ -169,7 +110,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div v-if="isLoadingProfile" class="animate-pulse flex flex-col items-center gap-4 w-60 mx-auto mt-8">
+      <div v-if="!getUser()" class="animate-pulse flex flex-col items-center gap-4 w-60 mx-auto mt-8">
         <div>
           <div class="w-48 h-6 bg-slate-400 rounded-md"></div>
           <div class="w-28 h-4 bg-slate-400 mx-auto mt-3 rounded-md"></div>
@@ -180,7 +121,7 @@ onMounted(() => {
         <div class="h-7 bg-slate-400 w-1/2 rounded-md"></div>
       </div>
 
-      <div v-else-if="user" class="px-6 pb-6">
+      <div v-else class="px-6 pb-6">
         <!-- Profile Image Section -->
         <div class="flex flex-col items-center -mt-16">
           <div class="relative">
@@ -199,10 +140,10 @@ onMounted(() => {
           
           <!-- Name and Role -->
           <h1 class="mt-4 text-2xl font-bold text-gray-900">
-            {{ user.first_name }} {{ user.last_name }}
+            {{ getUser().first_name }} {{ getUser().last_name }}
           </h1>
           <div class="mt-1 px-3 py-1 bg-blue-50 rounded-full">
-            <span class="text-sm font-medium text-blue-700">{{ user.role.name }}</span>
+            <span class="text-sm font-medium text-blue-700">{{ getUser().role }}</span>
           </div>
         </div>
 
@@ -219,7 +160,7 @@ onMounted(() => {
               </div>
               <div class="ml-4">
                 <p class="text-sm text-gray-500">Email Address</p>
-                <p class="text-gray-900">{{ user.email_address }}</p>
+                <p class="text-gray-900">{{ getUser().email_address }}</p>
               </div>
             </div>
 
@@ -235,7 +176,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm text-gray-500">Member Since</p>
-                  <p class="text-gray-900">{{ new Date(user.created_at).toISOString().split('T')[0] }}</p>
+                  <p class="text-gray-900">{{ new Date(getUser().created_at).toISOString().split('T')[0] }}</p>
                 </div>
               </div>
 
@@ -249,7 +190,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm text-gray-500">Last Updated</p>
-                  <p class="text-gray-900">{{ new Date(user.updated_at).toISOString().split('T')[0] }}</p>
+                  <p class="text-gray-900">{{ new Date(getUser().updated_at).toISOString().split('T')[0] }}</p>
                 </div>
               </div>
             </div>

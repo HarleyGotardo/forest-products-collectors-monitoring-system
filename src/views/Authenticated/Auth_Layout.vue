@@ -10,7 +10,7 @@ import Locations from '@/components/SideBarItems/Locations.vue'
 import defaultProfileImage from '@/assets/profile.png'
 import logoutIcon from '@/assets/logout.png'
 import { supabase } from '@/lib/supabaseClient'
-import {getName , isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges} from '@/router/routeGuard';
+import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges } from '@/router/routeGuard'
 
 const router = useRouter()
 const activeDropdown = ref(null) // Track active dropdown
@@ -24,41 +24,8 @@ const isCollectorsDropdownOpen = computed(() => activeDropdown.value === 'collec
 const isSystemUsersDropdownOpen = computed(() => activeDropdown.value === 'systemUsers')
 const isLocationDropdownOpen = computed(() => activeDropdown.value === 'locations')
 
-const user = ref(null)
-
-const fetchUserDetails2 = async () => {
-  isLoading.value = true
-  const { data: { user: authUser } } = await supabase.auth.getUser()
-  if (authUser) {
-    const { data: userDetails, error } = await supabase
-      .from('profiles')
-      .select('id, role_id, first_name, last_name, profile_picture')
-      .eq('id', authUser.id)
-      .single()
-
-    if (error) {
-      console.error('Error fetching user details:', error)
-    } else {
-      user.value = userDetails
-      if (user.value && user.value.profile_picture) {
-        try {
-          const profilePictureData = JSON.parse(user.value.profile_picture)
-          user.value.profile_picture = profilePictureData.data.publicUrl
-        } catch (e) {
-          console.error('Error parsing profile_picture:', e)
-        }
-      }
-    }
-  }
-  isLoading.value = false
-}
-
-onMounted(() => {
-  fetchUserDetails2()
-})
-
 const profilePictureUrl = computed(() => {
-  return user.value && user.value.profile_picture ? user.value.profile_picture : defaultProfileImage
+  return getUser() && getUser().profile_picture ? getUser().profile_picture : defaultProfileImage
 })
 
 const toggleSidebar = () => {
@@ -103,21 +70,11 @@ const goToProfile = () => {
   router.push({ name: 'Profile' })
 }
 
-// const isFPUAdmin = computed(() => {
-//   return user.value && user.value.role_id === 4
-// })
-
-// const isForestRanger = computed(() => {
-//   return user.value && user.value.role_id === 1
-// })
-
-// const isFPCollector = computed(() => {
-//   return user.value && user.value.role_id === 2
-// })
-
-// const isVSUAdmin = computed(() => {
-//   return user.value && user.value.role_id === 3
-// })
+onMounted(async () => {
+  await fetchUserDetails()
+  isLoading.value = false
+  subscribeToUserChanges()
+})
 </script>
 
 <template>
@@ -291,7 +248,7 @@ const goToProfile = () => {
               class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all"
             />
             <div>
-              <p class="font-medium text-gray-800">{{ user ? `${getName()}` : 'User' }}</p>
+              <p class="font-medium text-gray-800">{{ getName() }}</p>
               <p class="text-sm text-gray-500">View Profile</p>
             </div>
           </div>

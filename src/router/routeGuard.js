@@ -15,6 +15,28 @@ const fetchUserDetails = async () => {
     if (error) {
       console.error('Error fetching user details:', error)
     } else {
+      if (userDetails.profile_picture) {
+        try {
+          const profilePictureData = JSON.parse(userDetails.profile_picture)
+          userDetails.profile_picture = profilePictureData.data.publicUrl
+        } catch (e) {
+          console.error('Error parsing profile_picture:', e)
+        }
+      }
+
+      // Fetch role name
+      const { data: roleData, error: roleError } = await supabase
+        .from('roles')
+        .select('name')
+        .eq('id', userDetails.role_id)
+        .single()
+
+      if (roleError) {
+        console.error('Error fetching role name:', roleError)
+      } else {
+        userDetails.role = roleData.name
+      }
+
       user.value = userDetails
     }
   }
@@ -54,13 +76,17 @@ const isVSUAdmin = computed(() => {
 
 const getName = () => {
   if (user && user.value) {
-    return `${user.value.first_name} ${user.value.last_name}`;
+    return `${user.value.first_name} ${user.value.last_name}`
   }
-  return '';
+  return ''
+}
+
+const getUser = () => {
+  return user.value
 }
 
 // Fetch user details and subscribe to changes when the module is loaded
 fetchUserDetails()
 subscribeToUserChanges()
 
-export { user, getName, fetchUserDetails, subscribeToUserChanges, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin }
+export { getUser, user, getName, fetchUserDetails, subscribeToUserChanges, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin }
