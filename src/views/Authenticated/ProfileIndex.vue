@@ -10,11 +10,14 @@ const error = ref(null)
 const newProfileImage = ref(null)
 const showImageModal = ref(false)
 const loading = ref(false)
+const isLoadingProfile = ref(true) // Track loading state for profile data
 
 const fetchUserProfile = async () => {
+  isLoadingProfile.value = true
   const { data: authUser, error: authError } = await supabase.auth.getUser()
   if (authError) {
     error.value = authError.message
+    isLoadingProfile.value = false
     return
   }
 
@@ -63,6 +66,7 @@ const fetchUserProfile = async () => {
   } else {
     error.value = 'User not authenticated'
   }
+  isLoadingProfile.value = false
 }
 
 const handleImageChange = (event) => {
@@ -165,7 +169,18 @@ onMounted(() => {
         </div>
       </div>
 
-      <div v-if="user" class="px-6 pb-6">
+      <div v-if="isLoadingProfile" class="animate-pulse flex flex-col items-center gap-4 w-60 mx-auto mt-8">
+        <div>
+          <div class="w-48 h-6 bg-slate-400 rounded-md"></div>
+          <div class="w-28 h-4 bg-slate-400 mx-auto mt-3 rounded-md"></div>
+        </div>
+        <div class="h-7 bg-slate-400 w-full rounded-md"></div>
+        <div class="h-7 bg-slate-400 w-full rounded-md"></div>
+        <div class="h-7 bg-slate-400 w-full rounded-md"></div>
+        <div class="h-7 bg-slate-400 w-1/2 rounded-md"></div>
+      </div>
+
+      <div v-else-if="user" class="px-6 pb-6">
         <!-- Profile Image Section -->
         <div class="flex flex-col items-center -mt-16">
           <div class="relative">

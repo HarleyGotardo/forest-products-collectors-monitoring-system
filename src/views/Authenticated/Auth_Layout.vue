@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabaseClient'
 const router = useRouter()
 const activeDropdown = ref(null) // Track active dropdown
 const isSidebarOpen = ref(false)
+const isLoading = ref(true) // Track loading state
 
 // Computed properties for dropdown states
 const isRecordsDropdownOpen = computed(() => activeDropdown.value === 'records')
@@ -25,6 +26,7 @@ const isLocationDropdownOpen = computed(() => activeDropdown.value === 'location
 const user = ref(null)
 
 const fetchUserDetails = async () => {
+  isLoading.value = true
   const { data: { user: authUser } } = await supabase.auth.getUser()
   if (authUser) {
     const { data: userDetails, error } = await supabase
@@ -47,6 +49,7 @@ const fetchUserDetails = async () => {
       }
     }
   }
+  isLoading.value = false
 }
 
 onMounted(() => {
@@ -115,6 +118,7 @@ const isVSUAdmin = computed(() => {
   return user.value && user.value.role_id === 3
 })
 </script>
+
 <template>
   <div class="min-h-screen bg-gray-50 relative">
     <!-- Improved Burger Menu Button -->
@@ -254,6 +258,7 @@ const isVSUAdmin = computed(() => {
           </ForestProducts>
 
           <SystemUsers
+            v-if="isFPUAdmin || isForestRanger"
             :isDropdownOpen="isSystemUsersDropdownOpen"
             @toggleDropdown="toggleSystemUsersDropdown"
             label="System Users"
@@ -275,6 +280,7 @@ const isVSUAdmin = computed(() => {
         <!-- Enhanced User Profile -->
         <div class="flex items-center justify-between gap-3 p-3 border-t border-gray-100 bg-gray-50">
           <div 
+            v-if="!isLoading"
             @click="goToProfile" 
             class="flex items-center gap-3 p-3 cursor-pointer rounded-xl hover:bg-white transition-all duration-200 group"
           >
@@ -287,6 +293,14 @@ const isVSUAdmin = computed(() => {
               <p class="font-medium text-gray-800">{{ user ? `${user.first_name} ${user.last_name}` : 'User' }}</p>
               <p class="text-sm text-gray-500">View Profile</p>
             </div>
+          </div>
+          <div v-else class="relative flex w-64 animate-pulse gap-2 p-4">
+            <div class="h-12 w-12 rounded-full bg-slate-400"></div>
+            <div class="flex-1">
+              <div class="mb-1 h-5 w-3/5 rounded-lg bg-slate-400 text-lg"></div>
+              <div class="h-5 w-[90%] rounded-lg bg-slate-400 text-sm"></div>
+            </div>
+            <div class="absolute bottom-5 right-0 h-4 w-4 rounded-full bg-slate-400"></div>
           </div>
           <SweetAlert
             title="Confirm Logout"
