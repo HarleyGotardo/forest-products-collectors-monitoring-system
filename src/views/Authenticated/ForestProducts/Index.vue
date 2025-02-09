@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
+import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/components/routeGuard/routeGuard';
 
 const router = useRouter()
 const allForestProducts = ref([]) // Store all forest products
@@ -117,6 +118,7 @@ const deleteProduct = async (productId) => {
 }
 
 onMounted(() => {
+  fetchUserDetails()
   fetchAllForestProducts()
 })
 
@@ -153,6 +155,7 @@ watch(currentPage, () => {
           </div>
         </div>
         <button 
+          v-if="isForestRanger || isFPUAdmin"
           @click="createForestProduct"
           class="px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
         >
@@ -184,7 +187,7 @@ watch(currentPage, () => {
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locations</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th v-if="isFPUAdmin || isForestRanger" scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -251,7 +254,8 @@ watch(currentPage, () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
                 <div class="flex items-center justify-end space-x-3">
-                  <button 
+                  <button
+                    v-if="isForestRanger || isFPUAdmin" 
                     class="p-1 rounded-lg hover:bg-blue-50 transition-colors duration-200 text-blue-600 hover:text-blue-700"
                     @click="editProduct(product.id, $event)"
                   >
@@ -261,6 +265,7 @@ watch(currentPage, () => {
                     </svg>
                   </button>
                   <button 
+                    v-if="isForestRanger || isFPUAdmin" 
                     class="p-1 rounded-lg hover:bg-red-50 transition-colors duration-200 text-red-600 hover:text-red-700"
                     @click="deleteProduct(product.id)"
                   >

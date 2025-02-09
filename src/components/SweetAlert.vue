@@ -34,7 +34,7 @@
     },
     buttonClass: {
       type: String,
-      default: 'w-full mt-4 px-4 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+      default: 'w-full mt-4 px-4 py-2 text-white rounded-xl hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
     },
     redirectTo: {
       type: String,

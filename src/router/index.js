@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
+import { fetchUserDetails } from '@/components/routeGuard/routeGuard'
 import Index from '@/views/Index.vue'
 import Auth_Layout from '@/views/Authenticated/Auth_Layout.vue'
 import Dashboard from '@/views/Authenticated/Dashboard.vue'
@@ -66,7 +67,7 @@ const routes = [
         path: 'forest-products/create',
         name: 'ForestProductsCreate',
         component: ForestProductsCreate,
-        meta: { title: 'Create Forest Product - Nature Cart' }
+        meta: { title: 'Create Forest Product - Nature Cart', requiresRole: [4, 1] }
       },
       {
         path: 'forest-products/:id',
@@ -78,13 +79,13 @@ const routes = [
         path: 'forest-products/:id/edit',
         name: 'ForestProductsEdit',
         component: ForestProductsEdit,
-        meta: { title: 'Edit Forest Product - Nature Cart' }
+        meta: { title: 'Edit Forest Product - Nature Cart', requiresRole: [4, 1] }
       },
       {
         path: 'system-users',
         name: 'SystemUsers',
         component: SystemUsersIndex,
-        meta: { title: 'System Users - Nature Cart' }
+        meta: { title: 'System Users - Nature Cart', requiresRole: [4, 2] }
       },
       {
         path: 'collection-records',
@@ -96,7 +97,7 @@ const routes = [
         path: 'collection-records/create',
         name: 'CollectionRecordsCreate',
         component: CollectionRecordsCreate,
-        meta: { title: 'Create Collection Record - Nature Cart' }
+        meta: { title: 'Create Collection Record - Nature Cart', requiresRole: [4, 1] }
       },
       {
         path: 'collection-records/trash',
@@ -111,16 +112,10 @@ const routes = [
         meta: { title: 'Locations - Nature Cart' }
       },
       {
-        path: 'locations',
-        name: 'LocationsIndex',
-        component: LocationsIndex,
-        meta: { title: 'Locations - Nature Cart' }
-      },
-      {
         path: 'locations/create',
         name: 'LocationsCreate',
         component: LocationsCreate,
-        meta: { title: 'Create Locations - Nature Cart' }
+        meta: { title: 'Create Locations - Nature Cart', requiresRole: [4, 1] }
       },
       {
         path: 'locations/:id',
@@ -138,7 +133,7 @@ const routes = [
         path: 'locations/:id/edit',
         name: 'LocationsEdit',
         component: LocationsEdit,
-        meta: { title: 'Edit Location - Nature Cart' }
+        meta: { title: 'Edit Location - Nature Cart', requiresRole: [4, 1] }
       },
       {
         path: 'profile',
@@ -163,7 +158,24 @@ router.beforeEach(async (to, from, next) => {
     if (!session) {
       next({ name: 'Index' })
     } else {
-      next()
+      await fetchUserDetails()
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: userDetails } = await supabase
+        .from('profiles')
+        .select('role_id')
+        .eq('id', user.id)
+        .single()
+
+      if (to.matched.some(record => record.meta.requiresRole)) {
+        const requiredRoles = to.meta.requiresRole
+        if (!requiredRoles.includes(userDetails.role_id)) {
+          next({ name: 'Dashboard' })
+        } else {
+          next()
+        }
+      } else {
+        next()
+      }
     }
   } else {
     if (session && to.name === 'Index') {

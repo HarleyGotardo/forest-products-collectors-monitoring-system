@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
+import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/components/routeGuard/routeGuard';
 
 const router = useRouter()
 const locations = ref([]) // Store all locations
@@ -102,6 +103,7 @@ const deleteLocation = async (locationId) => {
 }
 
 onMounted(() => {
+  fetchUserDetails()
   fetchAllLocations()
 })
 
@@ -138,6 +140,7 @@ watch(currentPage, () => {
           </div>
         </div>
         <button 
+          v-if="isFPUAdmin || isForestRanger"
           @click="createLocation"
           class="px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
         >
@@ -166,7 +169,7 @@ watch(currentPage, () => {
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coordinates</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th v-if="isFPUAdmin || isForestRanger" scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -213,6 +216,7 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex items-center justify-end space-x-3">
                   <button 
+                    v-if="isFPUAdmin || isForestRanger"
                     @click.stop="editLocation(location.id)" 
                     class="p-1 rounded-lg hover:bg-blue-50 transition-colors duration-200 text-blue-600 hover:text-blue-700">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -221,6 +225,7 @@ watch(currentPage, () => {
                     </svg>
                   </button>
                   <button 
+                    v-if="isFPUAdmin || isForestRanger"
                     @click.stop="deleteLocation(location.id)"
                     class="p-1 rounded-lg hover:bg-red-50 transition-colors duration-200 text-red-600 hover:text-red-700"
                   >

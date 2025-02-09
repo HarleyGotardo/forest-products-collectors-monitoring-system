@@ -6,6 +6,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Swal from 'sweetalert2'
 import { format } from 'date-fns'
+import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/components/routeGuard/routeGuard';
 
 // Fix for Leaflet default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -277,6 +278,7 @@ const handleImageSubmit = async () => {
 onMounted(() => {
   fetchForestProduct()
   fetchAllLocations()
+  fetchUserDetails()
 })
 </script>
 <template>
@@ -316,6 +318,7 @@ onMounted(() => {
           <div v-if="forestProduct.image_url" class="relative mb-6">
             <img :src="forestProduct.image_url" alt="Forest Product Image" class="w-full h-auto rounded-lg shadow-sm">
             <button 
+    v-if="isForestRanger || isFPUAdmin"
     @click="showImageModal = true"
     class="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 focus:outline-none"
   >
