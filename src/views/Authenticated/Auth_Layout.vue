@@ -10,6 +10,7 @@ import Locations from '@/components/SideBarItems/Locations.vue'
 import defaultProfileImage from '@/assets/profile.png'
 import logoutIcon from '@/assets/logout.png'
 import { supabase } from '@/lib/supabaseClient'
+import {getName , isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges} from '@/router/routeGuard';
 
 const router = useRouter()
 const activeDropdown = ref(null) // Track active dropdown
@@ -25,7 +26,7 @@ const isLocationDropdownOpen = computed(() => activeDropdown.value === 'location
 
 const user = ref(null)
 
-const fetchUserDetails = async () => {
+const fetchUserDetails2 = async () => {
   isLoading.value = true
   const { data: { user: authUser } } = await supabase.auth.getUser()
   if (authUser) {
@@ -53,7 +54,7 @@ const fetchUserDetails = async () => {
 }
 
 onMounted(() => {
-  fetchUserDetails()
+  fetchUserDetails2()
 })
 
 const profilePictureUrl = computed(() => {
@@ -102,21 +103,21 @@ const goToProfile = () => {
   router.push({ name: 'Profile' })
 }
 
-const isFPUAdmin = computed(() => {
-  return user.value && user.value.role_id === 4
-})
+// const isFPUAdmin = computed(() => {
+//   return user.value && user.value.role_id === 4
+// })
 
-const isForestRanger = computed(() => {
-  return user.value && user.value.role_id === 1
-})
+// const isForestRanger = computed(() => {
+//   return user.value && user.value.role_id === 1
+// })
 
-const isFPCollector = computed(() => {
-  return user.value && user.value.role_id === 2
-})
+// const isFPCollector = computed(() => {
+//   return user.value && user.value.role_id === 2
+// })
 
-const isVSUAdmin = computed(() => {
-  return user.value && user.value.role_id === 3
-})
+// const isVSUAdmin = computed(() => {
+//   return user.value && user.value.role_id === 3
+// })
 </script>
 
 <template>
@@ -290,7 +291,7 @@ const isVSUAdmin = computed(() => {
               class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all"
             />
             <div>
-              <p class="font-medium text-gray-800">{{ user ? `${user.first_name} ${user.last_name}` : 'User' }}</p>
+              <p class="font-medium text-gray-800">{{ user ? `${getName()}` : 'User' }}</p>
               <p class="text-sm text-gray-500">View Profile</p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
-import { fetchUserDetails } from '@/components/routeGuard/routeGuard'
+import { fetchUserDetails, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin, user } from '@/router/routeGuard'
 import Index from '@/views/Index.vue'
 import Auth_Layout from '@/views/Authenticated/Auth_Layout.vue'
 import Dashboard from '@/views/Authenticated/Dashboard.vue'
@@ -158,17 +158,12 @@ router.beforeEach(async (to, from, next) => {
     if (!session) {
       next({ name: 'Index' })
     } else {
-      await fetchUserDetails()
-      const { data: { user } } = await supabase.auth.getUser()
-      const { data: userDetails } = await supabase
-        .from('profiles')
-        .select('role_id')
-        .eq('id', user.id)
-        .single()
-
+      if (!user.value) {
+        await fetchUserDetails()
+      }
       if (to.matched.some(record => record.meta.requiresRole)) {
         const requiredRoles = to.meta.requiresRole
-        if (!requiredRoles.includes(userDetails.role_id)) {
+        if (!requiredRoles.includes(user.value.role_id)) {
           next({ name: 'Dashboard' })
         } else {
           next()

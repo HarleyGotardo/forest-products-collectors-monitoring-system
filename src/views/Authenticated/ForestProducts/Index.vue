@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
-import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/components/routeGuard/routeGuard';
+import {user, isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
 
 const router = useRouter()
 const allForestProducts = ref([]) // Store all forest products
