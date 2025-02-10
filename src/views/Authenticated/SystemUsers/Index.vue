@@ -154,30 +154,32 @@ onMounted(async () => {
             <tr v-for="user in filteredUsers" 
                 :key="user.id"
                 class="hover:bg-gray-50 transition-colors duration-200">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="h-10 w-10 flex-shrink-0">
-                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span class="text-gray-600 font-medium">
-                        {{ user.first_name[0] }}{{ user.last_name[0] }}
-                      </span>
+              <router-link :to="{ name: 'SystemUsersView', params: { id: user.id } }" class="contents">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="h-10 w-10 flex-shrink-0">
+                      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span class="text-gray-600 font-medium">
+                          {{ user.first_name[0] }}{{ user.last_name[0] }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900">
+                        {{ user.first_name }} {{ user.last_name }}
+                      </div>
                     </div>
                   </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">
-                      {{ user.first_name }} {{ user.last_name }}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ user.email_address }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                  {{ user.role.name }}
-                </span>
-              </td>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-600">{{ user.email_address }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    {{ user.role.name }}
+                  </span>
+                </td>
+              </router-link>
             </tr>
           </tbody>
         </table>

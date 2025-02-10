@@ -20,6 +20,7 @@ import LocationsEdit from '@/views/Authenticated/Location/Edit.vue'
 import ForestProductsView from '@/views/Authenticated/ForestProducts/View.vue'
 import ForestProductsEdit from '@/views/Authenticated/ForestProducts/Edit.vue'
 import SignUp from '@/views/Authenticated/SignUp.vue'
+import SystemUsersView from '@/views/Authenticated/SystemUsers/View.vue'
 
 const routes = [
   {
@@ -86,6 +87,12 @@ const routes = [
         name: 'SystemUsers',
         component: SystemUsersIndex,
         meta: { title: 'System Users - Nature Cart', requiresRole: [4, 2] }
+      },
+      {
+        path: 'system-users/:id',
+        name: 'SystemUsersView',
+        component: SystemUsersView,
+        meta: { title: 'View System User - Nature Cart', requiresRole: [4, 2] }
       },
       {
         path: 'collection-records',
