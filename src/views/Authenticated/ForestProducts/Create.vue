@@ -3,13 +3,14 @@ import { CommonConstant } from "@/components/constants/common.constant";
 import { DatabaseNamesConstant } from "@/components/constants/databaseNames.constant";
 import { RouterNamesConstant } from "@/components/constants/routerNames.constant";
 import { SeparatorConstant } from "@/components/constants/separators.constant";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick, computed } from "vue";
 import { useRouter } from "vue-router";
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient';
 import Swal from 'sweetalert2';
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import locationPeek from '@/assets/location-peek.png';
 
 // Fix for Leaflet default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -34,10 +35,12 @@ const measurementUnits = ref(null);
 const selectedMeasurementUnit = ref(null);
 const error = ref(null);
 const locations = ref([]);
-const selectedLocation = ref(null);
+const selectedLocations = ref([]);
 const showLocationModal = ref(false);
+const showMapModal = ref(false);
 const mapInstance = ref(null);
 const tempMarker = ref(null);
+const currentLocation = ref(null);
 
 const fetchLocations = async () => {
   const { data, error } = await supabase
@@ -71,69 +74,24 @@ onMounted(() => {
   fetchAllMeasurementUnits();
 });
 
-const initializeMap = () => {
+const initializeMap = (latitude, longitude, name) => {
   if (mapInstance.value) {
     mapInstance.value.remove();
   }
   
-  mapInstance.value = L.map("map").setView([10.744340, 124.791995], 16);
+  mapInstance.value = L.map("map").setView([latitude, longitude], 16);
   
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19
   }).addTo(mapInstance.value);
 
-  // Add existing location markers with tooltips
-  locations.value.forEach(location => {
-    L.marker([location.latitude, location.longitude])
-      .addTo(mapInstance.value)
-      .bindTooltip(location.name, {
-        permanent: true,
-        direction: 'top',
-        className: 'bg-white px-2 py-1 rounded shadow-lg'
-      })
-      .on('click', () => {
-        selectedLocation.value = location;
-        showLocationModal.value = false;
-      });
-  });
-
-  // Handle map click for new location
-  mapInstance.value.on('click', async (e) => {
-    if (tempMarker.value) {
-      mapInstance.value.removeLayer(tempMarker.value);
-    }
-
-    const { value: locationName } = await Swal.fire({
-      title: 'New Location',
-      input: 'text',
-      inputLabel: 'Enter location name',
-      showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) return 'Location name is required';
-      }
+  L.marker([latitude, longitude])
+    .addTo(mapInstance.value)
+    .bindTooltip(name, {
+      permanent: true,
+      direction: 'top',
+      className: 'bg-white px-2 py-1 rounded shadow-lg'
     });
-
-    if (locationName) {
-      const newLocation = {
-        name: locationName,
-        latitude: e.latlng.lat,
-        longitude: e.latlng.lng
-      };
-
-      const { data, error } = await supabase
-        .from('location')
-        .insert([newLocation])
-        .select()
-        .single();
-
-      if (error) {
-        Swal.fire('Error', error.message, 'error');
-      } else {
-        selectedLocation.value = data;
-        showLocationModal.value = false;
-      }
-    }
-  });
 };
 
 const handleImageChange = (event) => {
@@ -141,8 +99,8 @@ const handleImageChange = (event) => {
 };
 
 const handleSubmit = async () => {
-  if (!selectedLocation.value) {
-    error.value = 'Please select a location';
+  if (selectedLocations.value.length === 0) {
+    error.value = 'Please select at least one location';
     return;
   }
 
@@ -201,17 +159,37 @@ const handleSubmit = async () => {
     return;
   }
 
-  // Insert fp_and_location relationship
-  const { error: fpLocationError } = await supabase
-    .from('fp_and_location')
-    .insert([{
-      forest_product_id: fpData.id,
-      location_id: selectedLocation.value.id
-    }]);
+  // Insert fp_and_location relationships
+  for (const location of selectedLocations.value) {
+    // Check for duplicate location
+    const { data: existingFpLocation, error: existingFpLocationError } = await supabase
+      .from('fp_and_location')
+      .select('*')
+      .eq('forest_product_id', fpData.id)
+      .eq('location_id', location.id)
+      .single();
 
-  if (fpLocationError) {
-    error.value = fpLocationError.message;
-    return;
+    if (existingFpLocationError && existingFpLocationError.code !== 'PGRST116') {
+      error.value = existingFpLocationError.message;
+      return;
+    }
+
+    if (existingFpLocation) {
+      error.value = `This forest product already has the location: ${location.name}.`;
+      return;
+    }
+
+    const { error: fpLocationError } = await supabase
+      .from('fp_and_location')
+      .insert([{
+        forest_product_id: fpData.id,
+        location_id: location.id
+      }]);
+
+    if (fpLocationError) {
+      error.value = fpLocationError.message;
+      return;
+    }
   }
 
   Swal.fire({
@@ -224,6 +202,16 @@ const handleSubmit = async () => {
     router.push(RouterNamesConstant.FOREST_PRODUCTS);
   });
 };
+
+const visualizeLocation = (location) => {
+  currentLocation.value = location;
+  showMapModal.value = true;
+  nextTick(() => initializeMap(location.latitude, location.longitude, location.name));
+};
+
+const selectedLocationsNote = computed(() => {
+  return selectedLocations.value.map(location => location.name).join(", ");
+});
 
 onMounted(() => {
   fetchLocations();
@@ -327,16 +315,19 @@ onMounted(() => {
         />
       </div>
 
-      <!-- Location select with map -->
+      <!-- Location select with dropdown -->
       <div>
         <label class="block text-sm font-medium text-gray-700">Location</label>
         <button
           type="button"
-          @click="showLocationModal = true; $nextTick(() => initializeMap())"
+          @click="showLocationModal = true"
           class="mt-1 w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left hover:bg-gray-50"
         >
-          {{ selectedLocation ? selectedLocation.name : 'Select location on map' }}
+          Select location(s)
         </button>
+        <p v-if="selectedLocationsNote" class="mt-2 text-sm text-gray-500">
+    <strong>Selected Locations:</strong> {{ selectedLocationsNote }}
+    </p>
       </div>
 
       <!-- Price input -->
@@ -362,20 +353,90 @@ onMounted(() => {
       </div>
     </form>
 
-    <!-- Map Modal -->
+    <!-- Location Modal -->
     <div v-if="showLocationModal" class="fixed inset-0 z-50 overflow-y-auto">
+    <!-- Modal Backdrop -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+    <!-- Modal Container -->
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+      <!-- Modal Content -->
+      <div class="relative bg-white rounded-xl shadow-xl p-8 max-w-4xl w-full">
+        <!-- Modal Header -->
+        <header class="mb-6">
+          <h3 class="text-xl font-semibold text-gray-900">
+            Select Location(s)
+          </h3>
+        </header>
+
+        <!-- Location List -->
+        <div class="space-y-4 max-h-96 overflow-y-auto">
+          <div 
+            v-for="location in locations" 
+            :key="location.id" 
+            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <!-- Checkbox and Label -->
+            <div class="flex items-center flex-1">
+              <input
+                type="checkbox"
+                :id="`location-${location.id}`"
+                :value="location"
+                v-model="selectedLocations"
+                class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <label 
+                :for="`location-${location.id}`" 
+                class="ml-3 text-gray-700 font-medium"
+              >
+                {{ location.name }}
+                <span class="text-gray-500 text-sm ml-2">
+                  ({{ location.latitude }}, {{ location.longitude }})
+                </span>
+              </label>
+            </div>
+
+            <!-- Visualize Button -->
+            <button
+              type="button"
+              @click="visualizeLocation(location)"
+              class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+            >
+              <img :src="locationPeek" alt="">
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <footer class="mt-8 flex justify-end">
+          <button
+            type="button"
+            @click="showLocationModal = false"
+            class="px-6 py-2.5 bg-gray-100 text-gray-800 font-medium rounded-lg
+                   hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300
+                   transition-colors"
+          >
+            Done
+          </button>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+    <!-- Map Modal -->
+    <div v-if="showMapModal" class="fixed inset-0 z-50 overflow-y-auto">
       <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
         <div class="relative bg-white rounded-lg p-8 max-w-4xl w-full">
-          <h3 class="text-lg font-medium mb-4">Select Location</h3>
+          <h3 class="text-lg font-medium mb-4">Location Map</h3>
           <div id="map" class="h-[400px] w-full mb-4"></div>
           <div class="flex justify-end">
             <button
               type="button"
-              @click="showLocationModal = false"
+              @click="showMapModal = false"
               class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
             >
-              Cancel
+              Close
             </button>
           </div>
         </div>
@@ -383,26 +444,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-<style>
-@import 'leaflet/dist/leaflet.css';
-
-.loader {
-  border: 16px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 16px solid #3498db;
-  width: 120px;
-  height: 120px;
-  animation: spin 2s linear infinite;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1000;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
