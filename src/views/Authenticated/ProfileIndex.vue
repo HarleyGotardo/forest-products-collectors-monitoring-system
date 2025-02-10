@@ -97,7 +97,7 @@ onMounted(async () => {
     <!-- Profile Card -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <!-- Header with background -->
-      <div class="h-32 bg-gradient-to-r from-blue-500 to-blue-600"></div>
+      <div class="h-32 bg-gradient-to-r from-green-500 to-blue-300"></div>
 
       <!-- Error Alert -->
       <div v-if="error" 

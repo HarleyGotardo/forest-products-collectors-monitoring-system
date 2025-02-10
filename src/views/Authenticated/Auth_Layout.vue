@@ -137,14 +137,45 @@ onMounted(async () => {
             <img src="@/assets/dashboard.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Dashboard</span>
           </router-link>
-          
+        
           <router-link 
+            v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
+            to="/authenticated/system-users" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/user.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">System Users</span>
+          </router-link>
+
+          <ForestProducts
+            :isDropdownOpen="isForestProductsDropdownOpen"
+            @toggleDropdown="toggleForestProductsDropdown"
+            label="Forest Products"
+            class="rounded-xl overflow-hidden"
+          >
+          <router-link 
+            to="/authenticated/forest-products" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/forest-product.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">View Forest Products</span>
+          </router-link>
+          <router-link 
+            v-if="isFPUAdmin || isForestRanger" 
+            to="/authenticated/forest-products/create" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">New Forest Product</span>
+          </router-link>
+            <router-link 
             to="/authenticated/map" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
           >
             <img src="@/assets/forest-map.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Forest Products Map</span>
           </router-link>
+          </ForestProducts>
 
           <!-- Enhanced Dropdowns -->
           <Locations
@@ -153,23 +184,29 @@ onMounted(async () => {
             label="Locations"
             class="rounded-xl overflow-hidden"
           >
-            <router-link to="/authenticated/locations" class="block p-3 hover:bg-emerald-50 transition-colors">
-              All Locations
-            </router-link>
             <router-link 
-              v-if="isFPUAdmin || isForestRanger" 
-              to="/authenticated/locations/create" 
-              class="block p-3 hover:bg-emerald-50 transition-colors"
-            >
-              Create
-            </router-link>
-            <router-link 
-              v-if="isFPUAdmin || isForestRanger" 
-              to="/authenticated/locations/trash" 
-              class="block p-3 hover:bg-emerald-50 transition-colors"
-            >
-              Recycle Bin
-            </router-link>
+            to="/authenticated/locations" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/location2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">View Locations</span>
+          </router-link>
+          <router-link 
+            v-if="isFPUAdmin || isForestRanger" 
+            to="/authenticated/locations/create" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">New Location</span>
+          </router-link>
+          <router-link 
+            v-if="isFPUAdmin || isForestRanger" 
+            to="/authenticated/locations/trash" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trash</span>
+          </router-link>
           </Locations>
 
           <Records
@@ -178,100 +215,61 @@ onMounted(async () => {
             label="Collection Records"
             class="rounded-xl overflow-hidden"
           >
-            <router-link to="/authenticated/collection-records" class="block p-3 hover:bg-emerald-50 transition-colors">
-              All Records
-            </router-link>
-            <router-link 
-              v-if="isFPUAdmin || isForestRanger" 
-              to="/authenticated/collection-records/create" 
-              class="block p-3 hover:bg-emerald-50 transition-colors"
-            >
-              Create
-            </router-link>
-            <router-link 
-              v-if="isFPUAdmin || isForestRanger" 
-              to="/authenticated/collection-records/trash" 
-              class="block p-3 hover:bg-emerald-50 transition-colors"
-            >
-              Recycle Bin
-            </router-link>
+          <router-link 
+            v-if="isFPUAdmin || isForestRanger || isVSUAdmin" 
+            to="/authenticated/collection-records" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/records2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">View Records</span>
+          </router-link>
+          <router-link 
+            v-if="isFPUAdmin || isForestRanger" 
+            to="/authenticated/collection-records/create" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">New Record</span>
+          </router-link>
+          <router-link 
+            v-if="isFPUAdmin || isForestRanger" 
+            to="/authenticated/collection-records/trash" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trash Records</span>
+          </router-link>
           </Records>
-
-          <ForestProducts
-            :isDropdownOpen="isForestProductsDropdownOpen"
-            @toggleDropdown="toggleForestProductsDropdown"
-            label="Forest Products"
-            class="rounded-xl overflow-hidden"
-          >
-            <router-link to="/authenticated/forest-products" class="block p-3 hover:bg-emerald-50 transition-colors">
-              All Forest Products
-            </router-link>
-            <router-link 
-              v-if="isFPUAdmin || isForestRanger" 
-              to="/authenticated/forest-products/create" 
-              class="block p-3 hover:bg-emerald-50 transition-colors"
-            >
-              Create
-            </router-link>
-          </ForestProducts>
-
-          <SystemUsers
-            v-if="isFPUAdmin || isForestRanger"
-            :isDropdownOpen="isSystemUsersDropdownOpen"
-            @toggleDropdown="toggleSystemUsersDropdown"
-            label="System Users"
-            class="rounded-xl overflow-hidden"
-          >
-            <router-link to="/authenticated/system-users" class="block p-3 hover:bg-emerald-50 transition-colors">
-              All Users
-            </router-link>
-            <router-link 
-              v-if="isFPUAdmin || isForestRanger" 
-              to="/authenticated/system-users/create" 
-              class="block p-3 hover:bg-emerald-50 transition-colors"
-            >
-              Create
-            </router-link>
-          </SystemUsers>
         </nav>
 
         <!-- Enhanced User Profile -->
-        <div class="flex items-center justify-between gap-3 p-3 border-t border-gray-100 bg-gray-50">
-          <div 
-            v-if="!isLoading"
-            @click="goToProfile" 
-            class="flex items-center gap-3 p-3 cursor-pointer rounded-xl hover:bg-white transition-all duration-200 group"
-          >
-            <img 
-              :src="profilePictureUrl" 
-              alt="Profile Picture" 
-              class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all"
-            />
-            <div>
-              <p class="font-medium text-gray-800">{{ getName() }}</p>
-              <p class="text-sm text-gray-500">View Profile</p>
-            </div>
-          </div>
-          <div v-else class="relative flex w-64 animate-pulse gap-2 p-4">
-            <div class="h-12 w-12 rounded-full bg-slate-400"></div>
-            <div class="flex-1">
-              <div class="mb-1 h-5 w-3/5 rounded-lg bg-slate-400 text-lg"></div>
-              <div class="h-5 w-[90%] rounded-lg bg-slate-400 text-sm"></div>
-            </div>
-            <div class="absolute bottom-5 right-0 h-4 w-4 rounded-full bg-slate-400"></div>
-          </div>
-          <SweetAlert
-            title="Confirm Logout"
-            text="Are you sure you want to log out?"
-            icon="warning"
-            confirmButtonText="Log Out"
-            @confirmed="handleLogout"
-          >
-            <button class="">
-              <img src="@/assets/logout.png" alt="Logout">
-            </button>
-          </SweetAlert>
-        </div>
+<div class="flex items-center justify-between gap-3 p-3 border-t border-gray-100 bg-gray-50">
+  <router-link
+    to="/authenticated/profile"
+    class="flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 group active:scale-95"
+    active-class="bg-green-100"
+  >
+    <img 
+      :src="profilePictureUrl" 
+      alt="Profile Picture" 
+      class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all"
+    />
+    <div>
+      <p class="font-medium text-gray-800">{{ getName() }}</p>
+    </div>
+  </router-link>
+  <SweetAlert
+    title="Confirm Logout"
+    text="Are you sure you want to log out?"
+    icon="warning"
+    confirmButtonText="Log Out"
+    @confirmed="handleLogout"
+  >
+    <button class="">
+      <img src="@/assets/logout.png" alt="Logout">
+    </button>
+  </SweetAlert>
+</div>
       </div>
     </aside>
 

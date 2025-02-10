@@ -21,20 +21,20 @@ import ForestProductsView from '@/views/Authenticated/ForestProducts/View.vue'
 import ForestProductsEdit from '@/views/Authenticated/ForestProducts/Edit.vue'
 import SignUp from '@/views/Authenticated/SignUp.vue'
 import SystemUsersView from '@/views/Authenticated/SystemUsers/View.vue'
-import SystemUsersCreate from '@/views/Authenticated/SystemUsers/Create.vue'
 
+// 4 = FPU Admin, 1 = Forest Ranger, 2 = FP Collector, 3 = VSU Admin
 const routes = [
   {
     path: '/',
     name: 'Index',
     component: Index,
-    meta: { title: 'Nature Cart - Home' }
+    meta: { title: 'Nature Cart - Home', requiresRole: [4, 2, 3, 1] }
   },
   {
     path: '/sign-up',
     name: 'SignUp',
     component: SignUp,
-    meta: { title: 'Sign Up - Nature Cart' }
+    meta: { title: 'Sign Up - Nature Cart', requiresRole: [4, 2, 3, 1] }
   },
   {
     path: '/authenticated',
@@ -45,25 +45,25 @@ const routes = [
         path: 'dashboard',
         name: 'Dashboard',
         component: Dashboard,
-        meta: { title: 'Dashboard - Nature Cart' }
+        meta: { title: 'Dashboard - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'records',
         name: 'Records',
         component: ForestProductsIndex,
-        meta: { title: 'Records - Nature Cart' }
+        meta: { title: 'Records - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'map',
         name: 'Map',
         component: Map,
-        meta: { title: 'Map - Nature Cart' }
+        meta: { title: 'Map - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'forest-products',
         name: 'ForestProducts',
         component: ForestProductsIndex,
-        meta: { title: 'Forest Products - Nature Cart' }
+        meta: { title: 'Forest Products - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'forest-products/create',
@@ -75,7 +75,7 @@ const routes = [
         path: 'forest-products/:id',
         name: 'ForestProductsView',
         component: ForestProductsView,
-        meta: { title: 'View Forest Product - Nature Cart' }
+        meta: { title: 'View Forest Product - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'forest-products/:id/edit',
@@ -87,25 +87,19 @@ const routes = [
         path: 'system-users',
         name: 'SystemUsers',
         component: SystemUsersIndex,
-        meta: { title: 'System Users - Nature Cart', requiresRole: [4, 2] }
+        meta: { title: 'System Users - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'system-users/:id',
         name: 'SystemUsersView',
         component: SystemUsersView,
-        meta: { title: 'View System User - Nature Cart', requiresRole: [4, 2] }
-      },
-      {
-        path: 'system-users/create',
-        name: 'SystemUsersCreate',
-        component: SystemUsersCreate,
-        meta: { title: 'Create User - Nature Cart', requiresRole: [4, 2] }
+        meta: { title: 'View System User - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'collection-records',
         name: 'CollectionRecords',
         component: CollectionRecordsIndex,
-        meta: { title: 'Collection Records - Nature Cart' }
+        meta: { title: 'Collection Records - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'collection-records/create',
@@ -117,13 +111,13 @@ const routes = [
         path: 'collection-records/trash',
         name: 'CollectionRecordsTrash',
         component: CollectionRecordsTrash,
-        meta: { title: 'Collection Records Trash - Nature Cart' }
+        meta: { title: 'Collection Records Trash - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'locations',
         name: 'LocationsIndex',
         component: LocationsIndex,
-        meta: { title: 'Locations - Nature Cart' }
+        meta: { title: 'Locations - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'locations/create',
@@ -135,13 +129,13 @@ const routes = [
         path: 'locations/:id',
         name: 'LocationsView',
         component: LocationsView,
-        meta: { title: 'View Location - Nature Cart' }
+        meta: { title: 'View Location - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'locations/trash',
         name: 'LocationsTrash',
         component: LocationsTrash,
-        meta: { title: 'Trash Locations - Nature Cart' }
+        meta: { title: 'Trash Locations - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'locations/:id/edit',
@@ -153,9 +147,8 @@ const routes = [
         path: 'profile',
         name: 'Profile',
         component: ProfileIndex,
-        meta: { title: 'Profile - Nature Cart' }
+        meta: { title: 'Profile - Nature Cart', requiresRole: [4, 2, 3, 1] }
       }
-      // Add other routes here
     ]
   }
 ]
