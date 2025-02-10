@@ -1,11 +1,19 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
+import Swal from 'sweetalert2'
+import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
 
 const users = ref([])
+const unapprovedUsers = ref([])
 const roles = ref([])
 const selectedRole = ref('')
 const searchQuery = ref('')
+const showModal = ref(false) // State to control the modal visibility
+const unapprovedSearchQuery = ref('') // Search query for unapproved users
+const currentPage = ref(1) // Current page for pagination
+const itemsPerPage = 5 // Items per page for pagination
+
 const filteredUsers = computed(() => {
   let filtered = users.value
 
@@ -25,6 +33,27 @@ const filteredUsers = computed(() => {
   return filtered
 })
 
+const filteredUnapprovedUsers = computed(() => {
+  let filtered = unapprovedUsers.value
+
+  if (unapprovedSearchQuery.value) {
+    const query = unapprovedSearchQuery.value.toLowerCase()
+    filtered = filtered.filter(user =>
+      user.first_name.toLowerCase().includes(query) ||
+      user.last_name.toLowerCase().includes(query) ||
+      user.email_address.toLowerCase().includes(query)
+    )
+  }
+
+  return filtered
+})
+
+const paginatedUnapprovedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredUnapprovedUsers.value.slice(start, end)
+})
+
 const fetchUsers = async () => {
   let { data, error } = await supabase
     .from('profiles')
@@ -34,6 +63,7 @@ const fetchUsers = async () => {
       last_name,
       email_address,
       profile_picture,
+      approval_flag,
       role:roles (
         id,
         name
@@ -43,7 +73,8 @@ const fetchUsers = async () => {
   if (error) {
     console.error('Error fetching users:', error)
   } else {
-    users.value = data
+    users.value = data.filter(user => user.approval_flag !== null)
+    unapprovedUsers.value = data.filter(user => user.approval_flag === null)
   }
 }
 
@@ -72,12 +103,52 @@ const getProfilePictureUrl = (profilePicture) => {
   return null
 }
 
+const approveUser = async (userId) => {
+  const result = await Swal.fire({
+    title: 'Approve User?',
+    text: "Are you sure you want to approve this user?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, approve it!'
+  })
+
+  if (result.isConfirmed) {
+    const currentDate = new Date()
+    const formattedDate = currentDate.toISOString().slice(0, 19).replace('T', ' ')
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ approval_flag: formattedDate })
+      .eq('id', userId)
+
+    if (error) {
+      Swal.fire('Error', error.message, 'error')
+    } else {
+      Swal.fire('Approved!', 'The user has been approved.', 'success')
+      fetchUsers()
+    }
+  }
+}
+
+const nextPage = () => {
+  if ((currentPage.value * itemsPerPage) < filteredUnapprovedUsers.value.length) {
+    currentPage.value++
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
 onMounted(async () => {
   await fetchUsers()
   await fetchRoles()
 })
 </script>
-
 <template>
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
@@ -86,10 +157,19 @@ onMounted(async () => {
         <h2 class="text-2xl font-bold text-gray-900">System Users</h2>
         <p class="mt-1 text-sm text-gray-500">Manage and view all system users</p>
       </div>
-      <div class="bg-blue-50 px-4 py-2 rounded-lg">
-        <span class="text-sm font-medium text-blue-700">
-          {{ filteredUsers.length }} Users
-        </span>
+      <div class="flex space-x-4">
+        <div class="bg-blue-50 px-4 py-2 rounded-lg">
+          <span class="text-sm font-medium text-blue-700">
+            {{ filteredUsers.length }} Users
+          </span>
+        </div>
+        <button 
+          v-if="isFPUAdmin || isForestRanger"
+          @click="showModal = true"
+          class="px-4 py-2 bg-yellow-500 text-white rounded-lg shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+        >
+          Pending Approval
+        </button>
       </div>
     </div>
 
@@ -203,6 +283,148 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Unapproved Users Modal -->
+    <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="relative bg-white rounded-lg p-8 max-w-4xl w-full">
+          <button
+            type="button"
+            @click="showModal = false"
+            class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Unapproved Users</h2>
+          
+          <!-- Search Input for Unapproved Users -->
+          <div class="mb-4">
+            <div class="relative">
+              <input
+                id="unapprovedSearch"
+                v-model="unapprovedSearchQuery"
+                type="text"
+                placeholder="Search by name or email..."
+                class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+              />
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-if="paginatedUnapprovedUsers.length === 0">
+                    <td colspan="4" class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center">
+                        <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <p class="text-gray-500 text-sm">No unapproved users found</p>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-for="user in paginatedUnapprovedUsers" 
+                      :key="user.id"
+                      class="hover:bg-gray-50 transition-colors duration-200">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="h-10 w-10 flex-shrink-0">
+                          <img
+                            v-if="getProfilePictureUrl(user.profile_picture)"
+                            :src="getProfilePictureUrl(user.profile_picture)"
+                            alt="Profile Picture"
+                            class="h-10 w-10 rounded-full object-cover"
+                          />
+                          <div v-else class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span class="text-gray-600 font-medium">
+                              {{ user.first_name[0] }}{{ user.last_name[0] }}
+                            </span>
+                          </div>
+                        </div>
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">
+                            {{ user.first_name }} {{ user.last_name }}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-600">{{ user.email_address }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        {{ user.role.name }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        @click="approveUser(user.id)"
+                        class="px-4 py-2 bg-green-100 text-black rounded-lg shadow-sm hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      >
+                        <div class="flex items-center justify-center space-x-2">
+                          <p>
+                            Approve
+                          </p>
+                          <img src="@/assets/approve.png" alt="Approve Button" class="w-4 h-4" />
+                        </div>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="flex justify-between items-center mt-4">
+            <button
+              @click="prevPage"
+              :disabled="currentPage === 1"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              Previous
+            </button>
+            <span class="text-sm text-gray-700">
+              Page {{ currentPage }} of {{ Math.ceil(filteredUnapprovedUsers.length / itemsPerPage) }}
+            </span>
+            <button
+              @click="nextPage"
+              :disabled="(currentPage * itemsPerPage) >= filteredUnapprovedUsers.length"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
