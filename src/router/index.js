@@ -21,6 +21,7 @@ import ForestProductsView from '@/views/Authenticated/ForestProducts/View.vue'
 import ForestProductsEdit from '@/views/Authenticated/ForestProducts/Edit.vue'
 import SignUp from '@/views/Authenticated/SignUp.vue'
 import SystemUsersView from '@/views/Authenticated/SystemUsers/View.vue'
+import SystemUsersCreate from '@/views/Authenticated/SystemUsers/Create.vue'
 
 const routes = [
   {
@@ -93,6 +94,12 @@ const routes = [
         name: 'SystemUsersView',
         component: SystemUsersView,
         meta: { title: 'View System User - Nature Cart', requiresRole: [4, 2] }
+      },
+      {
+        path: 'system-users/create',
+        name: 'SystemUsersCreate',
+        component: SystemUsersCreate,
+        meta: { title: 'Create User - Nature Cart', requiresRole: [4, 2] }
       },
       {
         path: 'collection-records',

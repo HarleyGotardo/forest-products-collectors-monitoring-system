@@ -33,6 +33,7 @@ const fetchUsers = async () => {
       first_name,
       last_name,
       email_address,
+      profile_picture,
       role:roles (
         id,
         name
@@ -56,6 +57,19 @@ const fetchRoles = async () => {
   } else {
     roles.value = data
   }
+}
+
+const getProfilePictureUrl = (profilePicture) => {
+  if (profilePicture) {
+    try {
+      const parsedProfilePicture = JSON.parse(profilePicture)
+      return parsedProfilePicture.data.publicUrl
+    } catch (e) {
+      console.error('Error parsing profile picture URL:', e)
+      return null
+    }
+  }
+  return null
 }
 
 onMounted(async () => {
@@ -158,7 +172,13 @@ onMounted(async () => {
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="h-10 w-10 flex-shrink-0">
-                      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <img
+                        v-if="getProfilePictureUrl(user.profile_picture)"
+                        :src="getProfilePictureUrl(user.profile_picture)"
+                        alt="Profile Picture"
+                        class="h-10 w-10 rounded-full object-cover"
+                      />
+                      <div v-else class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                         <span class="text-gray-600 font-medium">
                           {{ user.first_name[0] }}{{ user.last_name[0] }}
                         </span>
