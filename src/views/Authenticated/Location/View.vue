@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { toast, Toaster } from 'vue-sonner'
 
 // Fix for Leaflet default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -66,7 +67,7 @@ const restoreLocation = async () => {
   const result = await Swal.fire({
     title: 'Restore Location?',
     text: "This location will be restored.",
-    icon: 'warning',
+    icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
@@ -83,11 +84,7 @@ const restoreLocation = async () => {
       error.value = restoreError.message
     } else {
       fetchLocation()
-      Swal.fire(
-        'Restored!',
-        'The location has been restored.',
-        'success'
-      )
+      toast.success('Location restored successfully', { duration: 2000 })
     }
   }
 }
@@ -96,7 +93,7 @@ const deletePermanently = async () => {
   const result = await Swal.fire({
     title: 'Delete Location Permanently?',
     text: "This action cannot be undone.",
-    icon: 'warning',
+    icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
@@ -112,13 +109,8 @@ const deletePermanently = async () => {
     if (deleteError) {
       error.value = deleteError.message
     } else {
-      Swal.fire(
-        'Deleted!',
-        'The location has been permanently deleted.',
-        'success'
-      ).then(() => {
-        router.push('/authenticated/locations/trash')
-      })
+      toast.success('Location deleted permanently', { duration: 2000 })
+      router.push('/authenticated/locations/trash')
     }
   }
 }
@@ -225,6 +217,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <Toaster/>
   </div>
 </template>
 

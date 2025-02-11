@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
+import {toast, Toaster} from 'vue-sonner'
 
 const router = useRouter()
 const locations = ref([]) // Store all locations
@@ -75,7 +76,7 @@ const deleteLocation = async (locationId) => {
   const result = await Swal.fire({
     title: 'Delete Location?',
     text: "This location will be transferred to the recycle bin.",
-    icon: 'warning',
+    icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
@@ -93,11 +94,7 @@ const deleteLocation = async (locationId) => {
       error.value = deleteError.message
     } else {
       fetchAllLocations()
-      Swal.fire(
-        'Deleted!',
-        'The location has been deleted.',
-        'success'
-      )
+      toast.success('Location deleted successfully', { duration: 2000 })
     }
   }
 }
@@ -267,5 +264,6 @@ watch(currentPage, () => {
         </div>
       </div>
     </div>
+    <Toaster/>
   </div>
 </template>

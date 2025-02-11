@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
+import { toast, Toaster } from 'vue-sonner'
 import { format } from 'date-fns'
 import defaultProfileImage from '@/assets/profile.png'
 import { getUser, fetchUserDetails } from '@/router/routeGuard'
@@ -16,7 +17,7 @@ const handleImageChange = (event) => {
 
 const handleImageSubmit = async () => {
   if (!newProfileImage.value) {
-    Swal.fire('Error', 'Please select an image', 'error')
+    toast.error('Please select an image', { duration: 3000 })
     return
   }
 
@@ -48,7 +49,7 @@ const handleImageSubmit = async () => {
     })
 
   if (uploadError) {
-    Swal.fire('Error', uploadError.message, 'error')
+    toast.error('Failed to upload image', { duration: 3000 })
     loading.value = false
     return
   }
@@ -65,22 +66,16 @@ const handleImageSubmit = async () => {
     .eq('id', getUser().id)
 
   if (updateError) {
-    Swal.fire('Error', updateError.message, 'error')
+    toast.error('Failed to update profile picture', { duration: 3000 })
     loading.value = false
     return
   }
 
-  Swal.fire({
-    icon: 'success',
-    title: 'Updated!',
-    text: 'Your profile picture has been updated.',
-    timer: 2000,
-    showConfirmButton: false
-  }).then(() => {
-    showImageModal.value = false
-    loading.value = false
-    fetchUserDetails()
-  })
+  toast.success('Your profile picture has been updated.', { duration: 2000 })
+  newProfileImage.value = null
+  showImageModal.value = false
+  loading.value = false
+  fetchUserDetails()
 }
 
 const profilePictureUrl = computed(() => {
@@ -246,5 +241,6 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+    <Toaster/>
   </div>
 </template>

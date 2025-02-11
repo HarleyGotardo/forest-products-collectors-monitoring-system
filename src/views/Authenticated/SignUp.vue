@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
-import Swal from 'sweetalert2'
+import { toast, Toaster } from 'vue-sonner'
 import { supabase } from '@/lib/supabaseClient'
 
 const router = useRouter()
@@ -22,22 +22,20 @@ const handleSignUp = async () => {
 
     if (profileError) throw profileError
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Sign Up Successful!',
-      text: 'Please check your email to confirm your account.',
-      timer: 2000,
-      showConfirmButton: false
-    }).then(() => {
-      router.push({ name: 'Index' })
+    toast.success('Sign Up Successful! Please check your email to confirm your account.', {
+      action: {
+        label: 'Login',
+        onClick: goToLoginPage,
+      },
+      duration: 3000,
     })
+
+    setTimeout(() => {
+      router.push({ name: 'Index' })
+    }, 2000)
   } catch (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Sign Up Failed',
-      text: error.message,
-      timer: 2000,
-      showConfirmButton: false
+    toast.error(`Sign Up Failed: ${error.message}`, {
+      duration: 3000,
     })
   }
 }
@@ -159,5 +157,6 @@ const goToLoginPage = () => {
         </div>
       </div>
     </div>
+    <Toaster />
   </div>
 </template>

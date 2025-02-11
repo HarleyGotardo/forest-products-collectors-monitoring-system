@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
+import { toast, Toaster } from 'vue-sonner'
 import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
 
 const users = ref([])
@@ -107,11 +108,11 @@ const approveUser = async (userId) => {
   const result = await Swal.fire({
     title: 'Approve User?',
     text: "Are you sure you want to approve this user?",
-    icon: 'warning',
+    icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, approve it!'
+    confirmButtonText: 'Approve'
   })
 
   if (result.isConfirmed) {
@@ -124,9 +125,9 @@ const approveUser = async (userId) => {
       .eq('id', userId)
 
     if (error) {
-      Swal.fire('Error', error.message, 'error')
+      toast.error('Error approving user.', error.message)
     } else {
-      Swal.fire('Approved!', 'The user has been approved.', 'success')
+      toast.success('User approved successfully.')
       fetchUsers()
     }
   }
@@ -426,6 +427,7 @@ onMounted(async () => {
           </div>
         </div>
       </div>
+      <Toaster/>
     </div>
   </div>
 </template>

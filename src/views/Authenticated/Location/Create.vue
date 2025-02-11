@@ -10,7 +10,7 @@ import { nextTick, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient'
-import Swal from 'sweetalert2'
+import { toast, Toaster } from 'vue-sonner'
 
 const router = useRouter();
 const name = ref(SeparatorConstant.EMPTY_STRING);
@@ -43,16 +43,10 @@ const handleSubmit = async () => {
 
   if (insertError) {
     error.value = insertError.message
+    toast.error(insertError.message, { duration: 3000 })
   } else {
-    Swal.fire({
-      icon: CommonConstant.SWAL.ICON,
-      title: CommonConstant.SWAL.TITLE,
-      text: CommonConstant.SWAL.TEXT_LOCATION,
-      timer: CommonConstant.SWAL.TIMER,
-      showConfirmButton: CommonConstant.SWAL.SHOW_CONFIRM_BUTTON
-    }).then(() => {
-      router.push(RouterNamesConstant.LOCATIONS)
-    })
+    toast.success('Location created successfully', { duration: 2000 })
+    router.push('/authenticated/locations')
   }
 };
 
@@ -139,7 +133,6 @@ const initializeMap = () => {
   });
 };
 </script>
-
 <template>
   <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
     <h2 class="text-2xl font-bold mb-6">Create Location</h2>
@@ -202,5 +195,6 @@ const initializeMap = () => {
         </button>
       </div>
     </div>
+    <Toaster />
   </div>
 </template>

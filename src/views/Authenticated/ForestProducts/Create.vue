@@ -7,10 +7,10 @@ import { ref, onMounted, nextTick, computed } from "vue";
 import { useRouter } from "vue-router";
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient';
-import Swal from 'sweetalert2';
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import locationPeek from '@/assets/location-peek.png';
+import {toast, Toaster} from 'vue-sonner';
 
 // Fix for Leaflet default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -192,15 +192,8 @@ const handleSubmit = async () => {
     }
   }
 
-  Swal.fire({
-    icon: CommonConstant.SWAL.ICON,
-    title: CommonConstant.SWAL.TITLE,
-    text: CommonConstant.SWAL.TEXT,
-    timer: CommonConstant.SWAL.TIMER,
-    showConfirmButton: CommonConstant.SWAL.SHOW_CONFIRM_BUTTON
-  }).then(() => {
-    router.push(RouterNamesConstant.FOREST_PRODUCTS);
-  });
+  toast.success('Forest product created successfully', { duration: 2000 });
+  router.push(RouterNamesConstant.FOREST_PRODUCTS);
 };
 
 const visualizeLocation = (location) => {
@@ -442,5 +435,6 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <Toaster />
   </div>
 </template>

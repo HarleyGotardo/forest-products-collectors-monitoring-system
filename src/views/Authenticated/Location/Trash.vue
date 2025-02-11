@@ -1,3 +1,120 @@
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '@/lib/supabaseClient'
+import Swal from 'sweetalert2'
+import { toast, Toaster } from 'vue-sonner'
+
+const router = useRouter()
+const locations = ref([]) // Store all deleted locations
+const paginatedLocations = ref([]) // Store paginated locations
+const error = ref(null)
+const currentPage = ref(1)
+const itemsPerPage = 7
+
+const fetchDeletedLocations = async () => {
+  let { data, error: fetchError } = await supabase
+    .from('location')
+    .select('*')
+    .not('deleted_at', 'is', null) // Fetch only locations with non-null deleted_at
+
+  if (fetchError) {
+    error.value = fetchError.message
+  } else {
+    locations.value = data
+    paginateLocations()
+  }
+}
+
+const paginateLocations = () => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  paginatedLocations.value = filteredLocations.value.slice(start, end)
+}
+
+const filteredLocations = computed(() => {
+  return locations.value
+})
+
+const nextPage = () => {
+  if ((currentPage.value * itemsPerPage) < filteredLocations.value.length) {
+    currentPage.value++
+    paginateLocations()
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    paginateLocations()
+  }
+}
+
+const viewLocation = (locationId) => {
+  router.push(`/authenticated/locations/${locationId}`)
+}
+
+const restoreLocation = async (locationId) => {
+  const result = await Swal.fire({
+    title: 'Restore Location?',
+    text: "This location will be restored.",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Restore'
+  })
+
+  if (result.isConfirmed) {
+    const { error: restoreError } = await supabase
+      .from('location')
+      .update({ deleted_at: null })
+      .eq('id', locationId)
+
+    if (restoreError) {
+      error.value = restoreError.message
+    } else {
+      fetchDeletedLocations()
+      toast.success('Location restored', { duration: 2000 })
+    }
+  }
+}
+
+const deletePermanently = async (locationId) => {
+  const result = await Swal.fire({
+    title: 'Delete Location Permanently?',
+    text: "This action cannot be undone.",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Delete'
+  })
+
+  if (result.isConfirmed) {
+    const { error: deleteError } = await supabase
+      .from('location')
+      .delete()
+      .eq('id', locationId)
+
+    if (deleteError) {
+      error.value = deleteError.message
+    } else {
+      fetchDeletedLocations()
+      toast.success('Location deleted permanently', { duration: 2000 })
+    }
+  }
+}
+
+onMounted(() => {
+  fetchDeletedLocations()
+})
+
+watch(currentPage, () => {
+  paginateLocations()
+})
+</script>
+
 <template>
     <div class="max-w-7xl mx-auto p-6">
       <!-- Header Section -->
@@ -121,129 +238,6 @@
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   </template>
-  
-  <script setup>
-  import { ref, onMounted, computed, watch } from 'vue'
-  import { useRouter } from 'vue-router'
-  import { supabase } from '@/lib/supabaseClient'
-  import Swal from 'sweetalert2'
-  
-  const router = useRouter()
-  const locations = ref([]) // Store all deleted locations
-  const paginatedLocations = ref([]) // Store paginated locations
-  const error = ref(null)
-  const currentPage = ref(1)
-  const itemsPerPage = 7
-  
-  const fetchDeletedLocations = async () => {
-    let { data, error: fetchError } = await supabase
-      .from('location')
-      .select('*')
-      .not('deleted_at', 'is', null) // Fetch only locations with non-null deleted_at
-  
-    if (fetchError) {
-      error.value = fetchError.message
-    } else {
-      locations.value = data
-      paginateLocations()
-    }
-  }
-  
-  const paginateLocations = () => {
-    const start = (currentPage.value - 1) * itemsPerPage
-    const end = start + itemsPerPage
-    paginatedLocations.value = filteredLocations.value.slice(start, end)
-  }
-  
-  const filteredLocations = computed(() => {
-    return locations.value
-  })
-  
-  const nextPage = () => {
-    if ((currentPage.value * itemsPerPage) < filteredLocations.value.length) {
-      currentPage.value++
-      paginateLocations()
-    }
-  }
-  
-  const prevPage = () => {
-    if (currentPage.value > 1) {
-      currentPage.value--
-      paginateLocations()
-    }
-  }
-  
-  const viewLocation = (locationId) => {
-    router.push(`/authenticated/locations/${locationId}`)
-  }
-  
-  const restoreLocation = async (locationId) => {
-    const result = await Swal.fire({
-      title: 'Restore Location?',
-      text: "This location will be restored.",
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Restore'
-    })
-  
-    if (result.isConfirmed) {
-      const { error: restoreError } = await supabase
-        .from('location')
-        .update({ deleted_at: null })
-        .eq('id', locationId)
-  
-      if (restoreError) {
-        error.value = restoreError.message
-      } else {
-        fetchDeletedLocations()
-        Swal.fire(
-          'Restored!',
-          'The location has been restored.',
-          'success'
-        )
-      }
-    }
-  }
-  
-  const deletePermanently = async (locationId) => {
-    const result = await Swal.fire({
-      title: 'Delete Location Permanently?',
-      text: "This action cannot be undone.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Delete Permanently'
-    })
-  
-    if (result.isConfirmed) {
-      const { error: deleteError } = await supabase
-        .from('location')
-        .delete()
-        .eq('id', locationId)
-  
-      if (deleteError) {
-        error.value = deleteError.message
-      } else {
-        fetchDeletedLocations()
-        Swal.fire(
-          'Deleted!',
-          'The location has been permanently deleted.',
-          'success'
-        )
-      }
-    }
-  }
-  
-  onMounted(() => {
-    fetchDeletedLocations()
-  })
-  
-  watch(currentPage, () => {
-    paginateLocations()
-  })
-  </script>

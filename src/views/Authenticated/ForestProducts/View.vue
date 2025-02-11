@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Swal from 'sweetalert2'
+import { toast, Toaster } from 'vue-sonner'
 import { format } from 'date-fns'
 import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
 
@@ -178,7 +179,7 @@ const initializeModalMap = () => {
         .single();
 
       if (error) {
-        Swal.fire('Error', error.message, 'error');
+        toast.error(error.message, { duration: 2000 });
       } else {
         selectedLocation.value = data;
         showLocationModal.value = false;
@@ -206,15 +207,8 @@ const upsertLocation = async () => {
     return;
   }
 
-  Swal.fire({
-    icon: 'success',
-    title: 'Location Added',
-    text: 'The location has been successfully added to the forest product.',
-    timer: 2000,
-    showConfirmButton: false
-  }).then(() => {
-    fetchLocations();
-  });
+  toast.success('Location added successfully', { duration: 2000 });
+  fetchLocations();
 };
 
 const handleImageChange = (event) => {
@@ -233,8 +227,8 @@ const handleImageSubmit = async () => {
   // Upload image to Supabase bucket using S3 protocol
   const { data: uploadData, error: uploadError } = await supabase
     .storage
-    .from('forest_product_images')
-    .upload(`public/${Date.now()}_${newImage.value.name}`, newImage.value, {
+    .from('nature_cart_images')
+    .upload(`forest_products/${Date.now()}_${newImage.value.name}`, newImage.value, {
       cacheControl: '3600',
       upsert: false,
       contentType: newImage.value.type,
@@ -249,7 +243,7 @@ const handleImageSubmit = async () => {
 
   const imageUrl = supabase
     .storage
-    .from('forest_product_images')
+    .from('nature_cart_images')
     .getPublicUrl(uploadData.path)
 
   // Update forest product with new image URL
@@ -263,16 +257,9 @@ const handleImageSubmit = async () => {
     return
   }
 
-  Swal.fire({
-    icon: 'success',
-    title: 'Updated!',
-    text: 'The forest product image has been updated.',
-    timer: 2000,
-    showConfirmButton: false
-  }).then(() => {
-    showImageModal.value = false
-    fetchForestProduct()
-  })
+  toast.success('Image updated successfully', { duration: 2000 })
+  showImageModal.value = false
+  fetchForestProduct()
 }
 
 onMounted(() => {
@@ -437,7 +424,7 @@ onMounted(() => {
         </div>
 
         <!-- Map Container -->
-        <div id="locationMap" class="h-[400px] w-full rounded-lg overflow-hidden border border-gray-200"></div>
+        <div v-if="locations.length != 0" id="locationMap" class="h-[400px] w-full rounded-lg overflow-hidden border border-gray-200"></div>
       </div>
     </div>
 
@@ -491,6 +478,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <Toaster/>
   </div>
 </template>
 

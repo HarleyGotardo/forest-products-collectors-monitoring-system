@@ -2,8 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
-import Swal from 'sweetalert2'
 import { supabase } from '@/lib/supabaseClient'
+import { toast, Toaster } from 'vue-sonner'
+import SweetAlert from '@/components/SweetAlert.vue'
 
 const router = useRouter()
 const email = ref('')
@@ -25,40 +26,29 @@ const handleLogin = async () => {
 
     if (profile.approval_flag === null) {
       await supabase.auth.signOut()
-      Swal.fire({
-        icon: 'error',
-        title: 'Login Failed',
-        text: 'Your account is not approved yet. Please contact the administrator.',
-        timer: 2000,
-        showConfirmButton: false
+      toast.error('Your account is not yet approved. Please wait for the admin to approve your account.', {
+        duration: 3000,
       })
     } else {
-      Swal.fire({
-        icon: 'success',
-        title: 'Login Successful!',
-        text: 'You are ready to proceed using Nature Cart',
-        timer: 2000,
-        showConfirmButton: false
-      }).then(() => {
-        router.push({ name: 'Dashboard' })
+      toast.success('Successfully Logged In.', {
+        duration: 2000,
       })
+      setTimeout(() => {
+        router.push({ name: 'Dashboard' })
+      }, 2000)
     }
   } catch (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Login Failed',
-      text: error.message,
-      timer: 2000,
-      showConfirmButton: false
+    toast.error(`Login Failed: ${error.message}`, {
+      duration: 3000,
     })
   }
 }
+
 
 const goToSignUpPage = () => {
   router.push({ name: 'SignUp' })
 }
 </script>
-
 <template>
   <div class="min-h-screen flex flex-col md:flex-row">
     <!-- Left Section - Login Form -->
@@ -172,5 +162,6 @@ const goToSignUpPage = () => {
         </div>
       </div>
     </div>
+    <Toaster />
   </div>
 </template>

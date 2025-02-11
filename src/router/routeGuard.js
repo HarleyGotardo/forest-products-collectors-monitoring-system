@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabaseClient'
 import { ref, computed } from 'vue'
-
+import { toast } from 'vue-sonner'
 const user = ref(null)
 
 const fetchUserDetails = async () => {
@@ -50,7 +50,7 @@ const subscribeToUserChanges = async () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${authUser.id}` },
         (payload) => {
-          console.log('Change received!', payload)
+          toast.info('Your personal-information has been updated by the admin.')
           fetchUserDetails()
         }
       )

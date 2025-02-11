@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 import {user, isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
+import { toast, Toaster } from 'vue-sonner'
 
 const router = useRouter()
 const allForestProducts = ref([]) // Store all forest products
@@ -92,7 +93,7 @@ const deleteProduct = async (productId) => {
   const result = await Swal.fire({
     title: 'Delete Forest Product?',
     text: "This forest product will be transferred to the recycle bin.",
-    icon: 'warning',
+    icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',  
@@ -109,9 +110,9 @@ const deleteProduct = async (productId) => {
       .eq('id', productId)
 
     if (updateError) {
-      Swal.fire('Error', updateError.message, 'error')
+      toast.error(updateError.message, { duration: 3000 })
     } else {
-      Swal.fire('Deleted!', 'The forest product has been transferred to the recycle bin.', 'success')
+      toast.success('Forest product deleted successfully', { duration: 3000 })
       fetchAllForestProducts() 
     }
   }

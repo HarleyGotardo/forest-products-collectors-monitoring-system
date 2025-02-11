@@ -11,6 +11,7 @@ import defaultProfileImage from '@/assets/profile.png'
 import logoutIcon from '@/assets/logout.png'
 import { supabase } from '@/lib/supabaseClient'
 import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges } from '@/router/routeGuard'
+import { Toaster } from 'vue-sonner'
 
 const router = useRouter()
 const activeDropdown = ref(null) // Track active dropdown
@@ -62,7 +63,9 @@ const handleLogout = async () => {
   if (error) {
     console.error('Error logging out:', error)
   } else {
-    router.push({ name: 'Index' })
+    setTimeout(() => {
+      router.push({ name: 'Index' })
+    }, 2000) // 1 second delay
   }
 }
 
@@ -82,7 +85,7 @@ onMounted(async () => {
     <!-- Improved Burger Menu Button -->
     <button 
       @click="toggleSidebar"
-      :class="`md:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-white shadow-lg transition-all duration-300 hover:bg-gray-50 active:scale-95 ${
+      :class="`md:hidden fixed top-4 left-4 z-50 p-3 transition-all duration-300  active:scale-95 ${
         isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`"
     >
@@ -281,6 +284,7 @@ onMounted(async () => {
     >
       <router-view />
     </main>
+    <Toaster />
   </div>
 </template>
 

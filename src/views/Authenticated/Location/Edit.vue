@@ -11,6 +11,7 @@ import { useRouter, useRoute } from "vue-router";
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
+import {toast, Toaster} from 'vue-sonner'
 
 const router = useRouter();
 const route = useRoute();
@@ -89,15 +90,8 @@ const handleSubmit = async () => {
   if (updateError) {
     error.value = updateError.message
   } else {
-    Swal.fire({
-      icon: CommonConstant.SWAL.ICON,
-      title: CommonConstant.SWAL.TITLE,
-      text: CommonConstant.SWAL.TEXT_LOCATION,
-      timer: CommonConstant.SWAL.TIMER,
-      showConfirmButton: CommonConstant.SWAL.SHOW_CONFIRM_BUTTON
-    }).then(() => {
-      router.push(RouterNamesConstant.LOCATIONS)
-    })
+    toast.success('Location updated successfully', { duration: 2000 })
+    router.push('/authenticated/locations')
   }
 };
 
@@ -268,5 +262,6 @@ onMounted(() => {
           </button>
         </div>
       </div>
+      <Toaster />
     </div>
   </template>
