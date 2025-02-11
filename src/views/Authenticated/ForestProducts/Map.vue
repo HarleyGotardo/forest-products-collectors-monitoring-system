@@ -1,9 +1,9 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from '@/lib/supabaseClient'
-import { computed } from 'vue'
 
 // Fix for the default icon issue
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -23,6 +23,15 @@ const selectedLocation = ref(null)
 const selectedLocationProducts = ref([])
 const currentPage = ref(1)
 const itemsPerPage = 3
+const router = useRouter()
+const route = useRoute()
+
+const goToForestProduct = (forestProductId) => {
+  router.push({
+    name: 'ForestProductsView',
+    params: { id: forestProductId },
+  })
+}
 
 const fetchLocationsWithProducts = async () => {
   let { data, error } = await supabase
@@ -33,12 +42,13 @@ const fetchLocationsWithProducts = async () => {
       latitude,
       longitude,
       fp_and_location (
+        forest_product_id,
+        quantity,
         forest_products (
           id,
           name,
           description,
           type,
-          quantity,
           price_based_on_measurement_unit
         )
       )
@@ -56,7 +66,10 @@ const showLocationDetails = async (location) => {
   
   // Transform the nested data structure
   selectedLocationProducts.value = location.fp_and_location
-    .map(fp => fp.forest_products)
+    .map(fp => ({
+      ...fp.forest_products,
+      quantity: fp.quantity
+    }))
     .filter(Boolean)
   
   showModal.value = true
@@ -110,6 +123,15 @@ onMounted(async () => {
         .on('click', () => showLocationDetails(location))
     }
   })
+
+  // Restore state from query parameters
+  if (route.query.modal) {
+    const location = locations.value.find(loc => loc.id === route.query.locationId)
+    if (location) {
+      showLocationDetails(location)
+      currentPage.value = parseInt(route.query.page) || 1
+    }
+  }
 });
 </script>
 
@@ -119,45 +141,75 @@ onMounted(async () => {
     <!-- Map container -->
     <div id="map" class="h-[500px] w-full rounded-lg shadow-md"></div>
 
-    <!-- Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        <h3 class="text-xl font-bold mb-4">Forest Products at {{ selectedLocation?.name }}</h3>
-        <div class="space-y-4">
-          <div v-for="product in paginatedProducts" :key="product.id" class="border-b pb-4">
-            <h4 class="font-semibold">{{ product.name }}</h4>
-            <p class="text-gray-600">{{ product.description }}</p>
-            <div class="mt-2 grid grid-cols-2 gap-4">
-              <p><span class="font-medium">Type:</span> {{ product.type === 'Timber' ? 'Timber' : 'Non-Timber' }}</p>
-              <p><span class="font-medium">Quantity:</span> {{ product.quantity }}</p>
-              <p><span class="font-medium">Price:</span> ₱{{ product.price_based_on_measurement_unit }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="flex justify-between mt-4">
-          <button 
-            @click="prevPage" 
-            :disabled="currentPage === 1"
-            class="px-4 py-2 bg-gray-300 rounded-lg disabled:opacity-50"
-          >
-            Previous
+    <div v-if="showModal" class="fixed inset-0 flex items-center justify-center z-50">
+    <!-- Backdrop with blur effect -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showModal = false"></div>
+    
+<!-- Modal Content -->
+<div class="relative bg-white w-full max-w-lg rounded-lg shadow-md overflow-hidden">
+  <!-- Header -->
+  <div class="p-4 border-b border-gray-200 bg-gray-50">
+    <h3 class="text-lg font-semibold text-gray-800">
+      Forest Products at {{ selectedLocation?.name }}
+    </h3>
+  </div>
+
+  <!-- Body -->
+  <div class="p-4 overflow-y-auto max-h-[60vh]">
+    <div class="space-y-3">
+      <div
+        v-for="product in paginatedProducts" 
+        :key="product.id" 
+        class="p-3 border border-gray-300 rounded-lg hover:shadow-sm transition"
+      >
+        <h4 class="text-md font-semibold text-gray-800">{{ product.name }}</h4>
+        <p class="text-gray-600">{{ product.description }}</p>
+        <div class="flex justify-between mt-2">
+          <span class="text-sm text-gray-500">Qty: {{ product.quantity }}</span>
+          <span class="text-sm font-medium text-gray-800">₱{{ product.price_based_on_measurement_unit }}</span>
+          <button class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition" @click="goToForestProduct(product.id)">
+            View
           </button>
-          <button 
-            @click="nextPage" 
-            :disabled="(currentPage * itemsPerPage) >= selectedLocationProducts.length"
-            class="px-4 py-2 bg-gray-300 rounded-lg disabled:opacity-50"
-          >
-            Next
-          </button>
         </div>
-        <button 
-          @click="showModal = false"
-          class="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          Close
-        </button>
       </div>
     </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="p-4 border-t border-gray-200 bg-gray-50">
+    <div class="flex justify-between mb-2">
+      <button 
+        @click="prevPage" 
+        :disabled="currentPage === 1"
+        class="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+      >
+        Previous
+      </button>
+
+      <span class="text-sm text-gray-600">
+        Page {{ currentPage }} of {{ Math.ceil(selectedLocationProducts.length / itemsPerPage) }}
+      </span>
+
+      <button 
+        @click="nextPage" 
+        :disabled="(currentPage * itemsPerPage) >= selectedLocationProducts.length"
+        class="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+
+    <button 
+      @click="showModal = false"
+      class="w-full mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+    >
+      Close
+    </button>
+  </div>
+</div>
+
+
+  </div>
   </div>
 </template>
 
