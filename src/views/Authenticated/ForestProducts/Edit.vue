@@ -26,7 +26,6 @@ const productId = route.params.id
 const name = ref('')
 const description = ref('')
 const type = ref('T')
-const quantity = ref('')
 const price_based_on_measurement_unit = ref('')
 const measurementUnits = ref([])
 const selectedMeasurementUnit = ref(null)
@@ -41,6 +40,7 @@ const currentLocation = ref(null)
 
 const originalData = ref({})
 
+// Fetch forest product data and populate selectedLocations
 const fetchForestProduct = async () => {
   let { data, error: fetchError } = await supabase
     .from('forest_products')
@@ -55,7 +55,8 @@ const fetchForestProduct = async () => {
           name,
           latitude,
           longitude
-        )
+        ),
+        quantity
       )
     `)
     .eq('id', productId)
@@ -67,22 +68,51 @@ const fetchForestProduct = async () => {
     name.value = data.name
     description.value = data.description
     type.value = data.type
-    quantity.value = data.quantity
     price_based_on_measurement_unit.value = data.price_based_on_measurement_unit
     selectedMeasurementUnit.value = data.measurement_unit_id
-    selectedLocations.value = data.fp_and_location.map(fpLoc => fpLoc.location)
+    selectedLocations.value = data.fp_and_location.map(fpLoc => ({
+      ...fpLoc.location,
+      quantity: fpLoc.quantity
+    }))
 
     // Store original data for comparison
     originalData.value = {
       name: data.name,
       description: data.description,
       type: data.type,
-      quantity: data.quantity,
       price_based_on_measurement_unit: data.price_based_on_measurement_unit,
       measurement_unit_id: data.measurement_unit_id,
       image_url: data.image_url,
-      locations: data.fp_and_location.map(fpLoc => fpLoc.location)
+      locations: data.fp_and_location.map(fpLoc => ({
+        ...fpLoc.location,
+        quantity: fpLoc.quantity
+      }))
     }
+  }
+}
+
+const selectedLocationsIds = computed({
+  get() {
+    return selectedLocations.value.map(loc => loc.id)
+  },
+  set(ids) {
+    selectedLocations.value = ids.map(id => {
+      const location = locations.value.find(loc => loc.id === id)
+      const existingLocation = selectedLocations.value.find(loc => loc.id === id)
+      return existingLocation || { ...location, quantity: 0 }
+    })
+  }
+})
+
+const getLocationQuantity = (locationId) => {
+  const location = selectedLocations.value.find(loc => loc.id === locationId)
+  return location ? location.quantity : 0
+}
+
+const updateLocationQuantity = (location, quantity) => {
+  const selectedLocation = selectedLocations.value.find(loc => loc.id === location.id)
+  if (selectedLocation) {
+    selectedLocation.quantity = quantity
   }
 }
 
@@ -165,7 +195,6 @@ const handleSubmit = async () => {
   if (name.value !== originalData.value.name) updates.name = name.value
   if (description.value !== originalData.value.description) updates.description = description.value
   if (type.value !== originalData.value.type) updates.type = type.value
-  if (quantity.value !== originalData.value.quantity) updates.quantity = quantity.value
   if (price !== originalData.value.price_based_on_measurement_unit) updates.price_based_on_measurement_unit = isNaN(price) ? null : price
   if (selectedMeasurementUnit.value !== originalData.value.measurement_unit_id) updates.measurement_unit_id = selectedMeasurementUnit.value
   if (imageUrl !== originalData.value.image_url) updates.image_url = imageUrl
@@ -203,18 +232,31 @@ const handleSubmit = async () => {
     }
   }
 
-  // Add new locations
-  for (const locationId of newLocationIds) {
-    if (!originalLocationIds.includes(locationId)) {
+  // Add new locations and update quantities
+  for (const location of selectedLocations.value) {
+    if (!originalLocationIds.includes(location.id)) {
       const { error: insertError } = await supabase
         .from('fp_and_location')
         .insert([{
           forest_product_id: productId,
-          location_id: locationId
+          location_id: location.id,
+          quantity: location.quantity // Save quantity
         }])
 
       if (insertError) {
         error.value = insertError.message
+        return
+      }
+    } else {
+      // Update existing location quantity
+      const { error: updateLocationError } = await supabase
+        .from('fp_and_location')
+        .update({ quantity: location.quantity })
+        .eq('forest_product_id', productId)
+        .eq('location_id', location.id)
+
+      if (updateLocationError) {
+        error.value = updateLocationError.message
         return
       }
     }
@@ -284,18 +326,6 @@ const handleSubmit = async () => {
         </select>
       </div>
 
-      <!-- Quantity input -->
-      <div>
-        <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
-        <input
-          id="quantity"
-          v-model="quantity"
-          type="number"
-          required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-        />
-      </div>
-
       <!-- Measurement Unit select -->
       <div>
         <label for="measurementUnit" class="block text-sm font-medium text-gray-700">Measurement Unit</label>
@@ -349,78 +379,92 @@ const handleSubmit = async () => {
         </button>
       </div>
     </form>
+
+    <!-- Location Modal -->
     <div v-if="showLocationModal" class="fixed inset-0 z-50 overflow-y-auto">
-    <!-- Modal Overlay -->
-    <div class="min-h-screen px-4 text-center">
-      <!-- Background Overlay -->
-      <div class="fixed inset-0 transition-opacity">
-        <div class="absolute inset-0 bg-gray-500 bg-opacity-75"></div>
-      </div>
+      <!-- Modal Overlay -->
+      <div class="min-h-screen px-4 text-center">
+        <!-- Background Overlay -->
+        <div class="fixed inset-0 transition-opacity">
+          <div class="absolute inset-0 bg-gray-500 bg-opacity-75"></div>
+        </div>
 
-      <!-- Modal Content -->
-      <div class="inline-block w-full max-w-4xl my-8 text-left align-middle transition-all transform">
-        <div class="relative bg-white rounded-xl shadow-2xl p-8">
-          <!-- Modal Header -->
-          <div class="border-b border-gray-200 pb-4 mb-6">
-            <h3 class="text-2xl font-semibold text-gray-900">
-              Select Location(s)
-            </h3>
-          </div>
+        <!-- Modal Content -->
+        <div class="inline-block w-full max-w-4xl my-8 text-left align-middle transition-all transform">
+          <div class="relative bg-white rounded-xl shadow-2xl p-8">
+            <!-- Modal Header -->
+            <div class="border-b border-gray-200 pb-4 mb-6">
+              <h3 class="text-2xl font-semibold text-gray-900">
+                Select Location(s)
+              </h3>
+            </div>
 
-          <!-- Locations List -->
-          <div class="space-y-3 max-h-[60vh] overflow-y-auto px-2">
-            <div 
-              v-for="location in locations" 
-              :key="location.id" 
-              class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200"
-            >
-              <div class="flex items-center space-x-3 flex-1">
-                <input
-                  type="checkbox"
-                  :id="`location-${location.id}`"
-                  :value="location"
-                  v-model="selectedLocations"
-                  class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                />
-                <label 
-                  :for="`location-${location.id}`" 
-                  class="flex-1 cursor-pointer"
-                >
-                  <span class="font-medium text-gray-900">{{ location.name }}</span>
-                  <span class="text-gray-500 ml-2">
-                    ({{ location.latitude }}, {{ location.longitude }})
-                  </span>
-                </label>
-              </div>
+<!-- Locations List -->
+<div class="space-y-3 max-h-[60vh] overflow-y-auto px-2">
+  <div 
+    v-for="location in locations" 
+    :key="location.id" 
+    class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200"
+  >
+    <div class="flex items-center space-x-3 flex-1">
+      <input
+      type="checkbox"
+      :id="`location-${location.id}`"
+      :value="location"
+      v-model="selectedLocations"
+      :checked="selectedLocationsIds.includes(location.id)"
+      class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+      />
+      <label 
+      :for="`location-${location.id}`" 
+      class="flex-1 cursor-pointer"
+      >
+      <span class="font-medium text-gray-900">{{ location.name }}</span>
+      <span class="text-gray-500 ml-2">
+        ({{ location.latitude }}, {{ location.longitude }})
+      </span>
+      </label>
+    </div>
 
+    <!-- Quantity Input -->
+    <div class="ml-4">
+      <input
+        type="number"
+        :value="getLocationQuantity(location.id)"
+        placeholder="Quantity"
+        class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        @input="updateLocationQuantity(location, $event.target.value)"
+      />
+    </div>
+
+    <button
+      type="button"
+      @click="visualizeLocation(location)"
+      class="flex items-center px-4 py-2 text-sm font-medium text-blue-600 
+             hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors
+             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    >
+      <img :src="locationPeek" alt="Visualize Location">
+    </button>
+  </div>
+</div>
+
+            <!-- Modal Footer -->
+            <div class="flex justify-end mt-8 pt-6 border-t border-gray-200">
               <button
                 type="button"
-                @click="visualizeLocation(location)"
-                class="flex items-center px-4 py-2 text-sm font-medium text-blue-600 
-                       hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                @click="showLocationModal = false"
+                class="px-6 py-3 bg-gray-100 text-gray-800 font-medium rounded-lg
+                       hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400
+                       transition-all duration-200 ease-in-out"
               >
-                <img :src="locationPeek" alt="Visualize Location">
+                Done
               </button>
             </div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="flex justify-end mt-8 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              @click="showLocationModal = false"
-              class="px-6 py-3 bg-gray-100 text-gray-800 font-medium rounded-lg
-                     hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400
-                     transition-all duration-200 ease-in-out"
-            >
-              Done
-            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
     <!-- Map Modal -->
     <div v-if="showMapModal" class="fixed inset-0 z-50 overflow-y-auto">

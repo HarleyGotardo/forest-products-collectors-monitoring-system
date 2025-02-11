@@ -183,7 +183,8 @@ const handleSubmit = async () => {
       .from('fp_and_location')
       .insert([{
         forest_product_id: fpData.id,
-        location_id: location.id
+        location_id: location.id,
+        quantity: location.quantity // Save quantity
       }]);
 
     if (fpLocationError) {
@@ -362,43 +363,53 @@ onMounted(() => {
           </h3>
         </header>
 
-        <!-- Location List -->
-        <div class="space-y-4 max-h-96 overflow-y-auto">
-          <div 
-            v-for="location in locations" 
-            :key="location.id" 
-            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <!-- Checkbox and Label -->
-            <div class="flex items-center flex-1">
-              <input
-                type="checkbox"
-                :id="`location-${location.id}`"
-                :value="location"
-                v-model="selectedLocations"
-                class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-              />
-              <label 
-                :for="`location-${location.id}`" 
-                class="ml-3 text-gray-700 font-medium"
-              >
-                {{ location.name }}
-                <span class="text-gray-500 text-sm ml-2">
-                  ({{ location.latitude }}, {{ location.longitude }})
-                </span>
-              </label>
-            </div>
+<!-- Location List -->
+<div class="space-y-4 max-h-96 overflow-y-auto">
+  <div 
+    v-for="location in locations" 
+    :key="location.id" 
+    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+  >
+    <!-- Checkbox and Label -->
+    <div class="flex items-center flex-1">
+      <input
+        type="checkbox"
+        :id="`location-${location.id}`"
+        :value="location"
+        v-model="selectedLocations"
+        class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+      />
+      <label 
+        :for="`location-${location.id}`" 
+        class="ml-3 text-gray-700 font-medium"
+      >
+        {{ location.name }}
+        <span class="text-gray-500 text-sm ml-2">
+          ({{ location.latitude }}, {{ location.longitude }})
+        </span>
+      </label>
+    </div>
 
-            <!-- Visualize Button -->
-            <button
-              type="button"
-              @click="visualizeLocation(location)"
-              class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-            >
-              <img :src="locationPeek" alt="">
-            </button>
-          </div>
-        </div>
+    <!-- Quantity Input -->
+    <div class="ml-4">
+      <input
+        type="number"
+        v-model="location.quantity"
+        placeholder="Quantity"
+        class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+      />
+    </div>
+
+    <!-- Visualize Button -->
+    <button
+      type="button"
+      @click="visualizeLocation(location)"
+      class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+    >
+      <img :src="locationPeek" alt="">
+    </button>
+  </div>
+</div>
 
         <!-- Modal Footer -->
         <footer class="mt-8 flex justify-end">
