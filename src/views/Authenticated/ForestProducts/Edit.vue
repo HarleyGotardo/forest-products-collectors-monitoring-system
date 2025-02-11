@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick, computed } from 'vue'
+import { ref, onMounted, nextTick, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
@@ -37,6 +37,7 @@ const showMapModal = ref(false)
 const mapInstance = ref(null)
 const tempMarker = ref(null)
 const currentLocation = ref(null)
+const isFormChanged = ref(false)
 
 const originalData = ref({})
 
@@ -265,6 +266,23 @@ const handleSubmit = async () => {
   toast.success('Forest product updated successfully', { duration: 2000 })
   router.push('/authenticated/forest-products')
 }
+
+// Watch for changes in form fields to enable/disable the update button
+watch([name, description, type, price_based_on_measurement_unit, selectedMeasurementUnit, selectedLocations], () => {
+  isFormChanged.value = (
+    name.value !== originalData.value.name ||
+    description.value !== originalData.value.description ||
+    type.value !== originalData.value.type ||
+    parseFloat(price_based_on_measurement_unit.value) !== originalData.value.price_based_on_measurement_unit ||
+    selectedMeasurementUnit.value !== originalData.value.measurement_unit_id ||
+    JSON.stringify(selectedLocations.value) !== JSON.stringify(originalData.value.locations)
+  )
+})
+
+// Reset form fields to original values
+const handleCancel = () => {
+  router.push('/authenticated/forest-products')
+}
 </script>
 <template>
   <div class="max-w-7xl mx-auto p-6">
@@ -341,21 +359,6 @@ const handleSubmit = async () => {
         </select>
       </div>
 
-      <!-- Location select with dropdown -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Location</label>
-        <button
-          type="button"
-          @click="showLocationModal = true"
-          class="mt-1 w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left hover:bg-gray-50"
-        >
-          Select location(s)
-        </button>
-        <p v-if="selectedLocationsNote" class="mt-2 text-sm text-gray-500">
-          Selected Locations: {{ selectedLocationsNote }}
-        </p>
-      </div>
-
       <!-- Price input -->
       <div>
         <label for="price" class="block text-sm font-medium text-gray-700">Price based on measurement unit</label>
@@ -369,102 +372,24 @@ const handleSubmit = async () => {
         />
       </div>
 
-      <!-- Submit button -->
-      <div class="flex justify-end">
+      <!-- Submit and Cancel buttons -->
+      <div class="flex justify-end space-x-4">
+        <button
+          type="button"
+          @click="handleCancel"
+          class="px-4 py-2 bg-gray-600 text-white rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+        >
+          Cancel
+        </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          :disabled="!isFormChanged"
+          class="px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Update
         </button>
       </div>
     </form>
-
-    <!-- Location Modal -->
-    <div v-if="showLocationModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <!-- Modal Overlay -->
-      <div class="min-h-screen px-4 text-center">
-        <!-- Background Overlay -->
-        <div class="fixed inset-0 transition-opacity">
-          <div class="absolute inset-0 bg-gray-500 bg-opacity-75"></div>
-        </div>
-
-        <!-- Modal Content -->
-        <div class="inline-block w-full max-w-4xl my-8 text-left align-middle transition-all transform">
-          <div class="relative bg-white rounded-xl shadow-2xl p-8">
-            <!-- Modal Header -->
-            <div class="border-b border-gray-200 pb-4 mb-6">
-              <h3 class="text-2xl font-semibold text-gray-900">
-                Select Location(s)
-              </h3>
-            </div>
-
-<!-- Locations List -->
-<div class="space-y-3 max-h-[60vh] overflow-y-auto px-2">
-  <div 
-    v-for="location in locations" 
-    :key="location.id" 
-    class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200"
-  >
-    <div class="flex items-center space-x-3 flex-1">
-      <input
-      type="checkbox"
-      :id="`location-${location.id}`"
-      :value="location"
-      v-model="selectedLocations"
-      :checked="selectedLocationsIds.includes(location.id)"
-      class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-      />
-      <label 
-      :for="`location-${location.id}`" 
-      class="flex-1 cursor-pointer"
-      >
-      <span class="font-medium text-gray-900">{{ location.name }}</span>
-      <span class="text-gray-500 ml-2">
-        ({{ location.latitude }}, {{ location.longitude }})
-      </span>
-      </label>
-    </div>
-
-    <!-- Quantity Input -->
-    <div class="ml-4">
-      <input
-        type="number"
-        :value="getLocationQuantity(location.id)"
-        placeholder="Quantity"
-        class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-        @input="updateLocationQuantity(location, $event.target.value)"
-      />
-    </div>
-
-    <button
-      type="button"
-      @click="visualizeLocation(location)"
-      class="flex items-center px-4 py-2 text-sm font-medium text-blue-600 
-             hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors
-             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-    >
-      <img :src="locationPeek" alt="Visualize Location">
-    </button>
-  </div>
-</div>
-
-            <!-- Modal Footer -->
-            <div class="flex justify-end mt-8 pt-6 border-t border-gray-200">
-              <button
-                type="button"
-                @click="showLocationModal = false"
-                class="px-6 py-3 bg-gray-100 text-gray-800 font-medium rounded-lg
-                       hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400
-                       transition-all duration-200 ease-in-out"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Map Modal -->
     <div v-if="showMapModal" class="fixed inset-0 z-50 overflow-y-auto">
