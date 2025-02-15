@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 import {toast, Toaster} from 'vue-sonner'
+import Button from "@/components/ui/button/Button.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -268,12 +269,11 @@ onMounted(() => {
 
           <!-- Submit Button -->
           <div class="pt-4">
-            <button
+            <Button
               type="submit"
-              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
             >
               Update Location
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -308,18 +308,16 @@ onMounted(() => {
 
         <!-- Modal actions -->
         <div class="mt-6 flex justify-end space-x-3">
-          <button
+          <Button
             @click="closeModal"
-            class="inline-flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             @click="saveModalValue"
-            class="inline-flex justify-center rounded-lg border border-transparent bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
           >
             Save Coordinates
-          </button>
+          </Button>
         </div>
       </div>
     </div>

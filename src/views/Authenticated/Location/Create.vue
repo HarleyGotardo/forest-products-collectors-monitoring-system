@@ -11,6 +11,9 @@ import { useRouter } from "vue-router";
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
+import Button from "@/components/ui/button/Button.vue";
+import Input from "@/components/ui/input/Input.vue";
+import Label from "@/components/ui/label/Label.vue";
 
 const router = useRouter();
 const name = ref(SeparatorConstant.EMPTY_STRING);
@@ -221,29 +224,27 @@ const prevPage = () => {
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <!-- Location Name -->
       <div>
-        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+        <Label for="name">
           Location Name
-        </label>
-        <input
+        </Label>
+        <Input
           id="name"
           v-model="name"
           type="text"
-          class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
           placeholder="Enter location name"
         />
       </div>
 
       <!-- Coordinates -->
       <div>
-        <label for="coordinates" class="block text-sm font-medium text-gray-700 mb-1">
+        <Label for="coordinates" >
           Coordinates
-        </label>
+        </Label>
         <div class="relative">
-          <input
+          <Input
             id="coordinates"
             type="text"
             readonly
-            class="block w-full rounded-lg border-gray-300 bg-gray-50 pr-10 cursor-pointer hover:bg-gray-100 transition-colors sm:text-sm"
             @click="openModal('coordinates')"
             v-model="coordinates"
             placeholder="Click to set coordinates"
@@ -258,15 +259,14 @@ const prevPage = () => {
 
       <!-- Forest Products -->
       <div>
-        <label for="forest-products" class="block text-sm font-medium text-gray-700 mb-1">
+        <Label for="forest-products">
           Forest Products
-        </label>
+        </Label>
         <div class="relative">
-          <input
+          <Input
             id="forest-products"
             type="text"
             readonly
-            class="block w-full rounded-lg border-gray-300 bg-gray-50 pr-10 cursor-pointer hover:bg-gray-100 transition-colors sm:text-sm"
             @click="openModal('forest-products')"
             value="Select Forest Products"
             placeholder="Click to select products"
@@ -281,15 +281,15 @@ const prevPage = () => {
 
       <!-- Submit Button -->
       <div class="flex justify-end">
-        <button
+        <Button
           type="submit"
-          class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           Create Location
-        </button>
+        </Button>
       </div>
     </form>
   </div>
@@ -336,18 +336,17 @@ const prevPage = () => {
                      :key="product.id" 
                      class="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
                   <div class="flex items-center space-x-3">
-                    <input
+                    <Input
                       type="checkbox"
                       :id="`product-${product.id}`"
                       :value="product"
                       v-model="selectedForestProducts"
-                      class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                     />
-                    <label :for="`product-${product.id}`" class="text-sm font-medium text-gray-700">
+                    <Label :for="`product-${product.id}`" >
                       {{ product.name }}
-                    </label>
+                    </Label>
                   </div>
-                  <input
+                  <Input
                     v-if="selectedForestProducts.includes(product)"
                     type="number"
                     v-model="product.quantity"

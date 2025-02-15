@@ -11,6 +11,19 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import locationPeek from '@/assets/location-peek.png';
 import {toast, Toaster} from 'vue-sonner';
+import Button from "@/components/ui/button/Button.vue";
+import Input from "@/components/ui/input/Input.vue";
+import Label from "@/components/ui/label/Label.vue";
+import Textarea from "@/components/ui/textarea/Textarea.vue";
+import 
+{
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Fix for Leaflet default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -236,76 +249,80 @@ onMounted(() => {
     <form @submit.prevent="handleSubmit" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-6 space-y-4">
       <!-- Name input -->
       <div>
-        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-        <input
+        <Label for="name">Name</Label>
+        <Input
           id="name"
           v-model="name"
           type="text"
+          class="mt-1"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
 
       <!-- Description input -->
       <div>
-        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-        <textarea
+        <Label for="description">Description</Label>
+        <Textarea
           id="description"
           v-model="description"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-        ></textarea>
+          class="mt-1"
+        ></Textarea>
       </div>
 
       <!-- Type select -->
       <div>
-        <label for="type" class="block text-sm font-medium text-gray-700">Type (Timber, Non-Timber)</label>
-        <select
-          id="type"
-          v-model="type"
-          required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-        >
-          <option value="Timber">Timber</option>
-          <option value="Non-Timber">Non-Timber</option>
-        </select>
+        <Label for="type">Type (Timber, Non-Timber)</Label>
+        <Select v-model="type" required>
+          <SelectTrigger class="mt-1">
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="Timber">Timber</SelectItem>
+              <SelectItem value="Non-Timber">Non-Timber</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       <!-- Quantity input -->
       <div>
-        <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
-        <input
+        <Label for="quantity">Quantity</Label>
+        <Input
           id="quantity"
           v-model="quantity"
           type="number"
+          class="mt-1"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
 
       <!-- Measurement Unit select -->
       <div>
-        <label for="measurementUnit" class="block text-sm font-medium text-gray-700">Measurement Unit</label>
-        <select
-          id="measurementUnit"
-          v-model="selectedMeasurementUnit"
-          required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-        >
-          <option v-for="unit in measurementUnits" :key="unit.id" :value="unit.id">
-            {{ unit.unit_name }}
-          </option>
-        </select>
+        <Label for="measurementUnit">Measurement Unit</Label>
+        <Select v-model="selectedMeasurementUnit" required>
+          <SelectTrigger class="mt-1">
+            <SelectValue placeholder="Select measurement unit" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem v-for="unit in measurementUnits" :key="unit.id" :value="unit.id">
+          {{ unit.unit_name }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       <!-- Image input -->
       <div>
-        <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
-        <input
+        <Label for="image">Image</Label>
+        <Input
           id="image"
           type="file"
           @change="handleImageChange"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          class="mt-1"
         />
       </div>
 
@@ -338,12 +355,11 @@ onMounted(() => {
 
       <!-- Submit button -->
       <div class="flex justify-end">
-        <button
+        <Button
           type="submit"
-          class="px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
         >
-          Create
-        </button>
+          + Create
+        </Button>
       </div>
     </form>
 
@@ -413,15 +429,12 @@ onMounted(() => {
 
         <!-- Modal Footer -->
         <footer class="mt-8 flex justify-end">
-          <button
+          <Button
             type="button"
             @click="showLocationModal = false"
-            class="px-6 py-2.5 bg-gray-100 text-gray-800 font-medium rounded-lg
-                   hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300
-                   transition-colors"
           >
             Done
-          </button>
+          </Button>
         </footer>
       </div>
     </div>
