@@ -231,6 +231,7 @@ const prevPage = () => {
           id="name"
           v-model="name"
           type="text"
+          class="mt-1"
           placeholder="Enter location name"
         />
       </div>
@@ -246,6 +247,7 @@ const prevPage = () => {
             type="text"
             readonly
             @click="openModal('coordinates')"
+            class="mt-1"
             v-model="coordinates"
             placeholder="Click to set coordinates"
           />
@@ -267,6 +269,7 @@ const prevPage = () => {
             id="forest-products"
             type="text"
             readonly
+            class="mt-1"
             @click="openModal('forest-products')"
             value="Select Forest Products"
             placeholder="Click to select products"

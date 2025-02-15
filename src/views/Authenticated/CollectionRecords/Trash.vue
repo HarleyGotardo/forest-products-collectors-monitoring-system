@@ -152,7 +152,29 @@ watch(currentPage, () => {
 
 <template>
   <div class="max-w-7xl mx-auto p-6">
-    <h2 class="text-2xl font-bold mb-4 ml-14 mt-1">Forest Products Collection Records - Recycle Bin</h2>
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Deleted Forest Product Collection Records</h2>
+        <p class="mt-1 text-sm text-gray-500">View and manage all collection records in the recycle bin</p>
+      </div>
+      <div class="flex space-x-4">
+        <div class="relative">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search records..."
+            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+          />
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Error Alert -->
     <div v-if="error" class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg">
@@ -199,22 +221,22 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₱{{ record.total_cost }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.created_by_name }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div class="flex items-center justify-end space-x-3">
-                    <button 
-                      @click.stop="restoreRecord(record.id)" 
-                      class="p-1 rounded-lg hover:bg-green-50 transition-colors duration-200 text-green-600 hover:text-green-700">
-                      <img src="@/assets/restore.png" alt="Restore" class="w-5 h-5" />
-                    </button>
-                    <button 
-                      @click.stop="deleteRecordPermanently(record.id)"
-                      class="p-1 rounded-lg hover:bg-red-50 transition-colors duration-200 text-red-600 hover:text-red-700"
-                    >
-                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
+                <div class="flex items-center justify-end space-x-3">
+                  <button 
+                    @click.stop="restoreRecord(record.id)" 
+                    class="p-1 rounded-lg hover:bg-green-50 transition-colors duration-200 text-green-600 hover:text-green-700">
+                    <img src="@/assets/restore.png" alt="Restore" class="w-5 h-5" />
+                  </button>
+                  <button 
+                    @click.stop="deleteRecordPermanently(record.id)"
+                    class="p-1 rounded-lg hover:bg-red-50 transition-colors duration-200 text-red-600 hover:text-red-700"
+                  >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
