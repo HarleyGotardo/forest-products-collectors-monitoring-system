@@ -15,6 +15,17 @@ const handleImageChange = (event) => {
   newProfileImage.value = event.target.files[0]
 }
 
+const handleLogout = async () => {
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    console.error('Error logging out:', error)
+  } else {
+    setTimeout(() => {
+      router.push({ name: 'Index' })
+    }, 2000) // 1 second delay
+  }
+}
+
 const handleImageSubmit = async () => {
   if (!newProfileImage.value) {
     toast.error('Please select an image', { duration: 3000 })

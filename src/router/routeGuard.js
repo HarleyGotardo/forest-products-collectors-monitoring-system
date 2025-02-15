@@ -85,8 +85,15 @@ const getUser = () => {
   return user.value
 }
 
+const getUserRole = () => {
+  if (user.value && user.value.role) {
+    return user.value.role
+  }
+  return ''
+}
+
 // Fetch user details and subscribe to changes when the module is loaded
 fetchUserDetails()
 subscribeToUserChanges()
 
-export { getUser, user, getName, fetchUserDetails, subscribeToUserChanges, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin }
+export { getUser, user, getName, fetchUserDetails, subscribeToUserChanges, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin, getUserRole }

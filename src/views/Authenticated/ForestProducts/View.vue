@@ -73,7 +73,7 @@ const updateLocationQuantity = async () => {
 
 const deleteLocation = async (locationId) => {
   const result = await Swal.fire({
-    title: 'Are you sure?',
+    title: 'Delete Location?',
     text: 'Delete this location of the forest product?',
     icon: 'question',
     showCancelButton: true,
@@ -738,7 +738,7 @@ onMounted(() => {
                 </div>
                 <div class="mt-3 w-full sm:mt-0 sm:ml-4">
                   <h3 class="text-lg font-medium leading-6 text-gray-900">
-                    Edit Location Quantity
+                    Edit Forest Product's Quantity in this Location
                   </h3>
                   <div class="mt-4">
                     <input

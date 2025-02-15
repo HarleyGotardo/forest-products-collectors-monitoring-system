@@ -10,7 +10,7 @@ import Locations from '@/components/SideBarItems/Locations.vue'
 import defaultProfileImage from '@/assets/profile.png'
 import logoutIcon from '@/assets/logout.png'
 import { supabase } from '@/lib/supabaseClient'
-import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges } from '@/router/routeGuard'
+import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
 import { Toaster } from 'vue-sonner'
 
 const router = useRouter()
@@ -245,34 +245,36 @@ onMounted(async () => {
           </Records>
         </nav>
 
-        <!-- Enhanced User Profile -->
-<div class="flex items-center justify-between gap-3 p-3 border-t border-gray-100 bg-gray-50">
-  <router-link
-    to="/authenticated/profile"
-    class="flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 group active:scale-95"
-    active-class="bg-green-100"
-  >
-    <img 
-      :src="profilePictureUrl" 
-      alt="Profile Picture" 
-      class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all"
-    />
-    <div>
-      <p class="font-medium text-gray-800">{{ getName() }}</p>
-    </div>
-  </router-link>
-  <SweetAlert
-    title="Confirm Logout"
-    text="Are you sure you want to log out?"
-    icon="warning"
-    confirmButtonText="Log Out"
-    @confirmed="handleLogout"
-  >
-    <button class="">
-      <img src="@/assets/logout.png" alt="Logout">
-    </button>
-  </SweetAlert>
-</div>
+        <div class="flex items-center justify-between gap-3 p-3 border-t border-gray-100 ">
+    <router-link
+      to="/authenticated/profile"
+      class="flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 group active:scale-95"
+      active-class="bg-green-100"
+    >
+      <div class="flex flex-col items-center">
+        <img 
+          :src="profilePictureUrl" 
+          alt="Profile Picture" 
+          class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all"
+        />
+        <p class="font-medium text-gray-800 mt-2">{{ getName() }}</p>
+        <p class="text-sm text-gray-500">{{ getUserRole() }}</p>
+      </div>
+    </router-link>
+    <SweetAlert
+      title="Confirm Logout"
+      text="Are you sure you want to log out?"
+      icon="warning"
+      confirmButtonText="Log Out"
+      @confirmed="handleLogout"
+    >
+      <button class="p-2 transition-all rounded-lg">
+        <img src="@/assets/logout.png" alt="Logout" class="w-6 h-6" />
+      </button>
+      <p class="text-black font-thin">Log Out</p>
+    </SweetAlert>
+  </div>
+
       </div>
     </aside>
 
