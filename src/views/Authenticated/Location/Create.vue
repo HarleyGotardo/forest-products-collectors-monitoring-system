@@ -14,6 +14,17 @@ import { toast, Toaster } from 'vue-sonner'
 import Button from "@/components/ui/button/Button.vue";
 import Input from "@/components/ui/input/Input.vue";
 import Label from "@/components/ui/label/Label.vue";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const router = useRouter();
 const name = ref(SeparatorConstant.EMPTY_STRING);
@@ -24,25 +35,22 @@ const modalValue = ref(null);
 let coordinatesObj = ref(null);
 const coordinates = ref("");
 let mapInstance = null;
-const forestProducts = ref([]);
-const selectedForestProducts = ref([]);
-const currentPage = ref(1);
-const itemsPerPage = 7;
+const existingLocations = ref([]);
 
-const fetchForestProducts = async () => {
+const fetchLocations = async () => {
   const { data, error } = await supabase
-    .from('forest_products')
+    .from('location')
     .select('*');
 
   if (error) {
     toast.error(error.message, { duration: 3000 });
   } else {
-    forestProducts.value = data;
+    existingLocations.value = data;
   }
 };
 
 onMounted(() => {
-  fetchForestProducts();
+  fetchLocations();
 });
 
 const handleSubmit = async () => {
@@ -60,33 +68,16 @@ const handleSubmit = async () => {
     updated_at: formattedDate,
   };
 
-  const { data: locationData, error: insertError } = await supabase
+  const { error: insertError } = await supabase
     .from('location')
-    .insert([payload])
-    .select();
+    .insert([payload]);
 
   if (insertError) {
     error.value = insertError.message
     toast.error(insertError.message, { duration: 3000 })
   } else {
-    const locationId = locationData[0].id;
-    const fpAndLocationPayload = selectedForestProducts.value.map(fp => ({
-      forest_product_id: fp.id,
-      location_id: locationId,
-      quantity: fp.quantity,
-    }));
-
-    const { error: fpAndLocationError } = await supabase
-      .from('fp_and_location')
-      .insert(fpAndLocationPayload);
-
-    if (fpAndLocationError) {
-      error.value = fpAndLocationError.message;
-      toast.error(fpAndLocationError.message, { duration: 3000 });
-    } else {
-      toast.success('Location and forest products saved successfully', { duration: 2000 });
-      router.push('/authenticated/locations');
-    }
+    toast.success('Location saved successfully', { duration: 2000 });
+    router.push('/authenticated/locations');
   }
 };
 
@@ -144,11 +135,31 @@ const initializeMap = () => {
     maxZoom: CommonConstant.MAP_ZOOM_LEVEL.NINETEEN,
   }).addTo(mapInstance);
 
+  // Add existing location markers
+  existingLocations.value.forEach(location => {
+    L.marker([location.latitude, location.longitude])
+      .addTo(mapInstance)
+      .bindPopup(location.name)
+      .on('click', () => {
+        toast.error('A location already exists at these coordinates', { duration: 3000 });
+      });
+  });
+
   mapInstance.on("click", (mapEvent) => {
     const latLngObj = {
       lat: mapEvent.latlng.lat,
       lng: mapEvent.latlng.lng,
     };
+
+    // Check if the clicked coordinates match any existing location
+    const isDuplicateLocation = existingLocations.value.some(location => 
+      location.latitude === latLngObj.lat && location.longitude === latLngObj.lng
+    );
+
+    if (isDuplicateLocation) {
+      toast.error('A location already exists at these coordinates', { duration: 3000 });
+      return;
+    }
 
     if (currentMark) {
       mapInstance.removeLayer(currentMark);
@@ -177,27 +188,9 @@ const initializeMap = () => {
   });
 };
 
-const paginatedForestProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return forestProducts.value.slice(start, end);
+const isFormValid = computed(() => {
+  return name.value && coordinates.value;
 });
-
-const totalPages = computed(() => {
-  return Math.ceil(forestProducts.value.length / itemsPerPage);
-});
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-  }
-};
-
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
-};
 </script>
 <template>
   <div class="max-w-2xl mx-auto p-8 bg-white rounded-xl shadow-lg">
@@ -221,7 +214,7 @@ const prevPage = () => {
     </div>
 
     <!-- Form -->
-    <form @submit.prevent="handleSubmit" class="space-y-6">
+    <form @submit.prevent="showConfirmationDialog" class="space-y-6">
       <!-- Location Name -->
       <div>
         <Label for="name">
@@ -259,40 +252,34 @@ const prevPage = () => {
         </div>
       </div>
 
-      <!-- Forest Products -->
-      <div>
-        <Label for="forest-products">
-          Forest Products
-        </Label>
-        <div class="relative">
-          <Input
-            id="forest-products"
-            type="text"
-            readonly
-            class="mt-1"
-            @click="openModal('forest-products')"
-            value="Select Forest Products"
-            placeholder="Click to select products"
-          />
-          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
       <!-- Submit Button -->
       <div class="flex justify-end">
-        <Button
-          type="submit"
-
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          Create Location
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger>
+            <button
+              type="button"
+              :disabled="!isFormValid"
+              class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 active:bg-green-700 focus:outline-none focus:border-green-700 focus:ring focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed transition ease-in-out duration-150"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Create Location
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Creation</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to create this location?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="handleSubmit">Create</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </form>
   </div>
@@ -330,57 +317,6 @@ const prevPage = () => {
             <!-- Map View -->
             <div v-if="modalField === 'coordinates'" class="mt-4">
               <div id="map" class="h-[500px] w-full rounded-lg border border-gray-200 shadow-inner"></div>
-            </div>
-
-            <!-- Forest Products Selection -->
-            <div v-else-if="modalField === 'forest-products'" class="mt-4">
-              <div class="space-y-4 max-h-[400px] overflow-y-auto px-2">
-                <div v-for="product in paginatedForestProducts" 
-                     :key="product.id" 
-                     class="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
-                  <div class="flex items-center space-x-3">
-                    <Input
-                      type="checkbox"
-                      :id="`product-${product.id}`"
-                      :value="product"
-                      v-model="selectedForestProducts"
-                    />
-                    <Label :for="`product-${product.id}`" >
-                      {{ product.name }}
-                    </Label>
-                  </div>
-                  <Input
-                    v-if="selectedForestProducts.includes(product)"
-                    type="number"
-                    v-model="product.quantity"
-                    placeholder="Quantity"
-                    class="w-24 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              <!-- Pagination -->
-              <div class="flex items-center justify-between mt-4 border-t border-gray-200 pt-4">
-                <button
-                  @click="prevPage"
-                  :disabled="currentPage === 1"
-                  :class="['px-4 py-2 rounded-md text-sm font-medium', 
-                          currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300']"
-                >
-                  Previous
-                </button>
-                <span class="text-sm text-gray-700">
-                  Page {{ currentPage }} of {{ totalPages }}
-                </span>
-                <button
-                  @click="nextPage"
-                  :disabled="currentPage === totalPages"
-                  :class="['px-4 py-2 rounded-md text-sm font-medium',
-                          currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300']"
-                >
-                  Next
-                </button>
-              </div>
             </div>
           </div>
         </div>

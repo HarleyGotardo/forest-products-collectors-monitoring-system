@@ -24,6 +24,17 @@ import
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 // Fix for Leaflet default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -41,7 +52,6 @@ const router = useRouter();
 const name = ref(SeparatorConstant.EMPTY_STRING);
 const description = ref(SeparatorConstant.EMPTY_STRING);
 const type = ref(CommonConstant.SINGLE_STRING.T);
-const quantity = ref(SeparatorConstant.EMPTY_STRING);
 const price_based_on_measurement_unit = ref(SeparatorConstant.EMPTY_STRING);
 const image = ref(null);
 const measurementUnits = ref(null);
@@ -157,7 +167,6 @@ const handleSubmit = async () => {
       name: name.value,
       description: description.value,
       type: type.value,
-      quantity: quantity.value,
       price_based_on_measurement_unit: isNaN(price) ? null : price,
       image_url: imageUrl, // Store image URL
       measurement_unit_id: selectedMeasurementUnit.value,
@@ -220,6 +229,10 @@ const selectedLocationsNote = computed(() => {
   return selectedLocations.value.map(location => location.name).join(", ");
 });
 
+const isFormValid = computed(() => {
+  return name.value && description.value && type.value && selectedMeasurementUnit.value && price_based_on_measurement_unit.value && selectedLocations.value.length > 0;
+});
+
 onMounted(() => {
   fetchLocations();
 });
@@ -246,7 +259,7 @@ onMounted(() => {
     </div>
 
     <!-- Form -->
-    <form @submit.prevent="handleSubmit" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-6 space-y-4">
+    <form @submit.prevent="showConfirmationDialog" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-6 space-y-4">
       <!-- Name input -->
       <div>
         <Label for="name">Name</Label>
@@ -286,18 +299,6 @@ onMounted(() => {
         </Select>
       </div>
 
-      <!-- Quantity input -->
-      <div>
-        <Label for="quantity">Quantity</Label>
-        <Input
-          id="quantity"
-          v-model="quantity"
-          type="number"
-          class="mt-1"
-          required
-        />
-      </div>
-
       <!-- Measurement Unit select -->
       <div>
         <Label for="measurementUnit">Measurement Unit</Label>
@@ -308,7 +309,7 @@ onMounted(() => {
           <SelectContent>
             <SelectGroup>
               <SelectItem v-for="unit in measurementUnits" :key="unit.id" :value="unit.id">
-          {{ unit.unit_name }}
+                {{ unit.unit_name }}
               </SelectItem>
             </SelectGroup>
           </SelectContent>
@@ -337,8 +338,8 @@ onMounted(() => {
           Select location(s)
         </button>
         <p v-if="selectedLocationsNote" class="mt-2 text-sm text-gray-500">
-    <strong>Selected Locations:</strong> {{ selectedLocationsNote }}
-    </p>
+          <strong>Selected Locations:</strong> {{ selectedLocationsNote }}
+        </p>
       </div>
 
       <!-- Price input -->
@@ -355,90 +356,108 @@ onMounted(() => {
 
       <!-- Submit button -->
       <div class="flex justify-end">
-        <Button
-          type="submit"
-        >
-          + Create
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger>
+            <button 
+              type="button"
+              :disabled="!isFormValid"
+              class="disabled:opacity-50 disabled:cursor-not-allowed bg-black text-white font-semibold py-2 px-4 rounded-md shadow hover:bg-green-700 transition-colors duration-300"
+            >
+              + Create
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Creation</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to create this forest product?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="handleSubmit">Create</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </form>
 
     <!-- Location Modal -->
     <div v-if="showLocationModal" class="fixed inset-0 z-50 overflow-y-auto">
-    <!-- Modal Backdrop -->
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+      <!-- Modal Backdrop -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-    <!-- Modal Container -->
-    <div class="flex items-center justify-center min-h-screen px-4 py-8">
-      <!-- Modal Content -->
-      <div class="relative bg-white rounded-xl shadow-xl p-8 max-w-4xl w-full">
-        <!-- Modal Header -->
-        <header class="mb-6">
-          <h3 class="text-xl font-semibold text-gray-900">
-            Select Location(s)
-          </h3>
-        </header>
+      <!-- Modal Container -->
+      <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-xl shadow-xl p-8 max-w-4xl w-full">
+          <!-- Modal Header -->
+          <header class="mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">
+              Select Location(s)
+            </h3>
+          </header>
 
-<!-- Location List -->
-<div class="space-y-4 max-h-96 overflow-y-auto">
-  <div 
-    v-for="location in locations" 
-    :key="location.id" 
-    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-  >
-    <!-- Checkbox and Label -->
-    <div class="flex items-center flex-1">
-      <input
-        type="checkbox"
-        :id="`location-${location.id}`"
-        :value="location"
-        v-model="selectedLocations"
-        class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-      />
-      <label 
-        :for="`location-${location.id}`" 
-        class="ml-3 text-gray-700 font-medium"
-      >
-        {{ location.name }}
-        <span class="text-gray-500 text-sm ml-2">
-          ({{ location.latitude }}, {{ location.longitude }})
-        </span>
-      </label>
-    </div>
+          <!-- Location List -->
+          <div class="space-y-4 max-h-96 overflow-y-auto">
+            <div 
+              v-for="location in locations" 
+              :key="location.id" 
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <!-- Checkbox and Label -->
+              <div class="flex items-center flex-1">
+                <input
+                  type="checkbox"
+                  :id="`location-${location.id}`"
+                  :value="location"
+                  v-model="selectedLocations"
+                  class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <label 
+                  :for="`location-${location.id}`" 
+                  class="ml-3 text-gray-700 font-medium"
+                >
+                  {{ location.name }}
+                  <span class="text-gray-500 text-sm ml-2">
+                    ({{ location.latitude }}, {{ location.longitude }})
+                  </span>
+                </label>
+              </div>
 
-    <!-- Quantity Input -->
-    <div class="ml-4">
-      <input
-        type="number"
-        v-model="location.quantity"
-        placeholder="Quantity"
-        class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-      />
-    </div>
+              <!-- Quantity Input -->
+              <div class="ml-4">
+                <input
+                  type="number"
+                  v-model="location.quantity"
+                  placeholder="Quantity"
+                  class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
 
-    <!-- Visualize Button -->
-    <button
-      type="button"
-      @click="visualizeLocation(location)"
-      class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-    >
-      <img :src="locationPeek" alt="">
-    </button>
-  </div>
-</div>
+              <!-- Visualize Button -->
+              <button
+                type="button"
+                @click="visualizeLocation(location)"
+                class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+              >
+                <img :src="locationPeek" alt="">
+              </button>
+            </div>
+          </div>
 
-        <!-- Modal Footer -->
-        <footer class="mt-8 flex justify-end">
-          <Button
-            type="button"
-            @click="showLocationModal = false"
-          >
-            Done
-          </Button>
-        </footer>
+          <!-- Modal Footer -->
+          <footer class="mt-8 flex justify-end">
+            <Button
+              type="button"
+              @click="showLocationModal = false"
+            >
+              Done
+            </Button>
+          </footer>
+        </div>
       </div>
     </div>
-  </div>
 
     <!-- Map Modal -->
     <div v-if="showMapModal" class="fixed inset-0 z-50 overflow-y-auto">

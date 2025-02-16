@@ -1,9 +1,19 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
-import Swal from 'sweetalert2'
 import { toast } from 'vue-sonner'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const collectionRecords = ref([])
 const currentPage = ref(1)
@@ -85,54 +95,30 @@ const prevPage = () => {
 }
 
 const restoreRecord = async (recordId) => {
-  const result = await Swal.fire({
-    title: 'Restore Collection Record?',
-    text: "This collection record will be restored.",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Restore'
-  })
+  const { error: updateError } = await supabase
+    .from('collection_records')
+    .update({ deleted_at: null })
+    .eq('id', recordId)
 
-  if (result.isConfirmed) {
-    const { error: updateError } = await supabase
-      .from('collection_records')
-      .update({ deleted_at: null })
-      .eq('id', recordId)
-
-    if (updateError) {
-      toast.error(updateError.message, { duration: 3000 })
-    } else {
-      toast.success('Collection record restored successfully', { duration: 3000 })
-      fetchDeletedCollectionRecords()
-    }
+  if (updateError) {
+    toast.error(updateError.message, { duration: 3000 })
+  } else {
+    toast.success('Collection record restored successfully', { duration: 3000 })
+    fetchDeletedCollectionRecords()
   }
 }
 
 const deleteRecordPermanently = async (recordId) => {
-  const result = await Swal.fire({
-    title: 'Delete Collection Record Permanently?',
-    text: "This action cannot be undone.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Delete'
-  })
+  const { error: deleteError } = await supabase
+    .from('collection_records')
+    .delete()
+    .eq('id', recordId)
 
-  if (result.isConfirmed) {
-    const { error: deleteError } = await supabase
-      .from('collection_records')
-      .delete()
-      .eq('id', recordId)
-
-    if (deleteError) {
-      toast.error(deleteError.message, { duration: 3000 })
-    } else {
-      toast.success('Collection record deleted permanently', { duration: 3000 })
-      fetchDeletedCollectionRecords()
-    }
+  if (deleteError) {
+    toast.error(deleteError.message, { duration: 3000 })
+  } else {
+    toast.success('Collection record deleted permanently', { duration: 3000 })
+    fetchDeletedCollectionRecords()
   }
 }
 
@@ -222,20 +208,47 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.created_by_name }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <div class="flex items-center justify-end space-x-3">
-                  <button 
-                    @click.stop="restoreRecord(record.id)" 
-                    class="p-1 rounded-lg hover:bg-green-50 transition-colors duration-200 text-green-600 hover:text-green-700">
-                    <img src="@/assets/restore.png" alt="Restore" class="w-5 h-5" />
-                  </button>
-                  <button 
-                    @click.stop="deleteRecordPermanently(record.id)"
-                    class="p-1 rounded-lg hover:bg-red-50 transition-colors duration-200 text-red-600 hover:text-red-700"
-                  >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  <AlertDialog>
+                    <AlertDialogTrigger>
+                      <button class="p-1 rounded-lg hover:bg-green-50 transition-colors duration-200 text-green-600 hover:text-green-700">
+                        <img src="@/assets/restore.png" alt="Restore" class="w-5 h-5" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Restore Collection Record?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This collection record will be restored.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="restoreRecord(record.id)">Restore</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <AlertDialog>
+                    <AlertDialogTrigger>
+                      <button class="p-1 rounded-lg hover:bg-red-50 transition-colors duration-200 text-red-600 hover:text-red-700">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Collection Record Permanently?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="deleteRecordPermanently(record.id)">Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </td>
             </tr>
