@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
-import SweetAlert from '@/components/SweetAlert.vue'
 
 const router = useRouter()
 const email = ref('')

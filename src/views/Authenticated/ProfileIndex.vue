@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
-import Swal from 'sweetalert2'
 import { toast, Toaster } from 'vue-sonner'
 import { format } from 'date-fns'
 import defaultProfileImage from '@/assets/profile.png'
