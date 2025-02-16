@@ -47,16 +47,17 @@
           <thead class="bg-gray-50">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">ID</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">Created At</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">Date</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">User</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">Forest Product</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">Total Cost</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">Created By</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">Processed By</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium  uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="paginatedRecords.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center">
+              <td colspan="7" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
                   <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -73,6 +74,32 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm ">{{ record.forest_product.name }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm ">₱{{ record.total_cost }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm ">{{ record.created_by_name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
+                <div class="flex items-center justify-end space-x-3">
+                  <AlertDialog>
+                    <AlertDialogTrigger>
+                      <Button v-if="isFPUAdmin || isForestRanger">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This collection record will be transferred to the recycle bin.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="deleteCollectionRecord(record.id)">Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -115,6 +142,17 @@ import { toast } from 'vue-sonner'
 import { isFPUAdmin, isForestRanger } from '@/router/routeGuard'
 import router from '@/router'
 import Button from '@/components/ui/button/Button.vue'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const collectionRecords = ref([])
 const currentPage = ref(1)
@@ -197,6 +235,21 @@ const prevPage = () => {
 
 const createCollectionRecord = () => {
   router.push('/authenticated/collection-records/create')
+}
+
+const deleteCollectionRecord = async (recordId) => {
+  const currentDate = new Date().toISOString()
+  const { error: deleteError } = await supabase
+    .from('collection_records')
+    .update({ deleted_at: currentDate })
+    .eq('id', recordId)
+
+  if (deleteError) {
+    error.value = deleteError.message
+  } else {
+    fetchCollectionRecords()
+    toast.success('Collection record deleted successfully', { duration: 2000 })
+  }
 }
 
 onMounted(() => {
