@@ -5,13 +5,23 @@ import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
 import Records from '@/components/SideBarItems/Records.vue'
 import ForestProducts from '@/components/SideBarItems/ForestProducts.vue'
 import SystemUsers from '@/components/SideBarItems/SystemUsers.vue'
-import SweetAlert from '@/components/SweetAlert.vue'
 import Locations from '@/components/SideBarItems/Locations.vue'
 import defaultProfileImage from '@/assets/profile.png'
 import logoutIcon from '@/assets/logout.png'
 import { supabase } from '@/lib/supabaseClient'
 import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
 import { Toaster } from 'vue-sonner'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const router = useRouter()
 const activeDropdown = ref(null) // Track active dropdown
@@ -245,36 +255,42 @@ onMounted(async () => {
           </Records>
         </nav>
 
-        <div class="flex items-center justify-between gap-3 p-3 border-t border-gray-100 ">
-    <router-link
-      to="/authenticated/profile"
-      class="flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 group active:scale-95"
-      active-class="bg-green-100"
-    >
-      <div class="flex flex-col items-center">
-        <img 
-          :src="profilePictureUrl" 
-          alt="Profile Picture" 
-          class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all"
-        />
-        <p class="font-medium text-gray-800 mt-2">{{ getName() }}</p>
-        <p class="text-sm text-gray-500">{{ getUserRole() }}</p>
-      </div>
-    </router-link>
-    <SweetAlert
-      title="Confirm Logout"
-      text="Are you sure you want to log out?"
-      icon="warning"
-      confirmButtonText="Log Out"
-      @confirmed="handleLogout"
-    >
-      <button class="p-2 transition-all rounded-lg">
-        <img src="@/assets/logout.png" alt="Logout" class="w-6 h-6" />
-      </button>
-      <p class="text-black font-thin">Log Out</p>
-    </SweetAlert>
-  </div>
-
+        <div class="flex items-center justify-between gap-3 p-3 border-t bg-gray-50 shadow-xl border-gray-100 ">
+          <router-link
+            to="/authenticated/profile"
+            class="flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 group active:scale-95"
+            active-class="bg-green-100"
+          >
+            <div class="flex flex-col items-center rounded-lg">
+              <img 
+                :src="profilePictureUrl" 
+                alt="Profile Picture" 
+                class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all"
+              />
+              <p class="font-medium text-gray-800 mt-2">{{ getName() }}</p>
+              <p class="text-sm text-gray-500">{{ getUserRole() }}</p>
+            </div>
+          </router-link>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <button class="p-2 transition-all rounded-lg bg-gray-100 hover:bg-emerald-50 active:scale-95">
+                <img src="@/assets/logout.png" alt="Logout" class="w-6 h-6" />
+                </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to log out?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="handleLogout">Log Out</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
     </aside>
 
