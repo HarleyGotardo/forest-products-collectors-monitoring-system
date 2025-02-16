@@ -6,27 +6,27 @@ import { RouterNamesConstant } from "@/components/constants/routerNames.constant
 import { SeparatorConstant } from "@/components/constants/separators.constant";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { nextTick, ref, watch, onMounted } from "vue";
+import { nextTick, ref, watch, onMounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient'
-import Swal from 'sweetalert2'
-import {toast, Toaster} from 'vue-sonner'
+import { toast, Toaster } from 'vue-sonner'
 import Button from "@/components/ui/button/Button.vue";
 
 const router = useRouter();
 const route = useRoute();
 const locationId = route.params.id;
 const name = ref(SeparatorConstant.EMPTY_STRING);
+const originalName = ref(SeparatorConstant.EMPTY_STRING);
 const error = ref(null);
 const isModalOpen = ref(false);
 const modalField = ref(SeparatorConstant.EMPTY_STRING);
 const modalValue = ref(null);
-let coordinatesObj = ref(null);
+let coordinatesObj = ref({ lat: 0, lng: 0 });
+let originalCoordinatesObj = { lat: 0, lng: 0 };
 const coordinates = ref("");
 let mapInstance = null;
 const allLocations = ref([]); // Store all existing locations
-
 
 // Fix for the default icon issue
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -52,7 +52,9 @@ const fetchLocation = async () => {
     error.value = fetchError.message
   } else {
     name.value = data.name
+    originalName.value = data.name
     coordinatesObj.value = { lat: data.latitude, lng: data.longitude }
+    originalCoordinatesObj = { lat: data.latitude, lng: data.longitude }
     coordinates.value = `${data.latitude}, ${data.longitude}`
   }
 }
@@ -158,6 +160,7 @@ const initializeMap = () => {
         })
         .on('click', (e) => {
           e.originalEvent.stopPropagation();
+          toast.error('Cannot select an existing location marker');
         });
     }
   });
@@ -167,6 +170,16 @@ const initializeMap = () => {
       lat: mapEvent.latlng.lat,
       lng: mapEvent.latlng.lng,
     };
+
+    // Check if the clicked coordinates match any existing location
+    const isExistingLocation = allLocations.value.some(location => 
+      location.latitude === latLngObj.lat && location.longitude === latLngObj.lng
+    );
+
+    if (isExistingLocation) {
+      toast.error('Cannot select an existing location marker');
+      return;
+    }
 
     if (currentMark) {
       mapInstance.removeLayer(currentMark);
@@ -194,6 +207,12 @@ const initializeMap = () => {
     });
   });
 };
+
+const isFormChanged = computed(() => {
+  return name.value !== originalName.value || 
+         coordinatesObj.value.lat !== originalCoordinatesObj.lat || 
+         coordinatesObj.value.lng !== originalCoordinatesObj.lng;
+});
 
 onMounted(() => {
   fetchLocation();
@@ -271,6 +290,7 @@ onMounted(() => {
           <div class="pt-4">
             <Button
               type="submit"
+              :disabled="!isFormChanged"
             >
               Update Location
             </Button>

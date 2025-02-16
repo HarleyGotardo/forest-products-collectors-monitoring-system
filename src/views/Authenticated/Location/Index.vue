@@ -2,10 +2,20 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
-import Swal from 'sweetalert2'
-import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
-import {toast, Toaster} from 'vue-sonner'
+import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
+import { toast, Toaster } from 'vue-sonner'
 import Button from '@/components/ui/button/Button.vue';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const router = useRouter()
 const locations = ref([]) // Store all locations
@@ -14,6 +24,7 @@ const error = ref(null)
 const currentPage = ref(1)
 const itemsPerPage = 7
 const searchQuery = ref('')
+const locationToDelete = ref(null)
 
 const fetchAllLocations = async () => {
   let { data, error: fetchError } = await supabase
@@ -61,7 +72,8 @@ const prevPage = () => {
   }
 }
 
-const editLocation = (locationId) => {
+const editLocation = (locationId, event) => {
+  event.stopPropagation()
   router.push(`/authenticated/locations/${locationId}/edit`)
 }
 
@@ -73,31 +85,25 @@ const createLocation = () => {
   router.push('/authenticated/locations/create')
 }
 
-const deleteLocation = async (locationId) => {
-  const result = await Swal.fire({
-    title: 'Delete Location?',
-    text: "This location will be transferred to the recycle bin.",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Delete'
-  })
+const confirmDeleteLocation = (locationId) => {
+  locationToDelete.value = locationId
+}
 
-  if (result.isConfirmed) {
-    const currentDate = new Date().toISOString()
-    const { error: deleteError } = await supabase
-      .from('location')
-      .update({ deleted_at: currentDate })
-      .eq('id', locationId)
+const deleteLocation = async () => {
+  const locationId = locationToDelete.value
+  const currentDate = new Date().toISOString()
+  const { error: deleteError } = await supabase
+    .from('location')
+    .update({ deleted_at: currentDate })
+    .eq('id', locationId)
 
-    if (deleteError) {
-      error.value = deleteError.message
-    } else {
-      fetchAllLocations()
-      toast.success('Location deleted successfully', { duration: 2000 })
-    }
+  if (deleteError) {
+    error.value = deleteError.message
+  } else {
+    fetchAllLocations()
+    toast.success('Location deleted successfully', { duration: 2000 })
   }
+  locationToDelete.value = null
 }
 
 onMounted(() => {
@@ -114,6 +120,7 @@ watch(currentPage, () => {
   paginateLocations()
 })
 </script>
+
 <template>
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
@@ -210,25 +217,40 @@ watch(currentPage, () => {
                   </span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
                 <div class="flex items-center justify-end space-x-3">
                   <Button 
                     v-if="isFPUAdmin || isForestRanger"
-                    @click.stop="editLocation(location.id)">
+                    @click="editLocation(location.id, $event)">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </Button>
-                  <Button 
-                    v-if="isFPUAdmin || isForestRanger"
-                    @click.stop="deleteLocation(location.id)"
-                  >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger>
+                      <Button 
+                        v-if="isFPUAdmin || isForestRanger"
+                      >
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Location?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This location will be transferred to the recycle bin.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="deleteLocation">Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </td>
             </tr>
