@@ -2,9 +2,19 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
-import Swal from 'sweetalert2'
 import { toast, Toaster } from 'vue-sonner'
 import Button from '@/components/ui/button/Button.vue'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const router = useRouter()
 const locations = ref([]) // Store all deleted locations
@@ -65,54 +75,30 @@ const viewLocation = (locationId) => {
 }
 
 const restoreLocation = async (locationId) => {
-  const result = await Swal.fire({
-    title: 'Restore Location?',
-    text: "This location will be restored.",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Restore'
-  })
+  const { error: restoreError } = await supabase
+    .from('location')
+    .update({ deleted_at: null })
+    .eq('id', locationId)
 
-  if (result.isConfirmed) {
-    const { error: restoreError } = await supabase
-      .from('location')
-      .update({ deleted_at: null })
-      .eq('id', locationId)
-
-    if (restoreError) {
-      toast.error(restoreError.message, { duration: 3000 })
-    } else {
-      toast.success('Location restored successfully', { duration: 3000 })
-      fetchDeletedLocations()
-    }
+  if (restoreError) {
+    toast.error(restoreError.message, { duration: 3000 })
+  } else {
+    toast.success('Location restored successfully', { duration: 3000 })
+    fetchDeletedLocations()
   }
 }
 
 const deletePermanently = async (locationId) => {
-  const result = await Swal.fire({
-    title: 'Delete Location Permanently?',
-    text: "This action cannot be undone.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Delete'
-  })
+  const { error: deleteError } = await supabase
+    .from('location')
+    .delete()
+    .eq('id', locationId)
 
-  if (result.isConfirmed) {
-    const { error: deleteError } = await supabase
-      .from('location')
-      .delete()
-      .eq('id', locationId)
-
-    if (deleteError) {
-      toast.error(deleteError.message, { duration: 3000 })
-    } else {
-      toast.success('Location deleted permanently', { duration: 3000 })
-      fetchDeletedLocations()
-    }
+  if (deleteError) {
+    toast.error(deleteError.message, { duration: 3000 })
+  } else {
+    toast.success('Location deleted permanently', { duration: 3000 })
+    fetchDeletedLocations()
   }
 }
 
@@ -222,20 +208,47 @@ watch(currentPage, () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex items-center justify-end space-x-3">
-                  <Button 
-                    @click.stop="restoreLocation(location.id)" 
-                    >
-                    <img src="@/assets/restore2.png" alt="Restore" class="w-5 h-5" />
-                  </Button>
-                  <Button 
-                    @click.stop="deletePermanently(location.id)"
-                    
-                  >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button @click.stop>
+                        <img src="@/assets/restore2.png" alt="Restore" class="w-5 h-5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Restore Location?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to restore this location?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="restoreLocation(location.id)">Restore</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button @click.stop>
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Location Permanently?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="deletePermanently(location.id)">Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </td>
             </tr>
