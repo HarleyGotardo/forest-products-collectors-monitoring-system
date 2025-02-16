@@ -11,6 +11,7 @@ import SystemUsersIndex from '@/views/Authenticated/SystemUsers/Index.vue'
 import CollectionRecordsIndex from '@/views/Authenticated/CollectionRecords/Index.vue'
 import CollectionRecordsCreate from '@/views/Authenticated/CollectionRecords/Create.vue'
 import CollectionRecordsTrash from '@/views/Authenticated/CollectionRecords/Trash.vue'
+import CollectionRecordsView from '@/views/Authenticated/CollectionRecords/View.vue'
 import ProfileIndex from '@/views/Authenticated/ProfileIndex.vue'
 import LocationsIndex from '@/views/Authenticated/Location/Index.vue'
 import LocationsCreate from '@/views/Authenticated/Location/Create.vue'
@@ -100,6 +101,12 @@ const routes = [
         name: 'CollectionRecords',
         component: CollectionRecordsIndex,
         meta: { title: 'Collection Records - Nature Cart', requiresRole: [4, 2, 3, 1] }
+      },
+      {
+        path: 'collection-records/:id',
+        name: 'CollectionRecordsView',
+        component: CollectionRecordsView,
+        meta: { title: 'View Collection Record - Nature Cart', requiresRole: [4, 2, 3, 1] }
       },
       {
         path: 'collection-records/create',

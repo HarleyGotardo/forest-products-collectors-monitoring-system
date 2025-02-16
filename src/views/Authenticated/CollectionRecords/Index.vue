@@ -67,7 +67,7 @@
                 </div>
               </td>
             </tr>
-            <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+            <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer" @click="viewCollectionRecord(record.id)">
               <td class="px-6 py-4 whitespace-nowrap text-sm ">#{{ record.id }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm ">{{ record.formatted_created_at }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm ">{{ record.user_name }}</td>
@@ -250,6 +250,10 @@ const deleteCollectionRecord = async (recordId) => {
     fetchCollectionRecords()
     toast.success('Collection record deleted successfully', { duration: 2000 })
   }
+}
+
+const viewCollectionRecord = (recordId) => {
+  router.push({ name: 'CollectionRecordsView', params: { id: recordId } })
 }
 
 onMounted(() => {
