@@ -24,6 +24,7 @@
     "pinia-plugin-persistedstate": "^4.2.0",
     "qrcode": "^1.5.4",
     "radix-vue": "^1.9.14",
+    "react-icons": "^5.4.0",
     "sonner": "^1.7.4",
     "sweetalert": "^2.1.2",
     "sweetalert2": "^11.15.3",
