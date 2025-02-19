@@ -100,6 +100,11 @@ const handleSubmit = () => {
     return;
   }
 
+  if (quantity.value > selectedProduct.quantity) {
+    toast.error('Quantity exceeds available amount');
+    return;
+  }
+
   const totalCost = selectedProduct.price * quantity.value;
   const remainingQuantity = selectedProduct.quantity - quantity.value;
 
@@ -133,7 +138,6 @@ const confirmSubmit = async () => {
         forest_product_id: selectedForestProduct.value,
         total_cost: totalCost,
         created_by: user.id,
-        // fp_quantity_location_based: receiptDetails.value.currentQuantity,
         deducted_quantity: receiptDetails.value.deductedQuantity,
         remaining_quantity: receiptDetails.value.remainingQuantity,
         quantity_during_purchase: receiptDetails.value.currentQuantity,
@@ -141,7 +145,7 @@ const confirmSubmit = async () => {
         location_id: receiptDetails.value.locationId,
       }
     ])
-    .select();
+    .select('id');
 
   if (error) {
     console.error('Error creating collection record:', error);
@@ -153,8 +157,9 @@ const confirmSubmit = async () => {
       .from('fp_and_location')
       .update({ quantity: newQuantity })
       .eq('id', selectedProduct.id);
-
-    router.push('/authenticated/collection-records');
+    
+    const newRecordId = data[0].id;
+    router.push(`/authenticated/collection-records/${newRecordId}`);
     toast.success('Collection record created successfully');
   }
 };
@@ -192,8 +197,8 @@ onMounted(() => {
             </Select>
           </div>
 
-          <!-- Forest Product Selection -->
-          <div>
+            <!-- Forest Product Selection -->
+            <div>
             <Label for="forestProduct">Forest Product</Label>
             <Select v-model="selectedForestProduct">
               <SelectTrigger>
@@ -202,7 +207,7 @@ onMounted(() => {
               <SelectContent>
                 <SelectGroup>
                   <SelectItem v-for="product in forestProducts" :key="product.forest_product_id" :value="product.forest_product_id">
-                    {{ product.forest_product_name }} ({{ product.location_name }}) - ₱{{ product.price }}/{{ product.unit_name }}
+                    {{ product.forest_product_name }} ({{ product.location_name }}) - (₱{{ product.price }} per {{ product.unit_name }}) - {{ product.quantity }} {{ product.unit_name }}(s) Available
                   </SelectItem>
                 </SelectGroup>
               </SelectContent>
@@ -225,13 +230,13 @@ onMounted(() => {
           <!-- Submit Button -->
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button type="button" :disabled="!isFormComplete" @click="handleSubmit" class="w-full bg-green-500 text-white rounded-lg py-2">
+              <button type="button" :disabled="!isFormComplete" @click="handleSubmit" class="w-full bg-black hover:bg-gray-700 transition-all text-white rounded-lg py-2">
                 Create Collection Record
               </button>
             </AlertDialogTrigger>
             <AlertDialogContent v-if="receiptDetails">
               <AlertDialogHeader>
-                <AlertDialogTitle>Receipt</AlertDialogTitle>
+                <AlertDialogTitle>Invoice</AlertDialogTitle>
                 <AlertDialogDescription>
                   <Card>
                     <CardHeader>
