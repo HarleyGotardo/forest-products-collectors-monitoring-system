@@ -51,15 +51,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto px-8 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
     <!-- Error Alert -->
     <div 
       v-if="error" 
-      class="mb-8 p-4 bg-red-50 border-l-4 border-red-400 rounded-r-xl shadow-sm"
+      class="mb-4 sm:mb-8 p-3 sm:p-4 bg-red-50 border-l-4 border-red-400 rounded-r-xl shadow-sm"
     >
       <div class="flex items-center">
         <svg 
-          class="h-5 w-5 text-red-400 flex-shrink-0" 
+          class="h-4 w-4 sm:h-5 sm:w-5 text-red-400 flex-shrink-0" 
           viewBox="0 0 20 20" 
           fill="currentColor"
         >
@@ -69,28 +69,28 @@ onMounted(() => {
             clip-rule="evenodd"
           />
         </svg>
-        <p class="ml-3 text-red-700 font-medium">{{ error }}</p>
+        <p class="ml-2 sm:ml-3 text-sm sm:text-base text-red-700 font-medium">{{ error }}</p>
       </div>
     </div>
 
     <!-- User Details Card -->
     <div 
       v-if="user" 
-      class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
+      class="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
     >
       <!-- Card Header -->
-      <div class="px-8 py-6 border-b border-gray-100">
+      <div class="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100">
         <div class="flex items-center justify-between">
-          <h2 class="text-2xl font-bold text-gray-900">User Details</h2>
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">User Details</h2>
           <!-- Avatar -->
-          <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+          <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 flex items-center justify-center">
             <img 
               v-if="profilePictureUrl" 
               :src="profilePictureUrl" 
               alt="Profile Picture" 
-              class="h-12 w-12 rounded-full object-cover"
+              class="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover"
             />
-            <span v-else class="text-blue-600 font-medium text-lg">
+            <span v-else class="text-blue-600 font-medium text-base sm:text-lg">
               {{ user.first_name[0] }}{{ user.last_name[0] }}
             </span>
           </div>
@@ -98,46 +98,46 @@ onMounted(() => {
       </div>
 
       <!-- User Information Grid -->
-      <div class="p-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="p-4 sm:p-8">
+        <div class="grid grid-cols-1 gap-4 sm:gap-8">
           <!-- First Name -->
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-500 uppercase tracking-wider">
+          <div class="space-y-1 sm:space-y-2">
+            <label class="block text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
               First Name
             </label>
-            <p class="text-lg text-gray-900 font-medium">
+            <p class="text-base sm:text-lg text-gray-900 font-medium">
               {{ user.first_name }}
             </p>
           </div>
 
           <!-- Last Name -->
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-500 uppercase tracking-wider">
+          <div class="space-y-1 sm:space-y-2">
+            <label class="block text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
               Last Name
             </label>
-            <p class="text-lg text-gray-900 font-medium">
+            <p class="text-base sm:text-lg text-gray-900 font-medium">
               {{ user.last_name }}
             </p>
           </div>
 
           <!-- Email Address -->
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-500 uppercase tracking-wider">
+          <div class="space-y-1 sm:space-y-2">
+            <label class="block text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
               Email Address
             </label>
-            <p class="text-lg text-gray-900 font-medium">
+            <p class="text-base sm:text-lg text-gray-900 font-medium break-all">
               {{ user.email_address }}
             </p>
           </div>
 
           <!-- Role -->
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-500 uppercase tracking-wider">
+          <div class="space-y-1 sm:space-y-2">
+            <label class="block text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
               Role
             </label>
             <div class="flex items-center">
               <span 
-                class="px-4 py-1.5 rounded-full text-sm font-semibold
+                class="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold
                        bg-blue-100 text-blue-700"
               >
                 {{ user.role.name }}
