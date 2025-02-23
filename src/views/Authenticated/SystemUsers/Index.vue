@@ -1,10 +1,22 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
-import Swal from 'sweetalert2'
 import { toast, Toaster } from 'vue-sonner'
 import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
+const showApproveDialog = ref(false)
+const userToApprove = ref(null)
 const users = ref([])
 const unapprovedUsers = ref([])
 const roles = ref([])
@@ -125,33 +137,29 @@ const getProfilePictureUrl = (profilePicture) => {
 }
 
 const approveUser = async (userId) => {
-  const result = await Swal.fire({
-    title: 'Approve User?',
-    text: "Are you sure you want to approve this user?",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Approve'
-  })
-
-  if (result.isConfirmed) {
-    const currentDate = new Date()
-    const formattedDate = currentDate.toISOString().slice(0, 19).replace('T', ' ')
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ approval_flag: formattedDate })
-      .eq('id', userId)
-
-    if (error) {
-      toast.error('Error approving user.', error.message)
-    } else {
-      toast.success('User approved successfully.')
-      fetchUsers()
-    }
-  }
+  userToApprove.value = userId
+  showApproveDialog.value = true
 }
+
+const handleApproveConfirm = async () => {
+  const currentDate = new Date()
+  const formattedDate = currentDate.toISOString().slice(0, 19).replace('T', ' ')
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ approval_flag: formattedDate })
+    .eq('id', userToApprove.value)
+
+  if (error) {
+    toast.error('Error approving user.', error.message)
+  } else {
+    toast.success('User approved successfully.')
+    fetchUsers()
+  }
+  showApproveDialog.value = false
+  userToApprove.value = null
+}
+
 
 const nextPage = () => {
   if ((currentPage.value * itemsPerPage) < filteredUnapprovedUsers.value.length) {
@@ -439,17 +447,16 @@ onMounted(async () => {
                       <div class="block sm:hidden text-sm text-gray-600">{{ user.email_address }}</div>
                       <div class="block sm:hidden text-sm text-gray-600">{{ user.role.name }}</div>
                       <div class="block sm:hidden text-right text-sm font-medium">
-                      <button
-                        @click="approveUser(user.id)"
-                        class="px-3 sm:px-4 py-2 bg-green-100 text-black rounded-lg shadow-sm hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                      >
-                        <div class="flex items-center justify-center space-x-2">
-                        <p>
-                          Approve
-                        </p>
-                        <img src="@/assets/approve.png" alt="Approve Button" class="w-4 h-4" />
-                        </div>
-                      </button>
+                      <!-- Update both mobile and desktop approve buttons -->
+<button
+  @click="approveUser(user.id)"
+  class="px-3 sm:px-4 py-2 bg-green-100 text-black rounded-lg shadow-sm hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+>
+  <div class="flex items-center justify-center space-x-2">
+    <p>Approve</p>
+    <img src="@/assets/approve.png" alt="Approve Button" class="w-4 h-4" />
+  </div>
+</button>
                       </div>
                     </div>
                     </div>
@@ -512,4 +519,19 @@ onMounted(async () => {
       <Toaster/>
     </div>
   </div>
+  <!-- Alert Dialog -->
+<AlertDialog :open="showApproveDialog" @update:open="showApproveDialog = $event">
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Approve User?</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to approve this user?
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel @click="showApproveDialog = false">Cancel</AlertDialogCancel>
+      <AlertDialogAction @click="handleApproveConfirm">Approve</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
 </template>
