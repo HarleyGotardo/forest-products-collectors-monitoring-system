@@ -154,7 +154,7 @@ watch(selectedType, () => {
       <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Forest Products Collection Records</h2>
       <p class="mt-1 text-sm">View and manage all collection records</p>
       </div>
-      <div class="flex space-x-4">
+      <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
       <div class="relative flex-1 sm:flex-none">
         <input
         v-model="searchQuery"
@@ -165,24 +165,26 @@ watch(selectedType, () => {
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         </div>
       </div>
-      <select
+      <div class="flex space-x-4">
+        <select
         v-model="selectedType"
         class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
-      >
+        >
         <option value="">All Types</option>
         <option value="Timber">Timber</option>
         <option value="Non-Timber">Non-Timber</option>
-      </select>
-      <Button 
+        </select>
+        <Button 
         v-if="isForestRanger || isFPUAdmin"
         @click="createForestProduct"
-      >
+        >
         +
-      </Button>
+        </Button>
+      </div>
       </div>
     </div>
 
