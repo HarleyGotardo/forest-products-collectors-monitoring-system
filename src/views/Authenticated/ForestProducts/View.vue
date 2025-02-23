@@ -736,7 +736,7 @@ onMounted(() => {
     Previous
   </button>
   <span class="text-sm text-gray-700">
-    Page {{ currentPage }} of {{ totalPages }}
+    Pg. {{ currentPage }} of {{ totalPages }}
   </span>
   <button
     @click="nextPage"
