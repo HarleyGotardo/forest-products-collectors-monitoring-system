@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
+import Button from '@/components/ui/button/Button.vue'
 
 const route = useRoute()
+const router = useRouter()
 const recordId = route.params.id
 const record = ref(null)
 const error = ref(null)
@@ -39,8 +41,21 @@ onMounted(() => {
   fetchCollectionRecord()
 })
 </script>
+
 <template>
   <div class="min-h-screen bg-gray-50 py-4 px-2 sm:py-8 mt-5 sm:px-6 lg:px-8">
+    <!-- Back Button -->
+    <div class="max-w-4xl mx-auto mb-4">
+      <Button
+        @click="router.push('/authenticated/collection-records')"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
+      </Button>
+    </div>
+
     <!-- Error Alert -->
     <div 
       v-if="error" 

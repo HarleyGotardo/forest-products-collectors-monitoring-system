@@ -47,10 +47,9 @@
           <thead class="bg-gray-50">
             <tr>
               <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
-              <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
-              <!-- Hidden on mobile -->
+              <th scope="col" class="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th> <!-- Hidden on mobile -->
               <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
-              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">User</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">User</th>
               <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Total Cost</th>
               <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Processed By</th>
               <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Actions</th>
@@ -70,10 +69,10 @@
             </tr>
             <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer" @click="viewCollectionRecord(record.id)">
               <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm">#{{ record.id }}</td>
-              <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm">{{ record.forest_product.name }}</td>
+              <td class="hidden sm:table-cell px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm">{{ record.forest_product.name }}</td>
               <!-- Hidden on mobile -->
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">{{ record.formatted_created_at }}</td>
-              <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">{{ record.user_name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">{{ record.user_name }}</td>
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">₱{{ record.total_cost }}</td>
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">{{ record.created_by_name }}</td>
               <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
@@ -204,6 +203,7 @@ const filteredRecords = computed(() => {
   }
   const query = searchQuery.value.toLowerCase()
   return collectionRecords.value.filter(record =>
+    record.id.toString().includes(query) ||
     record.user_name.toLowerCase().includes(query) ||
     record.forest_product.name.toLowerCase().includes(query) ||
     record.created_by_name.toLowerCase().includes(query)

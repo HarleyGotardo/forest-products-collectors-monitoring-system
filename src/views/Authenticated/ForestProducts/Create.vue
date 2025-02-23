@@ -239,12 +239,14 @@ onMounted(() => {
 </script>
 <template>
   <div class="max-w-7xl mx-auto p-6">
+    
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-8">
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Create Forest Product</h2>
         <p class="mt-1 text-sm text-gray-500">Fill in the details to create a new forest product</p>
       </div>
+      
     </div>
 
     <!-- Error Alert -->
@@ -257,6 +259,7 @@ onMounted(() => {
         <p class="ml-3">{{ error }}</p>
       </div>
     </div>
+
 
     <!-- Form -->
     <form @submit.prevent="showConfirmationDialog" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-6 space-y-4">
