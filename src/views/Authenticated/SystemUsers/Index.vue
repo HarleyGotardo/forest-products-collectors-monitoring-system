@@ -448,15 +448,15 @@ onMounted(async () => {
                       <div class="block sm:hidden text-sm text-gray-600">{{ user.role.name }}</div>
                       <div class="block sm:hidden text-right text-sm font-medium">
                       <!-- Update both mobile and desktop approve buttons -->
-<button
-  @click="approveUser(user.id)"
-  class="px-3 sm:px-4 py-2 bg-green-100 text-black rounded-lg shadow-sm hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
->
-  <div class="flex items-center justify-center space-x-2">
-    <p>Approve</p>
-    <img src="@/assets/approve.png" alt="Approve Button" class="w-4 h-4" />
-  </div>
-</button>
+          <!-- <button
+            @click="approveUser(user.id)"
+            class="px-3 sm:px-4 py-2 bg-black text-black rounded-lg shadow-sm hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <div class="flex items-center justify-center space-x-2">
+              <p>Approve</p>
+              <img src="@/assets/approve.png" alt="Approve Button" class="w-4 h-4" />
+            </div>
+          </button> -->
                       </div>
                     </div>
                     </div>
@@ -472,7 +472,7 @@ onMounted(async () => {
                   <td class="hidden sm:table-cell px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                     @click="approveUser(user.id)"
-                    class="px-3 sm:px-4 py-2 bg-green-100 text-black rounded-lg shadow-sm hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    class="px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                     >
                     <div class="flex items-center justify-center space-x-2">
                       <p>
