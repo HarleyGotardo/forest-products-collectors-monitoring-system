@@ -639,7 +639,7 @@ onMounted(() => {
     class="p-4 hover:bg-gray-50 transition-all duration-200"
   >
     <div class="flex flex-col sm:flex-row items-start sm:items-center">
-      <div class="p-2 bg-gray-100 rounded-lg">
+      <div class="p-2 bg-gray-100 rounded-lg ml-3">
         <svg
           class="w-5 h-5 text-gray-600"
           fill="none"
@@ -736,7 +736,7 @@ onMounted(() => {
     Previous
   </button>
   <span class="text-sm text-gray-700">
-    Pg. {{ currentPage }} of {{ totalPages }}
+    {{ currentPage }} / {{ totalPages }}
   </span>
   <button
     @click="nextPage"

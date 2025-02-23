@@ -437,7 +437,7 @@ onMounted(async () => {
             Previous
           </button>
           <span class="text-sm text-gray-700">
-            Page {{ currentPageApproved }} of
+            {{ currentPageApproved }} /
             {{ Math.ceil(filteredUsers.length / itemsPerPage) }}
           </span>
           <button
@@ -696,7 +696,7 @@ onMounted(async () => {
               Previous
             </button>
             <span class="text-sm text-gray-700">
-              Page {{ currentPage }} of
+              {{ currentPage }} /
               {{ Math.ceil(filteredUnapprovedUsers.length / itemsPerPage) }}
             </span>
             <button
