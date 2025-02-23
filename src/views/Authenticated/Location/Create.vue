@@ -26,6 +26,18 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 
+// Fix for the default icon issue
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+})
+
 const router = useRouter();
 const name = ref(SeparatorConstant.EMPTY_STRING);
 const error = ref(null);
@@ -192,6 +204,7 @@ const isFormValid = computed(() => {
   return name.value && coordinates.value;
 });
 </script>
+
 <template>
   <div class="max-w-2xl mx-auto p-8 bg-white rounded-xl shadow-lg mt-8">
     <!-- Header -->
