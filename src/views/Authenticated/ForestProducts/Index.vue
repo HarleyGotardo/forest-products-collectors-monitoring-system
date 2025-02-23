@@ -149,40 +149,40 @@ watch(selectedType, () => {
 <template>
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
-    <div class="flex justify-between items-center mb-8">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Forest Products</h2>
-        <p class="mt-1 text-sm text-gray-500">View and manage all registered forest products</p>
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Forest Products Collection Records</h2>
+      <p class="mt-1 text-sm">View and manage all collection records</p>
       </div>
       <div class="flex space-x-4">
-        <div class="relative">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search..."
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
-          />
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+      <div class="relative flex-1 sm:flex-none">
+        <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search records..."
+        class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+        />
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
         </div>
-        <select
-          v-model="selectedType"
-          class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
-        >
-          <option value="">All Types</option>
-          <option value="Timber">Timber</option>
-          <option value="Non-Timber">Non-Timber</option>
-        </select>
-        <Button 
-          v-if="isForestRanger || isFPUAdmin"
-          @click="createForestProduct"
-        >
-          +
-        </Button>
+      </div>
+      <select
+        v-model="selectedType"
+        class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+      >
+        <option value="">All Types</option>
+        <option value="Timber">Timber</option>
+        <option value="Non-Timber">Non-Timber</option>
+      </select>
+      <Button 
+        v-if="isForestRanger || isFPUAdmin"
+        @click="createForestProduct"
+      >
+        +
+      </Button>
       </div>
     </div>
 
@@ -244,7 +244,7 @@ watch(selectedType, () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">
-                  {{ product.type === 'T' ? 'Timber' : 'Non-Timber' }}
+                  {{ product.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">

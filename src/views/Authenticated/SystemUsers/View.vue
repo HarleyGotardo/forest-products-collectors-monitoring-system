@@ -76,7 +76,7 @@ onMounted(() => {
     <!-- User Details Card -->
     <div 
       v-if="user" 
-      class="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
+      class="bg-white rounded-xl mt-2 sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
     >
       <!-- Card Header -->
       <div class="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100">

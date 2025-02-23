@@ -377,9 +377,9 @@ onMounted(() => {
       <div
         v-if="forestProduct"
         class="px-3 py-1 rounded-full text-sm font-medium"
-        :class="forestProduct.type === 'T' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'"
+        :class="forestProduct.type === 'Timber' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'"
       >
-        {{ forestProduct.type === 'T' ? 'Timber' : 'Non-Timber' }}
+        {{ forestProduct.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
       </div>
     </div>
 

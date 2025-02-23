@@ -151,26 +151,35 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div class="max-w-7xl mx-auto p-4 sm:p-6">
+  <div class="max-w-7xl mx-auto p-4 sm:p-6 mt-2">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8">
-      <div class="mb-4 sm:mb-0">
-        <h2 class="text-xl sm:text-2xl mt-5 mr-5 font-bold text-gray-900">System Users</h2>
-        <p class="mt-1 text-sm text-gray-500">Manage and view all system users</p>
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2">
+      <div>
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-900">System Users</h2>
+      <p class="mt-1 text-sm text-gray-500">Manage and view all system users</p>
       </div>
-      <div class="flex space-x-2 sm:space-x-4">
-        <div class="bg-blue-50 px-3 sm:px-4 py-2 rounded-lg">
-          <span class="text-sm font-medium text-blue-700">
-            {{ filteredUsers.length }} Users
-          </span>
+      <div class="flex space-x-4">
+      <div class="relative flex-1 sm:flex-none">
+        <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search users..."
+        class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+        />
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
         </div>
-        <button 
-          v-if="isFPUAdmin || isForestRanger"
-          @click="showModal = true"
-          class="px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-lg shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 text-sm sm:text-base"
-        >
-          Pending Approval
-        </button>
+      </div>
+      <button 
+        v-if="isFPUAdmin || isForestRanger"
+        @click="showModal = true"
+        class="px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-lg shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 text-sm sm:text-base"
+      >
+        Pending Approval
+      </button>
       </div>
     </div>
 
@@ -226,10 +235,10 @@ onMounted(async () => {
               <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 User
               </th>
-              <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 hidden sm:table-cell sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
-              <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 hidden sm:table-cell sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
               </th>
             </tr>
@@ -269,13 +278,15 @@ onMounted(async () => {
                       <div class="text-sm font-medium text-gray-900">
                         {{ user.first_name }} {{ user.last_name }}
                       </div>
+                      <div class="block sm:hidden text-sm text-gray-600">{{ user.email_address }}</div>
+                        <div class="block sm:hidden text-sm text-gray-600 rounded-2xl mt-1 bg-green-100 px-2 py-1 w-max">{{ user.role.name }}</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                <td class="px-4 hidden sm:table-cell sm:px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-600">{{ user.email_address }}</div>
                 </td>
-                <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                <td class="px-4 hidden sm:table-cell sm:px-6 py-4 whitespace-nowrap">
                   <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                     {{ user.role.name }}
                   </span>
@@ -446,11 +457,3 @@ onMounted(async () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.appearance-none {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
-</style>
