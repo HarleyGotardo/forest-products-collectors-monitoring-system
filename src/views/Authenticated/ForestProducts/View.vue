@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import L from 'leaflet'
@@ -37,6 +37,8 @@ const newImage = ref(null)
 const showEditLocationModal = ref(false)
 const editLocationQuantity = ref(null)
 const locationToEdit = ref(null)
+const currentPage = ref(1) // Current page for pagination
+const itemsPerPage = 4 // Items per page for pagination
 
 const cancelMapModal = () => {
   showLocationModal.value = false
@@ -189,6 +191,12 @@ const initializeMap = () => {
   mapInstance.value.fitBounds(bounds)
 }
 
+const totalPages = computed(() => {
+  if (!locations.value) return 1
+  return Math.ceil(locations.value.length / itemsPerPage)
+})
+
+
 const initializeModalMap = () => {
   if (mapInstance.value) {
     mapInstance.value.remove()
@@ -288,6 +296,25 @@ const initializeModalMap = () => {
     }
   });
 };
+
+const paginatedLocations = computed(() => {
+  if (!locations.value) return []
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return locations.value.slice(start, end)
+})
+
+const nextPage = () => {
+  if ((currentPage.value * itemsPerPage) < (locations.value?.length || 0)) {
+    currentPage.value++
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
 
 const upsertLocation = async () => {
   if (!selectedLocation.value) {
@@ -604,21 +631,21 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Locations List -->
-        <div class="divide-y divide-gray-100">
-          <div
-        v-for="location in locations"
-        :key="location.id"
-        class="p-4 hover:bg-gray-50 transition-all duration-200"
-          >
-        <div class="flex flex-col sm:flex-row items-start sm:items-center">
-          <div class="p-2 bg-gray-100 rounded-lg">
-            <svg
+<!-- Locations List -->
+<div class="divide-y divide-gray-100">
+  <div
+    v-for="location in paginatedLocations"
+    :key="location.id"
+    class="p-4 hover:bg-gray-50 transition-all duration-200"
+  >
+    <div class="flex flex-col sm:flex-row items-start sm:items-center">
+      <div class="p-2 bg-gray-100 rounded-lg">
+        <svg
           class="w-5 h-5 text-gray-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-            >
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -629,14 +656,14 @@ onMounted(() => {
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M15 11a3 3 0 11-6 0 3 3 0z"
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
           />
-            </svg>
-          </div>
+        </svg>
+      </div>
 
-          <div class="ml-4 flex-grow mt-2 sm:mt-0">
-            <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
-            <div class="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
+      <div class="ml-4 flex-grow mt-2 sm:mt-0">
+        <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
+        <div class="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
           <div class="flex items-center space-x-1">
             <span class="font-medium">Lat:</span>
             <span>{{ location.latitude }}</span>
@@ -647,20 +674,17 @@ onMounted(() => {
           </div>
           <div class="flex items-center space-x-1">
             <span class="font-medium">Quantity:</span>
-            <span
-              >{{ location.quantity ? location.quantity : 'N/A' }}
-              {{ forestProduct.measurement_units.unit_name }}(s)</span
-            >
+            <span>{{ location.quantity ? location.quantity : 'N/A' }} {{ forestProduct.measurement_units.unit_name }}(s)</span>
           </div>
-            </div>
-          </div>
+        </div>
+      </div>
 
-          <div class="ml-4 flex items-center space-x-2 mt-2 sm:mt-0">
-            <button
+      <div class="ml-4 flex items-center space-x-2 mt-2 sm:mt-0">
+        <button
           @click="editLocation(location)"
           class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           title="Edit Location"
-            >
+        >
           <svg
             class="w-5 h-5"
             fill="none"
@@ -674,12 +698,12 @@ onMounted(() => {
               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
             />
           </svg>
-            </button>
-            <button
+        </button>
+        <button
           @click="deleteLocation(location.id)"
           class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           title="Delete Location"
-            >
+        >
           <svg
             class="w-5 h-5"
             fill="none"
@@ -693,11 +717,38 @@ onMounted(() => {
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
             />
           </svg>
-            </button>
-          </div>
-        </div>
-          </div>
-        </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- In the template section, update the pagination controls -->
+<div class="flex justify-between items-center mt-4">
+  <button
+    @click="prevPage"
+    :disabled="currentPage === 1"
+    class="ml-3 inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    <svg class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    Previous
+  </button>
+  <span class="text-sm text-gray-700">
+    Page {{ currentPage }} of {{ totalPages }}
+  </span>
+  <button
+    @click="nextPage"
+    :disabled="(currentPage * itemsPerPage) >= (locations.value?.length || 0)"
+    class="mr-3 inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Next
+    <svg class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+  </button>
+</div>
 
         <!-- Edit Location Modal -->
         <div
