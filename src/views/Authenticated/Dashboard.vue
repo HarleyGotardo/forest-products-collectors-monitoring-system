@@ -163,6 +163,7 @@ const fetchDashboardData = async (forceRefresh = false) => {
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id', { count: 'exact' })
+      .eq('role_id', 2)
     
     if (profilesError) throw profilesError
     totalCollectors.value = profiles.length
@@ -199,6 +200,7 @@ const fetchDashboardData = async (forceRefresh = false) => {
     const { data: routes, error: routesError } = await supabase
       .from('collection_records')
       .select('id', { count: 'exact' })
+      .is('deleted_at', null)
     
     if (routesError) throw routesError
     totalRoutes.value = routes.length
@@ -207,6 +209,7 @@ const fetchDashboardData = async (forceRefresh = false) => {
     const { data: products, error: productsError } = await supabase
       .from('forest_products')
       .select('id', { count: 'exact' })
+      .is('deleted_at', null)
     
     if (productsError) throw productsError
     totalProducts.value = products.length
@@ -223,29 +226,32 @@ const fetchDashboardData = async (forceRefresh = false) => {
     const locationNamesMap = {}
     for (const record of fpAndLocation) {
       const { data: product, error: productError } = await supabase
-        .from('forest_products')
-        .select('name')
-        .eq('id', record.forest_product_id)
-        .single()
-      if (productError) throw productError
+      .from('forest_products')
+      .select('name')
+      .eq('id', record.forest_product_id)
+      .is('deleted_at', null) // Ensure the product is not deleted
+      .single()
+      if (productError) continue // Skip this record if there's an error fetching the product
       productNamesMap[record.forest_product_id] = product.name
 
       const { data: location, error: locationError } = await supabase
-        .from('location')
-        .select('name')
-        .eq('id', record.location_id)
-        .single()
+      .from('location')
+      .select('name')
+      .eq('id', record.location_id)
+      .single()
       if (locationError) throw locationError
       locationNamesMap[record.location_id] = location.name
     }
 
-    forestProductsData.value = fpAndLocation.map(record => ({
+    forestProductsData.value = fpAndLocation
+      .filter(record => productNamesMap[record.forest_product_id]) // Filter out records with deleted products
+      .map(record => ({
       id: record.id,
       productName: productNamesMap[record.forest_product_id],
       locationName: locationNamesMap[record.location_id],
       fp_id: record.forest_product_id,
       quantity: record.quantity
-    }))
+      }))
 
     // Cache data
     const dashboardData = {
@@ -282,12 +288,18 @@ const refreshData = () => {
   fetchDashboardData(true)
 }
 
+let mostCollectedChartInstance = null;
+
 const renderCharts = async (labels, quantities) => {
   try {
     // Most Collected Forest Product Chart
     const mostCollectedCtx = document.getElementById('mostCollectedChart')?.getContext('2d')
     if (mostCollectedCtx) {
-      new Chart(mostCollectedCtx, {
+      if (mostCollectedChartInstance) {
+        mostCollectedChartInstance.destroy();
+        mostCollectedChartInstance = null;
+      }
+      mostCollectedChartInstance = new Chart(mostCollectedCtx, {
         type: 'bar',
         data: {
           labels,
