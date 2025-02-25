@@ -141,9 +141,12 @@ watch(currentPage, () => {
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0">
+      <div class="flex items-center space-x-2">
+      <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
       <div>
-      <h2 class="text-2xl font-bold text-gray-900">Deleted Collection Records</h2>
-      <p class="mt-1 text-sm text-gray-500">View and manage all collection records in the recycle bin</p>
+        <h2 class="text-2xl font-bold text-gray-900">Deleted Collection Records</h2>
+        <p class="mt-1 text-sm text-gray-500">View and manage all collection records in the recycle bin</p>
+      </div>
       </div>
       <div class="flex w-full md:w-auto space-x-4">
       <div class="relative w-full md:w-auto">

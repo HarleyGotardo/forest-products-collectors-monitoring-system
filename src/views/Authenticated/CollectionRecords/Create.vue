@@ -174,8 +174,13 @@ onMounted(() => {
   <div class="min-h-screen flex items-center justify-center px-4">
     <Card class="max-w-lg w-full">
       <CardHeader>
-        <CardTitle>Forest Product Collection</CardTitle>
-        <CardDescription>Create a new collection record</CardDescription>
+        <div class="flex items-center space-x-2">
+          <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+          <CardTitle>Forest Product Collection</CardTitle>
+        </div>
+        <div>
+          <CardDescription>Create a new collection record</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         <!-- Form -->

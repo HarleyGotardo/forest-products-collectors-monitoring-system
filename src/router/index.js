@@ -7,6 +7,7 @@ import Dashboard from '@/views/Authenticated/Dashboard.vue'
 import Map from '@/views/Authenticated/ForestProducts/Map.vue'
 import ForestProductsIndex from '@/views/Authenticated/ForestProducts/Index.vue'
 import ForestProductsCreate from '@/views/Authenticated/ForestProducts/Create.vue'
+import ForestProductsTrash from '@/views/Authenticated/ForestProducts/Trash.vue'
 import SystemUsersIndex from '@/views/Authenticated/SystemUsers/Index.vue'
 import CollectionRecordsIndex from '@/views/Authenticated/CollectionRecords/Index.vue'
 import CollectionRecordsCreate from '@/views/Authenticated/CollectionRecords/Create.vue'
@@ -83,6 +84,12 @@ const routes = [
         name: 'ForestProductsEdit',
         component: ForestProductsEdit,
         meta: { title: 'Edit Forest Product - Nature Cart', requiresRole: [4, 1] }
+      },
+      {
+        path: 'forest-products/trash',
+        name: 'ForestProductsTrash',
+        component: ForestProductsTrash,
+        meta: { title: 'Forest Products Trash - Nature Cart', requiresRole: [4, 1] }
       },
       {
         path: 'system-users',

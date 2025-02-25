@@ -150,9 +150,12 @@ watch(selectedType, () => {
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2">
+      <div class="flex items-center space-x-2">
+      <img src="@/assets/forest-product.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
       <div>
-      <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Forest Products Collection Records</h2>
-      <p class="mt-1 text-sm">View and manage all collection records</p>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Forest Products</h2>
+        <p class="mt-1 text-sm">View and manage all forest products</p>
+      </div>
       </div>
       <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
       <div class="relative flex-1 sm:flex-none">

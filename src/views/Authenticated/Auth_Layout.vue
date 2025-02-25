@@ -188,6 +188,13 @@ onMounted(async () => {
             <img src="@/assets/forest-map.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Forest Products Map</span>
           </router-link>
+          <router-link 
+            to="/authenticated/forest-products/trash" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trashed Forest Products</span>
+          </router-link>
           </ForestProducts>
 
           <!-- Enhanced Dropdowns -->
@@ -218,7 +225,7 @@ onMounted(async () => {
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
           >
             <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trash</span>
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trashed Locations</span>
           </router-link>
           </Locations>
 
@@ -250,7 +257,7 @@ onMounted(async () => {
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
           >
             <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trash Records</span>
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trashed Records</span>
           </router-link>
           </Records>
         </nav>

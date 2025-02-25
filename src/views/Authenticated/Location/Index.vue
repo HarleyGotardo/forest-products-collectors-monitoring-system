@@ -127,9 +127,12 @@ watch(currentPage, () => {
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2">
+      <div class="flex items-center space-x-2">
+      <img src="@/assets/location2.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
       <div>
-      <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Locations</h2>
-      <p class="mt-1 text-sm text-gray-500">View and manage all registered locations</p>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Locations</h2>
+        <p class="mt-1 text-sm">View and manage all registered locations</p>
+      </div>
       </div>
       <div class="flex space-x-4">
       <div class="relative flex-1 sm:flex-none">
@@ -142,7 +145,7 @@ watch(currentPage, () => {
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         </div>
       </div>

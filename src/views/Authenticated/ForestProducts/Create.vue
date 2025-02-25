@@ -242,11 +242,13 @@ onMounted(() => {
     
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-8">
+      <div class="flex items-center space-x-4">
+      <img src="@/assets/add.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Create Forest Product</h2>
         <p class="mt-1 text-sm text-gray-500">Fill in the details to create a new forest product</p>
       </div>
-      
+      </div>
     </div>
 
     <!-- Error Alert -->

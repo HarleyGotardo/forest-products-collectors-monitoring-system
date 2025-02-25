@@ -2,20 +2,23 @@
   <div class="min-h-screen bg-gray-50 p-3 sm:p-6">
     <!-- Header Section - Stacked layout on mobile -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <h1 class="text-2xl sm:text-3xl mt-7 font-bold text-gray-800">Dashboard</h1>
+      <div class="flex items-center gap-2">
+      <img src="@/assets/dashboard.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
+      </div>
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
-        <button @click="createCollectionRoute" 
-                class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto">
-          <span class="mr-2">+</span> New Collection
-        </button>
-        <button @click="createNewProduct" 
-                class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto">
-          <span class="mr-2">+</span> New Product
-        </button>
-        <button @click="refreshData" 
-                class="inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors w-full sm:w-auto">
-          <span class="mr-2">🔄</span> Refresh
-        </button>
+      <button @click="createCollectionRoute" 
+          class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto">
+        <span class="mr-2">+</span> New Collection
+      </button>
+      <button @click="createNewProduct" 
+          class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto">
+        <span class="mr-2">+</span> New Product
+      </button>
+      <button @click="refreshData" 
+          class="inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors w-full sm:w-auto">
+        <span class="mr-2">🔄</span> Refresh
+      </button>
       </div>
     </div>
 

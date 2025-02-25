@@ -184,47 +184,50 @@ onMounted(async () => {
     <div
       class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2"
     >
+      <div class="flex items-center space-x-2">
+      <img src="@/assets/user.png" alt="users" class="w-12 h-12 group-hover:scale-110 transition-transform" />
       <div>
         <h2 class="text-xl sm:text-2xl font-bold text-gray-900">
-          System Users
+        System Users
         </h2>
         <p class="mt-1 text-sm text-gray-500">
-          Manage and view all system users
+        Manage and view all system users
         </p>
       </div>
+      </div>
       <div class="flex space-x-4">
-        <div class="relative flex-1 sm:flex-none">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search users..."
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
-          />
-          <div
-            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-          >
-            <svg
-              class="h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-        </div>
-        <button
-          v-if="isFPUAdmin || isForestRanger"
-          @click="showModal = true"
-          class="px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-lg shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 text-sm sm:text-base"
+      <div class="relative flex-1 sm:flex-none">
+        <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search users..."
+        class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+        />
+        <div
+        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
         >
-          Pending Approval
-        </button>
+        <svg
+          class="h-5 w-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+        </div>
+      </div>
+      <button
+        v-if="isFPUAdmin || isForestRanger"
+        @click="showModal = true"
+        class="px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-lg shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 text-sm sm:text-base"
+      >
+        Pending Approval
+      </button>
       </div>
     </div>
 
