@@ -3,33 +3,48 @@
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2">
       <div class="flex items-center space-x-2">
-      <img src="@/assets/records2.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
-      <div>
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Forest Products Collection Records</h2>
-        <p class="mt-1 text-sm">View and manage all collection records</p>
-      </div>
-      </div>
-      <div class="flex space-x-4">
-      <div class="relative flex-1 sm:flex-none">
-        <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search records..."
-        class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
-        />
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+        <img src="@/assets/records2.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
+        <div>
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Forest Products Collection Records</h2>
+          <p class="mt-1 text-sm">View and manage all collection records</p>
         </div>
       </div>
-      <Button 
-        v-if="isFPUAdmin || isForestRanger"
-        @click="createCollectionRecord"
-      >
-        +
-      </Button>
+      <div class="flex space-x-4">
+        <div class="relative flex-1 sm:flex-none">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search records..."
+            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+          />
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+        <Button 
+          v-if="isFPUAdmin || isForestRanger"
+          @click="createCollectionRecord"
+        >
+          +
+        </Button>
+      </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
+      <div class="flex items-center space-x-4">
+        <!-- Payment Status Filter -->
+        <select
+          v-model="paymentFilter"
+          class="block w-40 px-3 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+        >
+          <option value="all">All Records</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+        </select>
       </div>
     </div>
 
@@ -102,6 +117,29 @@
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  <AlertDialog v-if="!record.is_paid">
+                    <AlertDialogTrigger>
+                      <Button v-if="isVSUAdmin" class="p-1 sm:p-2">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M5 13l4 4L19 7" />
+                        </svg>
+                        Paid
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will mark the collection record as paid.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="markAsPaid(record.id)">Mark as Paid</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </td>
             </tr>
@@ -143,7 +181,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'vue-sonner'
-import { isFPUAdmin, isForestRanger } from '@/router/routeGuard'
+import { isFPUAdmin, isForestRanger, isVSUAdmin } from '@/router/routeGuard'
 import router from '@/router'
 import Button from '@/components/ui/button/Button.vue'
 import {
@@ -163,6 +201,7 @@ const currentPage = ref(1)
 const itemsPerPage = 8
 const error = ref(null)
 const searchQuery = ref('')
+const paymentFilter = ref('all') // 'all', 'paid', 'unpaid'
 
 const fetchCollectionRecords = async () => {
   let { data: records, error: fetchError } = await supabase
@@ -174,7 +213,8 @@ const fetchCollectionRecords = async () => {
       forest_product:forest_products ( id, name ),
       total_cost,
       created_by:profiles!collection_records_created_by_fkey ( id, first_name, last_name ),
-      deleted_at
+      deleted_at,
+      is_paid
     `)
     .is('deleted_at', null) // Exclude records with non-null deleted_at
 
@@ -188,7 +228,8 @@ const fetchCollectionRecords = async () => {
       user_name: `${record.user.first_name} ${record.user.last_name}`,
       forest_product: record.forest_product,
       total_cost: record.total_cost,
-      created_by_name: `${record.created_by.first_name} ${record.created_by.last_name}`
+      created_by_name: `${record.created_by.first_name} ${record.created_by.last_name}`,
+      is_paid: record.is_paid
     }))
     paginateRecords()
   }
@@ -201,16 +242,27 @@ const paginateRecords = () => {
 }
 
 const filteredRecords = computed(() => {
-  if (!searchQuery.value) {
-    return collectionRecords.value
+  let records = collectionRecords.value
+
+  // Apply payment filter
+  if (paymentFilter.value !== 'all') {
+    records = records.filter(record => 
+      paymentFilter.value === 'paid' ? record.is_paid : !record.is_paid
+    )
   }
-  const query = searchQuery.value.toLowerCase()
-  return collectionRecords.value.filter(record =>
-    record.id.toString().includes(query) ||
-    record.user_name.toLowerCase().includes(query) ||
-    record.forest_product.name.toLowerCase().includes(query) ||
-    record.created_by_name.toLowerCase().includes(query)
-  )
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    records = records.filter(record =>
+      record.id.toString().includes(query) ||
+      record.user_name.toLowerCase().includes(query) ||
+      record.forest_product.name.toLowerCase().includes(query) ||
+      record.created_by_name.toLowerCase().includes(query)
+    )
+  }
+
+  return records
 })
 
 const paginatedRecords = ref([])
@@ -242,6 +294,20 @@ const createCollectionRecord = () => {
   router.push('/authenticated/collection-records/create')
 }
 
+const markAsPaid = async (recordId) => {
+  const { error: updateError } = await supabase
+    .from('collection_records')
+    .update({ is_paid: true })
+    .eq('id', recordId)
+
+  if (updateError) {
+    error.value = updateError.message
+  } else {
+    fetchCollectionRecords()
+    toast.success('Collection record marked as paid successfully', { duration: 2000 })
+  }
+}
+
 const deleteCollectionRecord = async (recordId) => {
   const currentDate = new Date().toISOString()
   const { error: deleteError } = await supabase
@@ -271,6 +337,11 @@ watch(searchQuery, () => {
 })
 
 watch(currentPage, () => {
+  paginateRecords()
+})
+
+watch(paymentFilter, () => {
+  currentPage.value = 1
   paginateRecords()
 })
 </script>

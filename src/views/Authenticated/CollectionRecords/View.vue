@@ -3,7 +3,18 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import Button from '@/components/ui/button/Button.vue'
-
+import { isVSUAdmin } from '@/router/routeGuard'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 const route = useRoute()
 const router = useRouter()
 const recordId = route.params.id
@@ -34,6 +45,20 @@ const fetchCollectionRecord = async () => {
     error.value = fetchError.message
   } else {
     record.value = data
+  }
+}
+
+const markAsPaid = async () => {
+  const { error: updateError } = await supabase
+    .from('collection_records')
+    .update({ is_paid: true })
+    .eq('id', recordId)
+
+  if (updateError) {
+    error.value = updateError.message
+  } else {
+    fetchCollectionRecord()
+    toast.success('Collection record marked as paid successfully', { duration: 2000 })
   }
 }
 
@@ -166,6 +191,27 @@ onMounted(() => {
                 <p class="text-xs sm:text-sm font-medium" :class="record.is_paid ? 'text-green-600' : 'text-red-600'">
                   {{ record.is_paid ? 'PAID' : 'UNPAID' }}
                 </p>
+              </div>
+              <div v-if="isVSUAdmin && !record.is_paid" class="mt-4">
+                <AlertDialog>
+                  <AlertDialogTrigger>
+                    <Button class="w-full">
+                      Mark as Paid
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will mark the collection record as paid.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction @click="markAsPaid">Mark as Paid</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>
