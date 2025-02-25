@@ -7,11 +7,11 @@
       <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
-      <button @click="createCollectionRoute" 
+      <button v-if="isForestRanger || isFPUAdmin" @click="createCollectionRoute" 
           class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto">
         <span class="mr-2">+</span> New Collection
       </button>
-      <button @click="createNewProduct" 
+      <button v-if="isForestRanger || isFPUAdmin" @click="createNewProduct" 
           class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto">
         <span class="mr-2">+</span> New Product
       </button>
@@ -133,6 +133,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'vue-sonner'
 import Chart from 'chart.js/auto'
+import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
 
 const router = useRouter()
 const totalCollectors = ref(0)
