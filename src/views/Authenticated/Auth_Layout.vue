@@ -189,6 +189,7 @@ onMounted(async () => {
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Forest Products Map</span>
           </router-link>
           <router-link 
+            v-if="isFPUAdmin || isForestRanger"
             to="/authenticated/forest-products/trash" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
           >
