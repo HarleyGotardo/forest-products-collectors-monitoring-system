@@ -291,7 +291,10 @@ watch(selectedType, () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button @click.stop>
-                        <img src="@/assets/restore2.png" alt="Restore" class="w-5 h-5" />
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+    d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
+</svg>
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
