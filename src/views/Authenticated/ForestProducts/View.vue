@@ -390,6 +390,10 @@ const handleImageSubmit = async () => {
   fetchForestProduct()
 }
 
+const isDeleted = computed(() => {
+  return forestProduct.value && forestProduct.value.deleted_at !== null;
+});
+
 onMounted(() => {
   fetchForestProduct()
   fetchAllLocations()
@@ -398,15 +402,21 @@ onMounted(() => {
 </script>
 <template>
   <div class="max-w-4xl mx-auto p-6">
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 mt-2 space-y-4 sm:space-y-0">
+   <!-- Header Section -->
+   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 mt-2 space-y-4 sm:space-y-0">
       <h2 class="text-3xl font-bold text-gray-900">Forest Product Details</h2>
       <div
-      v-if="forestProduct"
-      class="px-3 py-1 rounded-full text-sm font-medium"
-      :class="forestProduct.type === 'Timber' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'"
+        v-if="forestProduct"
+        class="px-3 py-1 rounded-full text-sm font-medium"
+        :class="forestProduct.type === 'Timber' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'"
       >
-      {{ forestProduct.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
+        {{ forestProduct.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
+      </div>
+      <div
+        v-if="isDeleted"
+        class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"
+      >
+        Deleted
       </div>
     </div>
 
