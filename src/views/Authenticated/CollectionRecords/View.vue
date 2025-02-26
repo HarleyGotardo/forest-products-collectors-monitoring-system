@@ -15,6 +15,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { toast } from 'vue-sonner'
+
 const route = useRoute()
 const router = useRouter()
 const recordId = route.params.id
@@ -33,10 +35,12 @@ const fetchCollectionRecord = async () => {
       quantity_during_purchase,
       price_per_unit_during_purchase,
       is_paid,
+      approved_at,
       user:profiles!forest_product_collection_records_user_id_fkey ( first_name, last_name ),
       forest_product:forest_products ( name, measurement_unit_id, measurement_unit:measurement_units ( unit_name ) ),
       location:location ( name ),
-      created_by:profiles!collection_records_created_by_fkey ( first_name, last_name )
+      created_by:profiles!collection_records_created_by_fkey ( first_name, last_name ),
+      approved_by:profiles!collection_records_approved_by_fkey ( first_name, last_name )
     `)
     .eq('id', recordId)
     .single()
@@ -49,9 +53,16 @@ const fetchCollectionRecord = async () => {
 }
 
 const markAsPaid = async () => {
+  // Get the current user's ID from the auth session
+  const { data: { user } } = await supabase.auth.getUser()
+  
   const { error: updateError } = await supabase
     .from('collection_records')
-    .update({ is_paid: true })
+    .update({ 
+      is_paid: true,
+      approved_by: user.id,
+      approved_at: new Date().toISOString()
+    })
     .eq('id', recordId)
 
   if (updateError) {
@@ -71,9 +82,7 @@ onMounted(() => {
   <div class="min-h-screen bg-gray-50 py-4 px-2 sm:py-8 mt-5 sm:px-6 lg:px-8">
     <!-- Back Button -->
     <div class="max-w-4xl mx-auto mb-4">
-      <Button
-        @click="router.back()"
-      >
+      <Button @click="router.back()">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
@@ -192,6 +201,23 @@ onMounted(() => {
                   {{ record.is_paid ? 'PAID' : 'UNPAID' }}
                 </p>
               </div>
+              
+              <!-- Conditional display of approval information -->
+              <template v-if="record.is_paid">
+                <div class="flex justify-between py-2 border-t border-gray-200">
+                  <p class="text-xs sm:text-sm font-medium text-gray-500">Approved By</p>
+                  <p class="text-xs sm:text-sm text-gray-900">
+                    {{ record.approved_by ? `${record.approved_by.first_name} ${record.approved_by.last_name}` : 'N/A' }}
+                  </p>
+                </div>
+                <div class="flex justify-between py-2">
+                  <p class="text-xs sm:text-sm font-medium text-gray-500">Approved At</p>
+                  <p class="text-xs sm:text-sm text-gray-900">
+                    {{ record.approved_at ? new Date(record.approved_at).toLocaleDateString() : 'N/A' }}
+                  </p>
+                </div>
+              </template>
+
               <div v-if="isVSUAdmin && !record.is_paid" class="mt-4">
                 <AlertDialog>
                   <AlertDialogTrigger>
