@@ -8,6 +8,17 @@ import Swal from 'sweetalert2'
 import { toast, Toaster } from 'vue-sonner'
 import { format } from 'date-fns'
 import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 // Fix for Leaflet default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -77,32 +88,30 @@ const updateLocationQuantity = async () => {
   fetchLocations()
 }
 
-const deleteLocation = async (locationId) => {
-  const result = await Swal.fire({
-    title: 'Delete Location?',
-    text: 'Delete this location of the forest product?',
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Delete',
-    cancelButtonText: 'Cancel'
-  });
+const locationToDelete = ref(null)
 
-  if (result.isConfirmed) {
+const confirmDeleteLocation = (locationId) => {
+  locationToDelete.value = locationId
+}
+
+const deleteLocation = async () => {
+  if (locationToDelete.value !== null) {
+    const locationId = locationToDelete.value
     const { error: deleteError } = await supabase
       .from('fp_and_location')
       .delete()
       .eq('forest_product_id', forestProduct.value.id)
-      .eq('location_id', locationId);
+      .eq('location_id', locationId)
 
     if (deleteError) {
-      toast.error(deleteError.message, { duration: 2000 });
-      return;
+      toast.error(deleteError.message, { duration: 2000 })
+    } else {
+      toast.success('Location deleted successfully', { duration: 2000 })
+      fetchLocations()
     }
-
-    toast.success('Location deleted successfully', { duration: 2000 });
-    fetchLocations();
+    locationToDelete.value = null
   }
-};
+}
 
 const fetchForestProduct = async () => {
   let { data, error: fetchError } = await supabase
@@ -661,89 +670,108 @@ onMounted(() => {
           >
             <div class="flex flex-col sm:flex-row items-start sm:items-center">
               <div class="p-2 bg-gray-100 rounded-lg ml-3">
-                <svg
-                  class="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
+          <svg
+            class="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
               </div>
 
               <div class="ml-4 flex-grow mt-2 sm:mt-0">
-                <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
-                <div
-                  class="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600"
-                >
-                  <div class="flex items-center space-x-1">
-                    <span class="font-medium">Lat:</span>
-                    <span>{{ location.latitude }}</span>
-                  </div>
-                  <div class="flex items-center space-x-1">
-                    <span class="font-medium">Long:</span>
-                    <span>{{ location.longitude }}</span>
-                  </div>
-                  <div class="flex items-center space-x-1">
-                    <span class="font-medium">Quantity:</span>
-                    <span
-                      >{{ location.quantity ? location.quantity : 'N/A' }}
-                      {{ forestProduct.measurement_units.unit_name }}(s)</span
-                    >
-                  </div>
-                </div>
+          <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
+          <div
+            class="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600"
+          >
+            <div class="flex items-center space-x-1">
+              <span class="font-medium">Lat:</span>
+              <span>{{ location.latitude }}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="font-medium">Long:</span>
+              <span>{{ location.longitude }}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="font-medium">Quantity:</span>
+              <span
+                >{{ location.quantity ? location.quantity : 'N/A' }}
+                {{ forestProduct.measurement_units.unit_name }}(s)</span
+              >
+            </div>
+          </div>
               </div>
 
               <div class="ml-4 flex items-center space-x-2 mt-2 sm:mt-0">
-                <button
-                  @click="editLocation(location)"
-                  class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  title="Edit Location"
+          <button
+            @click.stop="editLocation(location)"
+            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            title="Edit Location"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                @click.stop="confirmDeleteLocation(location.id)"
+                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                title="Delete Location"
+              >
+                <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
                 >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  @click="deleteLocation(location.id)"
-                  class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  title="Delete Location"
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+                </svg>
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Location?</AlertDialogTitle>
+                <AlertDialogDescription>
+            Delete this location of the forest product?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deleteLocation"
+            >Delete</AlertDialogAction
                 >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
               </div>
             </div>
           </div>
@@ -835,6 +863,7 @@ onMounted(() => {
                 <div class="mt-3 w-full sm:mt-0 sm:ml-4">
                   <h3 class="text-lg font-medium leading-6 text-gray-900">
                     Edit Forest Product's Quantity in this Location ({{ forestProduct.measurement_units.unit_name
+
                     }})
                   </h3>
                   <div class="mt-4">
