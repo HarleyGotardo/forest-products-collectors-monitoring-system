@@ -222,7 +222,7 @@ watch(selectedType, () => {
                 </div>
               </td>
             </tr>
-            <tr v-for="product in forestProducts" :key="product.id" class="hover:bg-gray-50 transition-colors duration-200" @click="viewForestProduct(product.id)">
+            <tr v-for="product in forestProducts" :key="product.id" class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer" @click="viewForestProduct(product.id)">
               <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="h-10 w-10 flex-shrink-0">
