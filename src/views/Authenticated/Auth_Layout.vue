@@ -92,6 +92,27 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-gray-50 relative">
+    <!-- Solid Color Header Section (Visible only on small screens) -->
+    <div class="fixed top-0 left-0 w-full h-16 bg-emerald-700 z-40 md:hidden flex items-center justify-between px-4">
+      <router-link 
+      to="/authenticated/profile" 
+      :class="`ml-auto flex items-center gap-3 rounded-lg p-2 transition-all duration-200 ${
+        isSidebarOpen ? 'hidden' : 'flex'
+      }`"
+      active-class="bg-emerald-800"
+      >
+      <img 
+      :src="profilePictureUrl" 
+      alt="Profile Picture" 
+      class="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-100"
+      />
+      <div class="text-right">
+      <p class="text-white font-medium">{{ getName() }}</p>
+      <p class="text-emerald-200 text-sm">{{ getUserRole() }}</p>
+      </div>
+      </router-link>
+    </div>
+
     <!-- Improved Burger Menu Button -->
     <button 
       @click="toggleSidebar"
@@ -124,7 +145,7 @@ onMounted(async () => {
 
     <!-- Enhanced Sidebar -->
     <aside 
-      :class="`fixed top-0 left-0 h-full w-72 bg-white shadow-xl transition-all duration-300 ease-in-out z-40 ${
+      :class="`fixed top-0 left-0 h-full w-72 bg-white shadow-xl transition-all duration-300 ease-in-out z-50 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } md:translate-x-0`"
     >
@@ -306,7 +327,7 @@ onMounted(async () => {
     <main 
       :class="`transition-all duration-300 ease-in-out ${
         isSidebarOpen ? 'ml-0 md:ml-72' : 'ml-0 md:ml-72'
-      } p-6 md:p-8`"
+      } pt-16 p-6 md:p-8`"
     >
       <router-view />
     </main>
