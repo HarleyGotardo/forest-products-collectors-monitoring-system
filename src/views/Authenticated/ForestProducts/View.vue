@@ -659,9 +659,12 @@ onMounted(() => {
             </button>
           </div>
         </div>
-
+    <!-- Conditional Rendering for No Locations -->
+    <div v-if="locations.length === 0" class="p-6 text-center text-gray-500">
+      This forest product doesn't have a location. Add a location to get started.
+    </div>
         <!-- Locations List -->
-        <div class="divide-y divide-gray-100">
+        <div v-else class="divide-y divide-gray-100">
           <div
             @click="goToLocation(location)"
             v-for="location in paginatedLocations"
@@ -778,7 +781,7 @@ onMounted(() => {
         </div>
 
         <!-- In the template section, update the pagination controls -->
-        <div class="flex justify-between items-center mt-4">
+        <div class="flex justify-between items-center mt-4 p-4">
           <button
             @click="prevPage"
             :disabled="currentPage === 1"
@@ -791,10 +794,10 @@ onMounted(() => {
               viewBox="0 0 24 24"
             >
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 19l-7-7 7-7"
               />
             </svg>
             Previous
@@ -815,10 +818,10 @@ onMounted(() => {
               viewBox="0 0 24 24"
             >
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5l7 7-7 7"
               />
             </svg>
           </button>
