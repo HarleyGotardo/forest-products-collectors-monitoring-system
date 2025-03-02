@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import L from 'leaflet'
@@ -38,6 +38,7 @@ const error = ref(null)
 const mapInstance = ref(null)
 const showRestoreDialog = ref(false)
 const showDeleteDialog = ref(false)
+const forestProducts = ref([])
 
 const fetchLocation = async () => {
   let { data, error: fetchError } = await supabase
@@ -53,6 +54,37 @@ const fetchLocation = async () => {
     nextTick(() => {
       initializeMap(data.latitude, data.longitude)
     })
+  }
+}
+
+const fetchForestProducts = async () => {
+  let { data, error: fetchError } = await supabase
+    .from('fp_and_location')
+    .select(`
+      forest_product:forest_products ( id, name, measurement_unit_id ),
+      quantity
+    `)
+    .eq('location_id', locationId)
+    .then(async ({ data }) => {
+      const productIds = data.map(item => item.forest_product.measurement_unit_id);
+      const { data: units, error: unitsError } = await supabase
+        .from('measurement_units')
+        .select('id, unit_name')
+        .in('id', productIds);
+
+      if (unitsError) {
+        error.value = unitsError.message;
+      } else {
+        forestProducts.value = data.map(item => ({
+          ...item.forest_product,
+          quantity: item.quantity,
+          unit_name: units.find(unit => unit.id === item.forest_product.measurement_unit_id)?.unit_name
+        }));
+      }
+    });
+
+  if (fetchError) {
+    error.value = fetchError.message;
   }
 }
 
@@ -109,8 +141,38 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString(undefined, options)
 }
 
+const goToForestProduct = (productId) => {
+  router.push(`/authenticated/forest-products/${productId}`)
+}
+
+const currentPage = ref(1)
+const itemsPerPage = 5
+
+const paginatedForestProducts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return forestProducts.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(forestProducts.value.length / itemsPerPage)
+})
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
 onMounted(() => {
   fetchLocation()
+  fetchForestProducts()
 })
 </script>
 
@@ -127,7 +189,7 @@ onMounted(() => {
          class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg">
       <div class="flex">
         <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 101.414 1.414L10 11.414l1.293 1.293a1 1 001.414-1.414L11.414 10l1.293-1.293a1 1 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
         </svg>
         <p class="ml-3">{{ error }}</p>
       </div>
@@ -232,6 +294,70 @@ onMounted(() => {
           </p>
         </div>
       </div>
+
+      <!-- Forest Products Section -->
+      <!-- Forest Products Section -->
+<div v-if="forestProducts.length" class="mt-12">
+  <div class="flex items-center space-x-2 mb-6">
+    <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+    <h3 class="text-xl font-bold text-gray-800">Forest Products in this Location</h3>
+  </div>
+
+  <!-- Forest Products Table -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+    <!-- Table Header -->
+    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <h4 class="font-medium text-gray-700">Forest Products</h4>
+      </div>
+    </div>
+
+    <!-- Table Body -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th scope="col" class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+            <th scope="col" class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="product in paginatedForestProducts" :key="product.id" class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer" @click="goToForestProduct(product.id)">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">#{{ product.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ product.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ product.quantity }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ product.unit_name }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+      <div class="flex items-center justify-between">
+        <button @click="prevPage" :disabled="currentPage === 1" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200" :class="currentPage === 1 ? 'text-gray-400' : 'text-gray-700'">
+          <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Previous
+        </button>
+
+        <div class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm">
+          <span class="text-sm font-medium text-gray-700">Page {{ currentPage }} of {{ totalPages }}</span>
+        </div>
+
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200" :class="currentPage === totalPages ? 'text-gray-400' : 'text-gray-700'">
+          Next
+          <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
     </div>
     <Toaster/>
   </div>
