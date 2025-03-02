@@ -1,4 +1,4 @@
-<script lang="ts">
+<script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
