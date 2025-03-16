@@ -34,6 +34,7 @@ import FPCRequestCreate from "@/views/Authenticated/FPCRequest/Create.vue";
 import FPCRequestIndex from "@/views/Authenticated/FPCRequest/Index.vue";
 import FPCRequestView from "@/views/Authenticated/FPCRequest/View.vue";
 import FPCRequestEdit from "@/views/Authenticated/FPCRequest/Edit.vue";
+import FPCRequestIndex2 from "@/views/Authenticated/FPCRequest/Index2.vue";
 
 // 4 = FPU Admin, 1 = Forest Ranger, 2 = FP Collector, 3 = VSU Admin
 const routes = [
@@ -190,7 +191,7 @@ const routes = [
         name: "RequestView",
         component: FPCRequestView,
         meta: {
-          title: "View Collection Request - Nature Cart", requiresRole: [2],
+          title: "View Collection Request - Nature Cart", requiresRole: [2, 4, 1],
         },
       },
       {
@@ -199,6 +200,14 @@ const routes = [
         component: FPCRequestEdit,
         meta: {
           title: "Edit Collection Request - Nature Cart", requiresRole: [2],
+        },
+      },
+      {
+        path: "collection-requests/all",
+        name: "RequestIndex2",
+        component: FPCRequestIndex2,
+        meta: {
+          title: "All Collection Requests - Nature Cart", requiresRole: [4, 1],
         },
       },
       {
