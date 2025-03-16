@@ -4,9 +4,11 @@ import { useRouter } from 'vue-router'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
 import Records from '@/components/SideBarItems/Records.vue'
 import ForestProducts from '@/components/SideBarItems/ForestProducts.vue'
+import FPC_Request from '@/components/SideBarItems/FPC_Request.vue'
 import SystemUsers from '@/components/SideBarItems/SystemUsers.vue'
 import Locations from '@/components/SideBarItems/Locations.vue'
 import defaultProfileImage from '@/assets/profile.png'
+import requestImage from '@/assets/request.png'
 import logoutIcon from '@/assets/logout.png'
 import { supabase } from '@/lib/supabaseClient'
 import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
@@ -31,6 +33,7 @@ const isLoading = ref(true) // Track loading state
 // Computed properties for dropdown states
 const isRecordsDropdownOpen = computed(() => activeDropdown.value === 'records')
 const isForestProductsDropdownOpen = computed(() => activeDropdown.value === 'forestProducts')
+const isFPCRequestDropdownOpen = computed(() => activeDropdown.value === 'fpc_request')
 const isCollectorsDropdownOpen = computed(() => activeDropdown.value === 'collectors')
 const isSystemUsersDropdownOpen = computed(() => activeDropdown.value === 'systemUsers')
 const isLocationDropdownOpen = computed(() => activeDropdown.value === 'locations')
@@ -58,6 +61,10 @@ const toggleLocationDropdown = () => {
 
 const toggleForestProductsDropdown = () => {
   activeDropdown.value = activeDropdown.value === 'forestProducts' ? null : 'forestProducts'
+}
+
+const toggleFPCRequestDropdown = () => {
+  activeDropdown.value = activeDropdown.value === 'fpc_request' ? null : 'fpc_request'
 }
 
 const toggleCollectorsDropdown = () => {
@@ -181,6 +188,38 @@ onMounted(async () => {
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">System Users</span>
           </router-link>
 
+          <FPC_Request
+            v-if="isFPCollector"
+            :isDropdownOpen="isFPCRequestDropdownOpen"
+            @toggleDropdown="toggleFPCRequestDropdown"
+            label="Collection Requests"
+            class="rounded-xl overflow-hidden"
+          >
+          <router-link 
+            to="/authenticated/collection-requests" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/request2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Your Requests</span>
+          </router-link>
+          <router-link  
+            to="/authenticated/collection-request/create" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">New Request</span>
+          </router-link>
+          <router-link 
+            v-if="isFPUAdmin || isForestRanger"
+            to="/authenticated/forest-products/trash" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+          >
+            <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trashed Forest Products</span>
+          </router-link>
+          </FPC_Request>
+
+
           <ForestProducts
             :isDropdownOpen="isForestProductsDropdownOpen"
             @toggleDropdown="toggleForestProductsDropdown"
@@ -252,6 +291,7 @@ onMounted(async () => {
           </Locations>
 
           <Records
+            v-if="isFPUAdmin || isForestRanger"
             :isDropdownOpen="isRecordsDropdownOpen"
             @toggleDropdown="toggleRecordsDropdown"
             label="Collection Records"

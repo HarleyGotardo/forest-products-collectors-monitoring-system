@@ -1,212 +1,294 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { supabase } from '@/lib/supabaseClient'
-import { fetchUserDetails, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin, user } from '@/router/routeGuard'
-import Index from '@/views/Index.vue'
-import Auth_Layout from '@/views/Authenticated/Auth_Layout.vue'
-import Dashboard from '@/views/Authenticated/Dashboard.vue'
-import Map from '@/views/Authenticated/ForestProducts/Map.vue'
-import ForestProductsIndex from '@/views/Authenticated/ForestProducts/Index.vue'
-import ForestProductsCreate from '@/views/Authenticated/ForestProducts/Create.vue'
-import ForestProductsTrash from '@/views/Authenticated/ForestProducts/Trash.vue'
-import SystemUsersIndex from '@/views/Authenticated/SystemUsers/Index.vue'
-import CollectionRecordsIndex from '@/views/Authenticated/CollectionRecords/Index.vue'
-import CollectionRecordsCreate from '@/views/Authenticated/CollectionRecords/Create.vue'
-import CollectionRecordsTrash from '@/views/Authenticated/CollectionRecords/Trash.vue'
-import CollectionRecordsView from '@/views/Authenticated/CollectionRecords/View.vue'
-import ProfileIndex from '@/views/Authenticated/ProfileIndex.vue'
-import LocationsIndex from '@/views/Authenticated/Location/Index.vue'
-import LocationsCreate from '@/views/Authenticated/Location/Create.vue'
-import LocationsTrash from '@/views/Authenticated/Location/Trash.vue'
-import LocationsView from '@/views/Authenticated/Location/View.vue'
-import LocationsEdit from '@/views/Authenticated/Location/Edit.vue'
-import ForestProductsView from '@/views/Authenticated/ForestProducts/View.vue'
-import ForestProductsEdit from '@/views/Authenticated/ForestProducts/Edit.vue'
-import SignUp from '@/views/Authenticated/SignUp.vue'
-import SystemUsersView from '@/views/Authenticated/SystemUsers/View.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import { supabase } from "@/lib/supabaseClient";
+import {
+  fetchUserDetails,
+  isFPUAdmin,
+  isForestRanger,
+  isFPCollector,
+  isVSUAdmin,
+  user,
+} from "@/router/routeGuard";
+import Index from "@/views/Index.vue";
+import Auth_Layout from "@/views/Authenticated/Auth_Layout.vue";
+import Dashboard from "@/views/Authenticated/Dashboard.vue";
+import Map from "@/views/Authenticated/ForestProducts/Map.vue";
+import ForestProductsIndex from "@/views/Authenticated/ForestProducts/Index.vue";
+import ForestProductsCreate from "@/views/Authenticated/ForestProducts/Create.vue";
+import ForestProductsTrash from "@/views/Authenticated/ForestProducts/Trash.vue";
+import SystemUsersIndex from "@/views/Authenticated/SystemUsers/Index.vue";
+import CollectionRecordsIndex from "@/views/Authenticated/CollectionRecords/Index.vue";
+import CollectionRecordsCreate from "@/views/Authenticated/CollectionRecords/Create.vue";
+import CollectionRecordsTrash from "@/views/Authenticated/CollectionRecords/Trash.vue";
+import CollectionRecordsView from "@/views/Authenticated/CollectionRecords/View.vue";
+import ProfileIndex from "@/views/Authenticated/ProfileIndex.vue";
+import LocationsIndex from "@/views/Authenticated/Location/Index.vue";
+import LocationsCreate from "@/views/Authenticated/Location/Create.vue";
+import LocationsTrash from "@/views/Authenticated/Location/Trash.vue";
+import LocationsView from "@/views/Authenticated/Location/View.vue";
+import LocationsEdit from "@/views/Authenticated/Location/Edit.vue";
+import ForestProductsView from "@/views/Authenticated/ForestProducts/View.vue";
+import ForestProductsEdit from "@/views/Authenticated/ForestProducts/Edit.vue";
+import SignUp from "@/views/Authenticated/SignUp.vue";
+import SystemUsersView from "@/views/Authenticated/SystemUsers/View.vue";
+import FPCRequestCreate from "@/views/Authenticated/FPCRequest/Create.vue";
+import FPCRequestIndex from "@/views/Authenticated/FPCRequest/Index.vue";
+import FPCRequestView from "@/views/Authenticated/FPCRequest/View.vue";
+import FPCRequestEdit from "@/views/Authenticated/FPCRequest/Edit.vue";
 
 // 4 = FPU Admin, 1 = Forest Ranger, 2 = FP Collector, 3 = VSU Admin
 const routes = [
   {
-    path: '/',
-    name: 'Index',
+    path: "/",
+    name: "Index",
     component: Index,
-    meta: { title: 'Nature Cart - Home', requiresRole: [4, 2, 3, 1] }
+    meta: { title: "Nature Cart - Home", requiresRole: [4, 2, 3, 1] },
   },
   {
-    path: '/sign-up',
-    name: 'SignUp',
+    path: "/sign-up",
+    name: "SignUp",
     component: SignUp,
-    meta: { title: 'Sign Up - Nature Cart', requiresRole: [4, 2, 3, 1] }
+    meta: { title: "Sign Up - Nature Cart", requiresRole: [4, 2, 3, 1] },
   },
   {
-    path: '/authenticated',
+    path: "/authenticated",
     component: Auth_Layout,
     meta: { requiresAuth: true },
     children: [
       {
-        path: 'dashboard',
-        name: 'Dashboard',
+        path: "dashboard",
+        name: "Dashboard",
         component: Dashboard,
-        meta: { title: 'Dashboard - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: { title: "Dashboard - Nature Cart", requiresRole: [4, 2, 3, 1] },
       },
       {
-        path: 'records',
-        name: 'Records',
+        path: "records",
+        name: "Records",
         component: ForestProductsIndex,
-        meta: { title: 'Records - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: { title: "Records - Nature Cart", requiresRole: [4, 2, 3, 1] },
       },
       {
-        path: 'map',
-        name: 'Map',
+        path: "map",
+        name: "Map",
         component: Map,
-        meta: { title: 'Map - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: { title: "Map - Nature Cart", requiresRole: [4, 2, 3, 1] },
       },
       {
-        path: 'forest-products',
-        name: 'ForestProducts',
+        path: "forest-products",
+        name: "ForestProducts",
         component: ForestProductsIndex,
-        meta: { title: 'Forest Products - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "Forest Products - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'forest-products/create',
-        name: 'ForestProductsCreate',
+        path: "forest-products/create",
+        name: "ForestProductsCreate",
         component: ForestProductsCreate,
-        meta: { title: 'Create Forest Product - Nature Cart', requiresRole: [4, 1] }
+        meta: {
+          title: "Create Forest Product - Nature Cart",
+          requiresRole: [4, 1],
+        },
       },
       {
-        path: 'forest-products/:id',
-        name: 'ForestProductsView',
+        path: "forest-products/:id",
+        name: "ForestProductsView",
         component: ForestProductsView,
-        meta: { title: 'View Forest Product - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "View Forest Product - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'forest-products/:id/edit',
-        name: 'ForestProductsEdit',
+        path: "forest-products/:id/edit",
+        name: "ForestProductsEdit",
         component: ForestProductsEdit,
-        meta: { title: 'Edit Forest Product - Nature Cart', requiresRole: [4, 1] }
+        meta: {
+          title: "Edit Forest Product - Nature Cart",
+          requiresRole: [4, 1],
+        },
       },
       {
-        path: 'forest-products/trash',
-        name: 'ForestProductsTrash',
+        path: "forest-products/trash",
+        name: "ForestProductsTrash",
         component: ForestProductsTrash,
-        meta: { title: 'Forest Products Trash - Nature Cart', requiresRole: [4, 1] }
+        meta: {
+          title: "Forest Products Trash - Nature Cart",
+          requiresRole: [4, 1],
+        },
       },
       {
-        path: 'system-users',
-        name: 'SystemUsers',
+        path: "system-users",
+        name: "SystemUsers",
         component: SystemUsersIndex,
-        meta: { title: 'System Users - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "System Users - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'system-users/:id',
-        name: 'SystemUsersView',
+        path: "system-users/:id",
+        name: "SystemUsersView",
         component: SystemUsersView,
-        meta: { title: 'View System User - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "View System User - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'collection-records',
-        name: 'CollectionRecords',
+        path: "collection-records",
+        name: "CollectionRecords",
         component: CollectionRecordsIndex,
-        meta: { title: 'Collection Records - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "Collection Records - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'collection-records/:id',
-        name: 'CollectionRecordsView',
+        path: "collection-records/:id",
+        name: "CollectionRecordsView",
         component: CollectionRecordsView,
-        meta: { title: 'View Collection Record - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "View Collection Record - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'collection-records/create',
-        name: 'CollectionRecordsCreate',
+        path: "collection-records/create",
+        name: "CollectionRecordsCreate",
         component: CollectionRecordsCreate,
-        meta: { title: 'Create Collection Record - Nature Cart', requiresRole: [4, 1] }
+        meta: {
+          title: "Create Collection Record - Nature Cart",
+          requiresRole: [4, 1],
+        },
       },
       {
-        path: 'collection-records/trash',
-        name: 'CollectionRecordsTrash',
+        path: "collection-records/trash",
+        name: "CollectionRecordsTrash",
         component: CollectionRecordsTrash,
-        meta: { title: 'Collection Records Trash - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "Collection Records Trash - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'locations',
-        name: 'LocationsIndex',
+        path: "collection-requests",
+        name: "RequestIndex",
+        component: FPCRequestIndex,
+        meta: { title: "Collection Requests - Nature Cart", requiresRole: [2] },
+      },
+      {
+        path: "collection-request/create",
+        name: "RequestCreate",
+        component: FPCRequestCreate,
+        meta: {
+          title: "Create a Collection Request - Nature Cart", requiresRole: [2],
+        },
+      },
+      {
+        path: "collection-requests/:id",
+        name: "RequestView",
+        component: FPCRequestView,
+        meta: {
+          title: "View Collection Request - Nature Cart", requiresRole: [2],
+        },
+      },
+      {
+        path: "collection-requests/:id/edit",
+        name: "RequestEdit",
+        component: FPCRequestEdit,
+        meta: {
+          title: "Edit Collection Request - Nature Cart", requiresRole: [2],
+        },
+      },
+      {
+        path: "locations",
+        name: "LocationsIndex",
         component: LocationsIndex,
-        meta: { title: 'Locations - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: { title: "Locations - Nature Cart", requiresRole: [4, 2, 3, 1] },
       },
       {
-        path: 'locations/create',
-        name: 'LocationsCreate',
+        path: "locations/create",
+        name: "LocationsCreate",
         component: LocationsCreate,
-        meta: { title: 'Create Locations - Nature Cart', requiresRole: [4, 1] }
+        meta: { title: "Create Locations - Nature Cart", requiresRole: [4, 1] },
       },
       {
-        path: 'locations/:id',
-        name: 'LocationsView',
+        path: "locations/:id",
+        name: "LocationsView",
         component: LocationsView,
-        meta: { title: 'View Location - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "View Location - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'locations/trash',
-        name: 'LocationsTrash',
+        path: "locations/trash",
+        name: "LocationsTrash",
         component: LocationsTrash,
-        meta: { title: 'Trash Locations - Nature Cart', requiresRole: [4, 2, 3, 1] }
+        meta: {
+          title: "Trash Locations - Nature Cart",
+          requiresRole: [4, 2, 3, 1],
+        },
       },
       {
-        path: 'locations/:id/edit',
-        name: 'LocationsEdit',
+        path: "locations/:id/edit",
+        name: "LocationsEdit",
         component: LocationsEdit,
-        meta: { title: 'Edit Location - Nature Cart', requiresRole: [4, 1] }
+        meta: { title: "Edit Location - Nature Cart", requiresRole: [4, 1] },
       },
       {
-        path: 'profile',
-        name: 'Profile',
+        path: "profile",
+        name: "Profile",
         component: ProfileIndex,
-        meta: { title: 'Profile - Nature Cart', requiresRole: [4, 2, 3, 1] }
-      }
-    ]
-  }
-]
+        meta: { title: "Profile - Nature Cart", requiresRole: [4, 2, 3, 1] },
+      },
+    ],
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes
-})
+  routes,
+});
 
 router.beforeEach(async (to, from, next) => {
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (to.matched.some(record => record.meta.requiresAuth)) {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!session) {
-      next({ name: 'Index' })
+      next({ name: "Index" });
     } else {
       if (!user.value) {
-        await fetchUserDetails()
+        await fetchUserDetails();
       }
-      if (to.matched.some(record => record.meta.requiresRole)) {
-        const requiredRoles = to.meta.requiresRole
+      if (to.matched.some((record) => record.meta.requiresRole)) {
+        const requiredRoles = to.meta.requiresRole;
         if (!requiredRoles.includes(user.value.role_id)) {
-          next({ name: 'Dashboard' })
+          next({ name: "Dashboard" });
         } else {
-          next()
+          next();
         }
       } else {
-        next()
+        next();
       }
     }
   } else {
-    if (session && to.name === 'Index') {
-      next({ name: 'Dashboard' })
+    if (session && to.name === "Index") {
+      next({ name: "Dashboard" });
     } else {
-      next()
+      next();
     }
   }
 
   // Set the document title
   if (to.meta.title) {
-    document.title = to.meta.title
+    document.title = to.meta.title;
   } else {
-    document.title = 'Nature Cart'
+    document.title = "Nature Cart";
   }
-})
+});
 
-export default router
+export default router;

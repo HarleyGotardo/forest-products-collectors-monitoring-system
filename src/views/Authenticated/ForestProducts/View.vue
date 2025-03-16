@@ -639,6 +639,7 @@ onMounted(() => {
             </div>
 
             <button
+              v-if="isForestRanger || isFPUAdmin"
               @click="showLocationModal = true; $nextTick(() => initializeModalMap())"
               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
             >
@@ -661,7 +662,7 @@ onMounted(() => {
         </div>
     <!-- Conditional Rendering for No Locations -->
     <div v-if="locations.length === 0" class="p-6 text-center text-gray-500">
-      This forest product doesn't have a location. Add a location to get started.
+      This forest product doesn't have a location.  
     </div>
         <!-- Locations List -->
         <div v-else class="divide-y divide-gray-100">
