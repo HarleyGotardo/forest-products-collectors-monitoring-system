@@ -28,7 +28,10 @@ const requestToApprove = ref(null);
 const fetchAllRequests = async () => {
   let { data, error: fetchError } = await supabase
     .from('collection_requests')
-    .select('*')
+    .select(`
+      *,
+      profiles!collection_requests_user_id_fkey (first_name, last_name)
+    `)
     .is('deleted_at', null); // Fetch only requests with null deleted_at
 
   if (fetchError) {
@@ -52,9 +55,10 @@ const filteredRequests = computed(() => {
   const query = searchQuery.value.toLowerCase();
   return requests.value.filter(request =>
     request.id.toString().includes(query) ||
-    request.status.toLowerCase().includes(query) ||
+    (request.approved_at ? 'approved' : 'pending').includes(query) ||
     request.requested_at.toString().includes(query) ||
-    request.collection_date.toString().includes(query)
+    request.collection_date.toString().includes(query) ||
+    `${request.profiles.first_name} ${request.profiles.last_name}`.toLowerCase().includes(query)
   );
 });
 
@@ -86,7 +90,6 @@ const approveRequest = async () => {
   const { error: approveError } = await supabase
     .from('collection_requests')
     .update({
-      status: 'approved',
       approved_by: user.id,
       approved_at: new Date().toISOString()
     })
@@ -162,15 +165,16 @@ watch(currentPage, () => {
           <thead class="bg-gray-50">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested At</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collection Date</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested By</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="filteredRequests.length === 0">
-              <td colspan="5" class="px-6 py-12 text-center">
+              <td colspan="6" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
                   <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -187,20 +191,23 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 #{{ request.id }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                  {{ request.status }}
-                </span>
-              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ new Date(request.requested_at).toLocaleDateString() }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ new Date(request.collection_date).toLocaleDateString() }}
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ request.profiles.first_name }} {{ request.profiles.last_name }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                  {{ request.approved_at ? 'Approved' : 'Pending' }}
+                </span>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
                 <div class="flex items-center justify-end space-x-3">
-                  <template v-if="request.status === 'approved'">
+                  <template v-if="request.approved_at">
                     <span class="text-sm text-gray-500">Approved at {{ new Date(request.approved_at).toLocaleDateString() }}</span>
                   </template>
                   <template v-else>
