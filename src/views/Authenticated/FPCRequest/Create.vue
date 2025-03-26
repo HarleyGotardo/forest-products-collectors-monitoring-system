@@ -114,6 +114,21 @@ const cancelSelection = () => {
   showModal.value = false;
 };
 
+// Add methods to handle quantity changes
+const increaseQuantity = (product) => {
+  const selectedProduct = selectedForestProducts.value.find(p => p.id === product.id);
+  if (selectedProduct) {
+    selectedProduct.quantity = (parseFloat(selectedProduct.quantity) + 1).toString();
+  }
+};
+
+const decreaseQuantity = (product) => {
+  const selectedProduct = selectedForestProducts.value.find(p => p.id === product.id);
+  if (selectedProduct && parseFloat(selectedProduct.quantity) > 1) {
+    selectedProduct.quantity = (parseFloat(selectedProduct.quantity) - 1).toString();
+  }
+};
+
 onMounted(() => {
   fetchForestProducts();
 });
@@ -207,7 +222,7 @@ onMounted(() => {
           class="w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
           </svg>
           Submit Collection Request
         </button>
