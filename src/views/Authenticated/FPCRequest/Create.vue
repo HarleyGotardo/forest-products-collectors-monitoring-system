@@ -7,6 +7,7 @@ import { toast } from 'vue-sonner';
 
 const forestProducts = ref([]);
 const selectedForestProducts = ref([]);
+const tempSelectedProducts = ref([]); // Temporary array for modal selection
 const collectionDate = ref('');
 const showModal = ref(false);
 const router = useRouter();
@@ -90,33 +91,34 @@ const submitRequest = async (collectionRequest, collectionRequestItems) => {
   router.push('/authenticated/collection-requests');
 };
 
-const toggleProductSelection = (product) => {
-  const index = selectedForestProducts.value.findIndex(p => p.id === product.id);
+const toggleTempProductSelection = (product) => {
+  const index = tempSelectedProducts.value.findIndex(p => p.id === product.id);
   if (index === -1) {
-    selectedForestProducts.value.push({ ...product, quantity: '1' });
+    tempSelectedProducts.value.push({ ...product, quantity: '1' });
   } else {
-    selectedForestProducts.value.splice(index, 1);
+    tempSelectedProducts.value.splice(index, 1);
   }
 };
 
-const isProductSelected = (product) => {
-  return selectedForestProducts.value.some(p => p.id === product.id);
+const isTempProductSelected = (product) => {
+  return tempSelectedProducts.value.some(p => p.id === product.id);
 };
 
-const increaseQuantity = (product) => {
-  product.quantity = (parseFloat(product.quantity) || 0) + 1;
+const confirmSelection = () => {
+  selectedForestProducts.value = [...tempSelectedProducts.value];
+  showModal.value = false;
 };
 
-const decreaseQuantity = (product) => {
-  if (product.quantity > 1) {
-    product.quantity = parseFloat(product.quantity) - 1;
-  }
+const cancelSelection = () => {
+  tempSelectedProducts.value = [...selectedForestProducts.value];
+  showModal.value = false;
 };
 
 onMounted(() => {
   fetchForestProducts();
 });
 </script>
+
 <template>
   <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
     <div class="max-w-lg w-full bg-white rounded-xl shadow-lg overflow-hidden">
@@ -133,7 +135,7 @@ onMounted(() => {
           <label for="forestProducts" class="block text-sm font-medium text-gray-700 mb-2">Forest Products</label>
           <button 
             type="button" 
-            @click="showModal = true" 
+            @click="showModal = true; tempSelectedProducts = [...selectedForestProducts]" 
             class="w-full flex items-center justify-between bg-white border border-gray-300 rounded-lg py-3 px-4 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             <span class="text-gray-700">
@@ -201,13 +203,11 @@ onMounted(() => {
         <button 
           type="submit" 
           :disabled="!isFormComplete || !isCollectionDateValid" 
-          :class="[
-            'w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center', 
-            isFormComplete && isCollectionDateValid ? 'bg-gray-900 hover:bg-green-800' : 'bg-gray-400 cursor-not-allowed'
-          ]"
+          :class="[isFormComplete && isCollectionDateValid ? 'bg-gray-900 hover:bg-green-800' : 'bg-gray-400 cursor-not-allowed']"
+          class="w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
           </svg>
           Submit Collection Request
         </button>
@@ -218,7 +218,7 @@ onMounted(() => {
     <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto">
       <div class="flex items-center justify-center min-h-screen px-4">
         <!-- Backdrop -->
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showModal = false">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="cancelSelection">
           <div class="absolute inset-0 bg-gray-500 bg-opacity-75"></div>
         </div>
         
@@ -236,8 +236,8 @@ onMounted(() => {
                   type="checkbox"
                   :id="'product-' + product.id"
                   :value="product"
-                  @change="toggleProductSelection(product)"
-                  :checked="isProductSelected(product)"
+                  @change="toggleTempProductSelection(product)"
+                  :checked="isTempProductSelected(product)"
                   class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
                 />
                 <label :for="'product-' + product.id" class="ml-3 flex justify-between items-center w-full cursor-pointer">
@@ -251,14 +251,14 @@ onMounted(() => {
           <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
             <button 
               type="button" 
-              @click="showModal = false" 
+              @click="cancelSelection" 
               class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               Cancel
             </button>
             <button 
               type="button" 
-              @click="showModal = false" 
+              @click="confirmSelection" 
               class="px-4 py-2 bg-gray-900 border border-transparent rounded-lg text-white hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               Confirm Selection
