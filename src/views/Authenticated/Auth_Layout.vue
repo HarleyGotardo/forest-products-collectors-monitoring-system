@@ -195,7 +195,7 @@ onMounted(async () => {
             class="rounded-xl overflow-hidden"
           >
           <router-link 
-            v-if="isFPUAdmin || isForestRanger"
+            v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
             to="/authenticated/collection-requests/all" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
           >

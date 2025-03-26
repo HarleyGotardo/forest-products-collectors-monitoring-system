@@ -14,6 +14,7 @@ import AlertDialogAction from '@/components/ui/alert-dialog/AlertDialogAction.vu
 import AlertDialogCancel from '@/components/ui/alert-dialog/AlertDialogCancel.vue';
 import AlertDialogHeader from '@/components/ui/alert-dialog/AlertDialogHeader.vue';
 import AlertDialogFooter from '@/components/ui/alert-dialog/AlertDialogFooter.vue';
+import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard';
 
 const router = useRouter();
 const requests = ref([]); // Store all requests
@@ -169,7 +170,8 @@ watch(currentPage, () => {
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collection Date</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested By</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th v-if="isFPUAdmin || isForestRanger"
+              scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -213,7 +215,9 @@ watch(currentPage, () => {
                   <template v-else>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button @click="confirmApproveRequest(request.id)">
+                        <Button 
+                        v-if="isFPUAdmin || isForestRanger"
+                        @click="confirmApproveRequest(request.id)">
                           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                   d="M5 13l4 4L19 7" />

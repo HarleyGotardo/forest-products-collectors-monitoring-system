@@ -207,7 +207,7 @@ const routes = [
         name: "RequestIndex2",
         component: FPCRequestIndex2,
         meta: {
-          title: "All Collection Requests - Nature Cart", requiresRole: [4, 1],
+          title: "All Collection Requests - Nature Cart", requiresRole: [4, 1, 3],
         },
       },
       {
