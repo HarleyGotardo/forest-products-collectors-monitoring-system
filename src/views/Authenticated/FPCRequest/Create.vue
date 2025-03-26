@@ -4,12 +4,22 @@ import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { getUser } from '@/router/routeGuard';
 import { toast } from 'vue-sonner';
+import AlertDialog from '@/components/ui/alert-dialog/AlertDialog.vue';
+import AlertDialogTrigger from '@/components/ui/alert-dialog/AlertDialogTrigger.vue';
+import AlertDialogContent from '@/components/ui/alert-dialog/AlertDialogContent.vue';
+import AlertDialogHeader from '@/components/ui/alert-dialog/AlertDialogHeader.vue';
+import AlertDialogTitle from '@/components/ui/alert-dialog/AlertDialogTitle.vue';
+import AlertDialogDescription from '@/components/ui/alert-dialog/AlertDialogDescription.vue';
+import AlertDialogFooter from '@/components/ui/alert-dialog/AlertDialogFooter.vue';
+import AlertDialogCancel from '@/components/ui/alert-dialog/AlertDialogCancel.vue';
+import AlertDialogAction from '@/components/ui/alert-dialog/AlertDialogAction.vue';
 
 const forestProducts = ref([]);
 const selectedForestProducts = ref([]);
 const tempSelectedProducts = ref([]); // Temporary array for modal selection
 const collectionDate = ref('');
 const showModal = ref(false);
+const showConfirmDialog = ref(false); // State for showing the confirmation dialog
 const router = useRouter();
 
 const fetchForestProducts = async () => {
@@ -44,6 +54,10 @@ const handleSubmit = () => {
     return;
   }
 
+  showConfirmDialog.value = true; // Show the confirmation dialog
+};
+
+const confirmSubmit = async () => {
   const user = getUser();
   const collectionRequest = {
     user_id: user.id,
@@ -55,10 +69,6 @@ const handleSubmit = () => {
     requested_quantity: product.quantity,
   }));
 
-  submitRequest(collectionRequest, collectionRequestItems);
-};
-
-const submitRequest = async (collectionRequest, collectionRequestItems) => {
   const { data: requestData, error: requestError } = await supabase
     .from('collection_requests')
     .insert([collectionRequest])
@@ -215,17 +225,33 @@ onMounted(() => {
         </div>
 
         <!-- Submit Button -->
-        <button 
-          type="submit" 
-          :disabled="!isFormComplete || !isCollectionDateValid" 
-          :class="[isFormComplete && isCollectionDateValid ? 'bg-gray-900 hover:bg-green-800' : 'bg-gray-400 cursor-not-allowed']"
-          class="w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-          Submit Collection Request
-        </button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button 
+              type="button" 
+              :disabled="!isFormComplete || !isCollectionDateValid" 
+              :class="[isFormComplete && isCollectionDateValid ? 'bg-gray-900 hover:bg-green-800' : 'bg-gray-400 cursor-not-allowed']"
+              class="w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+              Submit Collection Request
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Submission</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to submit this collection request?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="confirmSubmit">Confirm</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </form>
     </div>
 
