@@ -36,6 +36,7 @@ const fetchDashboardData = async (forceRefresh = false) => {
       .from('profiles')
       .select('id', { count: 'exact' })
       .eq('role_id', 2)
+      .not('approval_flag', 'is', null)
     
     if (profilesError) throw profilesError
     totalCollectors.value = profiles.length
