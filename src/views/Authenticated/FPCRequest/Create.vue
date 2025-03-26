@@ -87,7 +87,7 @@ const submitRequest = async (collectionRequest, collectionRequestItems) => {
   }
 
   toast.success('Collection request created successfully');
-  router.push('/authenticated/request');
+  router.push('/authenticated/collection-requests');
 };
 
 const toggleProductSelection = (product) => {
