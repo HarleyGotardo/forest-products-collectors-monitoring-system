@@ -67,7 +67,7 @@ const currentLocation = ref(null);
 
 const fetchLocations = async () => {
   const { data, error } = await supabase
-    .from('location')
+    .from('locations')
     .select('id, name, latitude, longitude')
     .order('name');
 
@@ -185,7 +185,7 @@ const handleSubmit = async () => {
   for (const location of selectedLocations.value) {
     // Check for duplicate location
     const { data: existingFpLocation, error: existingFpLocationError } = await supabase
-      .from('fp_and_location')
+      .from('fp_and_locations')
       .select('*')
       .eq('forest_product_id', fpData.id)
       .eq('location_id', location.id)
@@ -202,7 +202,7 @@ const handleSubmit = async () => {
     }
 
     const { error: fpLocationError } = await supabase
-      .from('fp_and_location')
+      .from('fp_and_locations')
       .insert([{
         forest_product_id: fpData.id,
         location_id: location.id,

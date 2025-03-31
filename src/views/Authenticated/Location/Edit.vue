@@ -43,7 +43,7 @@ L.Icon.Default.mergeOptions({
 
 const fetchLocation = async () => {
   let { data, error: fetchError } = await supabase
-    .from('location')
+    .from('locations')
     .select('*')
     .eq('id', locationId)
     .single()
@@ -61,7 +61,7 @@ const fetchLocation = async () => {
 
 const fetchAllLocations = async () => {
   let { data, error: fetchError } = await supabase
-    .from('location')
+    .from('locations')
     .select('*')
 
   if (fetchError) {
@@ -86,7 +86,7 @@ const handleSubmit = async () => {
   };
 
   const { error: updateError } = await supabase
-    .from('location')
+    .from('locations')
     .update(payload)
     .eq('id', locationId);
 

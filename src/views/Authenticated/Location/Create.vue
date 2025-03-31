@@ -51,7 +51,7 @@ const existingLocations = ref([]);
 
 const fetchLocations = async () => {
   const { data, error } = await supabase
-    .from('location')
+    .from('locations')
     .select('*');
 
   if (error) {
@@ -81,7 +81,7 @@ const handleSubmit = async () => {
   };
 
   const { error: insertError } = await supabase
-    .from('location')
+    .from('locations')
     .insert([payload]);
 
   if (insertError) {

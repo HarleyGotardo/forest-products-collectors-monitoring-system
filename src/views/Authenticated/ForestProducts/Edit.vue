@@ -51,8 +51,8 @@ const fetchForestProduct = async () => {
       measurement_units:measurement_unit_id (
         unit_name
       ),
-      fp_and_location (
-        location (
+      fp_and_locations (
+        locations (
           id,
           name,
           latitude,
@@ -72,7 +72,7 @@ const fetchForestProduct = async () => {
     type.value = data.type
     price_based_on_measurement_unit.value = data.price_based_on_measurement_unit
     selectedMeasurementUnit.value = data.measurement_unit_id
-    selectedLocations.value = data.fp_and_location.map(fpLoc => ({
+    selectedLocations.value = data.fp_and_locations.map(fpLoc => ({
       ...fpLoc.location,
       quantity: fpLoc.quantity
     }))
@@ -85,8 +85,8 @@ const fetchForestProduct = async () => {
       price_based_on_measurement_unit: data.price_based_on_measurement_unit,
       measurement_unit_id: data.measurement_unit_id,
       image_url: data.image_url,
-      locations: data.fp_and_location.map(fpLoc => ({
-        ...fpLoc.location,
+      locations: data.fp_and_locations.map(fpLoc => ({
+        ...fpLoc.locations,
         quantity: fpLoc.quantity
       }))
     }
@@ -120,7 +120,7 @@ const updateLocationQuantity = (location, quantity) => {
 
 const fetchLocations = async () => {
   const { data, error } = await supabase
-    .from('location')
+    .from('locations')
     .select('id, name, latitude, longitude')
     .order('name')
 
@@ -180,10 +180,6 @@ const selectedLocationsNote = computed(() => {
 })
 
 const handleSubmit = async () => {
-  if (selectedLocations.value.length === 0) {
-    error.value = 'Please select at least one location'
-    return
-  }
 
   const currentDate = new Date()
   const formattedDate = format(currentDate, 'yyyy-MM-dd HH:mm:ss')
@@ -222,7 +218,7 @@ const handleSubmit = async () => {
   for (const locationId of originalLocationIds) {
     if (!newLocationIds.includes(locationId)) {
       const { error: deleteError } = await supabase
-        .from('fp_and_location')
+        .from('fp_and_locations')
         .delete()
         .eq('forest_product_id', productId)
         .eq('location_id', locationId)
@@ -238,7 +234,7 @@ const handleSubmit = async () => {
   for (const location of selectedLocations.value) {
     if (!originalLocationIds.includes(location.id)) {
       const { error: insertError } = await supabase
-        .from('fp_and_location')
+        .from('fp_and_locations')
         .insert([{
           forest_product_id: productId,
           location_id: location.id,

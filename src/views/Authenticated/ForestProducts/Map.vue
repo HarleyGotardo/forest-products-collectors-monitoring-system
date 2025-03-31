@@ -42,13 +42,13 @@ const createLocation = () => {
 
 const fetchLocationsWithProducts = async () => {
   let { data, error } = await supabase
-    .from('location')
+    .from('locations')
     .select(`
       id,
       name,
       latitude,
       longitude,
-      fp_and_location (
+      fp_and_locations (
         forest_product_id,
         quantity,
         forest_products (
@@ -76,7 +76,7 @@ const showLocationDetails = async (location) => {
   selectedLocation.value = location
   
   // Transform the nested data structure
-  selectedLocationProducts.value = location.fp_and_location
+  selectedLocationProducts.value = location.fp_and_locations
     .map(fp => ({
       ...fp.forest_products,
       quantity: fp.quantity

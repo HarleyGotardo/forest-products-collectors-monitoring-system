@@ -32,8 +32,8 @@ const fetchTrashedProducts = async () => {
     .from('forest_products')
     .select(`
       *,
-      fp_and_location (
-        location (
+      fp_and_locations (
+        locations (
           id,
           name
         )
@@ -49,7 +49,7 @@ const fetchTrashedProducts = async () => {
   } else {
     trashedProducts.value = forest_products.map(product => ({
       ...product,
-      locations: product.fp_and_location.map(fp => fp.location),
+      locations: product.fp_and_locations.map(fp => fp.locations),
       unit_name: product.measurement_units ? product.measurement_units.unit_name : 'N/A',
       image_url: JSON.parse(product.image_url).data.publicUrl
     }))

@@ -42,7 +42,7 @@ const forestProducts = ref([])
 
 const fetchLocation = async () => {
   let { data, error: fetchError } = await supabase
-    .from('location')
+    .from('locations')
     .select('*')
     .eq('id', locationId)
     .single()
@@ -110,7 +110,7 @@ const initializeMap = (lat, lng) => {
 
 const restoreLocation = async () => {
   const { error: restoreError } = await supabase
-    .from('location')
+    .from('locations')
     .update({ deleted_at: null })
     .eq('id', locationId)
 
@@ -124,7 +124,7 @@ const restoreLocation = async () => {
 
 const deletePermanently = async () => {
   const { error: deleteError } = await supabase
-    .from('location')
+    .from('locations')
     .delete()
     .eq('id', locationId)
 
@@ -200,77 +200,81 @@ onMounted(() => {
       <!-- Location Info Card -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-6">
-          <div class="flex items-start space-x-4">
+          <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
             <!-- Location Icon -->
-            <div class="p-3 bg-blue-50 rounded-lg">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            <div class="p-4 bg-blue-50 rounded-full flex items-center justify-center">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
 
             <!-- Location Details -->
             <div class="flex-1">
-              <div v-if="location.deleted_at" class="mt-4 flex items-center space-x-4">
-                <h3 class="text-xl font-semibold text-gray-900">{{ location.name }}</h3>
-                <div class="flex items-center space-x-2">
-                  <p class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">Deleted</p>
-                  <p class="mt-1 font-mono text-gray-900">{{ formatDate(location.deleted_at) }}</p>
-                  <AlertDialog>
-                    <AlertDialogTrigger>
-                        <Button>
-                        <img src="@/assets/restore2.png" alt="Restore" class="w-5 h-5"/>
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Restore Location?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This location will be restored.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="restoreLocation">Restore</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <AlertDialog>
-                    <AlertDialogTrigger>
-                      <Button >
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Location Permanently?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="deletePermanently">Delete Permanently</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+              <div class="flex items-center justify-between">
+          <h3 class="text-2xl font-semibold text-gray-900">{{ location.name }}</h3>
+          <div v-if="location.deleted_at" class="flex items-center space-x-2">
+            <p class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">Deleted</p>
+            <p class="font-mono text-gray-900">{{ formatDate(location.deleted_at) }}</p>
+          </div>
               </div>
-              <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="p-3 bg-gray-50 rounded-lg">
-                  <p class="text-sm text-gray-500">Latitude</p>
-                  <p class="mt-1 font-mono text-gray-900">{{ location.latitude }}</p>
-                </div>
-                
-                <div class="p-3 bg-gray-50 rounded-lg">
-                  <p class="text-sm text-gray-500">Longitude</p>
-                  <p class="mt-1 font-mono text-gray-900">{{ location.longitude }}</p>
-                </div>
+
+              <div v-if="location.deleted_at" class="mt-4 flex space-x-4">
+          <AlertDialog>
+            <AlertDialogTrigger>
+              <Button class="flex items-center space-x-2">
+                <img src="@/assets/restore2.png" alt="Restore" class="w-5 h-5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Restore Location?</AlertDialogTitle>
+                <AlertDialogDescription>
+            This location will be restored.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="restoreLocation">Restore</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog>
+            <AlertDialogTrigger>
+              <Button class="flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Location Permanently?</AlertDialogTitle>
+                <AlertDialogDescription>
+            This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deletePermanently">Delete Permanently</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+              </div>
+
+              <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-500">Latitude</p>
+            <p class="mt-1 font-mono text-gray-900">{{ location.latitude }}</p>
+          </div>
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-500">Longitude</p>
+            <p class="mt-1 font-mono text-gray-900">{{ location.longitude }}</p>
+          </div>
               </div>
             </div>
           </div>

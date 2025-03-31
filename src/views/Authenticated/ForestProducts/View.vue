@@ -73,7 +73,7 @@ const updateLocationQuantity = async () => {
   }
 
   const { error: updateError } = await supabase
-    .from('fp_and_location')
+    .from('fp_and_locations')
     .update({ quantity: editLocationQuantity.value })
     .eq('forest_product_id', forestProduct.value.id)
     .eq('location_id', locationToEdit.value.id)
@@ -98,7 +98,7 @@ const deleteLocation = async () => {
   if (locationToDelete.value !== null) {
     const locationId = locationToDelete.value
     const { error: deleteError } = await supabase
-      .from('fp_and_location')
+      .from('fp_and_locations')
       .delete()
       .eq('forest_product_id', forestProduct.value.id)
       .eq('location_id', locationId)
@@ -144,15 +144,15 @@ const fetchForestProduct = async () => {
 }
 const fetchLocations = async () => {
   let { data, error: fetchError } = await supabase
-    .from('fp_and_location')
-    .select('location (id, name, latitude, longitude), quantity')
+    .from('fp_and_locations')
+    .select('locations (id, name, latitude, longitude), quantity')
     .eq('forest_product_id', productId)
 
   if (fetchError) {
     error.value = fetchError.message
   } else {
     locations.value = data.map(fp => ({
-      ...fp.location,
+      ...fp.locations,
       quantity: fp.quantity
     }))
     nextTick(() => {
@@ -163,7 +163,7 @@ const fetchLocations = async () => {
 
 const fetchAllLocations = async () => {
   let { data, error: fetchError } = await supabase
-    .from('location')
+    .from('locations')
     .select('*')
 
   if (fetchError) {
@@ -292,7 +292,7 @@ const initializeModalMap = () => {
         };
 
         const { data, error } = await supabase
-          .from('location')
+          .from('locations')
           .insert([newLocation])
           .select()
           .single();
@@ -336,7 +336,7 @@ const upsertLocation = async () => {
   }
 
   const { error: fpLocationError } = await supabase
-    .from('fp_and_location')
+    .from('fp_and_locations')
     .upsert([{
       forest_product_id: forestProduct.value.id,
       location_id: selectedLocation.value.id,
@@ -789,6 +789,7 @@ onMounted(() => {
             @click="prevPage"
             :disabled="currentPage === 1"
             class="ml-3 inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            v-if="locations.length > 0"
           >
             <svg
               class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
@@ -805,10 +806,11 @@ onMounted(() => {
             </svg>
             Previous
           </button>
-          <span class="text-sm text-gray-700">
+          <span class="text-sm text-gray-700" v-if="locations.length > 0">
             {{ currentPage }} / {{ totalPages }}
           </span>
           <button
+            v-if="locations.length > 0"
             @click="nextPage"
             :disabled="(currentPage * itemsPerPage) >= (locations.value?.length || 0)"
             class="mr-3 inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -903,7 +905,7 @@ onMounted(() => {
         </div>
 
         <!-- Map Container -->
-        <div class="w-1/2 mx-auto rounded-full">
+        <div class="w-1/2 mx-auto rounded-full" v-if="locations.length != 0">
           <h3 
             class="text-lg text-center font-medium text-gray-900 bg-green-100 py-2 rounded-full shadow-sm">
             {{ forestProduct.name }}s Map Locations

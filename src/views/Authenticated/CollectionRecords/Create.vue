@@ -55,7 +55,7 @@ const fetchCollectors = async () => {
 
 const fetchForestProducts = async () => {
   const { data, error } = await supabase
-    .from('fp_and_location')
+    .from('fp_and_locations')
     .select(`
       id,
       forest_product_id,
@@ -68,7 +68,7 @@ const fetchForestProducts = async () => {
         measurement_unit_id,
         measurement_units (unit_name)
       ),
-      location (name)
+      locations (name)
     `);
   if (error) {
     console.error('Error fetching forest products:', error);
@@ -78,7 +78,7 @@ const fetchForestProducts = async () => {
       forest_product_id: item.forest_product_id,
       forest_product_name: item.forest_products.name,
       location_id: item.location_id,
-      location_name: item.location.name,
+      location_name: item.locations.name,
       price: item.forest_products.price_based_on_measurement_unit,
       unit_name: item.forest_products.measurement_units.unit_name,
       quantity: item.quantity
@@ -151,10 +151,10 @@ const confirmSubmit = async () => {
     console.error('Error creating collection record:', error);
     toast.error('Error creating collection record - ' + error.message);
   } else {
-    // Deduct the quantity from the fp_and_location table
+    // Deduct the quantity from the fp_and_locations table
     const newQuantity = selectedProduct.quantity - quantity.value;
     await supabase
-      .from('fp_and_location')
+      .from('fp_and_locations')
       .update({ quantity: newQuantity })
       .eq('id', selectedProduct.id);
     

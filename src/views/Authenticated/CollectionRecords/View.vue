@@ -38,7 +38,7 @@ const fetchCollectionRecord = async () => {
       approved_at,
       user:profiles!forest_product_collection_records_user_id_fkey ( first_name, last_name ),
       forest_product:forest_products ( name, measurement_unit_id, measurement_unit:measurement_units ( unit_name ) ),
-      location:location ( name ),
+      location:locations ( name ),
       created_by:profiles!collection_records_created_by_fkey ( first_name, last_name ),
       approved_by:profiles!collection_records_approved_by_fkey ( first_name, last_name )
     `)

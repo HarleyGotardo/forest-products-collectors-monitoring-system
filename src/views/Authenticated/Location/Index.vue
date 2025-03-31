@@ -28,7 +28,7 @@ const locationToDelete = ref(null)
 
 const fetchAllLocations = async () => {
   let { data, error: fetchError } = await supabase
-    .from('location')
+    .from('locations')
     .select('*')
     .is('deleted_at', null) // Fetch only locations with null deleted_at
 
@@ -94,7 +94,7 @@ const deleteLocation = async () => {
     const locationId = locationToDelete.value
     const currentDate = new Date().toISOString()
     const { error: deleteError } = await supabase
-      .from('location')
+      .from('locations')
       .update({ deleted_at: currentDate })
       .eq('id', locationId)
 

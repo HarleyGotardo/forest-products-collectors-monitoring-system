@@ -26,7 +26,7 @@ const searchQuery = ref('')
 
 const fetchDeletedLocations = async () => {
   let { data, error: fetchError } = await supabase
-    .from('location')
+    .from('locations')
     .select('*')
     .not('deleted_at', 'is', null) // Fetch only locations with non-null deleted_at
 
@@ -76,7 +76,7 @@ const viewLocation = (locationId) => {
 
 const restoreLocation = async (locationId) => {
   const { error: restoreError } = await supabase
-    .from('location')
+    .from('locations')
     .update({ deleted_at: null })
     .eq('id', locationId)
 
@@ -90,7 +90,7 @@ const restoreLocation = async (locationId) => {
 
 const deletePermanently = async (locationId) => {
   const { error: deleteError } = await supabase
-    .from('location')
+    .from('locations')
     .delete()
     .eq('id', locationId)
 
