@@ -174,6 +174,7 @@ onMounted(async () => {
           <router-link 
             to="/authenticated/dashboard" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/dashboard.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Dashboard</span>
@@ -183,6 +184,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
             to="/authenticated/system-users" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/user.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">System Users</span>
@@ -198,6 +200,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
             to="/authenticated/collection-requests/all" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/request2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">All Requests</span>
@@ -206,6 +209,7 @@ onMounted(async () => {
             v-if="isFPCollector"
             to="/authenticated/collection-requests" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/request2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Your Requests</span>
@@ -214,6 +218,7 @@ onMounted(async () => {
             v-if="isFPCollector" 
             to="/authenticated/collection-request/create" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">New Request</span>
@@ -230,6 +235,7 @@ onMounted(async () => {
           <router-link 
             to="/authenticated/forest-products" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/forest-product.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">View Forest Products</span>
@@ -238,6 +244,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger" 
             to="/authenticated/forest-products/create" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">New Forest Product</span>
@@ -245,6 +252,7 @@ onMounted(async () => {
             <router-link 
             to="/authenticated/map" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/forest-map.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Forest Products Map</span>
@@ -253,6 +261,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger"
             to="/authenticated/forest-products/trash" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trashed Forest Products</span>
@@ -269,6 +278,7 @@ onMounted(async () => {
             <router-link 
             to="/authenticated/locations" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/location2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">View Locations</span>
@@ -277,6 +287,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger" 
             to="/authenticated/locations/create" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">New Location</span>
@@ -285,6 +296,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger" 
             to="/authenticated/locations/trash" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trashed Locations</span>
@@ -302,6 +314,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger || isVSUAdmin" 
             to="/authenticated/collection-records" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/records2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">View Records</span>
@@ -310,6 +323,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger" 
             to="/authenticated/collection-records/create" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/add.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">New Record</span>
@@ -318,6 +332,7 @@ onMounted(async () => {
             v-if="isFPUAdmin || isForestRanger" 
             to="/authenticated/collection-records/trash" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
           >
             <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span class="font-medium text-gray-700 group-hover:text-emerald-600">Trashed Records</span>
@@ -330,6 +345,7 @@ onMounted(async () => {
             to="/authenticated/profile"
             class="flex items-center gap-3 p-3 cursor-pointer rounded-xl transition-all duration-200 group active:scale-95"
             active-class="bg-green-100"
+            @click="closeSidebar"
           >
             <div class="flex flex-col items-center rounded-lg">
               <img 

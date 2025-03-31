@@ -50,85 +50,85 @@ const goToLoginPage = () => {
 <template>
   <div class="min-h-screen flex flex-col md:flex-row">
     <!-- Left Section - Sign Up Form -->
-    <div class="w-full md:w-1/2 flex flex-col justify-center p-4 sm:p-6 md:p-12 order-2 md:order-1">
-      <div class="max-w-md w-full mx-auto space-y-8">
+    <div class="w-full md:w-1/2 flex flex-col justify-center p-4 sm:p-6 md:p-8 order-2 md:order-1">
+      <div class="max-w-sm w-full mx-auto space-y-6">
         <div class="flex between">
-          <div class="w-12 h-12 sm:w-16 sm:h-16">
-            <NatureCartLogo width="100%" height="100%" />
-          </div>
-          <h1 class="text-xl sm:text-2xl md:text-4xl font-bold ml-2">Sign Up for Nature Cart</h1>
+        <div class="w-10 h-10 sm:w-14 sm:h-14">
+        <NatureCartLogo width="100%" height="100%" />
+        </div>
+        <h1 class="text-lg sm:text-xl md:text-3xl font-bold ml-2">Sign up to Nature Cart</h1>
+      </div>
+
+      <div>
+        <p class="text-sm sm:text-base text-gray-600">Enter your details to create an account.</p>
+      </div>
+
+      <form @submit.prevent="handleSignUp" class="space-y-4">
+        <div class="space-y-3">
+        <div>
+          <label for="first-name" class="block text-sm font-medium text-gray-700">
+          First Name
+          </label>
+          <input
+          id="first-name"
+          type="text"
+          v-model="firstName"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+          />
         </div>
 
         <div>
-          <p class="text-base sm:text-lg md:text-2xl text-gray-600">Please enter your sign-up information.</p>
+          <label for="last-name" class="block text-sm font-medium text-gray-700">
+          Last Name
+          </label>
+          <input
+          id="last-name"
+          type="text"
+          v-model="lastName"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+          />
         </div>
 
-        <form @submit.prevent="handleSignUp" class="space-y-6">
-          <div class="space-y-4">
-            <div>
-              <label for="first-name" class="block text-sm sm:text-base font-medium text-gray-700">
-                First Name
-              </label>
-              <input
-                id="first-name"
-                type="text"
-                v-model="firstName"
-                class="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base"
-              />
-            </div>
-
-            <div>
-              <label for="last-name" class="block text-sm sm:text-base font-medium text-gray-700">
-                Last Name
-              </label>
-              <input
-                id="last-name"
-                type="text"
-                v-model="lastName"
-                class="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base"
-              />
-            </div>
-
-            <div>
-              <label for="email" class="block text-sm sm:text-base font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                v-model="email"
-                class="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base"
-              />
-            </div>
-
-            <div>
-              <label for="password" class="block text-sm sm:text-base font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                v-model="password"
-                class="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            class="w-full flex justify-center py-2 sm:py-3 px-4 border border-transparent rounded-full shadow-sm text-sm sm:text-base font-medium text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-          >
-            Sign Up
-          </button>
-        </form>
-        <div class="text-center mt-4">
-          <p class="text-sm sm:text-base text-gray-600">
-            Already have an account?
-            <button @click="goToLoginPage" class="text-green-600 hover:text-green-500 font-medium">
-              Login
-            </button>
-          </p>
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">
+          Email
+          </label>
+          <input
+          id="email"
+          type="email"
+          v-model="email"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+          />
         </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">
+          Password
+          </label>
+          <input
+          id="password"
+          type="password"
+          v-model="password"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+          />
+        </div>
+        </div>
+
+        <button
+        type="submit"
+        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+        >
+        Sign Up
+        </button>
+      </form>
+      <div class="text-center mt-3">
+        <p class="text-sm text-gray-600">
+        Already have an account?
+        <button @click="goToLoginPage" class="text-green-600 hover:text-green-500 font-medium">
+          Login
+        </button>
+        </p>
+      </div>
       </div>
     </div>
 
