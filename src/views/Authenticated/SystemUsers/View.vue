@@ -292,7 +292,7 @@ onMounted(() => {
     >
       <!-- Card Header with Gradient Background -->
       <div
-        class="px-6 sm:px-8 py-6 bg-gradient-to-r from-blue-500 to-indigo-600"
+        class="px-6 sm:px-8 py-6 bg-[#10b880]"
       >
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-white">User Profile</h2>
@@ -373,9 +373,9 @@ onMounted(() => {
               Role
             </label>
             <div class="flex items-center">
-              <span
-                class="px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-700 border border-indigo-100"
-              >
+                <span 
+                class="px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-[#10b880] to-[#4b977e] text-white border border-[#10b880]"
+                >
                 {{ user.role.name }}
               </span>
             </div>
@@ -390,7 +390,7 @@ onMounted(() => {
       class="mt-12"
     >
       <div class="flex items-center space-x-2 mb-6">
-        <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+        <div class="w-1.5 h-6 bg-green-500 rounded-full"></div>
         <h3 class="text-xl font-bold text-gray-800">
           Created Collection Records
         </h3>

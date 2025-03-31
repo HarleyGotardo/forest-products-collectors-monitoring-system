@@ -179,7 +179,7 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div class="max-w-7xl mx-auto p-4 sm:p-6 mt-2">
+  <div class="max-w-7xl mx-auto p-3 sm:p-6 mt-2">
     <!-- Header Section -->
     <div
       class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2"

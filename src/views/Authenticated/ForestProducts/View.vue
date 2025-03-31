@@ -414,7 +414,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <div class="max-w-4xl mx-auto p-6">
+  <div class="max-w-4xl mx-auto p-3">
     <!-- Header Section -->
     <div
       class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 mt-2 space-y-4 sm:space-y-0"
@@ -462,7 +462,7 @@ onMounted(() => {
       <div
         class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
       >
-        <div class="p-6">
+        <div class="p-3">
           <div
             class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4"
           >
@@ -723,6 +723,7 @@ onMounted(() => {
             @click.stop="editLocation(location)"
             class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             title="Edit Location"
+            v-if="isForestRanger || isFPUAdmin"
           >
             <svg
               class="w-5 h-5"
@@ -745,6 +746,7 @@ onMounted(() => {
                 @click.stop="confirmDeleteLocation(location.id)"
                 class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 title="Delete Location"
+                v-if="isForestRanger || isFPUAdmin"
               >
                 <svg
             class="w-5 h-5"
@@ -901,6 +903,12 @@ onMounted(() => {
         </div>
 
         <!-- Map Container -->
+        <div class="w-1/2 mx-auto rounded-full">
+          <h3 
+            class="text-lg text-center font-medium text-gray-900 bg-green-100 py-2 rounded-full shadow-sm">
+            {{ forestProduct.name }}s Map Locations
+          </h3>
+        </div>
         <div
           v-if="locations.length != 0"
           id="locationMap"

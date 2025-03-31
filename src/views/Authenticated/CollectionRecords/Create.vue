@@ -229,6 +229,7 @@ onMounted(() => {
               min="0"
               step="0.01"
               placeholder="Enter quantity"
+              @input="(e) => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); quantity.value = parseFloat(e.target.value) || 0; }"
             />
           </div>
 
