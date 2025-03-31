@@ -65,7 +65,7 @@
           <thead class="bg-gray-700">
             <tr>
               <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">ID</th>
-              <th scope="col" class="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">FOREST PRODUCT</th> <!-- Hidden on mobile -->
+              <th scope="col" class="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">LOCATION</th> <!-- Updated from FOREST PRODUCT -->
               <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Date</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">COLLECTOR</th>
               <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Total Cost</th>
@@ -88,25 +88,24 @@
             </tr>
             <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer" @click="viewCollectionRecord(record.id)">
               <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm">#{{ record.id }}</td>
-              <td class="hidden sm:table-cell px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm">{{ record.forest_product.name }}</td>
-              <!-- Hidden on mobile -->
+              <td class="hidden sm:table-cell px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm">{{ record.location_name }}</td>
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">{{ record.formatted_created_at }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">{{ record.user_name }}</td>
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">₱{{ record.total_cost }}</td>
               
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">{{ record.created_by_name }}</td>
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-    <span
-      :class="[
-        'px-3 py-1 rounded-full text-xs font-medium',
-        record.is_paid 
-          ? 'bg-green-100 text-green-800'
-          : 'bg-yellow-100 text-yellow-800'
-      ]"
-    >
-      {{ record.is_paid ? 'Paid' : 'Unpaid' }}
-    </span>
-  </td>
+                <span
+                  :class="[
+                    'px-3 py-1 rounded-full text-xs font-medium',
+                    record.is_paid 
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  ]"
+                >
+                  {{ record.is_paid ? 'Paid' : 'Unpaid' }}
+                </span>
+              </td>
               <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
                 <div class="flex items-center justify-end space-x-3">
                   <AlertDialog>
@@ -218,40 +217,82 @@ const searchQuery = ref('')
 const paymentFilter = ref('all') // 'all', 'paid', 'unpaid'
 
 const fetchCollectionRecords = async () => {
-  let { data: records, error: fetchError } = await supabase
-    .from('collection_records')
-    .select(`
-      id,
-      created_at,
-      user:profiles!forest_product_collection_records_user_id_fkey ( id, first_name, last_name ),
-      forest_product:forest_products ( id, name ),
-      total_cost,
-      created_by:profiles!collection_records_created_by_fkey ( id, first_name, last_name ),
-      approved_by:profiles!collection_records_approved_by_fkey ( id, first_name, last_name ),
-      approved_at,
-      deleted_at,
-      is_paid
-    `)
-    .is('deleted_at', null)
+  try {
+    // First, fetch the collection records
+    let { data: records, error: fetchError } = await supabase
+      .from('collection_records')
+      .select(`
+        id,
+        created_at,
+        user_id,
+        user:profiles!forest_product_collection_records_user_id_fkey (id, first_name, last_name),
+        created_by,
+        creator:profiles!collection_records_created_by_fkey (id, first_name, last_name),
+        approved_by,
+        approver:profiles!collection_records_approved_by_fkey (id, first_name, last_name),
+        approved_at,
+        deleted_at,
+        is_paid,
+        location_id,
+        location:locations (id, name)
+      `)
+      .is('deleted_at', null)
 
-  if (fetchError) {
-    error.value = fetchError.message
-  } else {
-    collectionRecords.value = records.map(record => ({
-      id: record.id,
-      created_at: record.created_at,
-      formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
-      user_name: `${record.user.first_name} ${record.user.last_name}`,
-      forest_product: record.forest_product,
-      total_cost: record.total_cost,
-      created_by_name: `${record.created_by.first_name} ${record.created_by.last_name}`,
-      approved_by_name: record.approved_by ? `${record.approved_by.first_name} ${record.approved_by.last_name}` : null,
-      approved_at: record.approved_at ? format(new Date(record.approved_at), 'MMMM dd, yyyy') : null,
-      is_paid: record.is_paid
+    if (fetchError) {
+      error.value = fetchError.message
+      return
+    }
+
+    // For each record, fetch the collection_record_items to calculate the total cost
+    const recordsWithItems = await Promise.all(records.map(async (record) => {
+      // Fetch items for this collection record
+      const { data: items, error: itemsError } = await supabase
+        .from('collection_record_items')
+        .select(`
+          id,
+          total_cost,
+          fp_and_location_id,
+          fp_and_location:fp_and_locations (
+            id,
+            forest_product:forest_products (id, name)
+          )
+        `)
+        .eq('collection_record_id', record.id)
+
+      if (itemsError) {
+        console.error('Error fetching items:', itemsError)
+        return null
+      }
+
+      // Calculate total cost from all items
+      const totalCost = items.reduce((sum, item) => sum + (item.total_cost || 0), 0)
+
+      // Format the record with all necessary data
+      return {
+        id: record.id,
+        created_at: record.created_at,
+        formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
+        user_name: `${record.user.first_name} ${record.user.last_name}`,
+        location_id: record.location_id,
+        location_name: record.location ? record.location.name : 'Unknown Location',
+        items: items,
+        total_cost: totalCost.toFixed(2),
+        created_by_name: record.creator ? `${record.creator.first_name} ${record.creator.last_name}` : 'Unknown',
+        approved_by_name: record.approver ? `${record.approver.first_name} ${record.approver.last_name}` : null,
+        approved_at: record.approved_at ? format(new Date(record.approved_at), 'MMMM dd, yyyy') : null,
+        is_paid: record.is_paid
+      }
     }))
+
+    // Filter out any null records (in case of errors)
+    collectionRecords.value = recordsWithItems.filter(record => record !== null)
     paginateRecords()
+  } catch (err) {
+    console.error('Error in fetchCollectionRecords:', err)
+    error.value = 'Failed to load collection records'
   }
 }
+
 const paginateRecords = () => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
@@ -274,7 +315,7 @@ const filteredRecords = computed(() => {
     records = records.filter(record =>
       record.id.toString().includes(query) ||
       record.user_name.toLowerCase().includes(query) ||
-      record.forest_product.name.toLowerCase().includes(query) ||
+      record.location_name.toLowerCase().includes(query) ||
       record.created_by_name.toLowerCase().includes(query)
     )
   }
@@ -319,8 +360,8 @@ const markAsPaid = async (recordId) => {
     .from('collection_records')
     .update({ 
       is_paid: true,
-      approved_by: user.id,  // Add the current user's ID as approved_by
-      approved_at: new Date().toISOString()  // Also add the approval timestamp
+      approved_by: user.id,
+      approved_at: new Date().toISOString()
     })
     .eq('id', recordId)
 

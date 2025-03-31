@@ -21,34 +21,59 @@ const route = useRoute()
 const router = useRouter()
 const recordId = route.params.id
 const record = ref(null)
+const recordItems = ref([])
 const error = ref(null)
 
 const fetchCollectionRecord = async () => {
+  // Fetch the main collection record
   const { data, error: fetchError } = await supabase
     .from('collection_records')
     .select(`
       id,
       created_at,
-      total_cost,
-      deducted_quantity,
-      remaining_quantity,
-      quantity_during_purchase,
-      price_per_unit_during_purchase,
       is_paid,
       approved_at,
-      user:profiles!forest_product_collection_records_user_id_fkey ( first_name, last_name ),
-      forest_product:forest_products ( name, measurement_unit_id, measurement_unit:measurement_units ( unit_name ) ),
-      location:locations ( name ),
-      created_by:profiles!collection_records_created_by_fkey ( first_name, last_name ),
-      approved_by:profiles!collection_records_approved_by_fkey ( first_name, last_name )
+      user:profiles!forest_product_collection_records_user_id_fkey (first_name, last_name),
+      location:locations (name),
+      created_by:profiles!collection_records_created_by_fkey (first_name, last_name),
+      approved_by:profiles!collection_records_approved_by_fkey (first_name, last_name)
     `)
     .eq('id', recordId)
     .single()
 
   if (fetchError) {
     error.value = fetchError.message
+    return
+  }
+  
+  record.value = data
+  
+  // Fetch the collection record items
+  const { data: itemsData, error: itemsError } = await supabase
+    .from('collection_record_items')
+    .select(`
+      id,
+      purchased_quantity,
+      total_cost,
+      deducted_quantity,
+      remaining_quantity_during_purchase,
+      quantity_during_purchase,
+      price_per_unit_during_purchase,
+      fp_and_location:fp_and_locations (
+        id,
+        forest_product:forest_products (
+          name, 
+          measurement_unit_id,
+          measurement_unit:measurement_units (unit_name)
+        )
+      )
+    `)
+    .eq('collection_record_id', recordId)
+
+  if (itemsError) {
+    error.value = itemsError.message
   } else {
-    record.value = data
+    recordItems.value = itemsData
   }
 }
 
@@ -71,6 +96,11 @@ const markAsPaid = async () => {
     fetchCollectionRecord()
     toast.success('Collection record marked as paid successfully', { duration: 2000 })
   }
+}
+
+// Calculate total from all items
+const calculateTotalCost = () => {
+  return recordItems.value.reduce((sum, item) => sum + item.total_cost, 0)
 }
 
 onMounted(() => {
@@ -140,6 +170,9 @@ onMounted(() => {
             <p class="text-sm sm:text-base text-gray-900 font-medium">
               {{ record.user ? `${record.user.first_name} ${record.user.last_name}` : 'N/A' }}
             </p>
+            <p class="text-xs sm:text-sm text-gray-600 mt-1">
+              Collection Location: {{ record.location ? record.location.name : 'N/A' }}
+            </p>
           </div>
         </div>
 
@@ -150,29 +183,30 @@ onMounted(() => {
             <table class="w-full min-w-[640px]">
               <thead>
                 <tr class="bg-gray-100">
-                  <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                  <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Location</th>
+                  <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">Forest Product</th>
                   <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
                   <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Price Per Unit</th>
                   <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
-                <tr>
+                <tr v-for="item in recordItems" :key="item.id">
                   <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">
-                    {{ record.forest_product ? record.forest_product.name : 'N/A' }}
+                    {{ item.fp_and_location?.forest_product?.name || 'N/A' }}
                   </td>
                   <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 text-right">
-                    {{ record.location ? record.location.name : 'N/A' }}
+                    {{ item.quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                   </td>
                   <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 text-right">
-                    {{ record.quantity_during_purchase }} {{ record.forest_product.measurement_unit.unit_name }}
-                  </td>
-                  <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 text-right">
-                    ₱{{ record.price_per_unit_during_purchase }}
+                    ₱{{ item.price_per_unit_during_purchase }}
                   </td>
                   <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 text-right font-medium">
-                    ₱{{ record.total_cost }}
+                    ₱{{ item.total_cost }}
+                  </td>
+                </tr>
+                <tr v-if="recordItems.length === 0">
+                  <td colspan="4" class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 text-center">
+                    No items found in this collection record.
                   </td>
                 </tr>
               </tbody>
@@ -185,15 +219,19 @@ onMounted(() => {
           <div class="flex flex-col sm:flex-row sm:justify-between gap-6 sm:gap-4">
             <div>
               <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-4">Additional Information</h2>
-              <div class="text-xs sm:text-sm text-gray-600">
-                <p class="mb-2">Deducted Quantity: {{ record.deducted_quantity }} {{ record.forest_product.measurement_unit.unit_name }}</p>
-                <p>Remaining Quantity: {{ record.remaining_quantity }} {{ record.forest_product.measurement_unit.unit_name }}</p>
+              <div class="text-xs sm:text-sm text-gray-600" v-if="recordItems.length > 0">
+                <div v-for="item in recordItems" :key="`info-${item.id}`" class="mb-3">
+                  <p class="font-medium">{{ item.fp_and_location?.forest_product?.name || 'Item' }}</p>
+                  <p class="ml-2">Deducted: {{ item.deducted_quantity }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
+                  <p class="ml-2">Remaining: {{ item.remaining_quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
+                </div>
               </div>
+              <p v-else class="text-xs sm:text-sm text-gray-500">No additional information available.</p>
             </div>
             <div class="w-full sm:w-64">
               <div class="flex justify-between py-2">
                 <p class="text-xs sm:text-sm font-medium text-gray-500">Total Amount</p>
-                <p class="text-lg sm:text-xl font-bold text-gray-900">₱{{ record.total_cost }}</p>
+                <p class="text-lg sm:text-xl font-bold text-gray-900">₱{{ calculateTotalCost() }}</p>
               </div>
               <div class="flex justify-between py-2 border-t border-gray-200 mt-2">
                 <p class="text-xs sm:text-sm font-medium text-gray-500">Payment Status</p>
