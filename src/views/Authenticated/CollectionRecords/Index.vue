@@ -62,16 +62,16 @@
     <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+          <thead class="bg-gray-700">
             <tr>
-              <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
-              <th scope="col" class="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">FOREST PRODUCT</th> <!-- Hidden on mobile -->
-              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">COLLECTOR</th>
-              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Total Cost</th>
-              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Processed By</th>
-              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
-              <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Actions</th>
+              <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">ID</th>
+              <th scope="col" class="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">FOREST PRODUCT</th> <!-- Hidden on mobile -->
+              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Date</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">COLLECTOR</th>
+              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Total Cost</th>
+              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Processed By</th>
+              <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Status</th>
+              <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">

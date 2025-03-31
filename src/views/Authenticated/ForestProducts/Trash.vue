@@ -203,12 +203,12 @@ watch(selectedType, () => {
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+          <thead class="bg-gray-700">
             <tr>
-              <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-              <th class="px-4 hidden sm:table-cell sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th class="px-4 hidden sm:table-cell sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locations</th>
-              <th class="px-4 hidden sm:table-cell sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Product</th>
+              <th class="px-4 hidden sm:table-cell sm:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Type</th>
+              <th class="px-4 hidden sm:table-cell sm:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Locations</th>
+              <th class="px-4 hidden sm:table-cell sm:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">

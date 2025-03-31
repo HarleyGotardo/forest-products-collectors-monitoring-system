@@ -206,14 +206,14 @@ watch(selectedType, () => {
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+          <thead class="bg-gray-700">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locations</th>
-              <th v-if="isFPUAdmin || isForestRanger" scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Type</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Price</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Locations</th>
+              <th v-if="isFPUAdmin || isForestRanger" scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -224,7 +224,7 @@ watch(selectedType, () => {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                           d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
-                  <p class="text-gray-500 text-sm">No forest products found matching your criteria</p>
+                  <p class="text-gray-900 text-sm">No forest products found matching your criteria</p>
                 </div>
               </td>
             </tr>
@@ -234,7 +234,7 @@ watch(selectedType, () => {
               class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
               @click="viewProduct(product.id, $event)"
             >
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 #{{ product.id }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
