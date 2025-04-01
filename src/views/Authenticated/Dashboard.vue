@@ -234,32 +234,28 @@ let mostCollectedChartInstance = null;
 
 const renderCharts = async (labels, quantities, units) => {
   try {
-    // Most Collected Forest Product Chart
-    const mostCollectedCtx = document.getElementById('mostCollectedChart')?.getContext('2d')
+    const mostCollectedCtx = document.getElementById('mostCollectedChart')?.getContext('2d');
     if (mostCollectedCtx) {
       if (mostCollectedChartInstance) {
         mostCollectedChartInstance.destroy();
         mostCollectedChartInstance = null;
       }
-      
-      // Only display top 5 products for better readability
+
       const displayLimit = 5;
       const displayLabels = Array.isArray(labels) ? labels.slice(0, displayLimit) : [];
       const displayQuantities = Array.isArray(quantities) ? quantities.slice(0, displayLimit) : [];
       const displayUnits = Array.isArray(units) ? units.slice(0, displayLimit) : [];
-      
-      // Ensure we have valid units for each product
+
       for (let i = 0; i < displayLabels.length; i++) {
         if (!displayUnits[i] || displayUnits[i] === 'undefined') {
           displayUnits[i] = 'N/A';
         }
       }
-      
-      // Prepare data for the chart - combine product name and unit
+
       const formattedLabels = displayLabels.map((label, index) => 
         `${label} (${displayUnits[index]})`
       );
-      
+
       mostCollectedChartInstance = new Chart(mostCollectedCtx, {
         type: 'bar',
         data: {
@@ -267,13 +263,14 @@ const renderCharts = async (labels, quantities, units) => {
           datasets: [{
             label: 'Most Collected Forest Products',
             data: displayQuantities,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
             borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
+            borderWidth: 1,
           }]
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           scales: {
             y: {
               beginAtZero: true,
@@ -311,7 +308,7 @@ const renderCharts = async (labels, quantities, units) => {
     console.error('Chart rendering error:', error);
     toast.error(error.message || 'Failed to render charts');
   }
-}
+};
 
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
@@ -380,20 +377,17 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200 flex flex-col items-center sm:items-stretch">
-        <div class="flex items-center justify-between w-full mb-4">
-          <div class="flex-1 text-center sm:text-left">
-        <p class="text-sm font-medium text-gray-500">Most Collected Product</p>
-        <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ mostCollectedProduct }}</p>
+      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-500">Most Collected Product</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ mostCollectedProduct }}</p>
           </div>
           <div class="p-2 sm:p-3 bg-green-100 rounded-lg">
-        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
           </div>
-        </div>
-        <div class="w-full">
-          <canvas id="mostCollectedChartMobile" class="w-full h-48 sm:h-64"></canvas>
         </div>
       </div>
 
@@ -428,10 +422,12 @@ onMounted(() => {
 
     <!-- Charts Section - Stack on mobile -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Most Collected Forest Products</h3>
-        <canvas id="mostCollectedChart" class="w-full h-48 sm:h-64"></canvas>
-      </div>
+      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 w-full">
+  <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Most Collected Forest Products</h3>
+  <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px]">
+    <canvas id="mostCollectedChart"></canvas>
+  </div>
+</div>
 
       <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
         <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Products Distribution</h3>
