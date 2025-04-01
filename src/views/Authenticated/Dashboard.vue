@@ -13,7 +13,7 @@ const totalRoutes = ref(0)
 const totalProducts = ref(0)
 const forestProductsData = ref([])
 const currentPage = ref(1)
-const itemsPerPage = 5
+const itemsPerPage = 8
 
 const fetchDashboardData = async (forceRefresh = false) => {
   try {
