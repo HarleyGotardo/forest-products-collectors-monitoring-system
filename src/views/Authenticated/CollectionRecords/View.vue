@@ -45,9 +45,9 @@ const fetchCollectionRecord = async () => {
     error.value = fetchError.message
     return
   }
-  
+
   record.value = data
-  
+
   // Fetch the collection record items
   const { data: itemsData, error: itemsError } = await supabase
     .from('collection_record_items')
@@ -61,8 +61,10 @@ const fetchCollectionRecord = async () => {
       price_per_unit_during_purchase,
       fp_and_location:fp_and_locations (
         id,
+        location_id,
+        location:locations (name),
         forest_product:forest_products (
-          name, 
+          name,
           measurement_unit_id,
           measurement_unit:measurement_units (unit_name)
         )
@@ -80,10 +82,10 @@ const fetchCollectionRecord = async () => {
 const markAsPaid = async () => {
   // Get the current user's ID from the auth session
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   const { error: updateError } = await supabase
     .from('collection_records')
-    .update({ 
+    .update({
       is_paid: true,
       approved_by: user.id,
       approved_at: new Date().toISOString()
@@ -109,8 +111,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 py-4 px-2 sm:py-8 mt-5 sm:px-6 lg:px-8">
-    <!-- Back Button -->
+  <div class="min-h-screen bg-gray-50 py-2 px-1 sm:py-4 mt-5 sm:px-3 lg:px-4">
     <div class="max-w-4xl mx-auto mb-4">
       <Button @click="router.back()">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,9 +121,8 @@ onMounted(() => {
       </Button>
     </div>
 
-    <!-- Error Alert -->
-    <div 
-      v-if="error" 
+    <div
+      v-if="error"
       class="max-w-4xl mx-auto mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-lg"
     >
       <div class="flex items-center">
@@ -133,17 +133,13 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Invoice Card -->
     <div v-if="record" class="max-w-4xl mx-auto bg-white rounded-lg sm:rounded-xl shadow-md sm:shadow-lg overflow-hidden">
-      <!-- Invoice Header -->
       <div class="border-b border-gray-200 p-4 sm:p-8">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0">
-          <!-- Logo/Company Area -->
           <div>
             <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Collection Receipt</h1>
             <p class="text-xs sm:text-sm text-gray-500 mt-1">Forest Products Collection Record</p>
           </div>
-          <!-- Invoice Number & Date -->
           <div class="sm:text-right">
             <p class="text-xs sm:text-sm text-gray-500">Receipt No.</p>
             <p class="text-lg sm:text-xl font-bold text-gray-900">#{{ record.id }}</p>
@@ -153,30 +149,22 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Invoice Body -->
       <div class="p-4 sm:p-8">
-        <!-- Parties Information -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
-          <!-- From Section -->
           <div>
             <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-2">Processed By</h2>
             <p class="text-sm sm:text-base text-gray-900 font-medium">
               {{ record.created_by ? `${record.created_by.first_name} ${record.created_by.last_name}` : 'N/A' }}
             </p>
           </div>
-          <!-- To Section -->
           <div>
-            <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-2">Customer Details</h2>
+            <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-2">Collector Details</h2>
             <p class="text-sm sm:text-base text-gray-900 font-medium">
               {{ record.user ? `${record.user.first_name} ${record.user.last_name}` : 'N/A' }}
-            </p>
-            <p class="text-xs sm:text-sm text-gray-600 mt-1">
-              Collection Location: {{ record.location ? record.location.name : 'N/A' }}
             </p>
           </div>
         </div>
 
-        <!-- Product Details -->
         <div class="mb-6 sm:mb-8">
           <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-4">Collection Details</h2>
           <div class="bg-gray-50 rounded-lg overflow-x-auto">
@@ -184,7 +172,8 @@ onMounted(() => {
               <thead>
                 <tr class="bg-gray-100">
                   <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">Forest Product</th>
-                  <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                  <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Location</th>
+                  <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Purchased Quantity</th>
                   <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Price Per Unit</th>
                   <th class="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
                 </tr>
@@ -193,9 +182,21 @@ onMounted(() => {
                 <tr v-for="item in recordItems" :key="item.id">
                   <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">
                     {{ item.fp_and_location?.forest_product?.name || 'N/A' }}
+                    <p class="text-gray-500 text-xs sm:text-xs">
+                      Quantity: {{ item.quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                    </p>
+                    <p class="text-gray-500 text-xs sm:text-xs">
+                      Deducted: {{ item.deducted_quantity }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                    </p>
+                    <p class="text-gray-500 text-xs sm:text-xs">
+                      Remaining: {{ item.remaining_quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                    </p>
                   </td>
                   <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 text-right">
-                    {{ item.quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                    {{ item.fp_and_location?.location?.name || 'N/A' }}
+                  </td>
+                  <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 text-right">
+                    {{ item.deducted_quantity }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                   </td>
                   <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 text-right">
                     ₱{{ item.price_per_unit_during_purchase }}
@@ -205,7 +206,7 @@ onMounted(() => {
                   </td>
                 </tr>
                 <tr v-if="recordItems.length === 0">
-                  <td colspan="4" class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 text-center">
+                  <td colspan="5" class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 text-center">
                     No items found in this collection record.
                   </td>
                 </tr>
@@ -214,20 +215,8 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Summary & Totals -->
         <div class="border-t border-gray-200 pt-6 sm:pt-8">
-          <div class="flex flex-col sm:flex-row sm:justify-between gap-6 sm:gap-4">
-            <div>
-              <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-4">Additional Information</h2>
-              <div class="text-xs sm:text-sm text-gray-600" v-if="recordItems.length > 0">
-                <div v-for="item in recordItems" :key="`info-${item.id}`" class="mb-3">
-                  <p class="font-medium">{{ item.fp_and_location?.forest_product?.name || 'Item' }}</p>
-                  <p class="ml-2">Deducted: {{ item.deducted_quantity }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
-                  <p class="ml-2">Remaining: {{ item.remaining_quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
-                </div>
-              </div>
-              <p v-else class="text-xs sm:text-sm text-gray-500">No additional information available.</p>
-            </div>
+          <div class="flex flex-col sm:flex-row sm:justify-end gap-6 sm:gap-4">
             <div class="w-full sm:w-64">
               <div class="flex justify-between py-2">
                 <p class="text-xs sm:text-sm font-medium text-gray-500">Total Amount</p>
@@ -239,8 +228,7 @@ onMounted(() => {
                   {{ record.is_paid ? 'PAID' : 'UNPAID' }}
                 </p>
               </div>
-              
-              <!-- Conditional display of approval information -->
+
               <template v-if="record.is_paid">
                 <div class="flex justify-between py-2 border-t border-gray-200">
                   <p class="text-xs sm:text-sm font-medium text-gray-500">Approved By</p>
@@ -282,7 +270,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Invoice Footer -->
       <div class="bg-gray-50 px-4 sm:px-8 py-4 sm:py-6">
         <div class="text-xs sm:text-sm text-gray-500 text-center">
           <p>Thank you for your business</p>

@@ -26,7 +26,7 @@ const fetchDashboardData = async (forceRefresh = false) => {
         totalRoutes.value = parsedData.totalRoutes
         totalProducts.value = parsedData.totalProducts
         forestProductsData.value = parsedData.forestProductsData
-        renderCharts(parsedData.labels, parsedData.quantities)
+        renderCharts(parsedData.labels, parsedData.quantities, parsedData.units)
         return
       }
     }
@@ -41,33 +41,106 @@ const fetchDashboardData = async (forceRefresh = false) => {
     if (profilesError) throw profilesError
     totalCollectors.value = profiles.length
 
-    // Fetch most collected product based on occurrence
-    const { data: collectionRecords, error: collectionRecordsError } = await supabase
-      .rpc('get_top_forest_products');
-
-    if (collectionRecordsError) {
-      console.error('Error fetching top forest products:', collectionRecordsError);
-    } else {
-      console.log('Top Forest Products:', collectionRecords);
+    // First, get all collection_record_items with their purchased_quantity and fp_and_location_id
+    console.log("Fetching collection record items...");
+    const { data: collectionItems, error: collectionItemsError } = await supabase
+      .from('collection_record_items')
+      .select('id, fp_and_location_id, purchased_quantity');
+    
+    if (collectionItemsError) {
+      console.error('Error fetching collection items:', collectionItemsError);
+      throw collectionItemsError;
     }
     
-    if (collectionRecordsError) throw collectionRecordsError
+    console.log(`Found ${collectionItems.length} collection items`);
     
-    const productNames = {}
-    for (const record of collectionRecords) {
-      const { data: product, error: productError } = await supabase
-        .from('forest_products')
-        .select('name')
-        .eq('id', record.forest_product_id)
-        .single()
-      if (productError) throw productError
-      productNames[record.forest_product_id] = product.name
+    // Get all forest product locations
+    console.log("Fetching fp_and_locations...");
+    const { data: fpLocations, error: fpLocationsError } = await supabase
+      .from('fp_and_locations')
+      .select('id, forest_product_id');
+    
+    if (fpLocationsError) {
+      console.error('Error fetching fp locations:', fpLocationsError);
+      throw fpLocationsError;
     }
-
-    const labels = collectionRecords.map(record => productNames[record.forest_product_id])
-    const quantities = collectionRecords.map(record => record.count)
-
-    mostCollectedProduct.value = labels.length > 0 ? labels[0] : 'N/A'
+    
+    console.log(`Found ${fpLocations.length} fp locations`);
+    
+    // Create a map of fp_and_location_id to forest_product_id
+    const fpLocationMap = {};
+    fpLocations.forEach(loc => {
+      fpLocationMap[loc.id] = loc.forest_product_id;
+    });
+    
+    // Get all forest products with their measurement units
+    console.log("Fetching forest products with measurement units...");
+    const { data: forestProducts, error: forestProductsError } = await supabase
+      .from('forest_products')
+      .select(`
+        id, 
+        name,
+        measurement_unit_id,
+        measurement_units:measurement_unit_id (
+          unit_name
+        )
+      `)
+      .is('deleted_at', null);
+    
+    if (forestProductsError) {
+      console.error('Error fetching forest products:', forestProductsError);
+      throw forestProductsError;
+    }
+    
+    console.log(`Found ${forestProducts.length} forest products`);
+    
+    // Create maps for product name and measurement unit
+    const productNameMap = {};
+    const productUnitMap = {};
+    
+    forestProducts.forEach(product => {
+      productNameMap[product.id] = product.name;
+      productUnitMap[product.id] = product.measurement_units?.unit_name || 'N/A';
+    });
+    
+    // Aggregate purchased quantities by forest product
+    const productQuantities = {};
+    
+    collectionItems.forEach(item => {
+      if (!item.fp_and_location_id || !item.purchased_quantity) return;
+      
+      const forestProductId = fpLocationMap[item.fp_and_location_id];
+      if (!forestProductId) return;
+      
+      if (!productQuantities[forestProductId]) {
+        productQuantities[forestProductId] = 0;
+      }
+      
+      productQuantities[forestProductId] += item.purchased_quantity;
+    });
+    
+    // Convert to array and sort by quantity
+    const sortedProducts = Object.entries(productQuantities)
+      .map(([id, quantity]) => ({
+        id: parseInt(id),
+        name: productNameMap[id] || `Product ID ${id}`,
+        unit: productUnitMap[id] || 'N/A',
+        quantity
+      }))
+      .sort((a, b) => b.quantity - a.quantity);
+    
+    console.log("Sorted products:", sortedProducts);
+    
+    // Prepare chart data
+    const labels = sortedProducts.map(p => p.name);
+    const quantities = sortedProducts.map(p => p.quantity);
+    const units = sortedProducts.map(p => p.unit);
+    
+    // Set most collected product with its unit
+    mostCollectedProduct.value = sortedProducts.length > 0 
+      ? `${sortedProducts[0].name} ` 
+      : 'N/A';
+    console.log("Most collected product:", mostCollectedProduct.value);
 
     // Fetch total collection routes
     const { data: routes, error: routesError } = await supabase
@@ -89,56 +162,36 @@ const fetchDashboardData = async (forceRefresh = false) => {
 
     // Fetch forest products quantity distribution with unit_name
     const { data: fpAndLocation, error: fpAndLocationError } = await supabase
-      .from('fp_and_location')
+      .from('fp_and_locations')
       .select(`
         id,
         forest_product_id,
         location_id,
         quantity,
         forest_products (
+          id,
           name,
           measurement_units:measurement_unit_id (
             unit_name
           )
         ),
-        location (
+        locations (
           name
         )
       `)
+    
     if (fpAndLocationError) throw fpAndLocationError
 
-    // Fetch product and location names
-    const productNamesMap = {}
-    const locationNamesMap = {}
-    for (const record of fpAndLocation) {
-      const { data: product, error: productError } = await supabase
-      .from('forest_products')
-      .select('name')
-      .eq('id', record.forest_product_id)
-      .is('deleted_at', null) // Ensure the product is not deleted
-      .single()
-      if (productError) continue // Skip this record if there's an error fetching the product
-      productNamesMap[record.forest_product_id] = product.name
-
-      const { data: location, error: locationError } = await supabase
-      .from('location')
-      .select('name')
-      .eq('id', record.location_id)
-      .single()
-      if (locationError) throw locationError
-      locationNamesMap[record.location_id] = location.name
-    }
-
     forestProductsData.value = fpAndLocation
-      .filter(record => productNamesMap[record.forest_product_id]) // Filter out records with deleted products
+      .filter(record => record.forest_products) // Filter out records with deleted products
       .map(record => ({
-      id: record.id,
-      productName: productNamesMap[record.forest_product_id],
-      locationName: locationNamesMap[record.location_id],
-      measurementUnit: record.forest_products.measurement_units?.unit_name || 'N/A',
-      fp_id: record.forest_product_id,
-      quantity: record.quantity
-      }))
+        id: record.id,
+        productName: record.forest_products?.name || 'Unknown Product',
+        locationName: record.locations?.name || 'Unknown Location',
+        measurementUnit: record.forest_products?.measurement_units?.unit_name || 'N/A',
+        fp_id: record.forest_product_id,
+        quantity: record.quantity
+      }));
 
     // Cache data
     const dashboardData = {
@@ -148,14 +201,16 @@ const fetchDashboardData = async (forceRefresh = false) => {
       totalProducts: totalProducts.value,
       forestProductsData: forestProductsData.value,
       labels,
-      quantities
+      quantities,
+      units
     }
     localStorage.setItem('dashboardData', JSON.stringify(dashboardData))
 
     // Render charts
-    renderCharts(labels, quantities)
+    renderCharts(labels, quantities, units)
   } catch (error) {
-    toast.error(error.message)
+    console.error('Dashboard error:', error);
+    toast.error(error.message || 'Failed to load dashboard data')
   }
 }
 
@@ -177,7 +232,7 @@ const refreshData = () => {
 
 let mostCollectedChartInstance = null;
 
-const renderCharts = async (labels, quantities) => {
+const renderCharts = async (labels, quantities, units) => {
   try {
     // Most Collected Forest Product Chart
     const mostCollectedCtx = document.getElementById('mostCollectedChart')?.getContext('2d')
@@ -186,29 +241,75 @@ const renderCharts = async (labels, quantities) => {
         mostCollectedChartInstance.destroy();
         mostCollectedChartInstance = null;
       }
+      
+      // Only display top 5 products for better readability
+      const displayLimit = 5;
+      const displayLabels = Array.isArray(labels) ? labels.slice(0, displayLimit) : [];
+      const displayQuantities = Array.isArray(quantities) ? quantities.slice(0, displayLimit) : [];
+      const displayUnits = Array.isArray(units) ? units.slice(0, displayLimit) : [];
+      
+      // Ensure we have valid units for each product
+      for (let i = 0; i < displayLabels.length; i++) {
+        if (!displayUnits[i] || displayUnits[i] === 'undefined') {
+          displayUnits[i] = 'N/A';
+        }
+      }
+      
+      // Prepare data for the chart - combine product name and unit
+      const formattedLabels = displayLabels.map((label, index) => 
+        `${label} (${displayUnits[index]})`
+      );
+      
       mostCollectedChartInstance = new Chart(mostCollectedCtx, {
         type: 'bar',
         data: {
-          labels,
+          labels: formattedLabels,
           datasets: [{
-            label: 'Most Collected Forest Product',
-            data: quantities,
+            label: 'Most Collected Forest Products',
+            data: displayQuantities,
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 1
           }]
         },
         options: {
+          responsive: true,
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Total Collected Quantity'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Forest Products'
+              }
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: 'Most Collected Forest Products'
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const index = context.dataIndex;
+                  const unit = displayUnits[index] || 'N/A';
+                  return `Quantity: ${context.raw.toLocaleString()} ${unit}`;
+                }
+              }
             }
           }
         }
-      })
+      });
     }
   } catch (error) {
-    toast.error(error.message)
+    console.error('Chart rendering error:', error);
+    toast.error(error.message || 'Failed to render charts');
   }
 }
 

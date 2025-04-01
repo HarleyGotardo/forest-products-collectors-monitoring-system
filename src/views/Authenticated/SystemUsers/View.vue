@@ -75,10 +75,7 @@ const fetchCollectionRecords = async () => {
     .from('collection_records')
     .select(`
       id,
-      created_at,
-      forest_product:forest_products ( id, name ),
-      total_cost,
-      created_by:profiles!collection_records_created_by_fkey ( id, first_name, last_name ),
+      created_at,      created_by:profiles!collection_records_created_by_fkey ( id, first_name, last_name ),
       is_paid
     `)
     .eq('user_id', userId)
@@ -87,15 +84,43 @@ const fetchCollectionRecords = async () => {
   if (fetchError) {
     error.value = fetchError.message
   } else {
-    collectionRecords.value = collection_records.map(record => ({
-      id: record.id,
-      created_at: record.created_at,
-      formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
-      forest_product: record.forest_product,
-      total_cost: record.total_cost,
-      created_by_name: `${record.created_by.first_name} ${record.created_by.last_name}`,
-      is_paid: record.is_paid ? 'Paid' : 'Unpaid'
-    }))
+    // Fetch the collection record items to get forest product details
+    for (let record of collection_records) {
+      // Get items for each collection record
+      const { data: items, error: itemsError } = await supabase
+        .from('collection_record_items')
+        .select(`
+          id,
+          total_cost,
+          fp_and_location_id,
+          fp_and_location:fp_and_locations(
+            forest_product:forest_products(id, name)
+          )
+        `)
+        .eq('collection_record_id', record.id)
+
+      if (itemsError) {
+        error.value = itemsError.message
+        continue
+      }
+
+      // Calculate the actual total cost from items
+      const totalCost = items.reduce((sum, item) => sum + item.total_cost, 0)
+
+      // Extract forest product names
+      const forestProducts = items.map(item => item.fp_and_location.forest_product.name)
+
+      collectionRecords.value.push({
+        id: record.id,
+        created_at: record.created_at,
+        formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
+        forest_products: forestProducts,
+        total_cost: totalCost,
+        created_by_name: `${record.created_by.first_name} ${record.created_by.last_name}`,
+        is_paid: record.is_paid ? 'Paid' : 'Unpaid',
+        items_count: items.length
+      })
+    }
   }
 }
 
@@ -105,9 +130,7 @@ const fetchCreatedByRecords = async () => {
     .select(`
       id,
       created_at,
-      forest_product:forest_products ( id, name ),
       user_id,
-      total_cost,
       is_paid
     `)
     .eq('created_by', userId)
@@ -126,15 +149,42 @@ const fetchCreatedByRecords = async () => {
     if (userError) {
       error.value = userError.message;
     } else {
-      createdByRecords.value = created_by_records.map(record => ({
-        id: record.id,
-        created_at: record.created_at,
-        formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
-        forest_product: record.forest_product,
-        total_cost: record.total_cost,
-        is_paid: record.is_paid ? 'Paid' : 'Unpaid',
-        user: `${users.find(user => user.id === record.user_id)?.first_name} ${users.find(user => user.id === record.user_id)?.last_name}` // Find the user details and format to first_name and last_name
-      }));
+      for (let record of created_by_records) {
+        // Get items for each collection record
+        const { data: items, error: itemsError } = await supabase
+          .from('collection_record_items')
+          .select(`
+            id,
+            total_cost,
+            fp_and_location_id,
+            fp_and_location:fp_and_locations(
+              forest_product:forest_products(id, name)
+            )
+          `)
+          .eq('collection_record_id', record.id)
+
+        if (itemsError) {
+          error.value = itemsError.message
+          continue
+        }
+
+        // Calculate the total cost from items
+        const totalCost = items.reduce((sum, item) => sum + item.total_cost, 0)
+
+        // Extract forest product names
+        const forestProducts = items.map(item => item.fp_and_location.forest_product.name)
+
+        createdByRecords.value.push({
+          id: record.id,
+          created_at: record.created_at,
+          formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
+          forest_products: forestProducts,
+          total_cost: totalCost,
+          is_paid: record.is_paid ? 'Paid' : 'Unpaid',
+          user: `${users.find(user => user.id === record.user_id)?.first_name} ${users.find(user => user.id === record.user_id)?.last_name}`,
+          items_count: items.length
+        });
+      }
     }
   }
 }
@@ -145,9 +195,7 @@ const fetchApprovedByRecords = async () => {
     .select(`
       id,
       created_at,
-      forest_product:forest_products ( id, name ),
       user_id,
-      total_cost,
       is_paid
     `)
     .eq('approved_by', userId)
@@ -161,20 +209,47 @@ const fetchApprovedByRecords = async () => {
     const { data: users, error: userError } = await supabase
       .from('profiles')
       .select('id, first_name, last_name')
-      .in('id', userIds); // Get users based on the user ids
+      .in('id', userIds);
 
     if (userError) {
       error.value = userError.message;
     } else {
-      approvedByRecords.value = approved_by_records.map(record => ({
-        id: record.id,
-        created_at: record.created_at,
-        formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
-        forest_product: record.forest_product,
-        total_cost: record.total_cost,
-        is_paid: record.is_paid ? 'Paid' : 'Unpaid',
-        user: `${users.find(user => user.id === record.user_id)?.first_name} ${users.find(user => user.id === record.user_id)?.last_name}` // Find the user details and format to first_name and last_name
-      }));
+      for (let record of approved_by_records) {
+        // Get items for each collection record
+        const { data: items, error: itemsError } = await supabase
+          .from('collection_record_items')
+          .select(`
+            id,
+            total_cost,
+            fp_and_location_id,
+            fp_and_location:fp_and_locations(
+              forest_product:forest_products(id, name)
+            )
+          `)
+          .eq('collection_record_id', record.id)
+
+        if (itemsError) {
+          error.value = itemsError.message
+          continue
+        }
+
+        // Calculate the total cost from items
+        const totalCost = items.reduce((sum, item) => sum + item.total_cost, 0)
+
+        // Extract forest product names
+        const forestProducts = items.map(item => item.fp_and_location.forest_product.name)
+
+        approvedByRecords.value.push({
+          id: record.id,
+          created_at: record.created_at,
+          formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
+          forest_products: forestProducts,
+          total_cost: totalCost,
+          is_paid: record.is_paid ? 'Paid' : 'Unpaid',
+          user: `${users.find(user => user.id === record.user_id)?.first_name} ${users.find(user => user.id === record.user_id)?.last_name}`,
+          items_count: items.length
+        });
+      }
     }
   }
 }
@@ -291,9 +366,7 @@ onMounted(() => {
       class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl"
     >
       <!-- Card Header with Gradient Background -->
-      <div
-        class="px-6 sm:px-8 py-6 bg-[#10b880]"
-      >
+      <div class="px-6 sm:px-8 py-6 bg-[#10b880]">
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-white">User Profile</h2>
           <!-- Avatar with Ring -->
@@ -373,9 +446,9 @@ onMounted(() => {
               Role
             </label>
             <div class="flex items-center">
-                <span 
+              <span
                 class="px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-[#10b880] to-[#4b977e] text-white border border-[#10b880]"
-                >
+              >
                 {{ user.role.name }}
               </span>
             </div>
@@ -426,7 +499,7 @@ onMounted(() => {
                   scope="col"
                   class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Forest Product
+                  Forest Products
                 </th>
                 <th
                   scope="col"
@@ -492,7 +565,7 @@ onMounted(() => {
                 <td
                   class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700"
                 >
-                  {{ record.forest_product.name }}
+                  {{ record.forest_products.join(', ') }}
                 </td>
                 <td
                   class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
@@ -512,9 +585,9 @@ onMounted(() => {
                 <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                   <span
                     :class="[
-                  'px-3 py-1 rounded-full text-xs font-medium',
-                  record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                ]"
+              'px-3 py-1 rounded-full text-xs font-medium',
+              record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            ]"
                   >
                     {{ record.is_paid }}
                   </span>
@@ -525,7 +598,6 @@ onMounted(() => {
         </div>
 
         <!-- Pagination Controls -->
-        <!-- Pagination Controls for Created By Records -->
         <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
           <div class="flex items-center justify-between">
             <button
@@ -588,387 +660,386 @@ onMounted(() => {
     <!-- Collection Records Section -->
     <div v-if="isForestProductCollector(user?.role?.id)" class="mt-12">
       <div class="flex items-center space-x-2 mb-6">
-        <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
-        <h3 class="text-xl font-bold text-gray-800">Collection Records</h3>
+      <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+      <h3 class="text-xl font-bold text-gray-800">Collection Records</h3>
       </div>
 
       <!-- Collection Records Card -->
       <div
-        class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+      class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
       >
-        <!-- Table Header -->
-        <div
-          class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200"
-        >
-          <div class="flex items-center justify-between">
-            <h4 class="font-medium text-gray-700">
-              Records for {{ user.first_name }} {{ user.last_name }}
-            </h4>
-            <!-- Could add filter/search controls here -->
-          </div>
+      <!-- Table Header -->
+      <div
+        class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200"
+      >
+        <div class="flex items-center justify-between">
+        <h4 class="font-medium text-gray-700">
+          Records for {{ user.first_name }} {{ user.last_name }}
+        </h4>
         </div>
+      </div>
 
-        <!-- Records Table -->
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  ID
-                </th>
-                <th
-                  scope="col"
-                  class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Forest Product
-                </th>
-                <th
-                  scope="col"
-                  class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Date Collected
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Total Cost
-                </th>
-                <th
-                  scope="col"
-                  class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Processed By
-                </th>
-                <th
-                  scope="col"
-                  class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Payment Status
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-if="paginatedRecords.length === 0">
-                <td colspan="6" class="px-6 py-12 text-center">
-                  <div class="flex flex-col items-center">
-                    <svg
-                      class="w-16 h-16 text-gray-300 mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    <p class="text-gray-500 mb-1">No records found</p>
-                    <p class="text-sm text-gray-400">
-                      Collection records will appear here
-                    </p>
-                  </div>
-                </td>
-              </tr>
-              <tr
-                v-for="record in paginatedRecords"
-                :key="record.id"
-                class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer"
-                @click="goToCollectionRecord(record.id)"
-              >
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600"
-                >
-                  #{{ record.id }}
-                </td>
-                <td
-                  class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                >
-                  {{ record.forest_product.name }}
-                </td>
-                <td
-                  class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                >
-                  {{ record.formatted_created_at }}
-                </td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                >
-                  ₱{{ record.total_cost }}
-                </td>
-                <td
-                  class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                >
-                  {{ record.created_by_name }}
-                </td>
-                <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                  <span
-                    :class="[
-                      'px-3 py-1 rounded-full text-xs font-medium',
-                      record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    ]"
-                  >
-                    {{ record.is_paid }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination Controls -->
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-          <div class="flex items-center justify-between">
-            <button
-              @click="prevPage"
-              :disabled="currentPage === 1"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentPage === 1 ? 'text-gray-400' : 'text-gray-700'"
+      <!-- Records Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+          <th
+            scope="col"
+            class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            ID
+          </th>
+          <th
+            scope="col"
+            class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Forest Products
+          </th>
+          <th
+            scope="col"
+            class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Date Collected
+          </th>
+          <th
+            scope="col"
+            class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Total Cost
+          </th>
+          <th
+            scope="col"
+            class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Processed By
+          </th>
+          <th
+            scope="col"
+            class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Payment Status
+          </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-if="paginatedRecords.length === 0">
+          <td colspan="6" class="px-6 py-12 text-center">
+            <div class="flex flex-col items-center">
+            <svg
+              class="w-16 h-16 text-gray-300 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                class="mr-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Previous
-            </button>
-
-            <div
-              class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
-            >
-              <span class="text-sm font-medium text-gray-700"
-                >Page {{ currentPage }} of {{ totalPages }}</span
-              >
+              <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <p class="text-gray-500 mb-1">No records found</p>
+            <p class="text-sm text-gray-400">
+              Collection records will appear here
+            </p>
             </div>
-
-            <button
-              @click="nextPage"
-              :disabled="currentPage === totalPages"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentPage === totalPages ? 'text-gray-400' : 'text-gray-700'"
+          </td>
+          </tr>
+          <tr
+          v-for="record in paginatedRecords"
+          :key="record.id"
+          class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer"
+          @click="goToCollectionRecord(record.id)"
+          >
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600"
+          >
+            #{{ record.id }}
+          </td>
+          <td
+            class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+          >
+            {{ record.forest_products.join(', ') }}
+          </td>
+          <td
+            class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+          >
+            {{ record.formatted_created_at }}
+          </td>
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+          >
+            ₱{{ record.total_cost }}
+          </td>
+          <td
+            class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+          >
+            {{ record.created_by_name }}
+          </td>
+          <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+            <span
+            :class="[
+              'px-3 py-1 rounded-full text-xs font-medium',
+              record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            ]"
             >
-              Next
-              <svg
-                class="ml-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
+            {{ record.is_paid }}
+            </span>
+          </td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+        <button
+          @click="prevPage"
+          :disabled="currentPage === 1"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          :class="currentPage === 1 ? 'text-gray-400' : 'text-gray-700'"
+        >
+          <svg
+          class="mr-2 h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+          </svg>
+          Previous
+        </button>
+
+        <div
+          class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
+        >
+          <span class="text-sm font-medium text-gray-700"
+          >Page {{ currentPage }} of {{ totalPages }}</span
+          >
         </div>
+
+        <button
+          @click="nextPage"
+          :disabled="currentPage === totalPages"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          :class="currentPage === totalPages ? 'text-gray-400' : 'text-gray-700'"
+        >
+          Next
+          <svg
+          class="ml-2 h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
+          </svg>
+        </button>
+        </div>
+      </div>
       </div>
     </div>
     <!-- Approved By Records Section -->
     <div v-if="isVSUAdmin(user?.role?.id)" class="mt-12">
       <div class="flex items-center space-x-2 mb-6">
-        <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
-        <h3 class="text-xl font-bold text-gray-800">
-          Approved Collection Records
-        </h3>
+      <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+      <h3 class="text-xl font-bold text-gray-800">
+        Approved Collection Records
+      </h3>
       </div>
 
       <!-- Approved By Records Card -->
       <div
-        class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+      class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
       >
-        <!-- Table Header -->
-        <div
-          class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200"
-        >
-          <div class="flex items-center justify-between">
-            <h4 class="font-medium text-gray-700">
-              Records approved by {{ user.first_name }} {{ user.last_name }}
-            </h4>
-          </div>
+      <!-- Table Header -->
+      <div
+        class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200"
+      >
+        <div class="flex items-center justify-between">
+        <h4 class="font-medium text-gray-700">
+          Records approved by {{ user.first_name }} {{ user.last_name }}
+        </h4>
         </div>
+      </div>
 
-        <!-- Records Table -->
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  ID
-                </th>
-                <th
-                  scope="col"
-                  class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Forest Product
-                </th>
-                <th
-                  scope="col"
-                  class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Date Collected
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Total Cost
-                </th>
-                <th
-                  scope="col"
-                  class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  FP Collector
-                </th>
-                <th
-                  scope="col"
-                  class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Payment Status
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-if="paginatedApprovedByRecords.length === 0">
-                <td colspan="6" class="px-6 py-12 text-center">
-                  <div class="flex flex-col items-center">
-                    <svg
-                      class="w-16 h-16 text-gray-300 mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    <p class="text-gray-500 mb-1">No records found</p>
-                    <p class="text-sm text-gray-400">
-                      Approved collection records will appear here
-                    </p>
-                  </div>
-                </td>
-              </tr>
-              <tr
-                v-for="record in paginatedApprovedByRecords"
-                :key="record.id"
-                class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer"
-                @click="goToCollectionRecord(record.id)"
-              >
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600"
-                >
-                  #{{ record.id }}
-                </td>
-                <td
-                  class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700"
-                >
-                  {{ record.forest_product.name }}
-                </td>
-                <td
-                  class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                >
-                  {{ record.formatted_created_at }}
-                </td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                >
-                  ₱{{ record.total_cost }}
-                </td>
-                <td
-                  class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                >
-                  {{ record.user }}
-                </td>
-                <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                  <span
-                    :class="['px-3 py-1 rounded-full text-xs font-medium', record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800']"
-                    >{{ record.is_paid }}</span
-                  >
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination Controls -->
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-          <div class="flex items-center justify-between">
-            <button
-              @click="prevApprovedByPage"
-              :disabled="currentApprovedByPage === 1"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentApprovedByPage === 1 ? 'text-gray-400' : 'text-gray-700'"
+      <!-- Records Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+          <th
+            scope="col"
+            class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            ID
+          </th>
+          <th
+            scope="col"
+            class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Forest Products
+          </th>
+          <th
+            scope="col"
+            class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Date Collected
+          </th>
+          <th
+            scope="col"
+            class="px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Total Cost
+          </th>
+          <th
+            scope="col"
+            class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            FP Collector
+          </th>
+          <th
+            scope="col"
+            class="hidden sm:table-cell px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Payment Status
+          </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-if="paginatedApprovedByRecords.length === 0">
+          <td colspan="6" class="px-6 py-12 text-center">
+            <div class="flex flex-col items-center">
+            <svg
+              class="w-16 h-16 text-gray-300 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                class="mr-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Previous
-            </button>
-
-            <div
-              class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
-            >
-              <span class="text-sm font-medium text-gray-700"
-                >Page {{ currentApprovedByPage }} of
-                {{ totalApprovedByPages }}</span
-              >
+              <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <p class="text-gray-500 mb-1">No records found</p>
+            <p class="text-sm text-gray-400">
+              Approved collection records will appear here
+            </p>
             </div>
-
-            <button
-              @click="nextApprovedByPage"
-              :disabled="currentApprovedByPage === totalApprovedByPages"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentApprovedByPage === totalApprovedByPages ? 'text-gray-400' : 'text-gray-700'"
+          </td>
+          </tr>
+          <tr
+          v-for="record in paginatedApprovedByRecords"
+          :key="record.id"
+          class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer"
+          @click="goToCollectionRecord(record.id)"
+          >
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600"
+          >
+            #{{ record.id }}
+          </td>
+          <td
+            class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+          >
+            {{ record.forest_products.join(', ') }}
+          </td>
+          <td
+            class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+          >
+            {{ record.formatted_created_at }}
+          </td>
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+          >
+            ₱{{ record.total_cost }}
+          </td>
+          <td
+            class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+          >
+            {{ record.user }}
+          </td>
+          <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+            <span
+            :class="['px-3 py-1 rounded-full text-xs font-medium', record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800']"
+            >{{ record.is_paid }}</span
             >
-              Next
-              <svg
-                class="ml-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
+          </td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+        <button
+          @click="prevApprovedByPage"
+          :disabled="currentApprovedByPage === 1"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          :class="currentApprovedByPage === 1 ? 'text-gray-400' : 'text-gray-700'"
+        >
+          <svg
+          class="mr-2 h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+          </svg>
+          Previous
+        </button>
+
+        <div
+          class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
+        >
+          <span class="text-sm font-medium text-gray-700"
+          >Page {{ currentApprovedByPage }} of
+          {{ totalApprovedByPages }}</span
+          >
         </div>
+
+        <button
+          @click="nextApprovedByPage"
+          :disabled="currentApprovedByPage === totalApprovedByPages"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          :class="currentApprovedByPage === totalApprovedByPages ? 'text-gray-400' : 'text-gray-700'"
+        >
+          Next
+          <svg
+          class="ml-2 h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
+          </svg>
+        </button>
+        </div>
+      </div>
       </div>
     </div>
   </div>
