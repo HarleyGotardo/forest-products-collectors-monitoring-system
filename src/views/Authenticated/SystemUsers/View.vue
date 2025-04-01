@@ -853,7 +853,7 @@ onMounted(() => {
     <!-- Approved By Records Section -->
     <div v-if="isVSUAdmin(user?.role?.id)" class="mt-12">
       <div class="flex items-center space-x-2 mb-6">
-      <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+      <div class="w-1.5 h-6 bg-green-500 rounded-full"></div>
       <h3 class="text-xl font-bold text-gray-800">
         Approved Collection Records
       </h3>
