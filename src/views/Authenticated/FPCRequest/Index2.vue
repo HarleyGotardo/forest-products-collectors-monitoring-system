@@ -170,7 +170,7 @@ watch(currentPage, () => {
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Collection Date</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Requested By</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
-              <th v-if="isFPUAdmin || isForestRanger"
+              <th v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
               scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
             </tr>
           </thead>

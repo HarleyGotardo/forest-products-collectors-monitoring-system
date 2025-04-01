@@ -304,7 +304,7 @@ onMounted(async () => {
           </Locations>
 
           <Records
-            v-if="isFPUAdmin || isForestRanger"
+            v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
             :isDropdownOpen="isRecordsDropdownOpen"
             @toggleDropdown="toggleRecordsDropdown"
             label="Collection Records"

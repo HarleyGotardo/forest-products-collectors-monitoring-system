@@ -191,7 +191,7 @@ const routes = [
         name: "RequestView",
         component: FPCRequestView,
         meta: {
-          title: "View Collection Request - Nature Cart", requiresRole: [2, 4, 1],
+          title: "View Collection Request - Nature Cart", requiresRole: [2, 4, 1, 3],
         },
       },
       {
