@@ -220,7 +220,7 @@ onMounted(() => {
             <div class="w-full sm:w-64">
               <div class="flex justify-between py-2">
                 <p class="text-xs sm:text-sm font-medium text-gray-500">Total Amount</p>
-                <p class="text-lg sm:text-xl font-bold text-gray-900">₱{{ calculateTotalCost() }}</p>
+                <p class="text-lg sm:text-xl font-bold text-gray-900">₱{{ calculateTotalCost().toFixed(2) }}</p>
               </div>
               <div class="flex justify-between py-2 border-t border-gray-200 mt-2">
                 <p class="text-xs sm:text-sm font-medium text-gray-500">Payment Status</p>

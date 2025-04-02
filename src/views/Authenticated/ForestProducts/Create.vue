@@ -436,8 +436,9 @@ onMounted(() => {
                 <input
                   type="number"
                   v-model="location.quantity"
+                  :disabled="!selectedLocations.includes(location)"
                   placeholder="Quantity"
-                  class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 

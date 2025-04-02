@@ -366,7 +366,7 @@ onMounted(() => {
       class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl"
     >
       <!-- Card Header with Gradient Background -->
-      <div class="px-6 sm:px-8 py-6 bg-[#10b880]">
+      <div class="px-6 sm:px-8 py-6 bg-gray-900">
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-white">User Profile</h2>
           <!-- Avatar with Ring -->
@@ -853,7 +853,7 @@ onMounted(() => {
     <!-- Approved By Records Section -->
     <div v-if="isVSUAdmin(user?.role?.id)" class="mt-12">
       <div class="flex items-center space-x-2 mb-6">
-      <div class="w-1.5 h-6 bg-green-500 rounded-full"></div>
+      <div class="w-1.5 h-6 bg-gray-900 rounded-full"></div>
       <h3 class="text-xl font-bold text-gray-800">
         Approved Collection Records
       </h3>
@@ -962,11 +962,11 @@ onMounted(() => {
           >
             {{ record.formatted_created_at }}
           </td>
-          <td
+            <td
             class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-          >
-            ₱{{ record.total_cost }}
-          </td>
+            >
+            ₱{{ record.total_cost.toFixed(2) }}
+            </td>
           <td
             class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500"
           >

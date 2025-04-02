@@ -356,7 +356,7 @@ onMounted(() => {
     >
       <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
-          <h2 class="text-lg font-semibold text-green-800">Confirm Collection Record</h2>
+          <h2 class="text-lg font-semibold text-gray-900">Confirm Collection Record</h2>
           <button @click="cancelSubmit" class="text-gray-500 hover:text-gray-700 p-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -416,7 +416,7 @@ onMounted(() => {
             Cancel
           </button>
           <button
-            class="bg-green-600 hover:bg-green-700 text-white rounded-lg px-6 py-2 font-medium"
+            class="bg-gray-900 hover:bg-gray-700 text-white rounded-lg px-6 py-2 font-medium"
             @click="confirmSubmit"
             :disabled="isSubmitting"
           >
