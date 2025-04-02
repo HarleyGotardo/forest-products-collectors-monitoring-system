@@ -404,8 +404,47 @@ const handleAdditionalImageUpload = async (event) => {
     toast.error('You can only upload up to 8 additional images');
     return;
   }
-const currentImage = ref(null); // Store the currently selected image
-const currentImageIndex = ref(null); // Store the index of the selected image
+
+  const remainingSlots = 8 - count;
+  const filesToUpload = Array.from(files).slice(0, remainingSlots);
+
+  for (const file of filesToUpload) {
+    const fileName = `fp_images/${Date.now()}_${file.name}`;
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('nature_cart_images')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error('Error uploading additional image:', uploadError);
+      toast.error('Failed to upload image');
+      continue;
+    }
+
+    const imageUrl = supabase.storage.from('nature_cart_images').getPublicUrl(uploadData.path).data.publicUrl;
+
+    const { error: insertError } = await supabase
+      .from('forest_product_images')
+      .insert({
+        forest_product_id: productId,
+        image_link: imageUrl,
+      });
+
+    if (insertError) {
+      console.error('Error saving image link:', insertError);
+      toast.error('Failed to save image link');
+      continue;
+    }
+
+    additionalImages.value.push(imageUrl);
+  }
+
+  if (files.length > remainingSlots) {
+    toast.error(`Only ${remainingSlots} images were uploaded due to the 8-image limit`);
+  } else {
+    toast.success('Images uploaded successfully');
+  }
+};
 
 const deleteImage = async (index) => {
   if (!isFPUAdmin && !isForestRanger) {
@@ -449,51 +488,10 @@ const deleteImage = async (index) => {
     // Remove the image from the local array
     additionalImages.value.splice(index, 1);
     toast.success('Image deleted successfully.');
-    showExtraImageModal.value = false;
+    showExtraImageModal.value = false; // Close the modal after deletion
   } catch (error) {
     console.error('Unexpected error:', error);
     toast.error('An unexpected error occurred.');
-  }
-};
-
-  const remainingSlots = 8 - count;
-  const filesToUpload = Array.from(files).slice(0, remainingSlots);
-
-  for (const file of filesToUpload) {
-    const fileName = `fp_images/${Date.now()}_${file.name}`;
-    const { data: uploadData, error: uploadError } = await supabase
-      .storage
-      .from('nature_cart_images')
-      .upload(fileName, file);
-
-    if (uploadError) {
-      console.error('Error uploading additional image:', uploadError);
-      toast.error('Failed to upload image');
-      continue;
-    }
-
-    const imageUrl = supabase.storage.from('nature_cart_images').getPublicUrl(uploadData.path).data.publicUrl;
-
-    const { error: insertError } = await supabase
-      .from('forest_product_images')
-      .insert({
-        forest_product_id: productId,
-        image_link: imageUrl,
-      });
-
-    if (insertError) {
-      console.error('Error saving image link:', insertError);
-      toast.error('Failed to save image link');
-      continue;
-    }
-
-    additionalImages.value.push(imageUrl);
-  }
-
-  if (files.length > remainingSlots) {
-    toast.error(`Only ${remainingSlots} images were uploaded due to the 8-image limit`);
-  } else {
-    toast.success('Images uploaded successfully');
   }
 };
 
@@ -749,7 +747,7 @@ onMounted(() => {
 <div class="mt-10 pt-8 border-t border-gray-200">
   <div class="flex items-center justify-between mb-6">
     <h3 class="text-xl font-bold text-gray-900">Additional Images</h3>
-    <span class="text-sm text-gray-500">{{ additionalImages.length }} images</span>
+    <span class="text-sm text-gray-500">{{ additionalImages.length }} image(s)</span>
   </div>
 
   <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mt-4">
@@ -787,7 +785,7 @@ onMounted(() => {
       d="M12 4v16m8-8H4"
     />
   </svg>
-  <span class="mt-2 text-sm font-medium text-gray-600">Add Images</span>
+  <span class="mt-2 text-sm font-medium text-gray-600">Add Image(s)</span>
   <input
     id="additional-image-upload"
     type="file"
@@ -1240,49 +1238,104 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
     <!-- Image Modal -->
 <div
-  v-if="showImageModal"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+  v-if="showExtraImageModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm transition-opacity duration-300"
 >
-  <div class="relative bg-white rounded-lg shadow-lg max-w-3xl w-full">
-    <!-- Close Button -->
-    <button
-      class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-      @click="showImageModal = false"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    </button>
-
-    <!-- Full Image -->
-    <img
-      :src="currentImage"
-      alt="Full Image"
-      class="w-full h-auto rounded-t-lg"
-    />
-
-    <!-- Delete Button -->
-    <div class="p-4 text-center">
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden transform transition-all duration-300 scale-100 border border-gray-200 dark:border-gray-700">
+    <!-- Modal Header with Title -->
+    <div class="bg-gradient-to-r bg-gray-900 px-6 py-4 flex items-center justify-between">
+      <h2 class="text-xl font-bold text-white">Image Viewer</h2>
+      <!-- Close Button -->
       <button
-        v-if="isForestRanger || isFPUAdmin"
-        class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none"
-        @click="deleteImage(currentImageIndex)"
+        class="text-white hover:text-gray-200 focus:outline-none transition-colors duration-200 bg-black bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5"
+        @click="closeImageModal"
+        aria-label="Close modal"
       >
-        Delete Image
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
       </button>
+    </div>
+
+    <!-- Image Container with Loading State and Image Controls -->
+    <div class="relative bg-gray-100 dark:bg-gray-900">
+      <!-- Loading Indicator -->
+      <div class="absolute inset-0 flex items-center justify-center z-10" v-if="isLoading">
+        <div class="w-16 h-16 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+
+      
+      <!-- Image Itself -->
+      <img
+        :src="currentImage"
+        alt="Image Preview"
+        class="w-full h-auto object-contain max-h-[60vh] mx-auto p-2"
+        @load="isLoading = false"
+      />
+      
+      <!-- Image Navigation -->
+      <div class="absolute inset-y-0 left-0 flex items-center" v-if="hasPreviousImage">
+        <button class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white p-2 rounded-r-lg transition-all duration-200 ml-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
+      <div class="absolute inset-y-0 right-0 flex items-center" v-if="hasNextImage">
+        <button class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white p-2 rounded-l-lg transition-all duration-200 mr-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  
+
+    <!-- Delete Button with Confirmation -->
+    <div class="p-6 bg-white dark:bg-gray-800 rounded-b-xl border-t border-gray-200 dark:border-gray-700">
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button
+            v-if="isForestRanger || isFPUAdmin"
+            class="px-5 py-2.5 bg-gray-900 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition-all duration-200 font-medium flex items-center justify-center mx-auto"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            Delete Image
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Image?</AlertDialogTitle>
+            <AlertDialogDescription >
+              Are you sure you want to delete this image? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter class="flex space-x-4 mt-6">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              @click="deleteImage(currentImageIndex)"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   </div>
 </div>
@@ -1347,22 +1400,9 @@ onMounted(() => {
                 class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg"
               >
                 <div class="space-y-1 text-center">
-                  <svg
-                    class="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
                   <div class="flex text-sm text-gray-600">
                     <label
-                      class="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2"
+                      class="relative cursor-pointer rounded-md font-medium text-gray-900 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2"
                     >
                       <span>Upload a file</span>
                       <input
@@ -1382,7 +1422,7 @@ onMounted(() => {
               <button
                 type="button"
                 @click="handleImageSubmit"
-                class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                class="inline-flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
               >
                 Update
               </button>
