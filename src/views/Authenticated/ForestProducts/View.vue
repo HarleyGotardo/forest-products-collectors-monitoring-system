@@ -50,6 +50,20 @@ const editLocationQuantity = ref(null)
 const locationToEdit = ref(null)
 const currentPage = ref(1) // Current page for pagination
 const itemsPerPage = 4 // Items per page for pagination
+const additionalImages = ref([]); // Store additional images
+
+const fetchAdditionalImages = async () => {
+  const { data, error } = await supabase
+    .from('forest_product_images')
+    .select('image_link')
+    .eq('forest_product_id', productId);
+
+  if (error) {
+    console.error('Error fetching additional images:', error);
+  } else {
+    additionalImages.value = data.map((img) => img.image_link);
+  }
+};
 
 const cancelMapModal = () => {
   showLocationModal.value = false
@@ -356,6 +370,59 @@ const handleImageChange = (event) => {
   newImage.value = event.target.files[0]
 }
 
+const handleAdditionalImageUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Check the current number of images in the database
+  const { count, error: countError } = await supabase
+    .from('forest_product_images')
+    .select('*', { count: 'exact', head: true })
+    .eq('forest_product_id', productId);
+
+  if (countError) {
+    console.error('Error checking image count:', countError);
+    toast.error('Failed to check image limit');
+    return;
+  }
+
+  if (count >= 8) {
+    toast.error('You can only upload up to 8 additional images');
+    return;
+  }
+
+  // Proceed with the upload if the limit is not exceeded
+  const fileName = `fp_images/${Date.now()}_${file.name}`;
+  const { data: uploadData, error: uploadError } = await supabase
+    .storage
+    .from('nature_cart_images')
+    .upload(fileName, file);
+
+  if (uploadError) {
+    console.error('Error uploading additional image:', uploadError);
+    toast.error('Failed to upload image');
+    return;
+  }
+
+  const imageUrl = supabase.storage.from('nature_cart_images').getPublicUrl(uploadData.path).data.publicUrl;
+
+  const { error: insertError } = await supabase
+    .from('forest_product_images')
+    .insert({
+      forest_product_id: productId,
+      image_link: imageUrl,
+    });
+
+  if (insertError) {
+    console.error('Error saving image link:', insertError);
+    toast.error('Failed to save image link');
+    return;
+  }
+
+  additionalImages.value.push(imageUrl);
+  toast.success('Image uploaded successfully');
+};
+
 const handleImageSubmit = async () => {
   if (!newImage.value) {
     error.value = 'Please select an image'
@@ -408,10 +475,11 @@ const isDeleted = computed(() => {
 });
 
 onMounted(() => {
-  fetchForestProduct()
-  fetchAllLocations()
-  fetchUserDetails()
-})
+  fetchForestProduct();
+  fetchAdditionalImages();
+  fetchAllLocations();
+  fetchUserDetails();
+});
 </script>
 <template>
   <div class="max-w-4xl mx-auto p-3">
@@ -589,7 +657,7 @@ onMounted(() => {
                 <div>
                   <p class="text-sm text-gray-500">Locations Available</p>
                   <p class="text-xl font-semibold text-gray-900">
-                    {{ locations.length }} Locations
+                    {{ locations.length }} Location(s)
                   </p>
                 </div>
               </div>
@@ -603,7 +671,100 @@ onMounted(() => {
           </div>
         </div>
       </div>
+<!-- Additional Images Section -->
+<div class="mt-10 pt-8 border-t border-gray-200">
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-xl font-bold text-gray-900">Additional Images</h3>
+    <span class="text-sm text-gray-500">{{ additionalImages.length }} images</span>
+  </div>
 
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mt-4">
+    <!-- Display existing images -->
+    <div
+      v-for="(image, index) in additionalImages"
+      :key="index"
+      class="relative group overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg border border-gray-200 cursor-pointer"
+      @click="viewImage(image, index)"
+    >
+      <img
+        :src="image"
+        alt="Additional Image"
+        class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+    </div>
+
+    <!-- Add Image Placeholder -->
+    <label
+      for="additional-image-upload"
+      class="relative border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 transition-all hover:border-gray-500 bg-gray-50 hover:bg-gray-100 cursor-pointer"
+      v-if="isForestRanger || isFPUAdmin"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-12 w-12 text-gray-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      <span class="mt-2 text-sm font-medium text-gray-600">Add Image</span>
+      <input
+        id="additional-image-upload"
+        type="file"
+        @change="handleAdditionalImageUpload"
+        class="hidden"
+      />
+    </label>
+  </div>
+
+  <!-- Image Modal -->
+  <div
+    v-if="showImageModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+  >
+    <div class="relative bg-white rounded-lg shadow-lg max-w-3xl w-full">
+      <button
+        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+        @click="closeImageModal"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+      <img
+        :src="currentImage"
+        alt="Full Image"
+        class="w-full h-auto rounded-t-lg"
+      />
+      <div class="p-4 text-center">
+        <button
+          v-if="isForestRanger || isFPUAdmin"
+          class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none"
+          @click="deleteImage(currentImageIndex)"
+        >
+          Delete Image
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
       <!-- Locations Section -->
       <div
         class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
@@ -660,10 +821,13 @@ onMounted(() => {
             </button>
           </div>
         </div>
-    <!-- Conditional Rendering for No Locations -->
-    <div v-if="locations.length === 0" class="p-6 text-center text-gray-500">
-      This forest product doesn't have a location.  
-    </div>
+        <!-- Conditional Rendering for No Locations -->
+        <div
+          v-if="locations.length === 0"
+          class="p-6 text-center text-gray-500"
+        >
+          This forest product doesn't have a location.
+        </div>
         <!-- Locations List -->
         <div v-else class="divide-y divide-gray-100">
           <div
@@ -674,110 +838,110 @@ onMounted(() => {
           >
             <div class="flex flex-col sm:flex-row items-start sm:items-center">
               <div class="p-2 bg-gray-100 rounded-lg ml-3">
-          <svg
-            class="w-5 h-5 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
+                <svg
+                  class="w-5 h-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
               </div>
 
               <div class="ml-4 flex-grow mt-2 sm:mt-0">
-          <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
-          <div
-            class="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600"
-          >
-            <div class="flex items-center space-x-1">
-              <span class="font-medium">Lat:</span>
-              <span>{{ location.latitude }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium">Long:</span>
-              <span>{{ location.longitude }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium">Quantity:</span>
-              <span
-                >{{ location.quantity ? location.quantity : 'N/A' }}
-                {{ forestProduct.measurement_units.unit_name }}(s)</span
-              >
-            </div>
-          </div>
+                <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
+                <div
+                  class="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600"
+                >
+                  <div class="flex items-center space-x-1">
+                    <span class="font-medium">Lat:</span>
+                    <span>{{ location.latitude }}</span>
+                  </div>
+                  <div class="flex items-center space-x-1">
+                    <span class="font-medium">Long:</span>
+                    <span>{{ location.longitude }}</span>
+                  </div>
+                  <div class="flex items-center space-x-1">
+                    <span class="font-medium">Quantity:</span>
+                    <span
+                      >{{ location.quantity ? location.quantity : 'N/A' }}
+                      {{ forestProduct.measurement_units.unit_name }}(s)</span
+                    >
+                  </div>
+                </div>
               </div>
 
               <div class="ml-4 flex items-center space-x-2 mt-2 sm:mt-0">
-          <button
-            @click.stop="editLocation(location)"
-            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            title="Edit Location"
-            v-if="isForestRanger || isFPUAdmin"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-          </button>
+                <button
+                  @click.stop="editLocation(location)"
+                  class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  title="Edit Location"
+                  v-if="isForestRanger || isFPUAdmin"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button
-                @click.stop="confirmDeleteLocation(location.id)"
-                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                title="Delete Location"
-                v-if="isForestRanger || isFPUAdmin"
-              >
-                <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-                >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-                </svg>
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Location?</AlertDialogTitle>
-                <AlertDialogDescription>
-            Delete this location of the forest product?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="deleteLocation"
-            >Delete</AlertDialogAction
-                >
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      @click.stop="confirmDeleteLocation(location.id)"
+                      class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      title="Delete Location"
+                      v-if="isForestRanger || isFPUAdmin"
+                    >
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Location?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Delete this location of the forest product?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction @click="deleteLocation"
+                        >Delete</AlertDialogAction
+                      >
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>
@@ -798,10 +962,10 @@ onMounted(() => {
               viewBox="0 0 24 24"
             >
               <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M15 19l-7-7 7-7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
               />
             </svg>
             Previous
@@ -823,10 +987,10 @@ onMounted(() => {
               viewBox="0 0 24 24"
             >
               <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 5l7 7-7 7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
               />
             </svg>
           </button>
@@ -872,6 +1036,7 @@ onMounted(() => {
                   <h3 class="text-lg font-medium leading-6 text-gray-900">
                     Edit Forest Product's Quantity in this Location ({{ forestProduct.measurement_units.unit_name
 
+
                     }})
                   </h3>
                   <div class="mt-4">
@@ -906,8 +1071,9 @@ onMounted(() => {
 
         <!-- Map Container -->
         <div class="w-1/2 mx-auto rounded-full" v-if="locations.length != 0">
-          <h3 
-            class="text-lg text-center font-medium text-gray-900 bg-green-100 py-2 rounded-full shadow-sm">
+          <h3
+            class="text-lg text-center font-medium text-gray-900 bg-green-100 py-2 rounded-full shadow-sm"
+          >
             {{ forestProduct.name }}s Map Locations
           </h3>
         </div>
