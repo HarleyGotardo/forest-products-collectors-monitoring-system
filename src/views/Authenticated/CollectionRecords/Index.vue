@@ -108,6 +108,35 @@
               </td>
               <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
                 <div class="flex items-center justify-end space-x-3">
+                  <!-- Mark as Paid Button or Placeholder -->
+                  <span v-if="!record.is_paid" class="inline-block">
+                    <AlertDialog>
+                      <AlertDialogTrigger>
+                        <Button v-if="isVSUAdmin" class="p-1 sm:p-2">
+                          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M5 13l4 4L19 7" />
+                          </svg>
+                          Paid
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will mark the collection record as paid.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction @click="markAsPaid(record.id)">Mark as Paid</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </span>
+                  <span v-else class="inline-block w-[40px]"></span> <!-- Placeholder for alignment -->
+
+                  <!-- Delete Button -->
                   <AlertDialog>
                     <AlertDialogTrigger>
                       <Button v-if="isFPUAdmin || isForestRanger" class="p-1 sm:p-2">
@@ -127,29 +156,6 @@
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction @click="deleteCollectionRecord(record.id)">Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <AlertDialog v-if="!record.is_paid">
-                    <AlertDialogTrigger>
-                      <Button v-if="isVSUAdmin" class="p-1 sm:p-2">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M5 13l4 4L19 7" />
-                        </svg>
-                        Paid
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will mark the collection record as paid.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="markAsPaid(record.id)">Mark as Paid</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
