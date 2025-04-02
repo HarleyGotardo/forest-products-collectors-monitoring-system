@@ -14,23 +14,11 @@ const totalProducts = ref(0)
 const forestProductsData = ref([])
 const currentPage = ref(1)
 const itemsPerPage = 8
+const loading = ref(true)
 
-const fetchDashboardData = async (forceRefresh = false) => {
+const fetchDashboardData = async () => {
+  loading.value = true
   try {
-    if (!forceRefresh) {
-      const cachedData = localStorage.getItem('dashboardData')
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData)
-        totalCollectors.value = parsedData.totalCollectors
-        mostCollectedProduct.value = parsedData.mostCollectedProduct
-        totalRoutes.value = parsedData.totalRoutes
-        totalProducts.value = parsedData.totalProducts
-        forestProductsData.value = parsedData.forestProductsData
-        renderCharts(parsedData.labels, parsedData.quantities, parsedData.units)
-        return
-      }
-    }
-
     // Fetch total collectors
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
@@ -193,24 +181,13 @@ const fetchDashboardData = async (forceRefresh = false) => {
         quantity: record.quantity
       }));
 
-    // Cache data
-    const dashboardData = {
-      totalCollectors: totalCollectors.value,
-      mostCollectedProduct: mostCollectedProduct.value,
-      totalRoutes: totalRoutes.value,
-      totalProducts: totalProducts.value,
-      forestProductsData: forestProductsData.value,
-      labels,
-      quantities,
-      units
-    }
-    localStorage.setItem('dashboardData', JSON.stringify(dashboardData))
-
     // Render charts
-    renderCharts(labels, quantities, units)
+    renderCharts(labels, quantities, units); // Render charts after fetching data
   } catch (error) {
     console.error('Dashboard error:', error);
-    toast.error(error.message || 'Failed to load dashboard data')
+    toast.error(error.message || 'Failed to load dashboard data');
+  } finally {
+    loading.value = false; // Stop loading
   }
 }
 
@@ -339,6 +316,24 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-gray-50 p-3 sm:p-6">
+        <!-- Loading Skeleton -->
+        <div v-if="loading" class="flex items-center justify-center min-h-screen">
+      <div class="relative">
+        <div class="relative w-32 h-32">
+          <div
+            class="absolute w-full h-full rounded-full border-[3px] border-gray-100/10 border-r-[#0ff] border-b-[#0ff] animate-spin"
+            style="animation-duration: 3s;"
+          ></div>
+          <div
+            class="absolute w-full h-full rounded-full border-[3px] border-gray-100/10 border-t-[#0ff] animate-spin"
+            style="animation-duration: 2s; animation-direction: reverse;"
+          ></div>
+        </div>
+        <div
+          class="absolute inset-0 bg-gradient-to-tr from-[#0ff]/10 via-transparent to-[#0ff]/5 animate-pulse rounded-full blur-sm"
+        ></div>
+      </div>
+    </div>
     <!-- Header Section - Stacked layout on mobile -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div class="flex items-center gap-2">
