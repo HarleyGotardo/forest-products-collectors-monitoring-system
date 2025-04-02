@@ -42,6 +42,7 @@ const error = ref(null)
 const mapInstance = ref(null)
 const showLocationModal = ref(false)
 const showImageModal = ref(false)
+const showExtraImageModal = ref(false)
 const selectedLocation = ref(null)
 const tempMarker = ref(null)
 const newImage = ref(null)
@@ -51,6 +52,19 @@ const locationToEdit = ref(null)
 const currentPage = ref(1) // Current page for pagination
 const itemsPerPage = 4 // Items per page for pagination
 const additionalImages = ref([]); // Store additional images
+
+const currentImage = ref(null); // Store the currently selected image
+const currentImageIndex = ref(null); // Store the index of the selected image
+
+const viewImage = (image, index) => {
+  currentImage.value = image; // Set the selected image
+  currentImageIndex.value = index; // Set the index of the selected image
+  showExtraImageModal.value = true; // Show the modal
+};
+
+const closeImageModal = () => {
+  showExtraImageModal.value = false; // Close the modal
+};
 
 const fetchAdditionalImages = async () => {
   const { data, error } = await supabase
@@ -371,8 +385,8 @@ const handleImageChange = (event) => {
 }
 
 const handleAdditionalImageUpload = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
 
   // Check the current number of images in the database
   const { count, error: countError } = await supabase
@@ -390,37 +404,97 @@ const handleAdditionalImageUpload = async (event) => {
     toast.error('You can only upload up to 8 additional images');
     return;
   }
+const currentImage = ref(null); // Store the currently selected image
+const currentImageIndex = ref(null); // Store the index of the selected image
 
-  // Proceed with the upload if the limit is not exceeded
-  const fileName = `fp_images/${Date.now()}_${file.name}`;
-  const { data: uploadData, error: uploadError } = await supabase
-    .storage
-    .from('nature_cart_images')
-    .upload(fileName, file);
-
-  if (uploadError) {
-    console.error('Error uploading additional image:', uploadError);
-    toast.error('Failed to upload image');
+const deleteImage = async (index) => {
+  if (!isFPUAdmin && !isForestRanger) {
+    toast.error("You don't have permission to delete images.");
     return;
   }
 
-  const imageUrl = supabase.storage.from('nature_cart_images').getPublicUrl(uploadData.path).data.publicUrl;
-
-  const { error: insertError } = await supabase
-    .from('forest_product_images')
-    .insert({
-      forest_product_id: productId,
-      image_link: imageUrl,
-    });
-
-  if (insertError) {
-    console.error('Error saving image link:', insertError);
-    toast.error('Failed to save image link');
+  const imageToDelete = additionalImages.value[index];
+  if (!imageToDelete) {
+    toast.error("Image not found.");
     return;
   }
 
-  additionalImages.value.push(imageUrl);
-  toast.success('Image uploaded successfully');
+  try {
+    // Delete the image from the bucket
+    const fileName = imageToDelete.split('/').pop(); // Extract the file name from the URL
+    const { error: deleteError } = await supabase
+      .storage
+      .from('nature_cart_images')
+      .remove([`fp_images/${fileName}`]);
+
+    if (deleteError) {
+      console.error('Error deleting image from bucket:', deleteError);
+      toast.error('Failed to delete image from bucket.');
+      return;
+    }
+
+    // Delete the image link from the database
+    const { error: dbError } = await supabase
+      .from('forest_product_images')
+      .delete()
+      .eq('forest_product_id', productId)
+      .eq('image_link', imageToDelete);
+
+    if (dbError) {
+      console.error('Error deleting image link from database:', dbError);
+      toast.error('Failed to delete image link from database.');
+      return;
+    }
+
+    // Remove the image from the local array
+    additionalImages.value.splice(index, 1);
+    toast.success('Image deleted successfully.');
+    showExtraImageModal.value = false;
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    toast.error('An unexpected error occurred.');
+  }
+};
+
+  const remainingSlots = 8 - count;
+  const filesToUpload = Array.from(files).slice(0, remainingSlots);
+
+  for (const file of filesToUpload) {
+    const fileName = `fp_images/${Date.now()}_${file.name}`;
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('nature_cart_images')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error('Error uploading additional image:', uploadError);
+      toast.error('Failed to upload image');
+      continue;
+    }
+
+    const imageUrl = supabase.storage.from('nature_cart_images').getPublicUrl(uploadData.path).data.publicUrl;
+
+    const { error: insertError } = await supabase
+      .from('forest_product_images')
+      .insert({
+        forest_product_id: productId,
+        image_link: imageUrl,
+      });
+
+    if (insertError) {
+      console.error('Error saving image link:', insertError);
+      toast.error('Failed to save image link');
+      continue;
+    }
+
+    additionalImages.value.push(imageUrl);
+  }
+
+  if (files.length > remainingSlots) {
+    toast.error(`Only ${remainingSlots} images were uploaded due to the 8-image limit`);
+  } else {
+    toast.success('Images uploaded successfully');
+  }
 };
 
 const handleImageSubmit = async () => {
@@ -693,39 +767,40 @@ onMounted(() => {
       />
     </div>
 
-    <!-- Add Image Placeholder -->
-    <label
-      for="additional-image-upload"
-      class="relative border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 transition-all hover:border-gray-500 bg-gray-50 hover:bg-gray-100 cursor-pointer"
-      v-if="isForestRanger || isFPUAdmin"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-12 w-12 text-gray-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 4v16m8-8H4"
-        />
-      </svg>
-      <span class="mt-2 text-sm font-medium text-gray-600">Add Image</span>
-      <input
-        id="additional-image-upload"
-        type="file"
-        @change="handleAdditionalImageUpload"
-        class="hidden"
-      />
-    </label>
+<!-- Add Image Placeholder -->
+<label
+  v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 8"
+  for="additional-image-upload"
+  class="relative border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 transition-all hover:border-gray-500 bg-gray-50 hover:bg-gray-100 cursor-pointer"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    class="h-12 w-12 text-gray-400"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M12 4v16m8-8H4"
+    />
+  </svg>
+  <span class="mt-2 text-sm font-medium text-gray-600">Add Images</span>
+  <input
+    id="additional-image-upload"
+    type="file"
+    multiple
+    @change="handleAdditionalImageUpload"
+    class="hidden"
+  />
+</label>
   </div>
 
   <!-- Image Modal -->
   <div
-    v-if="showImageModal"
+    v-if="showExtraImageModal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
   >
     <div class="relative bg-white rounded-lg shadow-lg max-w-3xl w-full">
@@ -754,13 +829,13 @@ onMounted(() => {
         class="w-full h-auto rounded-t-lg"
       />
       <div class="p-4 text-center">
-        <button
-          v-if="isForestRanger || isFPUAdmin"
-          class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none"
-          @click="deleteImage(currentImageIndex)"
-        >
-          Delete Image
-        </button>
+<button
+  v-if="isForestRanger || isFPUAdmin"
+  class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none"
+  @click="deleteImage(currentImageIndex)"
+>
+  Delete Image
+</button>
       </div>
     </div>
   </div>
@@ -1165,6 +1240,52 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <!-- Image Modal -->
+<div
+  v-if="showImageModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+>
+  <div class="relative bg-white rounded-lg shadow-lg max-w-3xl w-full">
+    <!-- Close Button -->
+    <button
+      class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+      @click="showImageModal = false"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
+
+    <!-- Full Image -->
+    <img
+      :src="currentImage"
+      alt="Full Image"
+      class="w-full h-auto rounded-t-lg"
+    />
+
+    <!-- Delete Button -->
+    <div class="p-4 text-center">
+      <button
+        v-if="isForestRanger || isFPUAdmin"
+        class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none"
+        @click="deleteImage(currentImageIndex)"
+      >
+        Delete Image
+      </button>
+    </div>
+  </div>
+</div>
 
     <div v-if="showImageModal" class="fixed inset-0 z-50 overflow-y-auto">
       <div
