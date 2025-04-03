@@ -196,6 +196,8 @@
 </template>
 
 <script setup>
+import { createApp } from 'vue';
+import PermitTemplate from './PermitTemplate.vue'; 
 import { ref, onMounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
@@ -214,6 +216,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import html2pdf from 'html2pdf.js';
 
 const collectionRecords = ref([])
 const currentPage = ref(1)
@@ -359,25 +362,109 @@ const createCollectionRecord = () => {
 }
 
 const markAsPaid = async (recordId) => {
-  // Get the current user's ID from the auth session
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  const { error: updateError } = await supabase
-    .from('collection_records')
-    .update({ 
-      is_paid: true,
-      approved_by: user.id,
-      approved_at: new Date().toISOString()
-    })
-    .eq('id', recordId)
+  try {
+    // Get the current user's ID from the auth session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (updateError) {
-    error.value = updateError.message
-  } else {
-    fetchCollectionRecords()
-    toast.success('Collection record marked as paid successfully', { duration: 2000 })
+    if (userError || !user) {
+      console.error('User authentication error:', userError);
+      error.value = 'Failed to authenticate user';
+      return;
+    }
+
+    // Update the record as paid
+    const { error: updateError } = await supabase
+      .from('collection_records')
+      .update({
+        is_paid: true,
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', recordId);
+
+    if (updateError) {
+      console.error('Supabase update error:', updateError);
+      error.value = 'Failed to update collection record';
+      return;
+    }
+
+    // Fetch the record details for the permit
+    const record = collectionRecords.value.find((r) => r.id === recordId);
+
+    if (!record) {
+      console.error('Record not found in collectionRecords:', recordId);
+      error.value = 'Record not found';
+      return;
+    }
+
+    // Fetch the collection record items
+    const { data: items, error: itemsError } = await supabase
+      .from('collection_record_items')
+      .select(`
+        id,
+        purchased_quantity,
+        total_cost,
+        fp_and_location:fp_and_locations (
+          location:locations (name),
+          forest_product:forest_products (name)
+        )
+      `)
+      .eq('collection_record_id', recordId);
+
+    if (itemsError) {
+      console.error('Error fetching collection record items:', itemsError);
+      error.value = 'Failed to fetch collection record items';
+      return;
+    }
+
+    // Format the list of forest products
+    const forestProductsList = items.map((item) => {
+      const productName = item.fp_and_location.forest_product.name;
+      const locationName = item.fp_and_location.location.name;
+      const quantity = item.purchased_quantity;
+      const totalCost = item.total_cost.toFixed(2);
+      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
+    }).join('; ');
+
+    // Prepare permit data
+    const permitData = {
+      name: record.user_name,
+      purpose: `collect the forest products: ${forestProductsList}`,
+      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString(),
+      chargesPaid: record.total_cost,
+      issuedBy: record.created_by_name, // Name of the user who created the record
+      inspectedBy: record.created_by_name, // Same as "Issued by"
+    };
+
+    // Generate the PDF
+    const permitElement = document.createElement('div');
+    document.body.appendChild(permitElement);
+
+    const app = createApp(PermitTemplate, { permitData });
+    app.mount(permitElement);
+
+    const options = {
+      margin: 1,
+      filename: `Forest_Conservation_Permit_${recordId}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+    };
+
+    await html2pdf().from(permitElement).set(options).save();
+
+    app.unmount();
+    document.body.removeChild(permitElement);
+
+    // Show success message
+    toast.success('Collection record marked as paid successfully. Check your downloads to see the permit.', { duration: 2000 });
+
+    // Refresh the records
+    fetchCollectionRecords();
+  } catch (err) {
+    console.error('Error marking as paid:', err);
+    error.value = 'Failed to mark as paid';
   }
-}
+};
 
 const deleteCollectionRecord = async (recordId) => {
   const currentDate = new Date().toISOString()
