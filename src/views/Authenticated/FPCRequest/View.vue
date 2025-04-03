@@ -102,7 +102,7 @@ onMounted(() => {
       <div v-if="request" 
            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-150"
            :class="request.approved_at ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
-        {{ request.approved_at ? 'Approved' : 'Unapproved' }}
+        {{ request.approved_at ? 'Approved' : 'Pending' }}
       </div>
     </div>
 

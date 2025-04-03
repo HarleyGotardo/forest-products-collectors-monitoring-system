@@ -20,6 +20,7 @@ import CollectionRecordsIndex from "@/views/Authenticated/CollectionRecords/Inde
 import CollectionRecordsCreate from "@/views/Authenticated/CollectionRecords/Create.vue";
 import CollectionRecordsTrash from "@/views/Authenticated/CollectionRecords/Trash.vue";
 import CollectionRecordsView from "@/views/Authenticated/CollectionRecords/View.vue";
+import CollectionRecordsEdit from "@/views/Authenticated/CollectionRecords/Edit.vue";
 import ProfileIndex from "@/views/Authenticated/ProfileIndex.vue";
 import LocationsIndex from "@/views/Authenticated/Location/Index.vue";
 import LocationsCreate from "@/views/Authenticated/Location/Create.vue";
@@ -152,6 +153,15 @@ const routes = [
         meta: {
           title: "View Collection Record - Nature Cart",
           requiresRole: [4, 2, 3, 1],
+        },
+      },
+      {
+        path: "collection-records/:id/edit",
+        name: "CollectionRecordsEdit",
+        component: CollectionRecordsEdit,
+        meta: {
+          title: "Edit Collection Record - Nature Cart",
+          requiresRole: [4, 1],
         },
       },
       {

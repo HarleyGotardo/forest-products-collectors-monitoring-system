@@ -34,7 +34,6 @@ const fetchDeletedCollectionRecords = async () => {
         created_at,
         user:profiles!forest_product_collection_records_user_id_fkey (id, first_name, last_name),
         created_by:profiles!collection_records_created_by_fkey (id, first_name, last_name),
-        location:locations (id, name),
         is_paid,
         approved_by:profiles!collection_records_approved_by_fkey (id, first_name, last_name),
         approved_at,
@@ -245,7 +244,6 @@ watch(currentPage, () => {
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">User</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Location</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Forest Products</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Total Cost</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Payment Status</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Created By</th>
@@ -278,7 +276,6 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.formatted_created_at }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.user_name }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.location_name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.products }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₱{{ record.total_cost.toFixed(2) }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span

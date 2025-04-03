@@ -178,7 +178,7 @@ watch(currentPage, () => {
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Name</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Coordinates</th>
-              <th v-if="isFPUAdmin || isForestRanger" scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">

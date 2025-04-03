@@ -1,4 +1,7 @@
 <script setup>
+import { createApp } from 'vue';
+import html2pdf from 'html2pdf.js';
+import PermitTemplate from './PermitTemplate.vue'; 
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
@@ -34,9 +37,10 @@ const fetchCollectionRecord = async () => {
       is_paid,
       approved_at,
       user:profiles!forest_product_collection_records_user_id_fkey (first_name, last_name),
-      location:locations (name),
       created_by:profiles!collection_records_created_by_fkey (first_name, last_name),
-      approved_by:profiles!collection_records_approved_by_fkey (first_name, last_name)
+      approved_by:profiles!collection_records_approved_by_fkey (first_name, last_name),
+      purpose,
+      collection_request_id
     `)
     .eq('id', recordId)
     .single()
@@ -79,26 +83,161 @@ const fetchCollectionRecord = async () => {
   }
 }
 
-const markAsPaid = async () => {
-  // Get the current user's ID from the auth session
-  const { data: { user } } = await supabase.auth.getUser()
+const downloadPermit = async () => {
+  try {
+    if (!record.value.is_paid) {
+      toast.error('Permit can only be downloaded for paid records.');
+      return;
+    }
 
-  const { error: updateError } = await supabase
-    .from('collection_records')
-    .update({
-      is_paid: true,
-      approved_by: user.id,
-      approved_at: new Date().toISOString()
-    })
-    .eq('id', recordId)
+    // Format the list of forest products
+    const forestProductsList = recordItems.value.map((item) => {
+      const productName = item.fp_and_location.forest_product.name;
+      const locationName = item.fp_and_location.location.name;
+      const quantity = item.purchased_quantity;
+      const totalCost = item.total_cost.toFixed(2);
+      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
+    }).join('; ');
 
-  if (updateError) {
-    error.value = updateError.message
-  } else {
-    fetchCollectionRecord()
-    toast.success('Collection record marked as paid successfully', { duration: 2000 })
+    // Prepare permit data
+    const permitData = {
+      permitNo: record.value.id, // Permit Number is the record ID
+      dateIssued: new Date(record.value.created_at).toLocaleDateString(), // Date the record was created
+      name: `${record.value.user.first_name} ${record.value.user.last_name}`,
+      permission: `collect the forest products: ${forestProductsList}`, // Updated to "permission"
+      purpose: record.value.purpose, // Official, Personal, or Others
+      collectionRequestId: record.value.collection_request_id, // Collection Request ID
+      expiryDate: new Date(new Date(record.value.created_at).setFullYear(new Date(record.value.created_at).getFullYear() + 1)).toLocaleDateString(),
+      chargesPaid: calculateTotalCost().toFixed(2),
+      issuedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Name of the user who created the record
+      inspectedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Same as "Issued by"
+    };
+
+    // Generate the PDF
+    const permitElement = document.createElement('div');
+    document.body.appendChild(permitElement);
+
+    const app = createApp(PermitTemplate, { permitData });
+    app.mount(permitElement);
+
+    const options = {
+      margin: 1,
+      filename: `Forest_Conservation_Permit_${record.value.id}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+    };
+
+    await html2pdf().from(permitElement).set(options).save();
+
+    app.unmount();
+    document.body.removeChild(permitElement);
+
+    toast.success('Permit downloaded successfully.');
+  } catch (err) {
+    console.error('Error downloading permit:', err);
+    toast.error('Failed to download permit.');
   }
-}
+};
+
+const markAsPaid = async () => {
+  try {
+    // Get the current user's ID from the auth session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error('User authentication error:', userError);
+      error.value = 'Failed to authenticate user';
+      return;
+    }
+
+    // Update the record as paid
+    const { error: updateError } = await supabase
+      .from('collection_records')
+      .update({
+        is_paid: true,
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', recordId);
+
+    if (updateError) {
+      console.error('Supabase update error:', updateError);
+      error.value = 'Failed to update collection record';
+      return;
+    }
+
+    // Fetch the collection record items
+    const { data: items, error: itemsError } = await supabase
+      .from('collection_record_items')
+      .select(`
+        id,
+        purchased_quantity,
+        total_cost,
+        fp_and_location:fp_and_locations (
+          location:locations (name),
+          forest_product:forest_products (name)
+        )
+      `)
+      .eq('collection_record_id', recordId);
+
+    if (itemsError) {
+      console.error('Error fetching collection record items:', itemsError);
+      error.value = 'Failed to fetch collection record items';
+      return;
+    }
+
+    // Format the list of forest products
+    const forestProductsList = items.map((item) => {
+      const productName = item.fp_and_location.forest_product.name;
+      const locationName = item.fp_and_location.location.name;
+      const quantity = item.purchased_quantity;
+      const totalCost = item.total_cost.toFixed(2);
+      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
+    }).join('; ');
+
+    // Prepare permit data
+    const permitData = {
+      permitNo: record.value.id, // Permit Number is the record ID
+      dateIssued: new Date().toLocaleDateString(), // Current date
+      name: `${record.value.user.first_name} ${record.value.user.last_name}`,
+      permission: `collect the forest products: ${forestProductsList}`, // Updated to "permission"
+      purpose: record.value.purpose, // Official, Personal, or Others
+      collectionRequestId: record.value.collection_request_id, // Collection Request ID
+      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString(),
+      chargesPaid: calculateTotalCost().toFixed(2),
+      issuedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Name of the user who created the record
+      inspectedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Same as "Issued by"
+    };
+
+    // Generate the PDF
+    const permitElement = document.createElement('div');
+    document.body.appendChild(permitElement);
+
+    const app = createApp(PermitTemplate, { permitData });
+    app.mount(permitElement);
+
+    const options = {
+      margin: 1,
+      filename: `Forest_Conservation_Permit_${recordId}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+    };
+
+    await html2pdf().from(permitElement).set(options).save();
+
+    app.unmount();
+    document.body.removeChild(permitElement);
+
+    // Show success message
+    toast.success('Collection record marked as paid successfully. Check your downloads to see the permit.', { duration: 2000 });
+
+    // Refresh the record
+    fetchCollectionRecord();
+  } catch (err) {
+    console.error('Error marking as paid:', err);
+    error.value = 'Failed to mark as paid';
+  }
+};
 
 // Calculate total from all items
 const calculateTotalCost = () => {
@@ -112,12 +251,18 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-gray-50 py-2 px-1 sm:py-4 mt-5 sm:px-3 lg:px-4">
-    <div class="max-w-4xl mx-auto mb-4">
-      <Button @click="router.back()">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back
+    <div class="max-w-4xl mx-auto mb-4 flex justify-between items-center">
+      <Button @click="router.back()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back
+      </Button>
+      <Button 
+      v-if="record?.is_paid" 
+      @click="downloadPermit" 
+      class="bg-gray-900 hover:bg-gray-700 text-white">
+      Download Permit
       </Button>
     </div>
 
@@ -135,16 +280,33 @@ onMounted(() => {
 
     <div v-if="record" class="max-w-4xl mx-auto bg-white rounded-lg sm:rounded-xl shadow-md sm:shadow-lg overflow-hidden">
       <div class="border-b border-gray-200 p-4 sm:p-8">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6 sm:gap-8">
           <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Collection Receipt</h1>
-            <p class="text-xs sm:text-sm text-gray-500 mt-1">Forest Products Collection Record</p>
+            <h1 class="text-2xl font-bold text-gray-900">Collection Receipt</h1>
+            <p class="text-sm text-gray-500 mt-1">Forest Products Collection Record</p>
           </div>
-          <div class="sm:text-right">
-            <p class="text-xs sm:text-sm text-gray-500">Receipt No.</p>
-            <p class="text-lg sm:text-xl font-bold text-gray-900">#{{ record.id }}</p>
-            <p class="text-xs sm:text-sm text-gray-500 mt-2">Date Issued</p>
-            <p class="text-sm sm:text-base text-gray-900">{{ new Date(record.created_at).toLocaleDateString() }}</p>
+          <div class="sm:text-right space-y-2">
+            <div>
+              <p class="text-sm text-gray-500">Receipt No.</p>
+              <p class="text-lg font-bold text-gray-900">#{{ record.id }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Date Issued</p>
+              <p class="text-base text-gray-900">{{ new Date(record.created_at).toLocaleDateString() }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Purpose</p>
+              <p class="text-base text-gray-900">{{ record.purpose }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Request ID</p>
+              <p 
+              class="text-base text-blue-600 cursor-pointer hover:underline" 
+              @click="router.push(`/authenticated/collection-requests/${record.collection_request_id}`)"
+              >
+              {{ record.collection_request_id }}
+              </p>
+            </div>
           </div>
         </div>
       </div>

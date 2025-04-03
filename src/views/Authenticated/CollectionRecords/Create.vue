@@ -14,7 +14,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import Label from '@/components/ui/label/Label.vue';
-
+const collectionRequests = ref([]);
+const selectedRequest = ref(null);
+const purpose = ref('');
+const customPurpose = ref('');
 const collectors = ref([]);
 const forestProducts = ref([]);
 const filteredForestProducts = ref([]);
@@ -30,7 +33,8 @@ const showReceiptPreview = ref(false);
 const fetchCollectors = async () => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name');
+    .select('id, first_name, last_name')
+    .eq('role_id', 2); // Filter profiles with role_id == 2
   if (error) {
     console.error('Error fetching collectors:', error);
     toast.error('Failed to load collectors');
@@ -72,6 +76,20 @@ const fetchForestProducts = async () => {
       purchased_quantity: 0,
     }));
     filteredForestProducts.value = forestProducts.value;
+  }
+};
+
+const fetchCollectionRequests = async () => {
+  const { data, error } = await supabase
+    .from('collection_requests')
+    .select('id')
+    .not('approved_at', 'is', null);
+
+  if (error) {
+    console.error('Error fetching collection requests:', error);
+    toast.error('Failed to load collection requests');
+  } else {
+    collectionRequests.value = data;
   }
 };
 
@@ -136,9 +154,12 @@ const handleSubmit = () => {
 const confirmSubmit = async () => {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
-  
+
   try {
     const user = getUser();
+
+    // Determine the final purpose
+    const finalPurpose = purpose.value === 'Others' ? customPurpose.value : purpose.value;
 
     // Insert into collection_records
     const { data: collectionRecordData, error: collectionRecordError } = await supabase
@@ -147,6 +168,8 @@ const confirmSubmit = async () => {
         {
           user_id: selectedCollector.value,
           created_by: user.id,
+          collection_request_id: selectedRequest.value, // Save the selected request number
+          purpose: finalPurpose, // Save the selected or custom purpose
         }
       ])
       .select('id');
@@ -207,6 +230,7 @@ const cancelSubmit = () => {
 onMounted(() => {
   fetchCollectors();
   fetchForestProducts();
+  fetchCollectionRequests();
 });
 </script>
 
@@ -235,6 +259,64 @@ onMounted(() => {
                 {{ collector.first_name }} {{ collector.last_name }}
               </option>
             </select>
+          </div>
+
+          <!-- Request Number Selection -->
+          <div class="space-y-2">
+            <Label for="requestNumber" class="text-sm font-medium text-gray-700">Request Number</Label>
+            <select
+              v-model="selectedRequest"
+              class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            >
+              <option value="" disabled>Select a request number</option>
+              <option v-for="request in collectionRequests" :key="request.id" :value="request.id">
+                {{ request.id }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Purpose Selection -->
+          <div class="space-y-2">
+            <Label for="purpose" class="text-sm font-medium text-gray-700">Purpose</Label>
+            <div class="space-y-2">
+              <div>
+                <input
+                  type="radio"
+                  id="official"
+                  value="Official"
+                  v-model="purpose"
+                  class="form-radio"
+                />
+                <label for="official" class="ml-2 text-sm">Official</label>
+              </div>
+              <div>
+                <input
+                  type="radio"
+                  id="personal"
+                  value="Personal"
+                  v-model="purpose"
+                  class="form-radio"
+                />
+                <label for="personal" class="ml-2 text-sm">Personal</label>
+              </div>
+              <div>
+                <input
+                  type="radio"
+                  id="others"
+                  value="Others"
+                  v-model="purpose"
+                  class="form-radio"
+                />
+                <label for="others" class="ml-2 text-sm">Others, specify:</label>
+                <input
+                  v-if="purpose === 'Others'"
+                  type="text"
+                  v-model="customPurpose"
+                  placeholder="Specify purpose"
+                  class="form-input mt-2 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Selected Products Summary -->
