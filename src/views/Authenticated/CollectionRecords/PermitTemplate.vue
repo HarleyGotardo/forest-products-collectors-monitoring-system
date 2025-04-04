@@ -1,86 +1,119 @@
 <template>
-  <div id="permit" class="p-6 bg-white text-black max-w-[800px] mx-auto border-2 border-black rounded-lg">
+  <div id="permit" class="w-full min-h-full bg-white p-6 flex flex-col relative text-black text-sm" style="font-family: 'Times New Roman', Times, serif;">
     <!-- Header -->
-    <div class="text-center border-b border-black pb-3">
-      <h1 class="text-lg font-bold uppercase">Faculty of Forestry and Environmental Science</h1>
-      <h2 class="text-md font-semibold">Department of Forest Science</h2>
-      <p class="text-sm">Visca, Baybay, Leyte</p>
-      <h3 class="text-lg font-bold mt-3 uppercase">Forest Conservation Permit</h3>
-    </div>
+    <div class="mb-4">
+      <div class="flex flex-col items-center mb-2">
+        <div class="flex items-center justify-center w-full mb-3">
+          <div class="w-12 h-12 mr-2">
+        <img src="@/assets/ffes-logo.jpg" alt="">
+          </div>
+        </div>
+        <div class="text-center">
+          <h1 class="text-base uppercase m-0">Faculty of Forestry and Environmental Science</h1>
+          <h2 class="text-sm mt-1 mb-0.5 m-0">Department of Forest Science</h2>
+          <p class="text-xs m-0">Visca, Baybay, Leyte</p>
+        </div>
+        <div class="mt-3 w-full text-center">
+          <h2 class="text-base uppercase m-0 inline-block border-b border-gray-900 pb-1">
+        Forest Conservation Permit
+          </h2>
+        </div>
+      </div>
 
-    <!-- Permit Number and Date -->
-    <div class="flex justify-between mt-3 text-sm">
-      <p>Permit No.: <span class="font-bold underline">{{ permitData.permitNo }}</span></p>
-      <p>Date Issued: <span class="font-bold underline">{{ permitData.dateIssued }}</span></p>
-    </div>
+      <!-- Permit Information -->
+      <div class="flex flex-wrap justify-between mt-3 text-sm">
+        <div class="flex justify-between w-full mb-1.5">
+          <div class="w-1/2">
+        <span>Permit No.:</span>
+        <span class="ml-2">{{ permitData.permitNo }}</span>
+          </div>
+          <div class="w-1/2">
+        <span>Date Issued:</span>
+        <span class="ml-2">{{ permitData.dateIssued }}</span>
+          </div>
+        </div>
+        <div class="flex justify-between w-full mb-1.5">
+          <div class="w-1/2">
+        <span>Request Number:</span>
+        <span class="ml-2">{{ permitData.collectionRequestId }}</span>
+          </div>
+          <div class="w-1/2">
+        <span>Expiry Date:</span>
+        <span class="ml-2">{{ permitData.expiryDate }}</span>
+          </div>
+        </div>
+      </div>
 
-    <!-- Collection Request ID -->
-    <div class="mt-3 text-sm">
-      <p>Request Number: <span class="font-bold underline">{{ permitData.collectionRequestId }}</span></p>
+      <div class="h-1 bg-gray-900 my-3"></div>
     </div>
 
     <!-- Main Content -->
-    <div class="mt-4">
-      <p>To Whom It May Concern:</p>
-      <p class="mt-3">
-        This is to certify that 
-        <span class="font-bold underline">{{ permitData.name }}</span> 
-        is given permission to 
-        <span class="font-bold underline">{{ permitData.permission }}</span>.
+    <div class="flex-grow mb-3 text-sm text-justify">
+      <p class="my-1.5 leading-relaxed">To Whom It May Concern:</p>
+
+      <p class="my-3 leading-relaxed">
+      This is to certify that <span class="font-bold">{{ permitData.name }}</span> is given permission to
+      <span class="font-bold">{{ permitData.permission }}</span>.
       </p>
-      <p class="mt-3">
-        This permit expires on 
-        <span class="font-bold underline">{{ permitData.expiryDate }}</span>.
-      </p>
-    </div>
 
-    <!-- Purpose Section -->
-    <div class="mt-4 border border-gray-400 p-3">
-      <p class="font-semibold">Purpose:</p>
-      <div class="flex space-x-6 mt-2">
-        <div>
-          <input type="checkbox" :checked="permitData.purpose === 'Official'" disabled class="mr-1" /> 
-          <span>Official</span>
+      <div class="my-3 border border-gray-300 p-2">
+      <p class=" mb-2 mt-0">Purpose:</p>
+      <div class="flex gap-4">
+        <div class="flex items-center">
+        <input type="checkbox" :checked="permitData.purpose === 'Official'" disabled class="mr-2 h-3 w-3" />
+        <span>Official</span>
         </div>
-        <div>
-          <input type="checkbox" :checked="permitData.purpose === 'Personal'" disabled class="mr-1" /> 
-          <span>Personal</span>
+        <div class="flex items-center">
+        <input type="checkbox" :checked="permitData.purpose === 'Personal'" disabled class="mr-2 h-3 w-3" />
+        <span>Personal</span>
         </div>
-        <div>
-          <input type="checkbox" :checked="permitData.purpose !== 'Official' && permitData.purpose !== 'Personal'" disabled class="mr-1" /> 
-          <span>Others, specify: <span v-if="permitData.purpose !== 'Official' && permitData.purpose !== 'Personal'" class="font-bold underline">{{ permitData.purpose }}</span></span>
+        <div class="flex items-center">
+        <input 
+          type="checkbox" 
+          :checked="permitData.purpose !== 'Official' && permitData.purpose !== 'Personal'" 
+          disabled 
+          class="mr-2 h-3 w-3" 
+        />
+        <span>Others, specify:</span>
+        <span 
+          v-if="permitData.purpose !== 'Official' && permitData.purpose !== 'Personal'" 
+          class=" underline ml-2"
+        >
+          {{ permitData.purpose }}
+        </span>
         </div>
+      </div>
+      </div>
+
+      <div class="my-2 py-3 border-t border-b border-gray-300">
+      <p class="m-0">Forest Charges Paid: <span class="font-bold">₱{{ permitData.chargesPaid }}</span></p>
       </div>
     </div>
 
-    <!-- Charges Section -->
-    <div class="mt-4 border-t border-b border-gray-300 py-3">
-      <p>Forest Charges Paid: <span class="font-bold underline">₱{{ permitData.chargesPaid }}</span></p>
-    </div>
-
-    <!-- Signatories Section -->
-    <div class="mt-4 grid grid-cols-2 gap-4">
-      <div>
-        <p class="text-sm">Issued by:</p>
-        <p class="mt-3 font-bold underline">{{ permitData.issuedBy }}</p>
-        <p class="text-sm">Forest Guard On-Duty</p>
+    <!-- Signatories -->
+    <div class="mb-6">
+      <div class="flex justify-between mb-6">
+        <div class="w-5/12">
+          <p class="text-xs m-0">Issued by:</p>
+          <p class=" underline mt-4 mb-1 text-sm">{{ permitData.issuedBy }}</p>
+          <p class="text-xs m-0">Forest Guard On-Duty</p>
+        </div>
+        <div class="w-5/12">
+          <p class="text-xs m-0">Inspected by:</p>
+          <p class=" underline mt-4 mb-1 text-sm">{{ permitData.inspectedBy }}</p>
+          <p class="text-xs m-0">Forest Guard On-Duty</p>
+        </div>
       </div>
-      <div>
-        <p class="text-sm">Inspected by:</p>
-        <p class="mt-3 font-bold underline">{{ permitData.inspectedBy }}</p>
-        <p class="text-sm">Forest Guard On-Duty</p>
-      </div>
-    </div>
 
-    <!-- Noted By Section -->
-    <div class="mt-6 text-center">
-      <p class="text-sm">Noted by:</p>
-      <p class="mt-3 font-bold underline">DENNIS P. PEQUE</p>
-      <p class="text-sm">Forest Conservation Officer</p>
+      <div class="text-center mt-3">
+        <p class="text-xs m-0">Noted by:</p>
+        <p class=" underline mt-4 mb-1 text-sm">DENNIS P. PEQUE</p>
+        <p class="text-xs m-0">Forest Conservation Officer</p>
+      </div>
     </div>
 
     <!-- Footer -->
-    <div class="mt-4 text-xs text-center border-t border-gray-300 pt-2">
+    <div class="text-center text-xs pt-2 border-t border-gray-300">
       <p>This permit is not valid without the signature of authorized personnel.</p>
     </div>
   </div>
@@ -94,9 +127,3 @@ defineProps({
   },
 });
 </script>
-
-<style scoped>
-#permit {
-  font-family: Arial, sans-serif;
-}
-</style>

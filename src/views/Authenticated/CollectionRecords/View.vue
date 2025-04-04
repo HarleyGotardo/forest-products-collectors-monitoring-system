@@ -217,10 +217,10 @@ const markAsPaid = async () => {
     app.mount(permitElement);
 
     const options = {
-      margin: 1,
+      margin: [0.1, 0.1, 0.1, 0.1], 
       filename: `Forest_Conservation_Permit_${recordId}.pdf`,
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
     };
 
     await html2pdf().from(permitElement).set(options).save();
