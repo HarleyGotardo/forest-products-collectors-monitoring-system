@@ -313,50 +313,48 @@ onMounted(() => {
   fetchDashboardData()
 })
 </script>
-
 <template>
-  <div class="min-h-screen bg-gray-50 p-3 sm:p-6">
-        <!-- Loading Skeleton -->
-        <div v-if="loading" class="flex items-center justify-center min-h-screen">
+  <div class="relative min-h-screen bg-gray-50 p-3 sm:p-6"> 
+    <div v-if="loading" class="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-lg"> 
       <div class="relative">
-        <div class="relative w-32 h-32">
-          <div
-            class="absolute w-full h-full rounded-full border-[3px] border-gray-100/10 border-r-[#0ff] border-b-[#0ff] animate-spin"
-            style="animation-duration: 3s;"
-          ></div>
-          <div
-            class="absolute w-full h-full rounded-full border-[3px] border-gray-100/10 border-t-[#0ff] animate-spin"
-            style="animation-duration: 2s; animation-direction: reverse;"
-          ></div>
-        </div>
+      <div class="relative w-32 h-32">
         <div
-          class="absolute inset-0 bg-gradient-to-tr from-[#0ff]/10 via-transparent to-[#0ff]/5 animate-pulse rounded-full blur-sm"
+        class="absolute w-full h-full rounded-full border-[3px] border-gray-100/10 border-r-[#0ff] border-b-[#0ff] animate-spin"
+        style="animation-duration: 3s;"
+        ></div>
+        <div
+        class="absolute w-full h-full rounded-full border-[3px] border-gray-100/10 border-t-[#0ff] animate-spin"
+        style="animation-duration: 2s; animation-direction: reverse;"
         ></div>
       </div>
+      <div
+        class="absolute inset-0 bg-gradient-to-tr from-[#0ff]/10 via-transparent to-[#0ff]/5 animate-pulse rounded-full blur-sm"
+      ></div>
+      </div>
+      <p class="mt-4 text-sm font-medium text-gray-600">Please wait...</p>
     </div>
-    <!-- Header Section - Stacked layout on mobile -->
+
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div class="flex items-center gap-2">
-      <img src="@/assets/dashboard.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
-      <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
+        <img src="@/assets/dashboard.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
-      <button v-if="isForestRanger || isFPUAdmin" @click="createCollectionRoute" 
+        <button v-if="isForestRanger || isFPUAdmin" @click="createCollectionRoute"
           class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto">
-        <span class="mr-2">+</span> New Collection
-      </button>
-      <button v-if="isForestRanger || isFPUAdmin" @click="createNewProduct" 
+          <span class="mr-2">+</span> New Collection
+        </button>
+        <button v-if="isForestRanger || isFPUAdmin" @click="createNewProduct"
           class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto">
-        <span class="mr-2">+</span> New Product
-      </button>
-      <button @click="refreshData" 
+          <span class="mr-2">+</span> New Product
+        </button>
+        <button @click="refreshData"
           class="inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors w-full sm:w-auto">
-        <span class="mr-2">🔄</span> Refresh
-      </button>
+          <span class="mr-2">🔄</span> Refresh
+        </button>
       </div>
     </div>
 
-    <!-- Stats Cards - Single column on mobile -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
       <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
         <div class="flex items-center justify-between">
@@ -415,45 +413,44 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Charts Section - Stack on mobile -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 w-full">
-  <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Most Collected Forest Products</h3>
-  <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px]">
-    <canvas id="mostCollectedChart"></canvas>
-  </div>
-</div>
+        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Most Collected Forest Products</h3>
+        <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px]">
+          <canvas id="mostCollectedChart"></canvas>
+        </div>
+      </div>
 
       <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
         <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Products Distribution</h3>
         <div class="space-y-3 sm:space-y-4">
           <ul class="divide-y divide-gray-200">
-            <li v-for="item in paginatedData" 
-                :key="item.id" 
-                class="py-2 sm:py-3 flex items-center justify-between cursor-pointer hover:bg-green-100 transition-colors rounded-lg px-3 sm:px-4"
-                @click="viewFP_Details(item.fp_id)">
+            <li v-for="item in paginatedData"
+              :key="item.id"
+              class="py-2 sm:py-3 flex items-center justify-between cursor-pointer hover:bg-green-100 transition-colors rounded-lg px-3 sm:px-4"
+              @click="viewFP_Details(item.fp_id)">
               <span class="text-xs sm:text-sm text-gray-600">
-                {{ item.productName }} 
+                {{ item.productName }}
                 <span class="text-gray-400">({{ item.locationName }})</span>
               </span>
               <span class="text-xs sm:text-sm font-medium text-gray-900">{{ item.quantity }} {{ item.measurementUnit }}</span>
             </li>
           </ul>
-          
+
           <div class="flex items-center justify-between pt-3 sm:pt-4">
-            <button @click="prevPage" 
-                :disabled="currentPage === 1"
-                :class="{'opacity-50 cursor-not-allowed': currentPage === 1}"
-                class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+            <button @click="prevPage"
+              :disabled="currentPage === 1"
+              :class="{'opacity-50 cursor-not-allowed': currentPage === 1}"
+              class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
               Previous
             </button>
             <span class="text-xs sm:text-sm text-gray-600">
               Page {{ currentPage }} of {{ totalPages }}
             </span>
-            <button @click="nextPage" 
-                :disabled="currentPage === totalPages"
-                :class="{'opacity-50 cursor-not-allowed': currentPage === totalPages}"
-                class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+            <button @click="nextPage"
+              :disabled="currentPage === totalPages"
+              :class="{'opacity-50 cursor-not-allowed': currentPage === totalPages}"
+              class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
               Next
             </button>
           </div>
@@ -461,9 +458,8 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <Toaster/>
+  <Toaster />
 </template>
-
 
 <style scoped>
 #map {
