@@ -261,10 +261,10 @@ watch(selectedType, () => {
                 <div class="flex flex-wrap gap-1">
                   <span 
                     v-for="location in product.locations" 
-                    :key="location.id"
+                    :key="location?.id"
                     class="bg-gray-100 px-2 py-1 rounded-full text-sm"
                   >
-                    {{ location.name }}
+                    {{ location?.name }}
                   </span>
                 </div>
               </td>
