@@ -179,9 +179,12 @@ onMounted(() => {
 <template>
   <div class="max-w-4xl mx-auto p-6">
     <!-- Header Section -->
-    <div class="mb-8">
-      <h2 class="text-3xl font-bold text-gray-900">Location Details</h2>
-      <p class="mt-2 text-gray-600">View detailed information about this location</p>
+    <div class="mb-6 flex items-center space-x-4">
+      <img src="@/assets/location2.png" alt="Location" class="w-16 h-16">
+      <div>
+      <h2 class="text-xl font-bold text-gray-900">Location Details</h2>
+      <p class="text-sm text-gray-600">Detailed information about this location</p>
+      </div>
     </div>
 
     <!-- Error Alert -->
