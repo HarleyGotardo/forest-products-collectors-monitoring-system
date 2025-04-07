@@ -463,7 +463,7 @@ onMounted(() => {
       class="mt-12"
     >
       <div class="flex items-center space-x-2 mb-6">
-        <div class="w-1.5 h-6 bg-green-500 rounded-full"></div>
+        <div class="w-1.5 h-6 bg-gray-900 rounded-full"></div>
         <h3 class="text-xl font-bold text-gray-800">
           Created Collection Records
         </h3>
@@ -602,54 +602,59 @@ onMounted(() => {
           <div class="flex items-center justify-between">
             <button
               @click="prevCreatedByPage"
-              :disabled="currentCreatedByPage === 1"
+              :disabled="currentCreatedByPage === 1 || totalCreatedByPages === 0"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentCreatedByPage === 1 ? 'text-gray-400' : 'text-gray-700'"
+              :class="currentCreatedByPage === 1 || totalCreatedByPages === 0 ? 'text-gray-400' : 'text-gray-700'"
             >
               <svg
-                class="mr-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          class="mr-2 h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
               </svg>
               Previous
             </button>
 
             <div
+              v-if="totalCreatedByPages > 0"
               class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
             >
-              <span class="text-sm font-medium text-gray-700"
-                >Page {{ currentCreatedByPage }} of
-                {{ totalCreatedByPages }}</span
-              >
+              <span class="text-sm font-medium text-gray-700">
+          <span class="hidden sm:inline">
+            Page {{ currentCreatedByPage }} of {{ totalCreatedByPages }}
+          </span>
+          <span class="sm:hidden">
+            {{ currentCreatedByPage }}/{{ totalCreatedByPages }}
+          </span>
+              </span>
             </div>
 
             <button
               @click="nextCreatedByPage"
-              :disabled="currentCreatedByPage === totalCreatedByPages"
+              :disabled="currentCreatedByPage === totalCreatedByPages || totalCreatedByPages === 0"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentCreatedByPage === totalCreatedByPages ? 'text-gray-400' : 'text-gray-700'"
+              :class="currentCreatedByPage === totalCreatedByPages || totalCreatedByPages === 0 ? 'text-gray-400' : 'text-gray-700'"
             >
               Next
               <svg
-                class="ml-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          class="ml-2 h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
               </svg>
             </button>
           </div>
@@ -795,57 +800,63 @@ onMounted(() => {
       <!-- Pagination Controls -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
         <div class="flex items-center justify-between">
-        <button
-          @click="prevPage"
-          :disabled="currentPage === 1"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          :class="currentPage === 1 ? 'text-gray-400' : 'text-gray-700'"
-        >
-          <svg
+          <button
+        @click="prevPage"
+        :disabled="currentPage === 1 || totalPages === 0"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        :class="currentPage === 1 || totalPages === 0 ? 'text-gray-400' : 'text-gray-700'"
+          >
+        <svg
           class="mr-2 h-5 w-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          >
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
             d="M15 19l-7-7 7-7"
           />
-          </svg>
-          Previous
-        </button>
+        </svg>
+        Previous
+          </button>
 
-        <div
-          class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
-        >
-          <span class="text-sm font-medium text-gray-700"
-          >Page {{ currentPage }} of {{ totalPages }}</span
+          <div
+        v-if="totalPages > 0"
+        class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
           >
-        </div>
+        <span class="text-sm font-medium text-gray-700">
+          <span class="hidden sm:inline">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+          <span class="sm:hidden">
+            {{ currentPage }}/{{ totalPages }}
+          </span>
+        </span>
+          </div>
 
-        <button
-          @click="nextPage"
-          :disabled="currentPage === totalPages"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          :class="currentPage === totalPages ? 'text-gray-400' : 'text-gray-700'"
-        >
-          Next
-          <svg
+          <button
+        @click="nextPage"
+        :disabled="currentPage === totalPages || totalPages === 0"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        :class="currentPage === totalPages || totalPages === 0 ? 'text-gray-400' : 'text-gray-700'"
+          >
+        Next
+        <svg
           class="ml-2 h-5 w-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          >
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
             d="M9 5l7 7-7 7"
           />
-          </svg>
-        </button>
+        </svg>
+          </button>
         </div>
       </div>
       </div>
@@ -986,58 +997,63 @@ onMounted(() => {
       <!-- Pagination Controls -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
         <div class="flex items-center justify-between">
-        <button
-          @click="prevApprovedByPage"
-          :disabled="currentApprovedByPage === 1"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          :class="currentApprovedByPage === 1 ? 'text-gray-400' : 'text-gray-700'"
-        >
-          <svg
+          <button
+        @click="prevApprovedByPage"
+        :disabled="currentApprovedByPage === 1 || totalApprovedByPages === 0"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        :class="currentApprovedByPage === 1 || totalApprovedByPages === 0 ? 'text-gray-400' : 'text-gray-700'"
+          >
+        <svg
           class="mr-2 h-5 w-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          >
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
             d="M15 19l-7-7 7-7"
           />
-          </svg>
-          Previous
-        </button>
+        </svg>
+        Previous
+          </button>
 
-        <div
-          class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
-        >
-          <span class="text-sm font-medium text-gray-700"
-          >Page {{ currentApprovedByPage }} of
-          {{ totalApprovedByPages }}</span
+          <div
+        v-if="totalApprovedByPages > 0"
+        class="flex items-center px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
           >
-        </div>
+        <span class="text-sm font-medium text-gray-700">
+          <span class="hidden sm:inline">
+            Page {{ currentApprovedByPage }} of {{ totalApprovedByPages }}
+          </span>
+          <span class="sm:hidden">
+            {{ currentApprovedByPage }}/{{ totalApprovedByPages }}
+          </span>
+        </span>
+          </div>
 
-        <button
-          @click="nextApprovedByPage"
-          :disabled="currentApprovedByPage === totalApprovedByPages"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          :class="currentApprovedByPage === totalApprovedByPages ? 'text-gray-400' : 'text-gray-700'"
-        >
-          Next
-          <svg
+          <button
+        @click="nextApprovedByPage"
+        :disabled="currentApprovedByPage === totalApprovedByPages || totalApprovedByPages === 0"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        :class="currentApprovedByPage === totalApprovedByPages || totalApprovedByPages === 0 ? 'text-gray-400' : 'text-gray-700'"
+          >
+        Next
+        <svg
           class="ml-2 h-5 w-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          >
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
             d="M9 5l7 7-7 7"
           />
-          </svg>
-        </button>
+        </svg>
+          </button>
         </div>
       </div>
       </div>
