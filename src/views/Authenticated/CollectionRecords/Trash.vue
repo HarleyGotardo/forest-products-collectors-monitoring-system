@@ -191,7 +191,6 @@ watch(currentPage, () => {
   paginateRecords();
 });
 </script>
-
 <template>
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
@@ -267,11 +266,10 @@ watch(currentPage, () => {
               </td>
             </tr>
             <tr
-  v-for="record in paginatedRecords"
-  :key="record.id"
-  class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-  @click="viewCollectionRecord(record.id)"
->
+              v-for="record in paginatedRecords"
+              :key="record.id"
+              class="hover:bg-gray-50 transition-colors duration-200"
+            >
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ record.id }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.formatted_created_at }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.user_name }}</td>
@@ -289,18 +287,21 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.created_by_name }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <div class="flex items-center justify-end space-x-3">
+                  <!-- Restore Button -->
                   <AlertDialog>
-                    <AlertDialogTrigger>
-                      <Button>
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
-                          />
-                        </svg>
-                      </Button>
+                    <AlertDialogTrigger asChild>
+                      <div @click.stop>
+                        <Button>
+                          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+                            />
+                          </svg>
+                        </Button>
+                      </div>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -315,18 +316,22 @@ watch(currentPage, () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+
+                  <!-- Delete Button -->
                   <AlertDialog>
-                    <AlertDialogTrigger>
-                      <Button>
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </Button>
+                    <AlertDialogTrigger asChild>
+                      <div @click.stop>
+                        <Button>
+                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </Button>
+                      </div>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -349,25 +354,31 @@ watch(currentPage, () => {
       </div>
 
       <!-- Pagination -->
-      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+      <div class="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200" v-if="filteredRecords.length > 0">
         <div class="flex items-center justify-between">
-          <button
-            @click="prevPage"
+          <button 
+            @click="prevPage" 
             :disabled="currentPage === 1"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
             Previous
           </button>
-          <button
-            @click="nextPage"
-            :disabled="currentPage >= totalPages"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          <div class="text-sm sm:text-base text-gray-700">
+            <span v-if="totalPages >= 1">
+              <span class="sm:hidden">{{ currentPage }} / {{ totalPages }}</span>
+              <span class="hidden sm:inline">Page {{ currentPage }} of {{ totalPages }}</span>
+            </span>
+          </div>
+          <button 
+            @click="nextPage" 
+            :disabled="paginatedRecords.length < itemsPerPage"
+            class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
-            <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>

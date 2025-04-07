@@ -571,7 +571,7 @@ onMounted(() => {
         v-if="isDeleted"
         class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"
       >
-        Deleted
+        Deleted at {{ format(new Date(forestProduct.deleted_at), 'MMMM dd, yyyy - hh:mm a') }}
       </div>
     </div>
 
@@ -622,7 +622,7 @@ onMounted(() => {
               class="w-full h-auto rounded-lg shadow-sm"
             />
             <button
-              v-if="isForestRanger || isFPUAdmin"
+              v-if="isForestRanger || isFPUAdmin && forestProduct.deleted_at === null"
               @click="showImageModal = true"
               class="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 focus:outline-none"
             >
@@ -767,7 +767,7 @@ onMounted(() => {
 
 <!-- Add Image Placeholder -->
 <label
-  v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 8"
+  v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 8 && forestProduct.deleted_at === null"
   for="additional-image-upload"
   class="relative border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 transition-all hover:border-gray-500 bg-gray-50 hover:bg-gray-100 cursor-pointer"
 >
@@ -873,7 +873,7 @@ onMounted(() => {
             </div>
 
             <button
-              v-if="isForestRanger || isFPUAdmin"
+              v-if="isForestRanger || isFPUAdmin && forestProduct.deleted_at === null"
               @click="showLocationModal = true; $nextTick(() => initializeModalMap())"
               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
             >
@@ -955,7 +955,7 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="ml-4 flex items-center space-x-2 mt-2 sm:mt-0">
+              <div class="ml-4 flex items-center space-x-2 mt-2 sm:mt-0" v-if="forestProduct.deleted_at === null">
                 <button
                   @click.stop="editLocation(location)"
                   class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
