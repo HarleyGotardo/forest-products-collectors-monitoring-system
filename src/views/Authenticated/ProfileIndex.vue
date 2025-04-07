@@ -16,6 +16,9 @@ const error = ref(null)
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
+const passwordsMatch = computed(() => {
+  return newPassword.value === confirmPassword.value && newPassword.value.length >= 6
+})
 
 const handleImageChange = (event) => {
   newProfileImage.value = event.target.files[0]
@@ -351,7 +354,7 @@ onMounted(async () => {
               <div class="mt-6 sm:mt-8 sm:flex sm:flex-row-reverse gap-3">
                 <button
                   type="button"
-                  :disabled="!selectedImageFile"
+                  :disabled="!newProfileImage"
                   @click="handleImageSubmit"
                   class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
                 >
