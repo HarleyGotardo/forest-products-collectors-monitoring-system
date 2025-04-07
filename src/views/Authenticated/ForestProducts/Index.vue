@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 
+const loading = ref(true);
 const router = useRouter()
 const allForestProducts = ref([]) // Store all forest products
 const forestProducts = ref([]) // Store paginated forest products
@@ -32,6 +33,7 @@ const createForestProduct = () => {
 }
 
 const fetchAllForestProducts = async () => {
+  loading.value = true; // Start loading
   let { data: forest_products, error: fetchError } = await supabase
     .from('forest_products')
     .select(`
@@ -60,6 +62,7 @@ const fetchAllForestProducts = async () => {
     }))
     paginateForestProducts()
   }
+  loading.value = false; // Stop loading after fetching
 }
 
 const paginateForestProducts = () => {
@@ -202,8 +205,36 @@ watch(selectedType, () => {
       </div>
     </div>
 
+      <!-- Loading Skeleton -->
+      <div v-if="loading" class="animate-pulse">
+      <div class="h-6 w-1/3 bg-gray-200 rounded mb-4"></div>
+      <div class="h-6 w-1/4 bg-gray-200 rounded mb-4"></div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-6 py-3 bg-gray-200 h-6"></th>
+                <th class="px-6 py-3 bg-gray-200 h-6"></th>
+                <th class="px-6 py-3 bg-gray-200 h-6"></th>
+                <th class="px-6 py-3 bg-gray-200 h-6"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="n in 8" :key="n">
+                <td class="px-6 py-4 bg-gray-100 h-6"></td>
+                <td class="px-6 py-4 bg-gray-100 h-6"></td>
+                <td class="px-6 py-4 bg-gray-100 h-6"></td>
+                <td class="px-6 py-4 bg-gray-100 h-6"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Forest Products Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-700">

@@ -58,8 +58,36 @@
       </div>
     </div>
 
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="animate-pulse">
+      <div class="h-6 w-1/3 bg-gray-200 rounded mb-4"></div>
+      <div class="h-6 w-1/4 bg-gray-200 rounded mb-4"></div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-6 py-3 bg-gray-200 h-6"></th>
+                <th class="px-6 py-3 bg-gray-200 h-6"></th>
+                <th class="px-6 py-3 bg-gray-200 h-6"></th>
+                <th class="px-6 py-3 bg-gray-200 h-6"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="n in 8" :key="n">
+                <td class="px-6 py-4 bg-gray-100 h-6"></td>
+                <td class="px-6 py-4 bg-gray-100 h-6"></td>
+                <td class="px-6 py-4 bg-gray-100 h-6"></td>
+                <td class="px-6 py-4 bg-gray-100 h-6"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Collection Records Table -->
-    <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div v-else class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-700">
@@ -238,8 +266,10 @@ const itemsPerPage = 8
 const error = ref(null)
 const searchQuery = ref('')
 const paymentFilter = ref('all') // 'all', 'paid', 'unpaid'
+const loading = ref(true);
 
 const fetchCollectionRecords = async () => {
+  loading.value = true; // Start loading
   try {
     // First, fetch the collection records
     let { data: records, error: fetchError } = await supabase
@@ -315,6 +345,8 @@ const fetchCollectionRecords = async () => {
   } catch (err) {
     console.error('Error in fetchCollectionRecords:', err)
     error.value = 'Failed to load collection records'
+  } finally {
+    loading.value = false; // End loading
   }
 }
 

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'vue-sonner'
 import Chart from 'chart.js/auto'
 import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
+import { nextTick } from 'vue'
 
 const router = useRouter()
 const totalCollectors = ref(0)
@@ -211,8 +212,12 @@ let mostCollectedChartInstance = null;
 
 const renderCharts = async (labels, quantities, units) => {
   try {
+    // Wait for the DOM to ensure the chart container is available
+    await nextTick();
+
     const mostCollectedCtx = document.getElementById('mostCollectedChart')?.getContext('2d');
     if (mostCollectedCtx) {
+      // Destroy the existing chart instance if it exists
       if (mostCollectedChartInstance) {
         mostCollectedChartInstance.destroy();
         mostCollectedChartInstance = null;
@@ -223,6 +228,7 @@ const renderCharts = async (labels, quantities, units) => {
       const displayQuantities = Array.isArray(quantities) ? quantities.slice(0, displayLimit) : [];
       const displayUnits = Array.isArray(units) ? units.slice(0, displayLimit) : [];
 
+      // Ensure units are valid
       for (let i = 0; i < displayLabels.length; i++) {
         if (!displayUnits[i] || displayUnits[i] === 'undefined') {
           displayUnits[i] = 'N/A';
@@ -233,6 +239,7 @@ const renderCharts = async (labels, quantities, units) => {
         `${label} (${displayUnits[index]})`
       );
 
+      // Create the chart
       mostCollectedChartInstance = new Chart(mostCollectedCtx, {
         type: 'bar',
         data: {
@@ -280,6 +287,8 @@ const renderCharts = async (labels, quantities, units) => {
           }
         }
       });
+    } else {
+      console.warn('Chart container not found. Ensure the DOM is fully loaded.');
     }
   } catch (error) {
     console.error('Chart rendering error:', error);
@@ -313,27 +322,9 @@ onMounted(() => {
   fetchDashboardData()
 })
 </script>
+
 <template>
   <div class="relative min-h-screen bg-gray-50 p-3 sm:p-6"> 
-    <div v-if="loading" class="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-lg"> 
-      <div class="relative">
-      <div class="relative w-32 h-32">
-        <div
-        class="absolute w-full h-full rounded-full border-[3px] border-gray-100/10 border-r-[#0ff] border-b-[#0ff] animate-spin"
-        style="animation-duration: 3s;"
-        ></div>
-        <div
-        class="absolute w-full h-full rounded-full border-[3px] border-gray-100/10 border-t-[#0ff] animate-spin"
-        style="animation-duration: 2s; animation-direction: reverse;"
-        ></div>
-      </div>
-      <div
-        class="absolute inset-0 bg-gradient-to-tr from-[#0ff]/10 via-transparent to-[#0ff]/5 animate-pulse rounded-full blur-sm"
-      ></div>
-      </div>
-      <p class="mt-4 text-sm font-medium text-gray-600">Please wait...</p>
-    </div>
-
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div class="flex items-center gap-2">
         <img src="@/assets/dashboard.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -355,104 +346,118 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <p class="text-sm font-medium text-gray-500">Total Collectors</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ totalCollectors }}</p>
-          </div>
-          <div class="p-2 sm:p-3 bg-blue-100 rounded-lg">
-            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </div>
-        </div>
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="animate-pulse">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        <div class="h-24 bg-gray-200 rounded-lg"></div>
+        <div class="h-24 bg-gray-200 rounded-lg"></div>
+        <div class="h-24 bg-gray-200 rounded-lg"></div>
+        <div class="h-24 bg-gray-200 rounded-lg"></div>
       </div>
-
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <p class="text-sm font-medium text-gray-500">Most Collected Product</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ mostCollectedProduct }}</p>
-          </div>
-          <div class="p-2 sm:p-3 bg-green-100 rounded-lg">
-            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <p class="text-sm font-medium text-gray-500">Total Collection Records</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ totalRoutes }}</p>
-          </div>
-          <div class="p-2 sm:p-3 bg-purple-100 rounded-lg">
-            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <p class="text-sm font-medium text-gray-500">Total Forest Products</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ totalProducts }}</p>
-          </div>
-          <div class="p-2 sm:p-3 bg-yellow-100 rounded-lg">
-            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-            </svg>
-          </div>
-        </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="h-96 bg-gray-200 rounded-lg"></div>
+        <div class="h-96 bg-gray-200 rounded-lg"></div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 w-full">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Most Collected Forest Products</h3>
-        <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px]">
-          <canvas id="mostCollectedChart"></canvas>
+    <!-- Dashboard Content -->
+    <div v-show="!loading">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-500">Total Collectors</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ totalCollectors }}</p>
+            </div>
+            <div class="p-2 sm:p-3 bg-blue-100 rounded-lg">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-500">Most Collected Product</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ mostCollectedProduct }}</p>
+            </div>
+            <div class="p-2 sm:p-3 bg-green-100 rounded-lg">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-500">Total Collection Records</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ totalRoutes }}</p>
+            </div>
+            <div class="p-2 sm:p-3 bg-purple-100 rounded-lg">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-500">Total Forest Products</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ totalProducts }}</p>
+            </div>
+            <div class="p-2 sm:p-3 bg-yellow-100 rounded-lg">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Products Distribution</h3>
-        <div class="space-y-3 sm:space-y-4">
-          <ul class="divide-y divide-gray-200">
-            <li v-for="item in paginatedData"
-              :key="item.id"
-              class="py-2 sm:py-3 flex items-center justify-between cursor-pointer hover:bg-green-100 transition-colors rounded-lg px-3 sm:px-4"
-              @click="viewFP_Details(item.fp_id)">
-              <span class="text-xs sm:text-sm text-gray-600">
-                {{ item.productName }}
-                <span class="text-gray-400">({{ item.locationName }})</span>
-              </span>
-              <span class="text-xs sm:text-sm font-medium text-gray-900">{{ item.quantity }} {{ item.measurementUnit }}</span>
-            </li>
-          </ul>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 w-full">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Most Collected Forest Products</h3>
+          <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px]">
+            <canvas id="mostCollectedChart"></canvas>
+          </div>
+        </div>
 
-          <div class="flex items-center justify-between pt-3 sm:pt-4">
-            <button @click="prevPage"
-              :disabled="currentPage === 1"
-              :class="{'opacity-50 cursor-not-allowed': currentPage === 1}"
-              class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-              Previous
-            </button>
-            <span class="text-xs sm:text-sm text-gray-600">
-              Page {{ currentPage }} of {{ totalPages }}
-            </span>
-            <button @click="nextPage"
-              :disabled="currentPage === totalPages"
-              :class="{'opacity-50 cursor-not-allowed': currentPage === totalPages}"
-              class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-              Next
-            </button>
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Products Distribution</h3>
+          <div class="space-y-3 sm:space-y-4">
+            <ul class="divide-y divide-gray-200">
+              <li v-for="item in paginatedData"
+                :key="item.id"
+                class="py-2 sm:py-3 flex items-center justify-between cursor-pointer hover:bg-green-100 transition-colors rounded-lg px-3 sm:px-4"
+                @click="viewFP_Details(item.fp_id)">
+                <span class="text-xs sm:text-sm text-gray-600">
+                  {{ item.productName }}
+                  <span class="text-gray-400">({{ item.locationName }})</span>
+                </span>
+                <span class="text-xs sm:text-sm font-medium text-gray-900">{{ item.quantity }} {{ item.measurementUnit }}</span>
+              </li>
+            </ul>
+
+            <div class="flex items-center justify-between pt-3 sm:pt-4">
+              <button @click="prevPage"
+                :disabled="currentPage === 1"
+                :class="{'opacity-50 cursor-not-allowed': currentPage === 1}"
+                class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                Previous
+              </button>
+              <span class="text-xs sm:text-sm text-gray-600">
+                Page {{ currentPage }} of {{ totalPages }}
+              </span>
+              <button @click="nextPage"
+                :disabled="currentPage === totalPages"
+                :class="{'opacity-50 cursor-not-allowed': currentPage === totalPages}"
+                class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
