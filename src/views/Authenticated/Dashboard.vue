@@ -446,7 +446,9 @@ onMounted(() => {
                 :disabled="currentPage === 1"
                 :class="{'opacity-50 cursor-not-allowed': currentPage === 1}"
                 class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                Previous
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
               </button>
               <span class="text-xs sm:text-sm text-gray-600">
                 Page {{ currentPage }} of {{ totalPages }}
@@ -455,7 +457,10 @@ onMounted(() => {
                 :disabled="currentPage === totalPages"
                 :class="{'opacity-50 cursor-not-allowed': currentPage === totalPages}"
                 class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                Next
+                <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+                
               </button>
             </div>
           </div>
