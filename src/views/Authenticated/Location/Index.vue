@@ -25,8 +25,11 @@ const currentPage = ref(1)
 const itemsPerPage = 7
 const searchQuery = ref('')
 const locationToDelete = ref(null)
+const loading = ref(true) // Add loading state
 
 const fetchAllLocations = async () => {
+  loading.value = true // Set loading to true when fetching data
+  
   let { data, error: fetchError } = await supabase
     .from('locations')
     .select('*')
@@ -38,6 +41,8 @@ const fetchAllLocations = async () => {
     locations.value = data
     paginateLocations()
   }
+  
+  loading.value = false // Set loading to false when data is fetched
 }
 
 const paginateLocations = () => {
@@ -169,8 +174,34 @@ watch(currentPage, () => {
       </div>
     </div>
 
+    <!-- Loading Skeleton --> 
+    <div v-if="loading" class="animate-pulse"> 
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"> 
+        <div class="overflow-x-auto"> 
+          <table class="min-w-full divide-y divide-gray-200"> 
+            <thead> 
+              <tr> 
+                <th class="px-6 py-6 bg-gray-200 h-12"></th> 
+                <th class="px-6 py-6 bg-gray-200 h-12"></th> 
+                <th class="px-6 py-6 bg-gray-200 h-12"></th> 
+                <th class="px-6 py-6 bg-gray-200 h-12"></th> 
+              </tr> 
+            </thead> 
+            <tbody> 
+              <tr v-for="n in 8" :key="n"> 
+                <td class="px-6 py-8 bg-gray-100 h-12"></td> 
+                <td class="px-6 py-8 bg-gray-100 h-12"></td> 
+                <td class="px-6 py-8 bg-gray-100 h-12"></td> 
+                <td class="px-6 py-8 bg-gray-100 h-12"></td> 
+              </tr> 
+            </tbody> 
+          </table> 
+        </div> 
+      </div> 
+    </div>
+
     <!-- Locations Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-700">

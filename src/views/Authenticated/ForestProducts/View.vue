@@ -19,7 +19,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-
 // Fix for Leaflet default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -388,6 +387,15 @@ const handleAdditionalImageUpload = async (event) => {
   const files = event.target.files;
   if (!files || files.length === 0) return;
 
+  // Filter files to only allow image types (e.g., png, jpg, jpeg, gif)
+  const validExtensions = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+  const filteredFiles = Array.from(files).filter(file => validExtensions.includes(file.type));
+
+  if (filteredFiles.length === 0) {
+    toast.error('Only image files (png, jpg, jpeg, gif) are allowed');
+    return;
+  }
+
   // Check the current number of images in the database
   const { count, error: countError } = await supabase
     .from('forest_product_images')
@@ -406,7 +414,7 @@ const handleAdditionalImageUpload = async (event) => {
   }
 
   const remainingSlots = 8 - count;
-  const filesToUpload = Array.from(files).slice(0, remainingSlots);
+  const filesToUpload = filteredFiles.slice(0, remainingSlots);
 
   for (const file of filesToUpload) {
     const fileName = `fp_images/${Date.now()}_${file.name}`;
@@ -439,7 +447,7 @@ const handleAdditionalImageUpload = async (event) => {
     additionalImages.value.push(imageUrl);
   }
 
-  if (files.length > remainingSlots) {
+  if (filteredFiles.length > remainingSlots) {
     toast.error(`Only ${remainingSlots} images were uploaded due to the 8-image limit`);
   } else {
     toast.success('Images uploaded successfully');
@@ -1126,7 +1134,7 @@ onMounted(() => {
                 <button
                   type="button"
                   @click="updateLocationQuantity"
-                  class="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                  class="inline-flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   Update
                 </button>

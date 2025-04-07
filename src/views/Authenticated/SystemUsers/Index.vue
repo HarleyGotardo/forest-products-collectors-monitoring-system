@@ -15,6 +15,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+const showRejectDialog = ref(false) // State for reject confirmation dialog
+const userToReject = ref(null) // Store the user ID to reject
 const showApproveDialog = ref(false)
 const userToApprove = ref(null)
 const users = ref([])
@@ -27,6 +29,7 @@ const unapprovedSearchQuery = ref('') // Search query for unapproved users
 const currentPage = ref(1) // Current page for pagination
 const itemsPerPage = 5 // Items per page for pagination
 const currentPageApproved = ref(1) // Current page for approved users pagination
+const isLoading = ref(true) // Loading state for data processing
 
 const paginatedUsers = computed(() => {
   const start = (currentPageApproved.value - 1) * itemsPerPage
@@ -45,7 +48,6 @@ const prevPageApproved = () => {
     currentPageApproved.value--
   }
 }
-
 
 const filteredUsers = computed(() => {
   let filtered = users.value
@@ -88,6 +90,7 @@ const paginatedUnapprovedUsers = computed(() => {
 })
 
 const fetchUsers = async () => {
+  isLoading.value = true
   let { data, error } = await supabase
     .from('profiles')
     .select(`
@@ -109,9 +112,11 @@ const fetchUsers = async () => {
     users.value = data.filter(user => user.approval_flag !== null)
     unapprovedUsers.value = data.filter(user => user.approval_flag === null)
   }
+  isLoading.value = false
 }
 
 const fetchRoles = async () => {
+  isLoading.value = true
   let { data, error } = await supabase
     .from('roles')
     .select('id, name')
@@ -121,6 +126,7 @@ const fetchRoles = async () => {
   } else {
     roles.value = data
   }
+  isLoading.value = false
 }
 
 const getProfilePictureUrl = (profilePicture) => {
@@ -160,6 +166,26 @@ const handleApproveConfirm = async () => {
   userToApprove.value = null
 }
 
+const rejectUser = (userId) => {
+  userToReject.value = userId
+  showRejectDialog.value = true
+}
+
+const handleRejectConfirm = async () => {
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userToReject.value)
+
+  if (error) {
+    toast.error('Error rejecting user.', error.message)
+  } else {
+    toast.success('User rejected successfully.')
+    fetchUsers() // Refresh the users list
+  }
+  showRejectDialog.value = false
+  userToReject.value = null
+}
 
 const nextPage = () => {
   if ((currentPage.value * itemsPerPage) < filteredUnapprovedUsers.value.length) {
@@ -174,9 +200,11 @@ const prevPage = () => {
 }
 
 onMounted(async () => {
-  await fetchUsers()
-  await fetchRoles()
-})
+  isLoading.value = true;
+  await fetchUsers();
+  await fetchRoles();
+  isLoading.value = false;
+});
 </script>
 <template>
   <div class="max-w-7xl mx-auto p-3 sm:p-6 mt-2">
@@ -222,12 +250,35 @@ onMounted(async () => {
         </div>
       </div>
       <button
-        v-if="isFPUAdmin || isForestRanger"
-        @click="showModal = true"
-        class="px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-lg shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 text-sm sm:text-base"
-      >
-        Pending Approval
-      </button>
+  v-if="isFPUAdmin || isForestRanger"
+  @click="showModal = true"
+  class="relative px-3 sm:px-5 py-1.5 sm:py-2.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold rounded-lg shadow-md hover:from-yellow-500 hover:to-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 text-sm sm:text-base transition-transform transform hover:scale-105"
+>
+  <div class="flex items-center space-x-2">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-4 w-4 sm:h-5 sm:w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      />
+    </svg>
+    <span>Pending Approval</span>
+    <!-- Notification Badge -->
+    <span
+      v-if="unapprovedUsers.length > 0"
+      class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
+    >
+      {{ unapprovedUsers.length }}
+    </span>
+  </div>
+</button>
       </div>
     </div>
 
@@ -303,8 +354,34 @@ onMounted(async () => {
       </div>
     </div>
 
+        <!-- Loading Skeleton -->
+        <div v-if="isLoading" class="animate-pulse">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+        <thead>
+          <tr>
+          <th class="px-6 py-6 bg-gray-200 h-12"></th>
+          <th class="px-6 py-6 bg-gray-200 h-12"></th>
+          <th class="px-6 py-6 bg-gray-200 h-12"></th>
+          <th class="px-6 py-6 bg-gray-200 h-12"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="n in 8" :key="n">
+          <td class="px-6 py-8 bg-gray-100 h-12"></td>
+          <td class="px-6 py-8 bg-gray-100 h-12"></td>
+          <td class="px-6 py-8 bg-gray-100 h-12"></td>
+          <td class="px-6 py-8 bg-gray-100 h-12"></td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      </div>
+    </div>
     <!-- Users Table -->
     <div
+    v-else
       class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
     >
       <div class="overflow-x-auto">
@@ -673,6 +750,19 @@ onMounted(async () => {
                           />
                         </div>
                       </button>
+                      <button
+    @click="rejectUser(user.id)"
+    class="ml-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg shadow-sm hover:bg-gray-700"
+  >
+    <div class="flex items-center justify-center space-x-2">
+      <p>Reject</p>
+      <img
+        src="@/assets/reject.png"
+        alt="Reject Button"
+        class="w-5 h-5"
+      />
+    </div>
+  </button>
                     </td>
                   </tr>
                 </tbody>
@@ -754,4 +844,22 @@ onMounted(async () => {
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
+  <!-- Reject Confirmation Dialog -->
+<AlertDialog
+  :open="showRejectDialog"
+  @update:open="showRejectDialog = $event"
+>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Reject User?</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to reject this user? This action cannot be undone. This account will be permanently deleted.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel @click="showRejectDialog = false">Cancel</AlertDialogCancel>
+      <AlertDialogAction @click="handleRejectConfirm">Reject</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
 </template>

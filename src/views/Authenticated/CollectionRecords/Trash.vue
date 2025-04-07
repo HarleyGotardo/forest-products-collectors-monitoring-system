@@ -21,11 +21,14 @@ const currentPage = ref(1);
 const itemsPerPage = 8;
 const error = ref(null);
 const searchQuery = ref('');
+const loading = ref(true); // Added loading state
 import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const fetchDeletedCollectionRecords = async () => {
   try {
+    loading.value = true; // Set loading to true when fetching data
+    
     // Fetch deleted collection records
     let { data: records, error: fetchError } = await supabase
       .from('collection_records')
@@ -43,6 +46,7 @@ const fetchDeletedCollectionRecords = async () => {
 
     if (fetchError) {
       error.value = fetchError.message;
+      loading.value = false; // Set loading to false if there's an error
       return;
     }
 
@@ -95,9 +99,11 @@ const fetchDeletedCollectionRecords = async () => {
 
     collectionRecords.value = recordsWithItems;
     paginateRecords();
+    loading.value = false; // Set loading to false after data is loaded
   } catch (err) {
     console.error('Error fetching deleted collection records:', err);
     error.value = 'Failed to load deleted collection records';
+    loading.value = false; // Set loading to false if there's an error
   }
 };
 
@@ -233,8 +239,34 @@ watch(currentPage, () => {
       </div>
     </div>
 
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="animate-pulse">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="n in 8" :key="n">
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Collection Records Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-700">
