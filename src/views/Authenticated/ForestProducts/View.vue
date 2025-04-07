@@ -567,7 +567,10 @@ onMounted(() => {
     <div
       class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 mt-2 space-y-4 sm:space-y-0"
     >
-      <h2 class="text-3xl font-bold text-gray-900">Forest Product Details</h2>
+      <div class="flex items-center space-x-4">
+        <img src="@/assets/forest-product.png" alt="Forest Product" class="w-10 h-10">
+        <h2 class="text-3xl font-bold text-gray-900">Forest Product Details</h2>
+      </div>
       <div
         v-if="forestProduct"
         class="px-3 py-1 rounded-full text-sm font-medium"
