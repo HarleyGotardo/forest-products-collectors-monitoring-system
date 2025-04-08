@@ -59,7 +59,7 @@ const fetchLocation = async () => {
 
 const fetchForestProducts = async () => {
   let { data, error: fetchError } = await supabase
-    .from('fp_and_location')
+    .from('fp_and_locations')
     .select(`
       forest_product:forest_products ( id, name, measurement_unit_id ),
       quantity
@@ -307,7 +307,7 @@ onMounted(() => {
 <div v-if="forestProducts.length" class="mt-12">
   <div class="flex items-center space-x-2 mb-6">
     <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
-    <h3 class="text-xl font-bold text-gray-800">Forest Products in this Location</h3>
+    <h3 class="text-xl font-bold text-gray-800">Forest Products in {{ location.name }}</h3>
   </div>
 
   <!-- Forest Products Table -->
