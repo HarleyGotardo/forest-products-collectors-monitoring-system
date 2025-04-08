@@ -132,7 +132,7 @@ const downloadPermit = async () => {
       margin: [.3, .3, .3, .3],
       filename: `Forest_Conservation_Permit_${record.value.id}.pdf`,
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
     };
 
     await html2pdf().from(permitElement).set(options).save();
