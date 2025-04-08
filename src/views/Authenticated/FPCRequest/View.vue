@@ -98,11 +98,19 @@ onMounted(() => {
   <div class="max-w-4xl mx-auto p-6">
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 mt-2 space-y-4 sm:space-y-0">
-      <h2 class="text-3xl font-bold text-gray-900">Collection Request Details</h2>
+      <div class="flex items-center space-x-4">
+        <img src="@/assets/request2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+        <h2 class="text-3xl font-bold text-gray-900">Collection Request Details</h2>
+      </div>
+
       <div v-if="request" 
            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-150"
            :class="request.approved_at ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
         {{ request.approved_at ? 'Approved' : 'Pending' }}
+      </div>
+      <div v-if="request && request.deleted_at" 
+        class="px-4 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+        Deleted
       </div>
     </div>
 

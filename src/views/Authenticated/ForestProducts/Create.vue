@@ -230,7 +230,7 @@ const selectedLocationsNote = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  return name.value && description.value && type.value && selectedMeasurementUnit.value && price_based_on_measurement_unit.value && selectedLocations.value.length > 0;
+  return name.value && description.value && type.value && selectedMeasurementUnit.value && price_based_on_measurement_unit.value !== null && selectedLocations.value.length > 0;
 });
 
 onMounted(() => {

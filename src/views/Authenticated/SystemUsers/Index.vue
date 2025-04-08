@@ -213,72 +213,76 @@ onMounted(async () => {
       class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2"
     >
       <div class="flex items-center space-x-2">
-      <img src="@/assets/user.png" alt="users" class="w-12 h-12 group-hover:scale-110 transition-transform" />
-      <div>
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">
-        System Users
-        </h2>
-        <p class="mt-1 text-sm text-gray-500">
-        Manage and view all system users
-        </p>
-      </div>
-      </div>
-      <div class="flex space-x-4">
-      <div class="relative flex-1 sm:flex-none">
-        <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search users..."
-        class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+        <img
+          src="@/assets/user.png"
+          alt="users"
+          class="w-12 h-12 group-hover:scale-110 transition-transform"
         />
-        <div
-        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-        >
-        <svg
-          class="h-5 w-5 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
+        <div>
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">
+            System Users
+          </h2>
+          <p class="mt-1 text-sm text-gray-500">
+            Manage and view all system users
+          </p>
         </div>
       </div>
-      <button
-  v-if="isFPUAdmin || isForestRanger"
-  @click="showModal = true"
-  class="relative px-3 sm:px-5 py-1.5 sm:py-2.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold rounded-lg shadow-md hover:from-yellow-500 hover:to-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 text-sm sm:text-base transition-transform transform hover:scale-105"
->
-  <div class="flex items-center space-x-2">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-4 w-4 sm:h-5 sm:w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-      />
-    </svg>
-    <span>Pending Approval</span>
-    <!-- Notification Badge -->
-    <span
-      v-if="unapprovedUsers.length > 0"
-      class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
-    >
-      {{ unapprovedUsers.length }}
-    </span>
-  </div>
-</button>
+      <div class="flex space-x-4">
+        <div class="relative flex-1 sm:flex-none">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search users..."
+            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+          />
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <svg
+              class="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </div>
+        <button
+          v-if="isFPUAdmin || isForestRanger"
+          @click="showModal = true"
+          class="relative px-3 sm:px-5 py-1.5 sm:py-2.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold rounded-lg shadow-md hover:from-yellow-500 hover:to-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 text-sm sm:text-base transition-transform transform hover:scale-105"
+        >
+          <div class="flex items-center space-x-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 sm:h-5 sm:w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+            <span>Pending Approval</span>
+            <!-- Notification Badge -->
+            <span
+              v-if="unapprovedUsers.length > 0"
+              class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
+            >
+              {{ unapprovedUsers.length }}
+            </span>
+          </div>
+        </button>
       </div>
     </div>
 
@@ -354,34 +358,36 @@ onMounted(async () => {
       </div>
     </div>
 
-        <!-- Loading Skeleton -->
-        <div v-if="isLoading" class="animate-pulse">
-      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-        <thead>
-          <tr>
-          <th class="px-6 py-6 bg-gray-200 h-12"></th>
-          <th class="px-6 py-6 bg-gray-200 h-12"></th>
-          <th class="px-6 py-6 bg-gray-200 h-12"></th>
-          <th class="px-6 py-6 bg-gray-200 h-12"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="n in 8" :key="n">
-          <td class="px-6 py-8 bg-gray-100 h-12"></td>
-          <td class="px-6 py-8 bg-gray-100 h-12"></td>
-          <td class="px-6 py-8 bg-gray-100 h-12"></td>
-          <td class="px-6 py-8 bg-gray-100 h-12"></td>
-          </tr>
-        </tbody>
-        </table>
-      </div>
+    <!-- Loading Skeleton -->
+    <div v-if="isLoading" class="animate-pulse">
+      <div
+        class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
+      >
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="n in 8" :key="n">
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <!-- Users Table -->
     <div
-    v-else
+      v-else
       class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
     >
       <div class="overflow-x-auto">
@@ -497,52 +503,54 @@ onMounted(async () => {
       >
         <div class="flex items-center justify-between">
           <button
-        @click="prevPageApproved"
-        :disabled="currentPageApproved === 1"
-        class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="prevPageApproved"
+            :disabled="currentPageApproved === 1"
+            class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-        <svg
-          class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        Previous
+            <svg
+              class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Previous
           </button>
           <span v-if="filteredUsers.length > 0" class="text-sm text-gray-700">
-        <span class="hidden sm:inline">
-          Page {{ currentPageApproved }} of {{ Math.ceil(filteredUsers.length / itemsPerPage) }}
-        </span>
-        <span class="sm:hidden">
-          {{ currentPageApproved }} / {{ Math.ceil(filteredUsers.length / itemsPerPage) }}
-        </span>
+            <span class="hidden sm:inline">
+              Page {{ currentPageApproved }} of
+              {{ Math.ceil(filteredUsers.length / itemsPerPage) }}
+            </span>
+            <span class="sm:hidden">
+              {{ currentPageApproved }} /
+              {{ Math.ceil(filteredUsers.length / itemsPerPage) }}
+            </span>
           </span>
           <button
-        @click="nextPageApproved"
-        :disabled="(currentPageApproved * itemsPerPage) >= filteredUsers.length"
-        class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="nextPageApproved"
+            :disabled="(currentPageApproved * itemsPerPage) >= filteredUsers.length"
+            class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-        Next
-        <svg
-          class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+            Next
+            <svg
+              class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
           </button>
         </div>
       </div>
@@ -687,33 +695,33 @@ onMounted(async () => {
                         </div>
                         <div class="ml-4 text-left">
                           <div class="text-sm font-medium text-gray-900">
-                          {{ user.first_name }} {{ user.last_name }}
+                            {{ user.first_name }} {{ user.last_name }}
                           </div>
                           <div class="block sm:hidden text-sm text-gray-600">
-                          {{ user.email_address }}
+                            {{ user.email_address }}
                           </div>
                           <div class="block sm:hidden text-sm text-gray-600">
-                          {{ user.role.name }}
+                            {{ user.role.name }}
                           </div>
                           <div
-                          class="block sm:hidden text-left text-sm font-medium mt-2"
+                            class="block sm:hidden text-left text-sm font-medium mt-2"
                           >
-                          <!-- Update both mobile and desktop approve buttons -->
-                          <button
-                            @click="approveUser(user.id)"
-                            class="px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                          >
-                            <div
-                            class="flex items-center justify-center space-x-2"
+                            <!-- Update both mobile and desktop approve buttons -->
+                            <button
+                              @click="approveUser(user.id)"
+                              class="px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                             >
-                            <p>Approve</p>
-                            <img
-                              src="@/assets/approve.png"
-                              alt="Approve Button"
-                              class="w-4 h-4"
-                            />
-                            </div>
-                          </button>
+                              <div
+                                class="flex items-center justify-center space-x-2"
+                              >
+                                <p>Approve</p>
+                                <img
+                                  src="@/assets/approve.png"
+                                  alt="Approve Button"
+                                  class="w-4 h-4"
+                                />
+                              </div>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -751,18 +759,18 @@ onMounted(async () => {
                         </div>
                       </button>
                       <button
-    @click="rejectUser(user.id)"
-    class="ml-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg shadow-sm hover:bg-gray-700"
-  >
-    <div class="flex items-center justify-center space-x-2">
-      <p>Reject</p>
-      <img
-        src="@/assets/reject.png"
-        alt="Reject Button"
-        class="w-5 h-5"
-      />
-    </div>
-  </button>
+                        @click="rejectUser(user.id)"
+                        class="ml-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg shadow-sm hover:bg-gray-700"
+                      >
+                        <div class="flex items-center justify-center space-x-2">
+                          <p>Reject</p>
+                          <img
+                            src="@/assets/reject.png"
+                            alt="Reject Button"
+                            class="w-5 h-5"
+                          />
+                        </div>
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -770,25 +778,28 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Pagination Controls -->
-          <div class="flex justify-between items-center mt-4">
+            <!-- Pagination Controls -->
+            <div
+            v-if="filteredUnapprovedUsers.length > 0"
+            class="flex justify-between items-center mt-4"
+            >
             <button
               @click="prevPage"
               :disabled="currentPage === 1"
               class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg
-                class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
               </svg>
               Previous
             </button>
@@ -803,20 +814,20 @@ onMounted(async () => {
             >
               Next
               <svg
-                class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
               </svg>
             </button>
-          </div>
+            </div>
         </div>
       </div>
       <Toaster />
@@ -845,21 +856,26 @@ onMounted(async () => {
     </AlertDialogContent>
   </AlertDialog>
   <!-- Reject Confirmation Dialog -->
-<AlertDialog
-  :open="showRejectDialog"
-  @update:open="showRejectDialog = $event"
->
-  <AlertDialogContent>
-    <AlertDialogHeader>
-      <AlertDialogTitle>Reject User?</AlertDialogTitle>
-      <AlertDialogDescription>
-        Are you sure you want to reject this user? This action cannot be undone. This account will be permanently deleted.
-      </AlertDialogDescription>
-    </AlertDialogHeader>
-    <AlertDialogFooter>
-      <AlertDialogCancel @click="showRejectDialog = false">Cancel</AlertDialogCancel>
-      <AlertDialogAction @click="handleRejectConfirm">Reject</AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
+  <AlertDialog
+    :open="showRejectDialog"
+    @update:open="showRejectDialog = $event"
+  >
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Reject User?</AlertDialogTitle>
+        <AlertDialogDescription>
+          Are you sure you want to reject this user? This action cannot be
+          undone. This account will be permanently deleted.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel @click="showRejectDialog = false"
+          >Cancel</AlertDialogCancel
+        >
+        <AlertDialogAction @click="handleRejectConfirm"
+          >Reject</AlertDialogAction
+        >
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>

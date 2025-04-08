@@ -99,6 +99,13 @@ const downloadPermit = async () => {
       return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
     }).join('; ');
 
+    // Check if any product is firewood
+    const firewoodNote = recordItems.value.some((item) => 
+      item.fp_and_location.forest_product.name.toLowerCase() === 'firewood'
+    )
+      ? 'Firewood Permits are intended for family consumption but not for sale. It is limited to dead branches up to 10cm diameter, 1 meter length.'
+      : '';
+
     // Prepare permit data
     const permitData = {
       permitNo: record.value.id, // Permit Number is the record ID
@@ -111,6 +118,7 @@ const downloadPermit = async () => {
       chargesPaid: calculateTotalCost().toFixed(2),
       issuedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Name of the user who created the record
       inspectedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Same as "Issued by"
+      note: firewoodNote, // Add the firewood note if applicable
     };
 
     // Generate the PDF
@@ -121,7 +129,7 @@ const downloadPermit = async () => {
     app.mount(permitElement);
 
     const options = {
-      margin: 1,
+      margin: [.3, .3, .3, .3],
       filename: `Forest_Conservation_Permit_${record.value.id}.pdf`,
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
@@ -166,73 +174,12 @@ const markAsPaid = async () => {
       return;
     }
 
-    // Fetch the collection record items
-    const { data: items, error: itemsError } = await supabase
-      .from('collection_record_items')
-      .select(`
-        id,
-        purchased_quantity,
-        total_cost,
-        fp_and_location:fp_and_locations (
-          location:locations (name),
-          forest_product:forest_products (name)
-        )
-      `)
-      .eq('collection_record_id', recordId);
-
-    if (itemsError) {
-      console.error('Error fetching collection record items:', itemsError);
-      error.value = 'Failed to fetch collection record items';
-      return;
-    }
-
-    // Format the list of forest products
-    const forestProductsList = items.map((item) => {
-      const productName = item.fp_and_location.forest_product.name;
-      const locationName = item.fp_and_location.location.name;
-      const quantity = item.purchased_quantity;
-      const totalCost = item.total_cost.toFixed(2);
-      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
-    }).join('; ');
-
-    // Prepare permit data
-    const permitData = {
-      permitNo: record.value.id, // Permit Number is the record ID
-      dateIssued: new Date().toLocaleDateString(), // Current date
-      name: `${record.value.user.first_name} ${record.value.user.last_name}`,
-      permission: `collect the forest products: ${forestProductsList}`, // Updated to "permission"
-      purpose: record.value.purpose, // Official, Personal, or Others
-      collectionRequestId: record.value.collection_request_id, // Collection Request ID
-      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString(),
-      chargesPaid: calculateTotalCost().toFixed(2),
-      issuedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Name of the user who created the record
-      inspectedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Same as "Issued by"
-    };
-
-    // Generate the PDF
-    const permitElement = document.createElement('div');
-    document.body.appendChild(permitElement);
-
-    const app = createApp(PermitTemplate, { permitData });
-    app.mount(permitElement);
-
-    const options = {
-      margin: [0.1, 0.1, 0.1, 0.1], 
-      filename: `Forest_Conservation_Permit_${recordId}.pdf`,
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-    };
-
-    await html2pdf().from(permitElement).set(options).save();
-
-    app.unmount();
-    document.body.removeChild(permitElement);
-
     // Show success message
-    toast.success('Collection record marked as paid successfully. Check your downloads to see the permit.', { duration: 2000 });
+    toast.success('Collection record marked as paid successfully. Downloading permit...', { duration: 2000 });
 
-    // Refresh the record
-    fetchCollectionRecord();
+    // Refresh the record and download the permit
+    await fetchCollectionRecord();
+    await downloadPermit();
   } catch (err) {
     console.error('Error marking as paid:', err);
     error.value = 'Failed to mark as paid';
@@ -252,17 +199,22 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-gray-50 py-2 px-1 sm:py-4 mt-5 sm:px-3 lg:px-4">
     <div class="max-w-4xl mx-auto mb-4 flex justify-between items-center">
-      <Button @click="router.back()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center">
+      <div class="flex items-center space-x-4">
+        <Button @click="router.back()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center">
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
       Back
       </Button>
+        <img src="@/assets/records2.png" alt="Forest Product" class="w-10 h-10">
+        <h2 class="text-3xl font-bold text-gray-900">Collection Record Details</h2>
+      </div>
       <Button 
       v-if="record?.is_paid" 
       @click="downloadPermit" 
       class="bg-gray-900 hover:bg-gray-700 text-white">
-      Download Permit
+      <img src="@/assets/download-pdf.png" alt="Forest Product" class="w-5 h-5 ">
+      Download
       </Button>
     </div>
 

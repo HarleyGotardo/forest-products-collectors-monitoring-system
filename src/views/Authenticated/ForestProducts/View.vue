@@ -715,7 +715,7 @@ onMounted(() => {
                     Price Based on Measurement Unit
                   </p>
                   <p class="text-xl font-semibold text-gray-900">
-                    ₱{{ forestProduct.price_based_on_measurement_unit ? forestProduct.price_based_on_measurement_unit.toLocaleString() : 'N/A' }}
+                    ₱{{ forestProduct.price_based_on_measurement_unit ? forestProduct.price_based_on_measurement_unit.toLocaleString() : 'Free' }}
                     per {{ forestProduct.measurement_units.unit_name }}
                   </p>
                 </div>

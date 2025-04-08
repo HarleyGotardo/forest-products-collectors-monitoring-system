@@ -472,6 +472,11 @@ const markAsPaid = async (recordId) => {
       return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
     }).join('; ');
 
+    // Check if any product name contains "firewood" (case-insensitive)
+    const hasFirewood = items.some(item => 
+      item.fp_and_location.forest_product.name.toLowerCase().includes('firewood')
+    );
+
     // Prepare permit data
     const permitData = {
       permitNo: record.id, // Permit Number is the record ID
@@ -484,6 +489,9 @@ const markAsPaid = async (recordId) => {
       chargesPaid: record.total_cost,
       issuedBy: record.created_by_name, // Name of the user who created the record
       inspectedBy: record.created_by_name, // Same as "Issued by"
+      note: hasFirewood 
+        ? 'Firewood Permits are intended for family consumption but not for sale. It is limited to dead branches up to 10 cm diameter, 1 meter length.' 
+        : null, // Add note only if "firewood" is present
     };
 
     // Generate the PDF
@@ -494,7 +502,7 @@ const markAsPaid = async (recordId) => {
     app.mount(permitElement);
 
     const options = {
-      margin: [0.1, 0.1, 0.1, 0.1], 
+      margin: [0.3, 0.3, 0.3, 0.3], 
       filename: `Forest_Conservation_Permit_${recordId}.pdf`,
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },

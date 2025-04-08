@@ -161,6 +161,9 @@ const confirmSubmit = async () => {
     // Determine the final purpose
     const finalPurpose = purpose.value === 'Others' ? customPurpose.value : purpose.value;
 
+    // Check if total cost is 0
+    const isPaid = totalCost.value === 0;
+
     // Insert into collection_records
     const { data: collectionRecordData, error: collectionRecordError } = await supabase
       .from('collection_records')
@@ -170,6 +173,9 @@ const confirmSubmit = async () => {
           created_by: user.id,
           collection_request_id: selectedRequest.value, // Save the selected request number
           purpose: finalPurpose, // Save the selected or custom purpose
+          is_paid: isPaid, // Automatically mark as paid if total cost is 0
+          approved_by: user.id, // Save the authenticated user as the approver
+          approved_at: new Date().toISOString(), // Save the current timestamp as approved_at
         }
       ])
       .select('id');

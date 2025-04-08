@@ -226,7 +226,7 @@ watch(currentPage, () => {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Request?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This request will be permanently deleted.
+                          This request will be transferred to the recycle bin.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

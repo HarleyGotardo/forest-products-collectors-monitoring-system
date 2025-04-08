@@ -52,7 +52,7 @@
       <p class="my-1.5 leading-relaxed">To Whom It May Concern:</p>
 
       <p class="my-3 leading-relaxed">
-      This is to certify that <span class="font-bold">{{ permitData.name }}</span> is given permission to
+      This is to certify that Mr./Ms. <span class="font-bold">{{ permitData.name }}</span> is given permission to
       <span class="font-bold">{{ permitData.permission }}</span>.
       </p>
 
@@ -103,6 +103,11 @@
           <p class=" underline mt-4 mb-1 text-sm">{{ permitData.inspectedBy }}</p>
           <p class="text-xs m-0">Forest Guard On-Duty</p>
         </div>
+      </div>
+
+      <div v-if="permitData.note" class="text-center mt-3">
+        <p class="text-xs m-0">Note:</p>
+        <p class="mt-2 text-sm">{{ permitData.note }}</p>
       </div>
 
       <div class="text-center mt-3">
