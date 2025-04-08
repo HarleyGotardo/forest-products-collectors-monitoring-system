@@ -30,6 +30,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 })
 
+const loading = ref(false)
 const route = useRoute()
 const router = useRouter()
 const locationId = route.params.id
@@ -170,9 +171,16 @@ const prevPage = () => {
   }
 }
 
-onMounted(() => {
-  fetchLocation()
-  fetchForestProducts()
+onMounted(async () => {
+  loading.value = true
+  try {
+    await fetchLocation()
+    await fetchForestProducts()
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
@@ -197,7 +205,52 @@ onMounted(() => {
         <p class="ml-3">{{ error }}</p>
       </div>
     </div>
+    <div v-if="loading">
+    <!-- Location Card Skeleton -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-6">
+        <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+          <!-- Location Icon Skeleton -->
+          <div class="p-4 bg-gray-100 rounded-full flex items-center justify-center animate-pulse">
+            <div class="w-8 h-8 rounded-full bg-gray-200"></div>
+          </div>
 
+          <!-- Location Details Skeleton -->
+          <div class="flex-1 w-full">
+            <div class="flex items-center justify-between">
+              <div class="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              <div class="h-6 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="p-4 bg-gray-50 rounded-lg">
+                <div class="h-4 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+                <div class="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </div>
+              <div class="p-4 bg-gray-50 rounded-lg">
+                <div class="h-4 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+                <div class="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Card Skeleton -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="h-6 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+          <div class="px-3 py-1 bg-gray-100 rounded-full">
+            <div class="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+          </div>
+        </div>
+        <div class="h-[500px] w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100 animate-pulse"></div>
+        <div class="mt-3 h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+      </div>
+    </div>
+  </div>
     <!-- Main Content -->
     <div v-if="location" class="space-y-6">
       <!-- Location Info Card -->
