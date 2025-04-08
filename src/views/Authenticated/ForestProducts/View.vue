@@ -581,8 +581,11 @@ onMounted(async () => {
         <img src="@/assets/forest-product.png" alt="Forest Product" class="w-10 h-10">
         <h2 class="text-3xl font-bold text-gray-900">Forest Product Details</h2>
       </div>
+      <div v-if="loading" class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 animate-pulse w-36">
+        &nbsp;
+      </div>
       <div
-        v-if="forestProduct"
+        v-else-if="forestProduct"
         class="px-3 py-1 rounded-full text-sm font-medium"
         :class="forestProduct.type === 'Timber' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'"
       >
