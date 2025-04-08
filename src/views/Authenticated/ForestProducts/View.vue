@@ -578,10 +578,17 @@ onMounted(async () => {
       class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 mt-2 space-y-4 sm:space-y-0"
     >
       <div class="flex items-center space-x-4">
-        <img src="@/assets/forest-product.png" alt="Forest Product" class="w-10 h-10">
+        <img
+          src="@/assets/forest-product.png"
+          alt="Forest Product"
+          class="w-10 h-10"
+        />
         <h2 class="text-3xl font-bold text-gray-900">Forest Product Details</h2>
       </div>
-      <div v-if="loading" class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 animate-pulse w-36">
+      <div
+        v-if="loading"
+        class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 animate-pulse w-36"
+      >
         &nbsp;
       </div>
       <div
@@ -595,7 +602,8 @@ onMounted(async () => {
         v-if="isDeleted"
         class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"
       >
-        Deleted at {{ format(new Date(forestProduct.deleted_at), 'MMMM dd, yyyy - hh:mm a') }}
+        Deleted at
+        {{ format(new Date(forestProduct.deleted_at), 'MMMM dd, yyyy - hh:mm a') }}
       </div>
     </div>
 
@@ -619,71 +627,76 @@ onMounted(async () => {
         <p class="ml-3 mt-2 sm:mt-0">{{ error }}</p>
       </div>
     </div>
-<!-- Loading Skeleton for Product Information Card -->
-<div v-if="loading" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
-  <div class="p-3">
-    <!-- Title and ID skeleton -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
-      <div class="h-8 bg-gray-200 rounded w-3/4"></div>
-      <div class="h-4 bg-gray-200 rounded w-20 mt-2 sm:mt-0"></div>
-    </div>
+    <!-- Loading Skeleton for Product Information Card -->
+    <div
+      v-if="loading"
+      class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse"
+    >
+      <div class="p-3">
+        <!-- Title and ID skeleton -->
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4"
+        >
+          <div class="h-8 bg-gray-200 rounded w-3/4"></div>
+          <div class="h-4 bg-gray-200 rounded w-20 mt-2 sm:mt-0"></div>
+        </div>
 
-    <!-- Image Skeleton -->
-    <div class="relative mb-6">
-      <div class="w-full h-64 bg-gray-200 rounded-lg"></div>
-    </div>
+        <!-- Image Skeleton -->
+        <div class="relative mb-6">
+          <div class="w-full h-64 bg-gray-200 rounded-lg"></div>
+        </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Left Column Skeleton -->
-      <div class="space-y-4">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
-          <div class="flex-1">
-            <div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-            <div class="h-5 bg-gray-200 rounded w-32"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Left Column Skeleton -->
+          <div class="space-y-4">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
+              <div class="flex-1">
+                <div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                <div class="h-5 bg-gray-200 rounded w-32"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
+              <div class="flex-1">
+                <div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                <div class="h-5 bg-gray-200 rounded w-32"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column Skeleton -->
+          <div class="space-y-4">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
+              <div class="flex-1">
+                <div class="h-4 bg-gray-200 rounded w-40 mb-2"></div>
+                <div class="h-6 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
+              <div class="flex-1">
+                <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                <div class="h-6 bg-gray-200 rounded w-24"></div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
-          <div class="flex-1">
-            <div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-            <div class="h-5 bg-gray-200 rounded w-32"></div>
-          </div>
+        <!-- Description Skeleton -->
+        <div class="mt-6 pt-6 border-t border-gray-100">
+          <div class="h-4 bg-gray-200 rounded w-24 mb-4"></div>
+          <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+          <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+          <div class="h-4 bg-gray-200 rounded w-3/4"></div>
         </div>
       </div>
-
-      <!-- Right Column Skeleton -->
-      <div class="space-y-4">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
-          <div class="flex-1">
-            <div class="h-4 bg-gray-200 rounded w-40 mb-2"></div>
-            <div class="h-6 bg-gray-200 rounded w-3/4"></div>
-          </div>
-        </div>
-
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
-          <div class="flex-1">
-            <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-            <div class="h-6 bg-gray-200 rounded w-24"></div>
-          </div>
-        </div>
-      </div>
     </div>
-
-    <!-- Description Skeleton -->
-    <div class="mt-6 pt-6 border-t border-gray-100">
-      <div class="h-4 bg-gray-200 rounded w-24 mb-4"></div>
-      <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
-      <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
-      <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-    </div>
-  </div>
-</div>
     <!-- Main Content -->
-    <div v-if="forestProduct" class="space-y-6">
+    <div v-if="!loading && forestProduct" class="space-y-6">
       <!-- Product Information Card -->
       <div
         class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
@@ -829,101 +842,105 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-<!-- Additional Images Section -->
-<div class="mt-10 pt-8 border-t border-gray-200">
-  <div class="flex items-center justify-between mb-6">
-    <h3 class="text-xl font-bold text-gray-900">Additional Images</h3>
-    <span class="text-sm text-gray-500">{{ additionalImages.length }} image(s)</span>
-  </div>
+      <!-- Additional Images Section -->
+      <div class="mt-10 pt-8 border-t border-gray-200">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-gray-900">Additional Images</h3>
+          <span class="text-sm text-gray-500"
+            >{{ additionalImages.length }} image(s)</span
+          >
+        </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mt-4">
-    <!-- Display existing images -->
-    <div
-      v-for="(image, index) in additionalImages"
-      :key="index"
-      class="relative group overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg border border-gray-200 cursor-pointer"
-      @click="viewImage(image, index)"
-    >
-      <img
-        :src="image"
-        alt="Additional Image"
-        class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-    </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mt-4">
+          <!-- Display existing images -->
+          <div
+            v-for="(image, index) in additionalImages"
+            :key="index"
+            class="relative group overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg border border-gray-200 cursor-pointer"
+            @click="viewImage(image, index)"
+          >
+            <img
+              :src="image"
+              alt="Additional Image"
+              class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
 
-<!-- Add Image Placeholder -->
-<label
-  v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 8 && forestProduct.deleted_at === null"
-  for="additional-image-upload"
-  class="relative border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 transition-all hover:border-gray-500 bg-gray-50 hover:bg-gray-100 cursor-pointer"
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    class="h-12 w-12 text-gray-400"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M12 4v16m8-8H4"
-    />
-  </svg>
-  <span class="mt-2 text-sm font-medium text-gray-600">Add Image(s)</span>
-  <input
-    id="additional-image-upload"
-    type="file"
-    multiple
-    @change="handleAdditionalImageUpload"
-    class="hidden"
-  />
-</label>
-  </div>
+          <!-- Add Image Placeholder -->
+          <label
+            v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 8 && forestProduct.deleted_at === null"
+            for="additional-image-upload"
+            class="relative border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 transition-all hover:border-gray-500 bg-gray-50 hover:bg-gray-100 cursor-pointer"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            <span class="mt-2 text-sm font-medium text-gray-600"
+              >Add Image(s)</span
+            >
+            <input
+              id="additional-image-upload"
+              type="file"
+              multiple
+              @change="handleAdditionalImageUpload"
+              class="hidden"
+            />
+          </label>
+        </div>
 
-  <!-- Image Modal -->
-  <div
-    v-if="showExtraImageModal"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-  >
-    <div class="relative bg-white rounded-lg shadow-lg max-w-3xl w-full">
-      <button
-        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-        @click="closeImageModal"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+        <!-- Image Modal -->
+        <div
+          v-if="showExtraImageModal"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-      <img
-        :src="currentImage"
-        alt="Full Image"
-        class="w-full h-auto rounded-t-lg"
-      />
-      <div class="p-4 text-center">
-<button
-  v-if="isForestRanger || isFPUAdmin"
-  class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none"
-  @click="deleteImage(currentImageIndex)"
->
-  Delete Image
-</button>
+          <div class="relative bg-white rounded-lg shadow-lg max-w-3xl w-full">
+            <button
+              class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              @click="closeImageModal"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <img
+              :src="currentImage"
+              alt="Full Image"
+              class="w-full h-auto rounded-t-lg"
+            />
+            <div class="p-4 text-center">
+              <button
+                v-if="isForestRanger || isFPUAdmin"
+                class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none"
+                @click="deleteImage(currentImageIndex)"
+              >
+                Delete Image
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
       <!-- Locations Section -->
       <div
         class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
@@ -1041,7 +1058,10 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <div class="ml-4 flex items-center space-x-2 mt-2 sm:mt-0" v-if="forestProduct.deleted_at === null">
+              <div
+                class="ml-4 flex items-center space-x-2 mt-2 sm:mt-0"
+                v-if="forestProduct.deleted_at === null"
+              >
                 <button
                   @click.stop="editLocation(location)"
                   class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -1196,6 +1216,7 @@ onMounted(async () => {
                     Edit Forest Product's Quantity in this Location ({{ forestProduct.measurement_units.unit_name
 
 
+
                     }})
                   </h3>
                   <div class="mt-4">
@@ -1237,7 +1258,7 @@ onMounted(async () => {
           </h3>
         </div>
         <div
-          v-if="locations.length != 0"
+          v-if="!loading && locations.length != 0"
           id="locationMap"
           class="mt-6 h-[400px] w-full rounded-lg overflow-hidden border border-gray-200 shadow-inner"
           style="z-index: 1"
@@ -1326,105 +1347,154 @@ onMounted(async () => {
     </div>
 
     <!-- Image Modal -->
-<div
-  v-if="showExtraImageModal"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm transition-opacity duration-300"
->
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden transform transition-all duration-300 scale-100 border border-gray-200 dark:border-gray-700">
-    <!-- Modal Header with Title -->
-    <div class="bg-gradient-to-r bg-gray-900 px-6 py-4 flex items-center justify-between">
-      <h2 class="text-xl font-bold text-white">Image Viewer</h2>
-      <!-- Close Button -->
-      <button
-        class="text-white hover:text-gray-200 focus:outline-none transition-colors duration-200 bg-black bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5"
-        @click="closeImageModal"
-        aria-label="Close modal"
+    <div
+      v-if="showExtraImageModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm transition-opacity duration-300"
+    >
+      <div
+        class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden transform transition-all duration-300 scale-100 border border-gray-200 dark:border-gray-700"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
+        <!-- Modal Header with Title -->
+        <div
+          class="bg-gradient-to-r bg-gray-900 px-6 py-4 flex items-center justify-between"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Image Container with Loading State and Image Controls -->
-    <div class="relative bg-gray-100 dark:bg-gray-900">
-      <!-- Loading Indicator -->
-      <div class="absolute inset-0 flex items-center justify-center z-10" v-if="isLoading">
-        <div class="w-16 h-16 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-      </div>
-
-      
-      <!-- Image Itself -->
-      <img
-        :src="currentImage"
-        alt="Image Preview"
-        class="w-full h-auto object-contain max-h-[60vh] mx-auto p-2"
-        @load="isLoading = false"
-      />
-      
-      <!-- Image Navigation -->
-      <div class="absolute inset-y-0 left-0 flex items-center" v-if="hasPreviousImage">
-        <button class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white p-2 rounded-r-lg transition-all duration-200 ml-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-      </div>
-      <div class="absolute inset-y-0 right-0 flex items-center" v-if="hasNextImage">
-        <button class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white p-2 rounded-l-lg transition-all duration-200 mr-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  
-
-    <!-- Delete Button with Confirmation -->
-    <div class="p-6 bg-white dark:bg-gray-800 rounded-b-xl border-t border-gray-200 dark:border-gray-700">
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
+          <h2 class="text-xl font-bold text-white">Image Viewer</h2>
+          <!-- Close Button -->
           <button
-            v-if="isForestRanger || isFPUAdmin"
-            class="px-5 py-2.5 bg-gray-900 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition-all duration-200 font-medium flex items-center justify-center mx-auto"
+            class="text-white hover:text-gray-200 focus:outline-none transition-colors duration-200 bg-black bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5"
+            @click="closeImageModal"
+            aria-label="Close modal"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            Delete Image
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Image?</AlertDialogTitle>
-            <AlertDialogDescription >
-              Are you sure you want to delete this image? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter class="flex space-x-4 mt-6">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              @click="deleteImage(currentImageIndex)"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
             >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Image Container with Loading State and Image Controls -->
+        <div class="relative bg-gray-100 dark:bg-gray-900">
+          <!-- Loading Indicator -->
+          <div
+            class="absolute inset-0 flex items-center justify-center z-10"
+            v-if="isLoading"
+          >
+            <div
+              class="w-16 h-16 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"
+            ></div>
+          </div>
+
+          <!-- Image Itself -->
+          <img
+            :src="currentImage"
+            alt="Image Preview"
+            class="w-full h-auto object-contain max-h-[60vh] mx-auto p-2"
+            @load="isLoading = false"
+          />
+
+          <!-- Image Navigation -->
+          <div
+            class="absolute inset-y-0 left-0 flex items-center"
+            v-if="hasPreviousImage"
+          >
+            <button
+              class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white p-2 rounded-r-lg transition-all duration-200 ml-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+          </div>
+          <div
+            class="absolute inset-y-0 right-0 flex items-center"
+            v-if="hasNextImage"
+          >
+            <button
+              class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white p-2 rounded-l-lg transition-all duration-200 mr-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Delete Button with Confirmation -->
+        <div
+          class="p-6 bg-white dark:bg-gray-800 rounded-b-xl border-t border-gray-200 dark:border-gray-700"
+        >
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                v-if="isForestRanger || isFPUAdmin"
+                class="px-5 py-2.5 bg-gray-900 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition-all duration-200 font-medium flex items-center justify-center mx-auto"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 mr-1.5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Delete Image
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Image?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this image? This action cannot
+                  be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter class="flex space-x-4 mt-6">
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deleteImage(currentImageIndex)">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <div v-if="showImageModal" class="fixed inset-0 z-50 overflow-y-auto">
       <div
