@@ -164,9 +164,12 @@ onMounted(() => {
   <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
     <div class="max-w-lg w-full bg-white rounded-xl shadow-lg overflow-hidden">
       <!-- Header -->
-      <div class="bg-gray-900 px-6 py-5 text-white">
-        <h2 class="text-2xl font-bold">Forest Product Collection Request</h2>
-        <p class="text-green-100 mt-1">Request permission to harvest forest products</p>
+      <div class="bg-gray-200 px-6 py-5 text-black flex items-center space-x-4">
+        <img src="@/assets/request2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+        <div>
+          <h2 class="text-2xl font-bold">Forest Product Collection Request</h2>
+          <p class="text-black-100 mt-1">Request permission to harvest forest products</p>
+        </div>
       </div>
 
       <!-- Form -->

@@ -25,8 +25,14 @@ const currentPage = ref(1);
 const itemsPerPage = 7;
 const searchQuery = ref('');
 const requestToDelete = ref(null);
+const loading = ref(true); // Add loading state
+
+// Add filter states
+const statusFilter = ref('all'); // 'all', 'approved', 'pending'
+const recordedFilter = ref('all'); // 'all', 'recorded', 'unrecorded'
 
 const fetchAllRequests = async () => {
+  loading.value = true; // Set loading to true before fetching
   const user = getUser();
   let { data, error: fetchError } = await supabase
     .from('collection_requests')
@@ -40,6 +46,7 @@ const fetchAllRequests = async () => {
     requests.value = data;
     paginateRequests();
   }
+  loading.value = false; // Set loading to false after fetching
 };
 
 const paginateRequests = () => {
@@ -49,13 +56,35 @@ const paginateRequests = () => {
 };
 
 const filteredRequests = computed(() => {
-  if (!searchQuery.value) {
-    return requests.value;
+  // First filter by search query
+  let filtered = requests.value;
+  
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(request =>
+      request.id.toString().includes(query)
+    );
   }
-  const query = searchQuery.value.toLowerCase();
-  return requests.value.filter(request =>
-    request.id.toString().includes(query) 
-  );
+  
+  // Then filter by status
+  if (statusFilter.value !== 'all') {
+    if (statusFilter.value === 'approved') {
+      filtered = filtered.filter(request => request.approved_at !== null);
+    } else if (statusFilter.value === 'pending') {
+      filtered = filtered.filter(request => request.approved_at === null);
+    }
+  }
+  
+  // Then filter by recorded status
+  if (recordedFilter.value !== 'all') {
+    if (recordedFilter.value === 'recorded') {
+      filtered = filtered.filter(request => request.is_recorded === true);
+    } else if (recordedFilter.value === 'unrecorded') {
+      filtered = filtered.filter(request => request.is_recorded === false);
+    }
+  }
+  
+  return filtered;
 });
 
 const nextPage = () => {
@@ -109,8 +138,9 @@ onMounted(() => {
   fetchAllRequests();
 });
 
-watch(searchQuery, () => {
-  currentPage.value = 1; // Reset to first page on search query change
+// Reset page when filters change
+watch([searchQuery, statusFilter, recordedFilter], () => {
+  currentPage.value = 1;
   paginateRequests();
 });
 
@@ -148,6 +178,35 @@ watch(currentPage, () => {
       </div>
     </div>
 
+    <!-- Filters -->
+    <div class="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-3 mb-6">
+      <div class="flex items-center">
+        <label for="statusFilter" class="mr-2 text-sm font-medium text-gray-700">Status:</label>
+        <select
+          id="statusFilter"
+          v-model="statusFilter"
+          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+        >
+          <option value="all">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+        </select>
+      </div>
+      
+      <div class="flex items-center">
+        <label for="recordedFilter" class="mr-2 text-sm font-medium text-gray-700">Recording:</label>
+        <select
+          id="recordedFilter"
+          v-model="recordedFilter"
+          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+        >
+          <option value="all">All</option>
+          <option value="recorded">Recorded</option>
+          <option value="unrecorded">Unrecorded</option>
+        </select>
+      </div>
+    </div>
+
     <!-- Error Alert -->
     <div v-if="error" 
          class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg">
@@ -159,8 +218,36 @@ watch(currentPage, () => {
       </div>
     </div>
 
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="animate-pulse">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+                <th class="px-6 py-6 bg-gray-200 h-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="n in 8" :key="n">
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+                <td class="px-6 py-8 bg-gray-100 h-12"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Requests Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -169,12 +256,13 @@ watch(currentPage, () => {
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested At</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collection Date</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recording</th>
               <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="filteredRequests.length === 0">
-              <td colspan="5" class="px-6 py-12 text-center">
+              <td colspan="6" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
                   <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -200,6 +288,11 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
                   {{ request.approved_at ? 'Approved' : 'Pending' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span :class="request.is_recorded ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                  {{ request.is_recorded ? 'Recorded' : 'Unrecorded' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
@@ -243,32 +336,32 @@ watch(currentPage, () => {
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200" v-if="filteredRequests.length > 0">
         <div class="flex items-center justify-between">
           <button 
-        @click="prevPage" 
-        :disabled="currentPage === 1"
-        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="prevPage" 
+            :disabled="currentPage === 1"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Previous
+            <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Previous
           </button>
           <div class="text-sm text-gray-700">
-        <span :class="{'hidden sm:inline': true}">
-          Page {{ currentPage }} of {{ Math.ceil(filteredRequests.length / itemsPerPage) }}
-        </span>
-        <span :class="{'sm:hidden': true}">
-          {{ currentPage }}/{{ Math.ceil(filteredRequests.length / itemsPerPage) }}
-        </span>
+            <span :class="{'hidden sm:inline': true}">
+              Page {{ currentPage }} of {{ Math.ceil(filteredRequests.length / itemsPerPage) || 1 }}
+            </span>
+            <span :class="{'sm:hidden': true}">
+              {{ currentPage }}/{{ Math.ceil(filteredRequests.length / itemsPerPage) || 1 }}
+            </span>
           </div>
           <button 
-        @click="nextPage" 
-        :disabled="paginatedRequests.length < itemsPerPage"
-        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="nextPage" 
+            :disabled="currentPage * itemsPerPage >= filteredRequests.length"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-        Next
-        <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
+            Next
+            <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </div>
