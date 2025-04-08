@@ -13,63 +13,117 @@ const requestItems = ref([]);
 const user = ref({ first_name: '', last_name: '' });
 const approver = ref({ first_name: '', last_name: '' });
 const error = ref(null);
+const isLoading = ref(true); // Added loading state
 
 const fetchRequestDetails = async () => {
+  isLoading.value = true;
+  error.value = null; // Reset error on fetch
   try {
+    // 1. Fetch the main request details
     const { data: requestData, error: requestError } = await supabase
       .from('collection_requests')
-      .select('*, user_id, approved_by, approved_at')
+      .select('*, user_id, approved_by, approved_at, requested_at, updated_at, deleted_at') // Select all needed fields
       .eq('id', requestId)
       .single();
 
     if (requestError) {
-      throw requestError;
+      if (requestError.code === 'PGRST116') { // Handle not found specifically
+        throw new Error(`Collection request with ID #${requestId} not found.`);
+      }
+      throw requestError; // Throw other errors
     }
 
     request.value = requestData;
 
+    // 2. Fetch the request items using the new structure
     const { data: itemsData, error: itemsError } = await supabase
       .from('collection_request_items')
-      .select('*, forest_product_id (name, measurement_unit_id (unit_name))')
+      .select(`
+        id,
+        requested_quantity,
+        fp_and_location_id (
+          id,
+          locations ( name ),
+          forest_products (
+            name,
+            measurement_units ( unit_name )
+          )
+        )
+      `)
       .eq('collection_request_id', requestId);
 
     if (itemsError) {
       throw itemsError;
     }
 
-    requestItems.value = itemsData;
+    // Map the fetched items data to a flatter, more usable structure
+    requestItems.value = itemsData.map(item => {
+      // Add checks for potentially null nested data
+      const fpAndLocation = item.fp_and_location_id;
+      const forestProduct = fpAndLocation?.forest_products;
+      const location = fpAndLocation?.locations;
+      const measurementUnit = forestProduct?.measurement_units;
 
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select('first_name, last_name')
-      .eq('id', request.value.user_id)
-      .single();
+      return {
+        id: item.id,
+        requested_quantity: item.requested_quantity,
+        product_name: forestProduct?.name ?? 'N/A',
+        unit_name: measurementUnit?.unit_name ?? 'N/A',
+        location_name: location?.name ?? 'N/A',
+      };
+    });
 
-    if (userError) {
-      throw userError;
+
+    // 3. Fetch requester details
+    if (request.value.user_id) {
+        const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', request.value.user_id)
+        .maybeSingle(); // Use maybeSingle to handle potential null user
+
+        if (userError) {
+            console.warn('Error fetching user details:', userError.message);
+            // Don't throw, just provide default values
+             user.value = { first_name: 'Unknown', last_name: 'User' };
+        } else {
+            user.value = userData || { first_name: 'Unknown', last_name: 'User' };
+        }
+    } else {
+         user.value = { first_name: 'Unknown', last_name: 'User' };
     }
 
-    user.value = userData;
 
+    // 4. Fetch approver details if applicable
     if (request.value.approved_by) {
       const { data: approverData, error: approverError } = await supabase
         .from('profiles')
         .select('first_name, last_name')
         .eq('id', request.value.approved_by)
-        .single();
+        .maybeSingle(); // Use maybeSingle
 
       if (approverError) {
-        throw approverError;
+         console.warn('Error fetching approver details:', approverError.message);
+         approver.value = { first_name: 'Unknown', last_name: 'Approver' };
+      } else {
+        approver.value = approverData || { first_name: 'Unknown', last_name: 'Approver' };
       }
-
-      approver.value = approverData;
+    } else {
+        // Clear approver if not approved_by
+        approver.value = { first_name: '', last_name: '' };
     }
+
   } catch (err) {
-    error.value = err.message;
+    console.error('Error fetching collection request details:', err);
+    error.value = `Failed to load request details: ${err.message}`;
+    request.value = null; // Clear request data on error
+    requestItems.value = []; // Clear items on error
+  } finally {
+    isLoading.value = false; // Ensure loading state is turned off
   }
 };
 
-// Watch for changes in the request object and update approved_by if approved_at is null
+// Watcher for resetting approved_by (seems okay, keeping it)
 watch(request, async (newRequest) => {
   if (newRequest && newRequest.approved_at === null && newRequest.approved_by !== null) {
     try {
@@ -81,10 +135,17 @@ watch(request, async (newRequest) => {
       if (updateError) {
         throw updateError;
       }
+      // Update local state if Supabase update is successful
+      if (request.value) { // Check if request still exists
+       request.value.approved_by = null;
+      }
+      approver.value = { first_name: '', last_name: '' }; // Clear approver name
+      toast.info('Approver reset as approval timestamp is missing.');
 
-      request.value.approved_by = null;
     } catch (err) {
-      error.value = err.message;
+      console.error("Error resetting approved_by:", err);
+      toast.error(`Failed to reset approver: ${err.message}`);
+      // Optionally revert local state or refetch if update fails critically
     }
   }
 });
@@ -92,220 +153,244 @@ watch(request, async (newRequest) => {
 onMounted(() => {
   fetchRequestDetails();
 });
+
+// Helper function for formatting dates
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  try {
+    return new Date(dateString).toLocaleDateString(undefined, { // Use locale-sensitive formatting
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+  } catch (e) {
+    console.warn("Could not format date:", dateString, e);
+    return 'Invalid Date';
+  }
+};
+
+// Helper function for formatting date and time
+const formatDateTime = (dateTimeString) => {
+  if (!dateTimeString) return 'N/A';
+   try {
+    return new Date(dateTimeString).toLocaleString(undefined, {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit' // Add time
+    });
+  } catch (e) {
+    console.warn("Could not format date/time:", dateTimeString, e);
+    return 'Invalid Date/Time';
+  }
+};
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto p-6">
-    <!-- Header Section -->
+  <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 mt-2 space-y-4 sm:space-y-0">
-      <div class="flex items-center space-x-4">
-        <img src="@/assets/request2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
-        <h2 class="text-3xl font-bold text-gray-900">Collection Request Details</h2>
+      <div class="flex items-center space-x-3">
+        <img src="@/assets/request2.png" alt="Request Icon" class="w-7 h-7" />
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">Collection Request Details</h2>
       </div>
 
-      <div v-if="request" 
-           class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-150"
-           :class="request.approved_at ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
-        {{ request.approved_at ? 'Approved' : 'Pending' }}
-      </div>
-      <div v-if="request && request.deleted_at" 
-        class="px-4 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
-        Deleted
+       <div class="flex items-center gap-2">
+          <div v-if="request && !request.deleted_at"
+              class="px-3 py-1 rounded-full text-xs sm:text-sm font-medium"
+              :class="{
+                  'bg-emerald-100 text-emerald-700 border border-emerald-200': request.approved_at,
+                  'bg-amber-100 text-amber-700 border border-amber-200': !request.approved_at
+              }">
+              {{ request.approved_at ? 'Approved' : 'Pending' }}
+          </div>
+          <div v-if="request && request.deleted_at"
+              class="px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-red-100 text-red-700 border border-red-200">
+              Deleted
+          </div>
       </div>
     </div>
 
-    <!-- Error Alert -->
-    <div v-if="error" class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg shadow-sm">
+    <div v-if="error && !isLoading" class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg shadow-md">
       <div class="flex items-center gap-3">
-        <svg class="h-5 w-5 text-red-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        <svg class="h-5 w-5 text-red-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1.293-8.707a1 1 0 011.414-1.414L10 8.586l1.293-1.293a1 1 0 111.414 1.414L11.414 10l1.293 1.293a1 1 0 01-1.414 1.414L10 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L8.586 10 7.293 8.707z" clip-rule="evenodd"/>
         </svg>
-        <p>{{ error }}</p>
+        <p class="font-medium">{{ error }}</p>
       </div>
     </div>
 
-    <!-- Loading Skeleton -->
-    <div v-if="!request && !error" class="space-y-6 animate-pulse">
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-6">
-        <div class="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-4">
-            <div class="h-6 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-6 bg-gray-200 rounded w-2/3"></div>
-          </div>
-          <div class="space-y-4">
-            <div class="h-6 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-6 bg-gray-200 rounded w-1/2"></div>
-          </div>
+    <div v-if="isLoading" class="space-y-6 animate-pulse">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex justify-between items-center mb-6">
+                 <div class="h-7 bg-gray-200 rounded w-1/3"></div>
+                 <div class="h-5 bg-gray-200 rounded w-1/4"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div class="h-5 bg-gray-200 rounded w-2/3"></div>
+                    <div class="h-5 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="space-y-4">
+                    <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div class="h-5 bg-gray-200 rounded w-2/3"></div>
+                     <div class="h-5 bg-gray-200 rounded w-1/2"></div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-6">
-        <div class="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-        <div class="space-y-3">
-          <div class="h-6 bg-gray-200 rounded w-full"></div>
-          <div class="h-6 bg-gray-200 rounded w-full"></div>
-          <div class="h-6 bg-gray-200 rounded w-full"></div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div class="space-y-3">
+                <div class="h-10 bg-gray-200 rounded w-full"></div>
+                <div class="h-10 bg-gray-200 rounded w-full"></div>
+                <div class="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
         </div>
-      </div>
     </div>
 
-    <!-- Main Content -->
-    <div v-if="request" class="space-y-6">
-      <!-- Request Information Card -->
-      <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-        <div class="p-6">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
-            <h3 class="text-2xl font-semibold text-gray-900">Request ID: #{{ request.id }}</h3>
-            <span class="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full mt-2 sm:mt-0">
-              {{ new Date(request.requested_at).toLocaleDateString() }}
-            </span>
-          </div>
+    <div v-if="request && !isLoading" class="space-y-6">
+        <div class="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
+            <div class="p-5 sm:p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 sm:mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2 sm:mb-0">Request ID: <span class="font-bold text-indigo-600">#{{ request.id }}</span></h3>
+                    <span class="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                       Requested: {{ formatDateTime(request.requested_at) }}
+                    </span>
+                </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Left Column -->
-            <div class="space-y-5">
-              <div class="flex items-center gap-4">
-                <div class="p-3 bg-indigo-50 rounded-lg">
-                  <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Collection Date</p>
-                  <p class="text-gray-900 font-medium">{{ new Date(request.collection_date).toLocaleDateString() }}</p>
-                </div>
-              </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 text-sm">
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="mt-1 p-1.5 bg-indigo-50 rounded-md flex-shrink-0">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-500">Collection Date</p>
+                                <p class="text-gray-800 font-semibold">{{ formatDate(request.collection_date) }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                           <div class="mt-1 p-1.5 bg-indigo-50 rounded-md flex-shrink-0">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            </div>
+                           <div>
+                                <p class="font-medium text-gray-500">Last Updated</p>
+                                <p class="text-gray-800 font-semibold">{{ formatDateTime(request.updated_at) }}</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start gap-3">
+                           <div class="mt-1 p-1.5 bg-indigo-50 rounded-md flex-shrink-0">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                           <div>
+                                <p class="font-medium text-gray-500">Status</p>
+                                <p class="text-gray-800 font-semibold">{{ request.approved_at ? 'Approved' : 'Pending' }}</p>
+                           </div>
+                        </div>
+                    </div>
 
-              <div class="flex items-center gap-4">
-                <div class="p-3 bg-indigo-50 rounded-lg">
-                  <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Updated At</p>
-                  <p class="text-gray-900 font-medium">{{ request.updated_at ? new Date(request.updated_at).toLocaleDateString() : 'N/A' }}</p>
-                </div>
-              </div>
-                <div class="flex items-center gap-4">
-                <div class="p-3 bg-indigo-50 rounded-lg">
-                  <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Status</p>
+                    <div class="space-y-3">
+                       <div class="flex items-start gap-3">
+                           <div class="mt-1 p-1.5 bg-indigo-50 rounded-md flex-shrink-0">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </div>
+                           <div>
+                                <p class="font-medium text-gray-500">Requested By</p>
+                                <p class="text-gray-800 font-semibold">{{ user.first_name }} {{ user.last_name }}</p>
+                            </div>
+                        </div>
 
-                    <p class="text-gray-900 font-medium">{{ request.approved_at ? 'Approved' : 'Pending' }}</p>
+                        <div v-if="request.approved_at" class="flex items-start gap-3">
+                           <div class="mt-1 p-1.5 bg-green-50 rounded-md flex-shrink-0">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                           </div>
+                           <div>
+                                <p class="font-medium text-gray-500">Approved At</p>
+                                <p class="text-green-700 font-semibold">{{ formatDateTime(request.approved_at) }}</p>
+                            </div>
+                        </div>
 
-                </div>
+                        <div v-if="request.approved_by && request.approved_at" class="flex items-start gap-3">
+                            <div class="mt-1 p-1.5 bg-green-50 rounded-md flex-shrink-0">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </div>
+                           <div>
+                                <p class="font-medium text-gray-500">Approved By</p>
+                                <p class="text-green-700 font-semibold">{{ approver.first_name }} {{ approver.last_name }}</p>
+                           </div>
+                        </div>
+                         <div v-if="request.deleted_at" class="flex items-start gap-3">
+                            <div class="mt-1 p-1.5 bg-red-50 rounded-md flex-shrink-0">
+                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </div>
+                           <div>
+                                <p class="font-medium text-gray-500">Deleted At</p>
+                                <p class="text-red-700 font-semibold">{{ formatDateTime(request.deleted_at) }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Right Column -->
-            <div class="space-y-5">
-              <div class="flex items-center gap-4">
-                <div class="p-3 bg-indigo-50 rounded-lg">
-                  <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Requested By</p>
-                  <p class="text-gray-900 font-medium">{{ user.first_name }} {{ user.last_name }}</p>
-                </div>
-              </div>
-
-              <div v-if="request.approved_at" class="flex items-center gap-4">
-                <div class="p-3 bg-green-50 rounded-lg">
-                  <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Approved At</p>
-                  <p class="text-gray-900 font-medium">{{ new Date(request.approved_at).toLocaleDateString() }}</p>
-                </div>
-              </div>
-
-              <div v-if="request.approved_by" class="flex items-center gap-4">
-                <div class="p-3 bg-green-50 rounded-lg">
-                  <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Approved By</p>
-                  <p class="text-gray-900 font-medium">{{ approver.first_name }} {{ approver.last_name }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
 
-      <!-- Request Items Section -->
-      <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-        <div class="p-6 border-b border-gray-100">
-          <div class="flex items-center gap-3">
-            <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-            </svg>
-            <h3 class="text-xl font-semibold text-gray-900">Requested Forest Products</h3>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forest Product</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Measurement Unit</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in requestItems" 
-                  :key="item.id" 
-                  class="hover:bg-gray-50 transition-colors duration-150"
-                  :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900">{{ item.forest_product_id.name }}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900">{{ item.requested_quantity }}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-500">{{ item.forest_product_id.measurement_unit_id.unit_name }}</div>
-                </td>
-              </tr>
-              
-              <!-- Empty state if no items -->
-              <tr v-if="requestItems.length === 0">
-                <td colspan="3" class="px-6 py-8 text-center text-sm text-gray-500">
-                  <div class="flex flex-col items-center justify-center">
-                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+        <div class="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
+            <div class="p-5 sm:p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                     </svg>
-                    <p>No items found in this request</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    <h3 class="text-lg font-semibold text-gray-800">Requested Forest Products</h3>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forest Product</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr v-for="(item) in requestItems"
+                            :key="item.id"
+                            class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ item.product_name }}</div>
+                            </td>
+                             <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-600">{{ item.location_name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-medium text-gray-900">{{ item.requested_quantity }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ item.unit_name }}</div>
+                            </td>
+                        </tr>
+
+                        <tr v-if="requestItems.length === 0">
+                            <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                    </svg>
+                                    <p>No items found in this request.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
-      
-      <!-- Back Button -->
-      <div class="mt-8 flex justify-start">
-        <button type="button" 
-                @click="router.back()"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
-          <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-          </svg>
-          Back to Requests
-        </button>
-      </div>
+
+        <div class="mt-8 flex justify-start">
+            <button type="button"
+                    @click="router.back()"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
+                <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back
+            </button>
+        </div>
     </div>
   </div>
 </template>

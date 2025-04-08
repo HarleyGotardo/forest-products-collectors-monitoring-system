@@ -81,8 +81,8 @@ const filteredForestProducts = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     products = products.filter(product =>
+      product.id.toString().includes(query) ||
       product.name.toLowerCase().includes(query) ||
-      product.type.toLowerCase().includes(query) ||
       product.locations.some(location => location.name.toLowerCase().includes(query))
     )
   }
@@ -165,7 +165,7 @@ watch(selectedType, () => {
         <input
         v-model="searchQuery"
         type="text"
-        placeholder="Search records..."
+        placeholder="ID, name, location"
         class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
         />
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

@@ -1,4 +1,5 @@
 <script setup>
+// Create a new collection record for forest products
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
@@ -29,6 +30,8 @@ const router = useRouter();
 const receiptDetails = ref([]);
 const isSubmitting = ref(false);
 const showReceiptPreview = ref(false);
+const requestDetails = ref(null); // Added to store the selected request details
+const isRequestSelected = computed(() => !!selectedRequest.value);
 
 const fetchCollectors = async () => {
   const { data, error } = await supabase
@@ -82,7 +85,14 @@ const fetchForestProducts = async () => {
 const fetchCollectionRequests = async () => {
   const { data, error } = await supabase
     .from('collection_requests')
-    .select('id')
+    .select(`
+      id,
+      user_id,
+      collection_date,
+      approved_at,
+      profiles!collection_requests_approved_by_fkey(id, first_name, last_name)
+    `)
+    .eq('is_recorded', false)
     .not('approved_at', 'is', null);
 
   if (error) {
@@ -93,6 +103,83 @@ const fetchCollectionRequests = async () => {
   }
 };
 
+const fetchRequestDetails = async (requestId) => {
+  if (!requestId) return;
+
+  // First, get the basic request data
+  const { data: requestData, error: requestError } = await supabase
+    .from('collection_requests')
+    .select(`
+      id,
+      user_id,
+      collection_date,
+      approved_at,
+      profiles!collection_requests_approved_by_fkey(id, first_name, last_name)
+    `)
+    .eq('id', requestId)
+    .single();
+
+  if (requestError) {
+    console.error('Error fetching request details:', requestError);
+    toast.error('Failed to load request details');
+    return;
+  }
+
+  // Set collector based on the request
+  selectedCollector.value = requestData.user_id;
+
+  // Fetch the items associated with this request
+  const { data: itemsData, error: itemsError } = await supabase
+    .from('collection_request_items')
+    .select(`
+      id,
+      fp_and_location_id,
+      requested_quantity
+    `)
+    .eq('collection_request_id', requestId);
+
+  if (itemsError) {
+    console.error('Error fetching request items:', itemsError);
+    toast.error('Failed to load request items');
+    return;
+  }
+
+  // Reset and populate selected forest products
+  selectedForestProducts.value = [];
+  
+  // Map the request items to the forest products
+  itemsData.forEach(item => {
+    const forestProduct = forestProducts.value.find(fp => fp.id === item.fp_and_location_id);
+    
+    if (forestProduct) {
+      // Create a copy of the forest product with the requested quantity
+      const productCopy = { ...forestProduct };
+      // Use the requested_quantity from the collection_request_items
+      productCopy.purchased_quantity = item.requested_quantity;
+      
+      // Add to selected products
+      selectedForestProducts.value.push(productCopy);
+    }
+  });
+  
+  requestDetails.value = {
+    ...requestData,
+    items: itemsData
+  };
+};
+
+// Watch for changes in the selected request and fetch the details
+watch(selectedRequest, (newRequestId) => {
+  if (newRequestId) {
+    fetchRequestDetails(newRequestId);
+  } else {
+    // Reset selections if request is cleared
+    selectedForestProducts.value = [];
+    requestDetails.value = null;
+    selectedCollector.value = null;
+  }
+});
+
 watch(searchQuery, (newQuery) => {
   filteredForestProducts.value = forestProducts.value.filter(product =>
     product.forest_product_name.toLowerCase().includes(newQuery.toLowerCase()) ||
@@ -100,8 +187,24 @@ watch(searchQuery, (newQuery) => {
   );
 });
 
+// Update forest products in the modal with what's currently selected
+const getModalForestProducts = computed(() => {
+  return filteredForestProducts.value.map(product => {
+    // Check if this product is in the selectedForestProducts array
+    const selectedProduct = selectedForestProducts.value.find(p => p.id === product.id);
+    if (selectedProduct) {
+      // Return a copy with the purchased_quantity from the selected product
+      return { ...product, purchased_quantity: selectedProduct.purchased_quantity };
+    }
+    // Return the original product
+    return { ...product };
+  });
+});
+
 const isFormComplete = computed(() => {
   return selectedCollector.value && 
+         purpose.value && 
+         (purpose.value !== 'Others' || (purpose.value === 'Others' && customPurpose.value)) &&
          selectedForestProducts.value.length > 0 && 
          selectedForestProducts.value.some(product => product.purchased_quantity > 0);
 });
@@ -219,6 +322,18 @@ const confirmSubmit = async () => {
         .eq('id', item.fp_and_location_id);
     }
 
+    // Update the collection_requests table to set 'is_recorded' to true
+    const { error: updateRequestError } = await supabase
+      .from('collection_requests')
+      .update({ is_recorded: true })
+      .eq('id', selectedRequest.value);
+
+    if (updateRequestError) {
+      console.error('Error updating collection request:', updateRequestError);
+      toast.error('Error updating collection request - ' + updateRequestError.message);
+      return;
+    }
+
     router.push(`/authenticated/collection-records/${collectionRecordId}`);
     toast.success('Collection record created successfully');
   } catch (error) {
@@ -231,6 +346,32 @@ const confirmSubmit = async () => {
 
 const cancelSubmit = () => {
   showReceiptPreview.value = false;
+};
+
+// Function to toggle product selection in the modal
+const toggleProductSelection = (product) => {
+  const index = selectedForestProducts.value.findIndex(p => p.id === product.id);
+  
+  if (index === -1) {
+    // Add to selected products
+    selectedForestProducts.value.push({ ...product, purchased_quantity: 0 });
+  } else {
+    // Remove from selected products
+    selectedForestProducts.value.splice(index, 1);
+  }
+};
+
+// Function to check if a product is selected
+const isProductSelected = (productId) => {
+  return selectedForestProducts.value.some(p => p.id === productId);
+};
+
+// Function to update the purchased quantity
+const updatePurchasedQuantity = (productId, quantity) => {
+  const product = selectedForestProducts.value.find(p => p.id === productId);
+  if (product) {
+    product.purchased_quantity = quantity;
+  }
 };
 
 onMounted(() => {
@@ -253,30 +394,39 @@ onMounted(() => {
       <CardContent class="p-6">
         <!-- Form -->
         <form @submit.prevent="handleSubmit" class="space-y-6">
-          <!-- Collector Selection -->
-          <div class="space-y-2">
-            <Label for="collector" class="text-sm font-medium text-gray-700">Forest Product Collector</Label>
-            <select
-              v-model="selectedCollector"
-              class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            >
-              <option value="" disabled>Select a collector</option>
-              <option v-for="collector in collectors" :key="collector.id" :value="collector.id">
-                {{ collector.first_name }} {{ collector.last_name }}
-              </option>
-            </select>
-          </div>
-
           <!-- Request Number Selection -->
           <div class="space-y-2">
             <Label for="requestNumber" class="text-sm font-medium text-gray-700">Request Number</Label>
             <select
+              id="requestNumber"
               v-model="selectedRequest"
               class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
               <option value="" disabled>Select a request number</option>
               <option v-for="request in collectionRequests" :key="request.id" :value="request.id">
                 {{ request.id }}
+              </option>
+            </select>
+            <p v-if="collectionRequests.length === 0" class="text-sm text-gray-500 mt-2">
+              There are no approved and unrecorded collection requests.
+            </p>
+          </div>
+
+          <!-- Collector Selection -->
+          <div class="space-y-2">
+            <Label for="collector" class="text-sm font-medium text-gray-700">Forest Product Collector</Label>
+            <div v-if="isRequestSelected" class="p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+              {{ requestDetails?.profiles?.first_name }} {{ requestDetails?.profiles?.last_name }}
+            </div>
+            <select
+              v-else
+              id="collector"
+              v-model="selectedCollector"
+              class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            >
+              <option value="" disabled>Select a collector</option>
+              <option v-for="collector in collectors" :key="collector.id" :value="collector.id">
+                {{ collector.first_name }} {{ collector.last_name }}
               </option>
             </select>
           </div>
@@ -292,8 +442,9 @@ onMounted(() => {
                   value="Official"
                   v-model="purpose"
                   class="form-radio"
+                  :disabled="!isRequestSelected && !selectedCollector"
                 />
-                <label for="official" class="ml-2 text-sm">Official</label>
+                <label for="official" class="ml-2 text-sm" :class="{ 'text-gray-400': !isRequestSelected && !selectedCollector }">Official</label>
               </div>
               <div>
                 <input
@@ -302,8 +453,9 @@ onMounted(() => {
                   value="Personal"
                   v-model="purpose"
                   class="form-radio"
+                  :disabled="!isRequestSelected && !selectedCollector"
                 />
-                <label for="personal" class="ml-2 text-sm">Personal</label>
+                <label for="personal" class="ml-2 text-sm" :class="{ 'text-gray-400': !isRequestSelected && !selectedCollector }">Personal</label>
               </div>
               <div>
                 <input
@@ -312,14 +464,16 @@ onMounted(() => {
                   value="Others"
                   v-model="purpose"
                   class="form-radio"
+                  :disabled="!isRequestSelected && !selectedCollector"
                 />
-                <label for="others" class="ml-2 text-sm">Others, specify:</label>
+                <label for="others" class="ml-2 text-sm" :class="{ 'text-gray-400': !isRequestSelected && !selectedCollector }">Others, specify:</label>
                 <input
                   v-if="purpose === 'Others'"
                   type="text"
                   v-model="customPurpose"
                   placeholder="Specify purpose"
                   class="form-input mt-2 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  :disabled="!isRequestSelected && !selectedCollector"
                 />
               </div>
             </div>
@@ -333,6 +487,9 @@ onMounted(() => {
                 {{ product.forest_product_name }} - {{ product.purchased_quantity > 0 ? product.purchased_quantity : 'No' }} {{ product.unit_name }}(s)
               </div>
             </div>
+            <p v-if="isRequestSelected" class="text-xs text-gray-500 mt-1">
+              Products were populated from the selected request
+            </p>
           </div>
 
           <!-- Forest Product Modal Trigger -->
@@ -341,9 +498,11 @@ onMounted(() => {
               type="button"
               class="w-full bg-gray-800 hover:bg-gray-700 text-white rounded-lg py-2.5 font-medium transition-colors flex items-center justify-center space-x-2"
               @click="isModalOpen = true"
+              :disabled="!isRequestSelected && !selectedCollector"
+              :class="{ 'opacity-50 cursor-not-allowed': !isRequestSelected && !selectedCollector }"
             >
               <span class="text-lg">+</span>
-              <span>Select Forest Products</span>
+              <span>{{ isRequestSelected ? 'Edit Selected Products' : 'Select Forest Products' }}</span>
             </button>
           </div>
 
@@ -359,7 +518,7 @@ onMounted(() => {
       </CardContent>
       <CardFooter class="bg-gray-50 px-6 py-4 rounded-b-lg">
         <p class="text-xs text-gray-500 text-center">
-          Select a collector and forest products to create a new collection record
+          Select a request to automatically populate products from that request
         </p>
       </CardFooter>
     </Card>
@@ -371,7 +530,7 @@ onMounted(() => {
     >
       <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
-          <h2 class="text-lg font-semibold text-green-800">Select Forest Products</h2>
+          <h2 class="text-lg font-semibold text-green-800">{{ isRequestSelected ? 'Edit Selected Products' : 'Select Forest Products' }}</h2>
           <button @click="isModalOpen = false" class="text-gray-500 hover:text-gray-700 p-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -400,8 +559,8 @@ onMounted(() => {
                  class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
               <input
                 type="checkbox"
-                :value="product"
-                v-model="selectedForestProducts"
+                :checked="isProductSelected(product.id)"
+                @change="toggleProductSelection(product)"
                 class="form-checkbox h-5 w-5 text-green-600 rounded"
               />
               <div class="flex-1">
@@ -412,15 +571,16 @@ onMounted(() => {
                   Available: {{ product.quantity }} {{ product.unit_name }}(s)
                 </div>
               </div>
-              <div v-if="selectedForestProducts.includes(product)" class="flex items-center space-x-2">
+              <div v-if="isProductSelected(product.id)" class="flex items-center space-x-2">
                 <label class="text-sm text-gray-600">Quantity:</label>
-                <Input
+                <!-- Fixed: Using v-model instead of :value and @input -->
+                <input
                   type="number"
-                  v-model="product.purchased_quantity"
+                  v-model.number="selectedForestProducts.find(p => p.id === product.id).purchased_quantity"
                   min="0"
                   :max="product.quantity"
                   placeholder="Qty"
-                  class="w-24 text-center"
+                  class="w-24 text-center p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
               </div>
             </div>
@@ -456,8 +616,13 @@ onMounted(() => {
             <div class="bg-gray-50 p-4 rounded-lg">
               <h3 class="font-medium text-gray-700 mb-2">Collector Information</h3>
               <p>
-                {{ collectors.find(c => c.id === selectedCollector)?.first_name }} 
-                {{ collectors.find(c => c.id === selectedCollector)?.last_name }}
+                {{ isRequestSelected 
+                  ? `${requestDetails?.profiles?.first_name} ${requestDetails?.profiles?.last_name}` 
+                  : `${collectors.find(c => c.id === selectedCollector)?.first_name} ${collectors.find(c => c.id === selectedCollector)?.last_name}` 
+                }}
+              </p>
+              <p v-if="isRequestSelected" class="text-sm text-gray-600 mt-1">
+                Request #: {{ selectedRequest }}
               </p>
             </div>
             
@@ -546,9 +711,8 @@ onMounted(() => {
   width: 1rem;
   color: #2563eb;
   background-color: #fff;
-  border-color: #6b7280;
-  border-width: 1px;
-  --tw-shadow: 0 0 #0000;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
 }
 
 .form-checkbox:checked {
@@ -558,5 +722,69 @@ onMounted(() => {
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.form-checkbox:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+  border-color: #2563eb;
+}
+
+.form-radio {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0;
+  print-color-adjust: exact;
+  display: inline-block;
+  vertical-align: middle;
+  background-origin: border-box;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  flex-shrink: 0;
+  height: 1rem;
+  width: 1rem;
+  color: #2563eb;
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+}
+
+.form-radio:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.form-radio:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+  border-color: #2563eb;
+}
+
+.form-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  width: 100%;
+}
+
+.form-input:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+  border-color: #2563eb;
 }
 </style>

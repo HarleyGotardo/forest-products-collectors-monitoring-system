@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+// FPC Request Create Component
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { getUser } from '@/router/routeGuard';
@@ -22,27 +23,57 @@ const selectedForestProducts = ref([]);
 const collectionDate = ref('');
 const showModal = ref(false);
 const searchQuery = ref(''); // Search query for filtering
-const selectAll = ref(false); // State for "Select All" checkbox
 const showConfirmDialog = ref(false); // State for showing the confirmation dialog
 const router = useRouter();
 
 const fetchForestProducts = async () => {
   const { data, error } = await supabase
-    .from('forest_products')
-    .select('id, name, measurement_unit_id (unit_name)');
+    .from('fp_and_locations')
+    .select(`
+      id,
+      forest_product_id,
+      location_id,
+      quantity,
+      forest_products (
+        id,
+        name,
+        price_based_on_measurement_unit,
+        measurement_unit_id,
+        measurement_units (unit_name)
+      ),
+      locations (name)
+    `);
   if (error) {
     console.error('Error fetching forest products:', error);
+    toast.error('Failed to load forest products');
   } else {
-    forestProducts.value = data;
-    filteredForestProducts.value = data; // Initialize filtered products
+    forestProducts.value = data.map(item => ({
+      id: item.id,
+      forest_product_id: item.forest_product_id,
+      forest_product_name: item.forest_products.name,
+      location_id: item.location_id,
+      location_name: item.locations.name,
+      price: item.forest_products.price_based_on_measurement_unit,
+      unit_name: item.forest_products.measurement_units.unit_name,
+      quantity: item.quantity,
+      requested_quantity: 0,
+    }));
+    filteredForestProducts.value = forestProducts.value;
   }
 };
+
+watch(searchQuery, (newQuery) => {
+  filteredForestProducts.value = forestProducts.value.filter(product =>
+    product.forest_product_name.toLowerCase().includes(newQuery.toLowerCase()) ||
+    product.location_name.toLowerCase().includes(newQuery.toLowerCase())
+  );
+});
 
 const isFormComplete = computed(() => {
   return (
     selectedForestProducts.value.length > 0 &&
     collectionDate.value &&
-    selectedForestProducts.value.every((p) => p.quantity && parseFloat(p.quantity) > 0)
+    selectedForestProducts.value.some(p => p.requested_quantity > 0)
   );
 });
 
@@ -71,10 +102,25 @@ const confirmSubmit = async () => {
     collection_date: collectionDate.value,
   };
 
-  const collectionRequestItems = selectedForestProducts.value.map((product) => ({
-    forest_product_id: product.id,
-    requested_quantity: product.quantity,
-  }));
+  // Filter out items with requested_quantity = 0
+  const validProducts = selectedForestProducts.value.filter(
+    product => product.requested_quantity > 0
+  );
+
+  if (validProducts.length === 0) {
+    toast.error('Please enter quantities for at least one product');
+    return;
+  }
+
+  // Validate quantities
+  const invalidProducts = validProducts.filter(
+    product => product.requested_quantity > product.quantity || product.requested_quantity <= 0
+  );
+
+  if (invalidProducts.length > 0) {
+    toast.error('Please enter valid quantities for all selected products');
+    return;
+  }
 
   const { data: requestData, error: requestError } = await supabase
     .from('collection_requests')
@@ -92,9 +138,10 @@ const confirmSubmit = async () => {
   const { error: itemsError } = await supabase
     .from('collection_request_items')
     .insert(
-      collectionRequestItems.map((item) => ({
-        ...item,
+      validProducts.map((item) => ({
+        fp_and_location_id: item.id,
         collection_request_id: collectionRequestId,
+        requested_quantity: item.requested_quantity,
       }))
     );
 
@@ -106,62 +153,6 @@ const confirmSubmit = async () => {
 
   toast.success('Collection request created successfully');
   router.push('/authenticated/collection-requests');
-};
-
-// Search functionality
-const filterProducts = () => {
-  filteredForestProducts.value = forestProducts.value.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-};
-
-// Select All functionality
-const toggleSelectAll = () => {
-  if (selectAll.value) {
-    selectedForestProducts.value = filteredForestProducts.value.map((product) => ({
-      ...product,
-      quantity: '1',
-    }));
-  } else {
-    selectedForestProducts.value = [];
-  }
-};
-
-// Toggle product selection
-const toggleProductSelection = (product) => {
-  const index = selectedForestProducts.value.findIndex((p) => p.id === product.id);
-  if (index === -1) {
-    selectedForestProducts.value.push({ ...product, quantity: '1' });
-  } else {
-    selectedForestProducts.value.splice(index, 1);
-  }
-};
-
-// Check if a product is selected
-const isProductSelected = (product) => {
-  return selectedForestProducts.value.some((p) => p.id === product.id);
-};
-
-// Update quantity for a selected product
-const updateQuantity = (product, quantity) => {
-  const selectedProduct = selectedForestProducts.value.find((p) => p.id === product.id);
-  if (selectedProduct) {
-    selectedProduct.quantity = quantity;
-  }
-};
-
-// Confirm selection in the modal
-const confirmSelection = () => {
-  if (selectedForestProducts.value.some((p) => !p.quantity || parseFloat(p.quantity) <= 0)) {
-    toast.error('Please provide a valid quantity for all selected products');
-    return;
-  }
-  showModal.value = false;
-};
-
-// Cancel selection in the modal
-const cancelSelection = () => {
-  showModal.value = false;
 };
 
 onMounted(() => {
@@ -201,6 +192,16 @@ onMounted(() => {
           </button>
         </div>
 
+        <!-- Selected Products Summary -->
+        <div v-if="selectedForestProducts.length > 0" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Selected Products ({{ selectedForestProducts.length }})</label>
+          <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div v-for="product in selectedForestProducts" :key="product.id" class="text-sm">
+              {{ product.forest_product_name }} - {{ product.requested_quantity > 0 ? product.requested_quantity : 'No' }} {{ product.unit_name }}(s)
+            </div>
+          </div>
+        </div>
+
         <!-- Collection Date Input -->
         <div>
           <label for="collectionDate" class="block text-sm font-medium text-gray-700 mb-2">Collection Date</label>
@@ -213,142 +214,158 @@ onMounted(() => {
         </div>
 
         <!-- Submit Button -->
-        <AlertDialog>
-          <AlertDialogTrigger>
-            <button
-              type="submit"
-              :disabled="!isFormComplete || !isCollectionDateValid"
-              :class="[isFormComplete && isCollectionDateValid ? 'bg-gray-900 hover:bg-green-800' : 'bg-gray-400 cursor-not-allowed']"
-              class="w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center"
-            >
-              Submit Collection Request
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent class="rounded-lg shadow-lg border border-gray-200">
-            <AlertDialogHeader class="bg-gray-900 text-white px-6 py-4 rounded-t-lg">
-              <AlertDialogTitle class="text-lg font-bold">Confirm Collection Request</AlertDialogTitle>
-            </AlertDialogHeader>
-            <AlertDialogDescription class="px-6 py-4 bg-gray-50">
-              <p class="text-sm text-gray-700 mb-4">
-          Please review the details of your collection request before submitting:
-              </p>
-              <ul class="text-sm text-gray-700 space-y-2 bg-white p-4 rounded-lg shadow-inner border border-gray-200">
-          <li v-for="product in selectedForestProducts" :key="product.id" class="flex justify-between">
-            <span><strong>{{ product.name }}</strong></span>
-            <span>{{ product.quantity }} {{ product.measurement_unit_id.unit_name }}</span>
-          </li>
-              </ul>
-              <p class="text-sm text-gray-700 mt-4">
-          <strong>Collection Date:</strong> {{ collectionDate }}
-              </p>
-            </AlertDialogDescription>
-            <AlertDialogFooter class="bg-gray-100 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-              <AlertDialogCancel class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500">
-          Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-          @click="confirmSubmit"
-          class="px-4 py-2 bg-gray-900 border border-transparent rounded-lg text-white hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-          Submit
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <button
+          type="submit"
+          :disabled="!isFormComplete || !isCollectionDateValid"
+          :class="[isFormComplete && isCollectionDateValid ? 'bg-gray-900 hover:bg-green-800' : 'bg-gray-400 cursor-not-allowed']"
+          class="w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center"
+        >
+          Submit Collection Request
+        </button>
       </form>
     </div>
 
-    <!-- Modal -->
-    <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex items-center justify-center min-h-screen px-4">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="cancelSelection">
-          <div class="absolute inset-0 bg-gray-500 bg-opacity-75"></div>
+    <!-- Forest Product Modal -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h2 class="text-lg font-semibold text-green-800">Select Forest Products</h2>
+          <button @click="showModal = false" class="text-gray-500 hover:text-gray-700 p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-
-        <!-- Modal Content -->
-        <div class="relative bg-white rounded-xl overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
-          <div class="bg-gray-900 px-6 py-4 text-white">
-            <h3 class="text-lg font-bold">Select Forest Products</h3>
-            <p class="text-green-100 text-sm">Choose products to harvest</p>
+        <div class="p-4 border-b">
+          <div class="relative">
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="Search forest products..."
+              class="w-full p-2.5 border border-gray-300 rounded-lg pl-10 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
-
-          <div class="px-6 py-4 max-h-96 overflow-y-auto">
-            <!-- Search Bar -->
-            <div class="mb-4">
+        </div>
+        <div class="p-4 overflow-y-auto flex-1">
+          <div v-if="filteredForestProducts.length === 0" class="text-center py-8 text-gray-500">
+            No forest products found matching your search
+          </div>
+          <div v-else class="space-y-3">
+            <div v-for="product in filteredForestProducts" :key="product.id" 
+                 class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
               <input
-                type="text"
-                v-model="searchQuery"
-                @input="filterProducts"
-                placeholder="Search forest products..."
-                class="w-full border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                type="checkbox"
+                :value="product"
+                v-model="selectedForestProducts"
+                class="form-checkbox h-5 w-5 text-green-600 rounded"
               />
-            </div>
-
-            <!-- Select All -->
-            <div class="mb-4">
-              <label class="flex items-center">
+              <div class="flex-1">
+                <div class="font-medium">{{ product.forest_product_name }}</div>
+                <div class="text-sm text-gray-500">
+                  Location: {{ product.location_name }} | 
+                  Price: ₱{{ product.price }} per {{ product.unit_name }} | 
+                  Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                </div>
+              </div>
+              <div v-if="selectedForestProducts.includes(product)" class="flex items-center space-x-2">
+                <label class="text-sm text-gray-600">Quantity:</label>
                 <input
-                  type="checkbox"
-                  v-model="selectAll"
-                  @change="toggleSelectAll"
-                  class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                />
-                <span class="ml-2 text-sm text-gray-700">Select All</span>
-              </label>
-            </div>
-
-            <!-- Product List -->
-            <div class="space-y-2">
-              <div
-                v-for="product in filteredForestProducts"
-                :key="product.id"
-                class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-              >
-                <input
-                  type="checkbox"
-                  :id="'product-' + product.id"
-                  :value="product"
-                  @change="toggleProductSelection(product)"
-                  :checked="isProductSelected(product)"
-                  class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                />
-                <label :for="'product-' + product.id" class="ml-3 flex justify-between items-center w-full cursor-pointer">
-                  <span class="text-sm text-gray-700">{{ product.name }}</span>
-                  <span class="text-xs text-gray-500">{{ product.measurement_unit_id.unit_name }}</span>
-                </label>
-                <input
-                  v-if="isProductSelected(product)"
                   type="number"
-                  v-model="selectedForestProducts.find((p) => p.id === product.id).quantity"
-                  min="0.01"
-                  step="0.01"
-                  class="ml-4 w-20 border border-gray-300 rounded-lg py-1 px-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  v-model="product.requested_quantity"
+                  min="0"
+                  :max="product.quantity"
                   placeholder="Qty"
-                  @input="updateQuantity(product, $event.target.value)"
+                  class="w-24 text-center border border-gray-300 rounded p-1"
                 />
               </div>
             </div>
           </div>
-
-          <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
-            <button
-              type="button"
-              @click="cancelSelection"
-              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              @click="confirmSelection"
-              class="px-4 py-2 bg-gray-900 border border-transparent rounded-lg text-white hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Confirm Selection
-            </button>
-          </div>
+        </div>
+        <div class="flex justify-end p-4 border-t">
+          <button
+            class="bg-green-600 hover:bg-green-700 text-white rounded-lg px-6 py-2.5 font-medium"
+            @click="showModal = false"
+          >
+            Done
+          </button>
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Dialog -->
+    <AlertDialog :open="showConfirmDialog">
+      <AlertDialogContent class="rounded-lg shadow-lg border border-gray-200">
+        <AlertDialogHeader class="bg-gray-900 text-white px-6 py-4 rounded-t-lg">
+          <AlertDialogTitle class="text-lg font-bold">Confirm Collection Request</AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogDescription class="px-6 py-4 bg-gray-50">
+          <p class="text-sm text-gray-700 mb-4">
+            Please review the details of your collection request before submitting:
+          </p>
+          <ul class="text-sm text-gray-700 space-y-2 bg-white p-4 rounded-lg shadow-inner border border-gray-200">
+            <li v-for="product in selectedForestProducts.filter(p => p.requested_quantity > 0)" :key="product.id" class="flex justify-between">
+              <span><strong>{{ product.forest_product_name }}</strong> ({{ product.location_name }})</span>
+              <span>{{ product.requested_quantity }} {{ product.unit_name }}</span>
+            </li>
+          </ul>
+          <p class="text-sm text-gray-700 mt-4">
+            <strong>Collection Date:</strong> {{ collectionDate }}
+          </p>
+        </AlertDialogDescription>
+        <AlertDialogFooter class="bg-gray-100 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
+          <AlertDialogCancel
+            @click="showConfirmDialog = false"
+            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            @click="confirmSubmit"
+            class="px-4 py-2 bg-gray-900 border border-transparent rounded-lg text-white hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            Submit
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
+
+<style scoped>
+.form-checkbox {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0;
+  print-color-adjust: exact;
+  display: inline-block;
+  vertical-align: middle;
+  background-origin: border-box;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  flex-shrink: 0;
+  height: 1rem;
+  width: 1rem;
+  color: #2563eb;
+  background-color: #fff;
+  border-color: #6b7280;
+  border-width: 1px;
+  --tw-shadow: 0 0 #0000;
+}
+
+.form-checkbox:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+</style>
