@@ -204,31 +204,58 @@ watch(selectedType, () => {
       </div>
     </div>
 
-    <!-- Loading Skeleton -->
-    <div v-if="loading" class="animate-pulse">
-      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th class="px-6 py-6 bg-gray-200 h-12"></th>
-                <th class="px-6 py-6 bg-gray-200 h-12"></th>
-                <th class="px-6 py-6 bg-gray-200 h-12"></th>
-                <th class="px-6 py-6 bg-gray-200 h-12"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="n in 8" :key="n">
-                <td class="px-6 py-8 bg-gray-100 h-12"></td>
-                <td class="px-6 py-8 bg-gray-100 h-12"></td>
-                <td class="px-6 py-8 bg-gray-100 h-12"></td>
-                <td class="px-6 py-8 bg-gray-100 h-12"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+<!-- Loading Skeleton -->
+<div v-if="loading" class="animate-pulse">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-6 py-3 h-10"></th>
+            <th class="px-6 py-3 h-10"></th>
+            <th class="px-6 py-3 h-10"></th>
+            <th class="px-6 py-3 h-10"></th>
+            <th class="px-6 py-3 h-10"></th>
+            <th class="px-6 py-3 h-10"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="n in 5" :key="n">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-16"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-lg"></div>
+                <div class="ml-4 w-24">
+                  <div class="h-4 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-20"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-32"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex gap-1">
+                <div class="h-6 bg-gray-200 rounded-full w-16"></div>
+                <div class="h-6 bg-gray-200 rounded-full w-16"></div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+              <div class="flex items-center justify-end space-x-3">
+                <div class="h-8 w-8 bg-gray-200 rounded"></div>
+                <div class="h-8 w-8 bg-gray-200 rounded"></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </div>
+</div>
 
     <!-- Products Table -->
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

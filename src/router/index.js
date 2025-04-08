@@ -44,7 +44,7 @@ const routes = [
     path: "/",
     name: "Index",
     component: Index,
-    meta: { title: "Nature Cart - Home", requiresRole: [4, 2, 3, 1] },
+    meta: { title: "Log In - Nature Cart", requiresRole: [4, 2, 3, 1] },
   },
   {
     path: "/sign-up",

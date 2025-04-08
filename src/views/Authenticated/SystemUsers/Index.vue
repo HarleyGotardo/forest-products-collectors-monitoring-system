@@ -358,33 +358,42 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Loading Skeleton -->
-    <div v-if="isLoading" class="animate-pulse">
-      <div
-        class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
-      >
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th class="px-6 py-6 bg-gray-200 h-12"></th>
-                <th class="px-6 py-6 bg-gray-200 h-12"></th>
-                <th class="px-6 py-6 bg-gray-200 h-12"></th>
-                <th class="px-6 py-6 bg-gray-200 h-12"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="n in 8" :key="n">
-                <td class="px-6 py-8 bg-gray-100 h-12"></td>
-                <td class="px-6 py-8 bg-gray-100 h-12"></td>
-                <td class="px-6 py-8 bg-gray-100 h-12"></td>
-                <td class="px-6 py-8 bg-gray-100 h-12"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+<!-- Loading Skeleton -->
+<div v-if="isLoading" class="animate-pulse">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 sm:px-6 py-3 h-10"></th>
+            <th class="hidden sm:table-cell px-4 sm:px-6 py-3 h-10"></th>
+            <th class="hidden sm:table-cell px-4 sm:px-6 py-3 h-10"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="n in 5" :key="n">
+            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="h-10 w-10 rounded-full bg-gray-200"></div>
+                <div class="ml-4">
+                  <div class="h-4 bg-gray-200 rounded w-28"></div>
+                  <div class="block sm:hidden h-3 bg-gray-200 rounded w-32 mt-2"></div>
+                  <div class="block sm:hidden h-5 bg-gray-200 rounded-full w-20 mt-2"></div>
+                </div>
+              </div>
+            </td>
+            <td class="hidden sm:table-cell px-4 sm:px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-36"></div>
+            </td>
+            <td class="hidden sm:table-cell px-4 sm:px-6 py-4 whitespace-nowrap">
+              <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </div>
+</div>
     <!-- Users Table -->
     <div
       v-else
