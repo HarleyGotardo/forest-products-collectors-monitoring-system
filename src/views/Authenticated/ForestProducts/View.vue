@@ -30,7 +30,7 @@ L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow
 })
-
+const loading = ref(false)
 const route = useRoute()
 const router = useRouter()
 const productId = route.params.id
@@ -554,13 +554,23 @@ const isDeleted = computed(() => {
   return forestProduct.value && forestProduct.value.deleted_at !== null;
 });
 
-onMounted(() => {
-  fetchForestProduct();
-  fetchAdditionalImages();
-  fetchAllLocations();
-  fetchUserDetails();
+onMounted(async () => {
+  loading.value = true;
+  try {
+    await Promise.all([
+      fetchForestProduct(),
+      fetchAdditionalImages(),
+      fetchAllLocations(),
+      fetchUserDetails()
+    ]);
+  } catch (err) {
+    console.error('Error during initialization:', err);
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
+
 <template>
   <div class="max-w-4xl mx-auto p-3">
     <!-- Header Section -->
@@ -606,7 +616,69 @@ onMounted(() => {
         <p class="ml-3 mt-2 sm:mt-0">{{ error }}</p>
       </div>
     </div>
+<!-- Loading Skeleton for Product Information Card -->
+<div v-if="loading" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+  <div class="p-3">
+    <!-- Title and ID skeleton -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+      <div class="h-8 bg-gray-200 rounded w-3/4"></div>
+      <div class="h-4 bg-gray-200 rounded w-20 mt-2 sm:mt-0"></div>
+    </div>
 
+    <!-- Image Skeleton -->
+    <div class="relative mb-6">
+      <div class="w-full h-64 bg-gray-200 rounded-lg"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Left Column Skeleton -->
+      <div class="space-y-4">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
+          <div class="flex-1">
+            <div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+            <div class="h-5 bg-gray-200 rounded w-32"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
+          <div class="flex-1">
+            <div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+            <div class="h-5 bg-gray-200 rounded w-32"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column Skeleton -->
+      <div class="space-y-4">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
+          <div class="flex-1">
+            <div class="h-4 bg-gray-200 rounded w-40 mb-2"></div>
+            <div class="h-6 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-gray-200 rounded-lg h-9 w-9"></div>
+          <div class="flex-1">
+            <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+            <div class="h-6 bg-gray-200 rounded w-24"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description Skeleton -->
+    <div class="mt-6 pt-6 border-t border-gray-100">
+      <div class="h-4 bg-gray-200 rounded w-24 mb-4"></div>
+      <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+      <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+      <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+    </div>
+  </div>
+</div>
     <!-- Main Content -->
     <div v-if="forestProduct" class="space-y-6">
       <!-- Product Information Card -->
