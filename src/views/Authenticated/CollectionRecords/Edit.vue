@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -37,7 +36,8 @@ const fetchCollectors = async () => {
   const { data, error } = await supabase
     .from('profiles')
     .select('id, first_name, last_name')
-    .eq('role_id', 2); // Fetch only profiles where role is 2
+    .eq('role_id', 2)
+    .not('approval_flag', 'is', null); // Fetch only profiles where role is 2 and approval_flag is not null
   if (error) {
     console.error('Error fetching collectors:', error);
     toast.error('Failed to load collectors');
@@ -86,7 +86,8 @@ const fetchCollectionRequests = async () => {
   const { data, error } = await supabase
     .from('collection_requests')
     .select('id')
-    .not('approved_at', 'is', null);
+    .not('approved_at', 'is', null)
+    .eq('is_recorded', false); // Include only requests where is_recorded is false
 
   if (error) {
     console.error('Error fetching collection requests:', error);
@@ -290,18 +291,22 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="space-y-2">
+            <div class="space-y-2">
             <Label for="requestNumber" class="text-sm font-medium text-gray-700">Request Number</Label>
+            <div v-if="collectionRequests.length === 0" class="text-sm text-gray-500">
+              There are no approved and unrecorded collection requests.
+            </div>
             <select
+              v-else
               v-model="selectedRequest"
               class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
               <option value="" disabled>Select a request number</option>
               <option v-for="request in collectionRequests" :key="request.id" :value="request.id">
-                {{ request.id }}
+              {{ request.id }}
               </option>
             </select>
-          </div>
+            </div>
 
           <div class="space-y-2">
             <Label for="purpose" class="text-sm font-medium text-gray-700">Purpose</Label>
@@ -455,4 +460,3 @@ onMounted(async () => {
     </div>
   </div>
 </template>
-```

@@ -37,7 +37,8 @@ const fetchCollectors = async () => {
   const { data, error } = await supabase
     .from('profiles')
     .select('id, first_name, last_name')
-    .eq('role_id', 2); // Filter profiles with role_id == 2
+    .eq('role_id', 2) // Filter profiles with role_id == 2
+    .not('approval_flag', 'is', null); // Ensure approval_flag is not null
   if (error) {
     console.error('Error fetching collectors:', error);
     toast.error('Failed to load collectors');
@@ -394,26 +395,27 @@ onMounted(() => {
       <CardContent class="p-6">
         <!-- Form -->
         <form @submit.prevent="handleSubmit" class="space-y-6">
-          <!-- Request Number Selection -->
-          <div class="space-y-2">
+            <!-- Request Number Selection -->
+            <div class="space-y-2">
             <Label for="requestNumber" class="text-sm font-medium text-gray-700">Request Number</Label>
             <select
               id="requestNumber"
               v-model="selectedRequest"
               class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              :disabled="collectionRequests.length === 0"
             >
               <option value="" disabled>Select a request number</option>
               <option v-for="request in collectionRequests" :key="request.id" :value="request.id">
-                {{ request.id }}
+              {{ request.id }}
               </option>
             </select>
             <p v-if="collectionRequests.length === 0" class="text-sm text-gray-500 mt-2">
-              There are no approved and unrecorded collection requests.
+              You cannot record a forest product collection because a request number is required, and there are no approved and unrecorded collection requests available.
             </p>
-          </div>
+            </div>
 
-          <!-- Collector Selection -->
-          <div class="space-y-2">
+            <!-- Collector Selection -->
+            <div class="space-y-2">
             <Label for="collector" class="text-sm font-medium text-gray-700">Forest Product Collector</Label>
             <div v-if="isRequestSelected" class="p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
               {{ requestDetails?.profiles?.first_name }} {{ requestDetails?.profiles?.last_name }}
@@ -423,61 +425,61 @@ onMounted(() => {
               id="collector"
               v-model="selectedCollector"
               class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              :disabled="!selectedRequest"
             >
               <option value="" disabled>Select a collector</option>
               <option v-for="collector in collectors" :key="collector.id" :value="collector.id">
-                {{ collector.first_name }} {{ collector.last_name }}
+              {{ collector.first_name }} {{ collector.last_name }}
               </option>
             </select>
-          </div>
-
-          <!-- Purpose Selection -->
-          <div class="space-y-2">
-            <Label for="purpose" class="text-sm font-medium text-gray-700">Purpose</Label>
-            <div class="space-y-2">
-              <div>
+            </div>
+              <!-- Purpose Selection -->
+              <div class="space-y-2">
+              <Label for="purpose" class="text-sm font-medium text-gray-700">Purpose</Label>
+              <div class="space-y-2">
+                <div>
                 <input
                   type="radio"
                   id="official"
                   value="Official"
                   v-model="purpose"
                   class="form-radio"
-                  :disabled="!isRequestSelected && !selectedCollector"
+                  :disabled="!selectedRequest"
                 />
-                <label for="official" class="ml-2 text-sm" :class="{ 'text-gray-400': !isRequestSelected && !selectedCollector }">Official</label>
-              </div>
-              <div>
+                <label for="official" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Official</label>
+                </div>
+                <div>
                 <input
                   type="radio"
                   id="personal"
                   value="Personal"
                   v-model="purpose"
                   class="form-radio"
-                  :disabled="!isRequestSelected && !selectedCollector"
+                  :disabled="!selectedRequest"
                 />
-                <label for="personal" class="ml-2 text-sm" :class="{ 'text-gray-400': !isRequestSelected && !selectedCollector }">Personal</label>
-              </div>
-              <div>
+                <label for="personal" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Personal</label>
+                </div>
+                <div>
                 <input
                   type="radio"
                   id="others"
                   value="Others"
                   v-model="purpose"
                   class="form-radio"
-                  :disabled="!isRequestSelected && !selectedCollector"
+                  :disabled="!selectedRequest"
                 />
-                <label for="others" class="ml-2 text-sm" :class="{ 'text-gray-400': !isRequestSelected && !selectedCollector }">Others, specify:</label>
+                <label for="others" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Others, specify:</label>
                 <input
                   v-if="purpose === 'Others'"
                   type="text"
                   v-model="customPurpose"
                   placeholder="Specify purpose"
                   class="form-input mt-2 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  :disabled="!isRequestSelected && !selectedCollector"
+                  :disabled="!selectedRequest"
                 />
+                </div>
               </div>
-            </div>
-          </div>
+              </div>
 
           <!-- Selected Products Summary -->
           <div v-if="selectedForestProducts.length > 0" class="space-y-2">
@@ -492,19 +494,19 @@ onMounted(() => {
             </p>
           </div>
 
-          <!-- Forest Product Modal Trigger -->
-          <div>
+            <!-- Forest Product Modal Trigger -->
+            <div>
             <button
               type="button"
               class="w-full bg-gray-800 hover:bg-gray-700 text-white rounded-lg py-2.5 font-medium transition-colors flex items-center justify-center space-x-2"
               @click="isModalOpen = true"
-              :disabled="!isRequestSelected && !selectedCollector"
-              :class="{ 'opacity-50 cursor-not-allowed': !isRequestSelected && !selectedCollector }"
+              :disabled="!selectedRequest"
+              :class="{ 'opacity-50 cursor-not-allowed': !selectedRequest }"
             >
               <span class="text-lg">+</span>
               <span>{{ isRequestSelected ? 'Edit Selected Products' : 'Select Forest Products' }}</span>
             </button>
-          </div>
+            </div>
 
           <!-- Submit Button -->
           <button
