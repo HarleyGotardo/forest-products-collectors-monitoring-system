@@ -204,92 +204,114 @@ const isFormValid = computed(() => {
   return name.value && coordinates.value;
 });
 </script>
-
 <template>
-  <div class="max-w-2xl mx-auto p-8 bg-white rounded-xl shadow-lg mt-8">
-    <!-- Header -->
-    <div class="flex items-center space-x-2 mb-8">
-      <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-      <h2 class="text-2xl font-bold text-gray-900">Create Location</h2>
-    </div>
-
-    <!-- Error Alert -->
-    <div v-if="error" class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
-      <div class="flex items-center">
-        <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  <div class="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-xl shadow-md border border-gray-100 mt-8">
+    <!-- Header with improved design -->
+    <div class="flex items-center space-x-3 mb-8 pb-4 border-b border-gray-100">
+      <div class="bg-green-100 p-2 rounded-full">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <span class="text-red-700">{{ error }}</span>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800">Create Location</h2>
+        <p class="text-sm text-gray-500 mt-1">Add a new location to your forest management system</p>
       </div>
     </div>
 
-    <!-- Form -->
+    <!-- Error Alert with improved styling -->
+    <div v-if="error" class="mb-6 p-4 rounded-lg bg-red-50 border-l-4 border-red-500 flex items-center">
+      <svg class="w-5 h-5 text-red-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="text-red-700">{{ error }}</span>
+    </div>
+
+    <!-- Form with better spacing and visual hierarchy -->
     <form @submit.prevent="showConfirmationDialog" class="space-y-6">
-      <!-- Location Name -->
-      <div>
-        <Label for="name">
+      <!-- Location Name with helper text -->
+      <div class="space-y-2">
+        <Label for="name" class="text-gray-700 font-medium">
           Location Name
         </Label>
         <Input
           id="name"
           v-model="name"
           type="text"
-          class="mt-1"
-          placeholder="Enter location name"
+          class="w-full focus:ring-green-500 focus:border-green-500"
+          placeholder="Enter a descriptive name for this location"
         />
+        <p class="text-xs text-gray-500 mt-1">Choose a clear, identifiable name for this forest location</p>
       </div>
 
-      <!-- Coordinates -->
-      <div>
-        <Label for="coordinates" >
+      <!-- Coordinates with improved interaction design -->
+      <div class="space-y-2">
+        <Label for="coordinates" class="text-gray-700 font-medium">
           Coordinates
         </Label>
         <div class="relative">
-          <Input
-            id="coordinates"
-            type="text"
-            readonly
+          <button
+            type="button"
             @click="openModal('coordinates')"
-            class="mt-1"
-            v-model="coordinates"
-            placeholder="Click to set coordinates"
-          />
-          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            class="w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 transition-colors flex justify-between items-center"
+          >
+            <span class="block truncate">
+              {{ coordinates || "Click to set location coordinates" }}
+            </span>
+            <div class="flex items-center text-green-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Click to open the map and select precise coordinates</p>
+      </div>
+
+      <!-- Visual preview of the selected location (optional component) -->
+      <div v-if="coordinates" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Selected Location Preview</h3>
+        <div class="h-24 bg-green-50 rounded border border-green-100 flex items-center justify-center">
+          <div class="text-center text-sm text-gray-500">
+            <svg class="w-6 h-6 text-green-500 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
+            {{ coordinates }}
           </div>
         </div>
       </div>
 
-      <!-- Submit Button -->
-      <div class="flex justify-end">
+      <!-- Submit Button with improved styling -->
+      <div class="flex justify-end pt-4">
         <AlertDialog>
           <AlertDialogTrigger>
             <button
               type="button"
               :disabled="!isFormValid"
-              class="inline-flex items-center px-4 py-2 bg-gray-900 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-800 focus:outline-none focus:border-gray-700 focus:ring focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition ease-in-out duration-150"
+              class="inline-flex items-center px-5 py-2.5 bg-green-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               Create Location
             </button>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent class="rounded-lg">
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Creation</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to create this location?
+              <AlertDialogTitle class="text-xl">Confirm Creation</AlertDialogTitle>
+              <AlertDialogDescription class="text-gray-600">
+                Are you sure you want to create this location with the following details?
+                <div class="mt-3 p-3 bg-gray-50 rounded border border-gray-200 text-sm">
+                  <p><span class="font-medium">Name:</span> {{ name }}</p>
+                  <p><span class="font-medium">Coordinates:</span> {{ coordinates }}</p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="handleSubmit">Create</AlertDialogAction>
+              <AlertDialogCancel class="bg-gray-100 hover:bg-gray-200 text-gray-800">Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="handleSubmit" class="bg-green-600 hover:bg-green-700">Create Location</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -297,7 +319,7 @@ const isFormValid = computed(() => {
     </form>
   </div>
 
-  <!-- Modal -->
+  <!-- Improved Modal -->
   <div
     v-if="isModalOpen"
     class="fixed inset-0 z-50 overflow-y-auto"
@@ -305,49 +327,58 @@ const isFormValid = computed(() => {
     role="dialog"
     aria-modal="true"
   >
-    <div class="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Background overlay -->
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeModal"></div>
-      <!-- Modal panel -->
-      <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle w-full max-w-md">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+    <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Background overlay with improved transition -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity" @click="closeModal"></div>
+      
+      <!-- Modal panel with improved styling -->
+      <div class="inline-block transform overflow-hidden rounded-xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle">
+        <div class="bg-white px-6 pt-5 pb-4">
           <div class="sm:flex sm:items-start">
-        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-          <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          </svg>
-        </div>
-        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-          <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
-            Set {{ modalField }}
-          </h3>
-        </div>
+            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+              <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
+                {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                {{ modalField === 'coordinates' ? 'Click on the map to select precise coordinates for this location.' : '' }}
+              </p>
+            </div>
           </div>
 
-          <!-- Modal Content -->
-          <div class="mt-4">
-        <!-- Map View -->
-        <div v-if="modalField === 'coordinates'" class="mt-4">
-          <div id="map" class="h-[400px] w-full rounded-lg border border-gray-200 shadow-inner"></div>
-        </div>
+          <!-- Modal Content with improved map container -->
+          <div class="mt-6">
+            <!-- Map View -->
+            <div v-if="modalField === 'coordinates'" class="mt-4">
+              <div id="map" class="h-[450px] w-full rounded-lg border border-gray-200 shadow-inner"></div>
+              
+              <!-- Selected coordinates display -->
+              <div v-if="tempCoordinates" class="mt-3 p-3 bg-green-50 border border-green-100 rounded-md text-sm text-green-800">
+                Selected coordinates: {{ tempCoordinates }}
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Modal Footer -->
-        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+        <!-- Modal Footer with improved button styling -->
+        <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100">
           <button
-        type="button"
-        @click="saveModalValue"
-        class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+            type="button"
+            @click="saveModalValue"
+            class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-5 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
           >
-        Save
+            Save Coordinates
           </button>
           <button
-        type="button"
-        @click="closeModal"
-        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            type="button"
+            @click="closeModal"
+            class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-5 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
           >
-        Cancel
+            Cancel
           </button>
         </div>
       </div>

@@ -15,7 +15,7 @@ import Button from "@/components/ui/button/Button.vue";
 import Input from "@/components/ui/input/Input.vue";
 import Label from "@/components/ui/label/Label.vue";
 import Textarea from "@/components/ui/textarea/Textarea.vue";
-import 
+import
 {
   Select,
   SelectContent,
@@ -101,9 +101,9 @@ const initializeMap = (latitude, longitude, name) => {
   if (mapInstance.value) {
     mapInstance.value.remove();
   }
-  
+
   mapInstance.value = L.map("map").setView([latitude, longitude], 16);
-  
+
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19
   }).addTo(mapInstance.value);
@@ -238,150 +238,290 @@ onMounted(() => {
 });
 </script>
 <template>
-  <div class="max-w-7xl mx-auto p-6">
-    
-    <!-- Header Section -->
-    <div class="flex justify-between items-center mb-8">
-      <div class="flex items-center space-x-4">
-      <img src="@/assets/add.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900">Create Forest Product</h2>
-        <p class="mt-1 text-sm text-gray-500">Fill in the details to create a new forest product</p>
-      </div>
+  <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Header Section with subtle gradient background -->
+    <div
+      class="mb-8 bg-gradient-to-r bg-gray-100 rounded-xl p-6 shadow-sm border border-green-100"
+    >
+      <div class="flex items-center">
+        <div class="flex-shrink-0 bg-gray-50 rounded-full p-3 flex space-x-2">
+          <img
+            src="@/assets/add.png"
+            alt="Add"
+            class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
+          />
+          <img
+            src="@/assets/forest-product.png"
+            alt="Forest Map"
+            class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
+          />
+
+        </div>
+        <div class="ml-5">
+          <h2 class="text-2xl font-bold text-gray-800">
+            Create Forest Product
+          </h2>
+          <p class="mt-1 text-sm text-gray-600">
+            Complete the form below to add a new forest product to the system
+          </p>
+        </div>
       </div>
     </div>
 
     <!-- Error Alert -->
-    <div v-if="error" 
-         class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg">
-      <div class="flex">
-        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-        </svg>
-        <p class="ml-3">{{ error }}</p>
-      </div>
+    <div
+      v-if="error"
+      class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-md flex items-center"
+    >
+      <svg
+        class="h-5 w-5 text-red-400 mr-3 flex-shrink-0"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <p>{{ error }}</p>
     </div>
 
+    <!-- Form with better spacing and organization -->
+    <form
+      @submit.prevent="showConfirmationDialog"
+      class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden"
+    >
+      <!-- Form content with sections -->
+      <div class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Basic Information Section -->
+          <div class="md:col-span-2">
+            <h3
+              class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-100"
+            >
+              Basic Information
+            </h3>
+          </div>
 
-    <!-- Form -->
-    <form @submit.prevent="showConfirmationDialog" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-6 space-y-4">
-      <!-- Name input -->
-      <div>
-        <Label for="name">Name</Label>
-        <Input
-          id="name"
-          v-model="name"
-          type="text"
-          class="mt-1"
-          required
-        />
+          <!-- Name input -->
+          <div class="space-y-2">
+            <Label for="name" class="text-gray-700">Product Name</Label>
+            <Input
+              id="name"
+              v-model="name"
+              type="text"
+              class="w-full"
+              placeholder="Enter product name"
+              required
+            />
+          </div>
+
+          <!-- Type select -->
+          <div class="space-y-2">
+            <Label for="type" class="text-gray-700">Product Type</Label>
+            <Select v-model="type" required>
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="Select product type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="Timber">Timber</SelectItem>
+                  <SelectItem value="Non-Timber">Non-Timber</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <!-- Description input - full width -->
+          <div class="md:col-span-2 space-y-2">
+            <Label for="description" class="text-gray-700">Description</Label>
+            <Textarea
+              id="description"
+              v-model="description"
+              required
+              placeholder="Describe the forest product"
+              class="min-h-24"
+            ></Textarea>
+          </div>
+
+          <!-- Measurement section -->
+          <div class="md:col-span-2 pt-4">
+            <h3
+              class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-100"
+            >
+              Measurement & Pricing
+            </h3>
+          </div>
+
+          <!-- Measurement Unit select -->
+          <div class="space-y-2">
+            <Label for="measurementUnit" class="text-gray-700"
+              >Measurement Unit</Label
+            >
+            <Select v-model="selectedMeasurementUnit" required>
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="Select unit of measurement" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem
+                    v-for="unit in measurementUnits"
+                    :key="unit.id"
+                    :value="unit.id"
+                  >
+                    {{ unit.unit_name }}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <!-- Price input -->
+          <div class="space-y-2">
+            <Label for="price" class="text-gray-700">Price per Unit</Label>
+            <div class="relative">
+              <span
+                class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"
+                >₱
+              </span>
+              <input
+                id="price"
+                v-model="price_based_on_measurement_unit"
+                type="number"
+                required
+                placeholder="0.00"
+                class="pl-8 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                @input="(e) => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); quantity.value = parseFloat(e.target.value) || 0; }"
+              />
+            </div>
+          </div>
+
+          <!-- Location & Image section -->
+          <div class="md:col-span-2 pt-4">
+            <h3
+              class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-100"
+            >
+              Location & Image
+            </h3>
+          </div>
+
+          <!-- Location select -->
+          <div class="space-y-2">
+            <Label class="text-gray-700">Location</Label>
+            <button
+              type="button"
+              @click="showLocationModal = true"
+              class="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              <span
+                class="text-gray-700"
+                >{{ selectedLocations.length ? `${selectedLocations.length} location(s) selected` : 'Select location(s)' }}</span
+              >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-gray-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <p v-if="selectedLocationsNote" class="mt-2 text-sm text-gray-500">
+              <span class="font-medium">Selected:</span>
+              {{ selectedLocationsNote }}
+            </p>
+          </div>
+
+            <!-- Image input with confirmation text -->
+            <div class="space-y-2">
+            <Label for="image" class="text-gray-700">Product Image</Label>
+            <div
+              class="border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-emerald-300 transition-colors"
+            >
+              <input
+              id="image"
+              type="file"
+              @change="handleImageChange"
+              class="hidden"
+              />
+              <label
+              for="image"
+              class="cursor-pointer flex flex-col items-center justify-center space-y-2"
+              >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-8 w-8 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span class="text-sm text-gray-500"
+                >Click to upload product image</span
+              >
+              </label>
+            </div>
+            <!-- Show confirmation text if image is uploaded -->
+            <div v-if="image" class="mt-4 flex items-center space-x-2">
+              <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-emerald-500"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              >
+              <path
+                fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                clip-rule="evenodd"
+              />
+              </svg>
+                <p class="text-sm text-gray-600">Image uploaded. Upload again to replace the image.</p>
+            </div>
+            </div>
+        </div>
       </div>
 
-      <!-- Description input -->
-      <div>
-        <Label for="description">Description</Label>
-        <Textarea
-          id="description"
-          v-model="description"
-          required
-          class="mt-1"
-        ></Textarea>
-      </div>
-
-      <!-- Type select -->
-      <div>
-        <Label for="type">Type (Timber, Non-Timber)</Label>
-        <Select v-model="type" required>
-          <SelectTrigger class="mt-1">
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="Timber">Timber</SelectItem>
-              <SelectItem value="Non-Timber">Non-Timber</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <!-- Measurement Unit select -->
-      <div>
-        <Label for="measurementUnit">Measurement Unit</Label>
-        <Select v-model="selectedMeasurementUnit" required>
-          <SelectTrigger class="mt-1">
-            <SelectValue placeholder="Select measurement unit" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem v-for="unit in measurementUnits" :key="unit.id" :value="unit.id">
-                {{ unit.unit_name }}
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <!-- Image input -->
-      <div>
-        <Label for="image">Image</Label>
-        <Input
-          id="image"
-          type="file"
-          @change="handleImageChange"
-          class="mt-1"
-        />
-      </div>
-
-      <!-- Location select with dropdown -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Location</label>
-        <button
-          type="button"
-          @click="showLocationModal = true"
-          class="mt-1 w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left hover:bg-gray-50"
-        >
-          Select location(s)
-        </button>
-        <p v-if="selectedLocationsNote" class="mt-2 text-sm text-gray-500">
-          <strong>Selected Locations:</strong> {{ selectedLocationsNote }}
-        </p>
-      </div>
-
-      <!-- Price input -->
-      <div>
-        <label for="price" class="block text-sm font-medium text-gray-700">Price based on measurement unit</label>
-        <input
-          id="price"
-          v-model="price_based_on_measurement_unit"
-          type="number"
-          required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-          @input="(e) => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); quantity.value = parseFloat(e.target.value) || 0; }"
-        />
-      </div>
-
-      <!-- Submit button -->
-      <div class="flex justify-end">
+      <!-- Submit button section -->
+      <div class="bg-gray-50 px-6 py-4 flex justify-end">
         <AlertDialog>
           <AlertDialogTrigger>
-            <button 
+            <button
               type="button"
               :disabled="!isFormValid"
-              class="disabled:opacity-50 disabled:cursor-not-allowed bg-black text-white font-semibold py-2 px-4 rounded-md shadow hover:bg-green-700 transition-colors duration-300"
+              class="disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-600 text-white font-medium py-2 px-6 rounded-md shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-300"
             >
-              + Create
+              Create Product
             </button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Creation</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to create this forest product?
+                Are you sure you want to create this forest product with the
+                provided information?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="handleSubmit">Create</AlertDialogAction>
+              <AlertDialogCancel
+                class="bg-gray-100 hover:bg-gray-200 text-gray-800"
+                >Cancel</AlertDialogCancel
+              >
+              <AlertDialogAction
+                @click="handleSubmit"
+                class="bg-emerald-600 hover:bg-emerald-700"
+                >Create</AlertDialogAction
+              >
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -391,73 +531,120 @@ onMounted(() => {
     <!-- Location Modal -->
     <div v-if="showLocationModal" class="fixed inset-0 z-50 overflow-y-auto">
       <!-- Modal Backdrop -->
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+      <div
+        class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+      ></div>
 
       <!-- Modal Container -->
       <div class="flex items-center justify-center min-h-screen px-4 py-8">
         <!-- Modal Content -->
-        <div class="relative bg-white rounded-xl shadow-xl p-8 max-w-4xl w-full">
+        <div class="relative bg-white rounded-xl shadow-xl max-w-4xl w-full">
           <!-- Modal Header -->
-          <header class="mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">
-              Select Location(s)
-            </h3>
+          <header class="px-6 py-4 border-b border-gray-100">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-medium text-gray-800">
+                Select Locations
+              </h3>
+              <button
+                @click="showLocationModal = false"
+                class="text-gray-400 hover:text-gray-500"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </header>
 
           <!-- Location List -->
-          <div class="space-y-4 max-h-96 overflow-y-auto">
-            <div 
-              v-for="location in locations" 
-              :key="location.id" 
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <!-- Checkbox and Label -->
-              <div class="flex items-center flex-1">
-                <input
-                  type="checkbox"
-                  :id="`location-${location.id}`"
-                  :value="location"
-                  v-model="selectedLocations"
-                  class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <label 
-                  :for="`location-${location.id}`" 
-                  class="ml-3 text-gray-700 font-medium"
-                >
-                  {{ location.name }}
-                  <span class="text-gray-500 text-sm ml-2">
-                    ({{ location.latitude }}, {{ location.longitude }})
-                  </span>
-                </label>
-              </div>
-
-              <!-- Quantity Input -->
-              <div class="ml-4">
-                <input
-                  type="number"
-                  v-model="location.quantity"
-                  :disabled="!selectedLocations.includes(location)"
-                  placeholder="Quantity"
-                  class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <!-- Visualize Button -->
-              <button
-                type="button"
-                @click="visualizeLocation(location)"
-                class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+          <div class="p-6">
+            <div class="max-h-96 overflow-y-auto">
+              <div
+                v-for="location in locations"
+                :key="location.id"
+                class="flex items-center justify-between p-4 mb-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <img :src="locationPeek" alt="">
-              </button>
+                <!-- Checkbox and Label -->
+                <div class="flex items-center flex-1">
+                  <input
+                    type="checkbox"
+                    :id="`location-${location.id}`"
+                    :value="location"
+                    v-model="selectedLocations"
+                    class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                  />
+                  <label
+                    :for="`location-${location.id}`"
+                    class="ml-3 cursor-pointer"
+                  >
+                    <span
+                      class="font-medium text-gray-800"
+                      >{{ location.name }}</span
+                    >
+                    <span class="text-gray-500 text-sm block">
+                      Coordinates: {{ location.latitude }},
+                      {{ location.longitude }}
+                    </span>
+                  </label>
+                </div>
+                <!-- Quantity Input -->
+                <div class="ml-4 flex items-center">
+                  <label class="mr-2 text-sm text-gray-600"
+                    >Quantity ({{ selectedMeasurementUnit ? measurementUnits.find(unit => unit.id === selectedMeasurementUnit)?.unit_name : ''
+                    }}):</label
+                  >
+                  <input
+                    type="number"
+                    v-model="location.quantity"
+                    :disabled="!selectedLocations.includes(location)"
+                    placeholder="0"
+                    class="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <!-- Visualize Button -->
+                <button
+                  type="button"
+                  @click="visualizeLocation(location)"
+                  class="ml-4 flex items-center justify-center px-3 py-1 text-sm font-medium text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 mr-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  View Map
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- Modal Footer -->
-          <footer class="mt-8 flex justify-end">
+          <footer
+            class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end"
+          >
             <Button
               type="button"
               @click="showLocationModal = false"
+              class="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               Done
             </Button>
@@ -468,16 +655,47 @@ onMounted(() => {
 
     <!-- Map Modal -->
     <div v-if="showMapModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-        <div class="relative bg-white rounded-lg p-8 max-w-4xl w-full">
-          <h3 class="text-lg font-medium mb-4">Location Map</h3>
-          <div id="map" class="h-[400px] w-full mb-4"></div>
+      <div
+        class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center"
+      >
+        <div
+          class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        ></div>
+        <div
+          class="relative bg-white rounded-xl shadow-xl p-6 max-w-4xl w-full"
+        >
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-800">Location Map</h3>
+            <button
+              type="button"
+              @click="showMapModal = false"
+              class="text-gray-400 hover:text-gray-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <div
+            id="map"
+            class="h-96 w-full rounded-lg border border-gray-200 mb-4"
+          ></div>
           <div class="flex justify-end">
             <button
               type="button"
               @click="showMapModal = false"
-              class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+              class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 transition-colors"
             >
               Close
             </button>
