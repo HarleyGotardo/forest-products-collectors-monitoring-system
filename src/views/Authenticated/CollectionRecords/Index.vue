@@ -3,10 +3,10 @@
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2">
       <div class="flex items-center space-x-2">
-        <img src="@/assets/records2.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
+        <img src="@/assets/records2.png" alt="Forest Map" class="w-10 h-10 sm:w-12 sm:h-12 group-hover:scale-110 transition-transform" />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Forest Products Collection Records</h2>
-          <p class="mt-1 text-sm">View and manage all collection records</p>
+          <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Forest Products Collection Records</h2>
+          <p class="mt-1 text-xs sm:text-sm">View and manage all collection records</p>
         </div>
       </div>
       <div class="flex space-x-4">
@@ -27,6 +27,7 @@
         <Button 
           v-if="isFPUAdmin || isForestRanger"
           @click="createCollectionRecord"
+          class="min-w-10"
         >
           +
         </Button>
@@ -39,7 +40,7 @@
         <!-- Payment Status Filter -->
         <select
           v-model="paymentFilter"
-          class="block w-40 px-3 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+          class="block w-full sm:w-40 px-3 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
         >
           <option value="all">All Records</option>
           <option value="paid">Paid</option>
@@ -117,14 +118,14 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-700">
         <tr>
-          <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">ID</th>
-          <th scope="col" class="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">LOCATION</th> <!-- Updated from FOREST PRODUCT -->
+          <th scope="col" class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider text-white">ID</th>
+          <th scope="col" class="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">LOCATION</th>
           <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Date</th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">COLLECTOR</th>
+          <th scope="col" class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider text-white">COLLECTOR</th>
           <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Total Cost</th>
           <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Processed By</th>
           <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Status</th>
-          <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white">Actions</th>
+          <th scope="col" class="px-2 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium uppercase tracking-wider text-white">Actions</th>
         </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -140,10 +141,10 @@
           </td>
         </tr>
         <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer" @click="viewCollectionRecord(record.id)">
-          <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm">#{{ record.id }}</td>
+          <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">#{{ record.id }}</td>
           <td class="hidden sm:table-cell px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm">{{ record.location_name }}</td>
           <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">{{ record.formatted_created_at }}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm">{{ record.user_name }}</td>
+          <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">{{ record.user_name }}</td>
           <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">₱{{ record.total_cost }}</td>
           
           <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm">{{ record.created_by_name }}</td>
@@ -159,18 +160,18 @@
             {{ record.is_paid ? 'Paid' : 'Unpaid' }}
           </span>
           </td>
-            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
-            <div class="flex items-center justify-end space-x-3">
+            <td class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
+            <div class="flex items-center justify-end space-x-2 sm:space-x-3">
             <!-- Mark as Paid Button or Placeholder -->
             <span v-if="!record.is_paid" class="inline-block">
             <AlertDialog>
               <AlertDialogTrigger>
-              <Button v-if="isVSUAdmin" class="p-1 sm:p-2">
+              <Button v-if="isVSUAdmin" class="p-1 sm:p-2 text-xs sm:text-sm">
               <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                         d="M5 13l4 4L19 7" />
                     </svg>
-                    Paid
+                    <span class="hidden sm:inline ml-1">Paid</span>
                   </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -191,7 +192,7 @@
 
                 <!-- Edit Button -->
                 <Button v-if="(isFPUAdmin || isForestRanger) && !record.is_paid" class="p-1 sm:p-2" @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })">
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
@@ -227,34 +228,33 @@
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- Pagination - Modified for responsive design -->
       <div class="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200" v-if="filteredRecords.length > 0">
         <div class="flex items-center justify-between">
           <button 
-        @click="prevPage" 
-        :disabled="currentPage === 1"
-        class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="prevPage" 
+            :disabled="currentPage === 1"
+            class="inline-flex items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-10 sm:min-w-0"
           >
-        <svg class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Previous
+            <svg class="h-5 w-5 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span class="hidden sm:inline ml-1 sm:ml-2">Previous</span>
           </button>
-          <div class="text-sm sm:text-base text-gray-700">
-        <span v-if="totalPages >= 1">
-          <span class="sm:hidden">{{ currentPage }} / {{ totalPages }}</span>
-          <span class="hidden sm:inline">Page {{ currentPage }} of {{ totalPages }}</span>
-        </span>
+          <div class="text-xs sm:text-sm md:text-base text-gray-700">
+            <span v-if="totalPages >= 1">
+              <span>{{ currentPage }} / {{ totalPages }}</span>
+            </span>
           </div>
           <button 
-        @click="nextPage" 
-        :disabled="paginatedRecords.length < itemsPerPage"
-        class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="nextPage" 
+            :disabled="paginatedRecords.length < itemsPerPage"
+            class="inline-flex items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-10 sm:min-w-0"
           >
-        Next
-        <svg class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
+            <span class="hidden sm:inline mr-1 sm:mr-2">Next</span>
+            <svg class="h-5 w-5 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </div>
