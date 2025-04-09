@@ -36,7 +36,8 @@ import FPCRequestIndex from "@/views/Authenticated/FPCRequest/Index.vue";
 import FPCRequestView from "@/views/Authenticated/FPCRequest/View.vue";
 import FPCRequestEdit from "@/views/Authenticated/FPCRequest/Edit.vue";
 import FPCRequestIndex2 from "@/views/Authenticated/FPCRequest/Index2.vue";
-import FPCRequestTrash from "@/views/Authenticated/FPCRequest/Trash.vue"
+import FPCRequestTrash from "@/views/Authenticated/FPCRequest/Trash.vue";
+import SalesReport from "@/views/Authenticated/SalesReport.vue";
 
 // 4 = FPU Admin, 1 = Forest Ranger, 2 = FP Collector, 3 = VSU Admin
 const routes = [
@@ -225,6 +226,15 @@ const routes = [
         component: FPCRequestIndex2,
         meta: {
           title: "All Collection Requests - Nature Cart", requiresRole: [4, 1, 3],
+        },
+      },
+      {
+        path: "sales-report",
+        name: "SalesReport",
+        component: SalesReport,
+        meta: {
+          title: "Sales Report - Nature Cart",
+          requiresRole: [4, 2, 1],
         },
       },
       {

@@ -182,6 +182,16 @@ onMounted(async () => {
         
           <router-link 
             v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
+            to="/authenticated/sales-report" 
+            class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+            @click="closeSidebar"
+          >
+            <img src="@/assets/sales-report-2.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span class="font-medium text-gray-700 group-hover:text-emerald-600">Sales Report</span>
+          </router-link>
+
+          <router-link 
+            v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
             to="/authenticated/system-users" 
             class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
             @click="closeSidebar"
