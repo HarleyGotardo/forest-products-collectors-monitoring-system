@@ -402,7 +402,7 @@ onMounted(async () => {
                         {{ user.email_address }}
                       </div>
                       <div
-                        class="block sm:hidden mt-1 inline-flex text-xs font-medium rounded-full bg-green-100 px-2 py-1 text-green-800"
+                        class="block sm:hidden mt-1 text-xs font-medium rounded-full bg-green-100 px-2 py-1 text-green-800"
                       >
                         {{ user.role.name }}
                       </div>
