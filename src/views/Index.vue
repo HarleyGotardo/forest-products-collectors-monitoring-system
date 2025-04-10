@@ -73,7 +73,7 @@ const goToSignUpPage = () => {
       
       <div class="flex items-center space-x-3 mb-6">
         <div class="w-12 h-12 bg-white rounded-full p-2 shadow-md">
-          <NatureCartLogo width="100%" height="100%" />
+          <img src="@/assets/nature-cart.png" alt="VSU Logo" class="max-h-full max-w-full object-contain" />
         </div>
         <h1 class="text-2xl font-bold">Nature Cart</h1>
       </div>
