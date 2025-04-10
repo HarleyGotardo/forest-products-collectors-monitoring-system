@@ -17,6 +17,13 @@ const currentPage = ref(1)
 const itemsPerPage = 8
 const loading = ref(true)
 
+// New refs for the additional features
+const todayCollectionRequests = ref([])
+const todayCollectionCount = ref(0)
+const lowStockProducts = ref([])
+const lowStockCount = ref(0)
+const lowStockThreshold = 10 // Define a threshold for "low stock" - adjust as needed
+
 const fetchDashboardData = async () => {
   loading.value = true
   try {
@@ -182,6 +189,69 @@ const fetchDashboardData = async () => {
         quantity: record.quantity
       }));
 
+    // NEW FEATURE: Find products with low stock
+    lowStockProducts.value = fpAndLocation
+      .filter(record => record.forest_products && record.quantity <= lowStockThreshold)
+      .map(record => ({
+        id: record.id,
+        productName: record.forest_products?.name || 'Unknown Product',
+        locationName: record.locations?.name || 'Unknown Location',
+        measurementUnit: record.forest_products?.measurement_units?.unit_name || 'N/A',
+        fp_id: record.forest_product_id,
+        quantity: record.quantity
+      }))
+      .sort((a, b) => a.quantity - b.quantity); // Sort ascending (lowest quantities first)
+    
+    lowStockCount.value = lowStockProducts.value.length;
+
+    // NEW FEATURE: Fetch today's collection requests
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const { data: todayRequests, error: todayRequestsError } = await supabase
+      .from('collection_requests')
+      .select(`
+        id,
+        collection_date,
+        user_id,
+        profiles:user_id (first_name, last_name),
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id,
+          fp_and_locations:fp_and_location_id (
+        id,
+        forest_product_id,
+        forest_products:forest_product_id (
+          name,
+          measurement_units:measurement_unit_id (unit_name)
+        )
+          )
+        )
+      `)
+      .gte('collection_date', today.toISOString())
+      .lt('collection_date', tomorrow.toISOString())
+      .is('deleted_at', null)
+      .not('approved_at', 'is', null)
+      .eq('is_recorded', false);
+    
+    if (todayRequestsError) throw todayRequestsError;
+    
+    todayCollectionRequests.value = todayRequests.map(request => ({
+      id: request.id,
+      collectionDate: new Date(request.collection_date).toLocaleDateString(),
+      collectorName: `${request.profiles?.first_name || 'Unknown'} ${request.profiles?.last_name || 'Collector'}`,
+      items: request.collection_request_items.map(item => ({
+        productName: item.fp_and_locations?.forest_products?.name || 'Unknown Product',
+        quantity: item.requested_quantity,
+        unitName: item.fp_and_locations?.forest_products?.measurement_units?.unit_name || 'N/A'
+      }))
+    }));
+    
+    todayCollectionCount.value = todayCollectionRequests.value.length;
+
     // Render charts
     renderCharts(labels, quantities, units); // Render charts after fetching data
   } catch (error) {
@@ -190,6 +260,16 @@ const fetchDashboardData = async () => {
   } finally {
     loading.value = false; // Stop loading
   }
+}
+
+const paginatedLowStockProducts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return lowStockProducts.value.slice(start, end);
+});
+
+const viewCollectionRequest = (id) => {
+  router.push(`/authenticated/collection-requests/${id}`);
 }
 
 const createCollectionRoute = () => {
@@ -296,28 +376,6 @@ const renderCharts = async (labels, quantities, units) => {
   }
 };
 
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return forestProductsData.value.slice(start, end)
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(forestProductsData.value.length / itemsPerPage)
-})
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
-
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
 onMounted(() => {
   fetchDashboardData()
 })
@@ -354,6 +412,10 @@ onMounted(() => {
         <div class="h-24 bg-gray-200 rounded-lg"></div>
         <div class="h-24 bg-gray-200 rounded-lg"></div>
       </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+        <div class="h-24 bg-gray-200 rounded-lg"></div>
+        <div class="h-24 bg-gray-200 rounded-lg"></div>
+      </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div class="h-96 bg-gray-200 rounded-lg"></div>
         <div class="h-96 bg-gray-200 rounded-lg"></div>
@@ -362,6 +424,7 @@ onMounted(() => {
 
     <!-- Dashboard Content -->
     <div v-show="!loading">
+      <!-- First row of cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
         <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
           <div class="flex items-center justify-between">
@@ -417,6 +480,83 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Second row of cards (New) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
+        <!-- Today's Collection Requests Card -->
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-500">Today's Collection Requests</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ todayCollectionCount }}</p>
+            </div>
+            <div class="p-2 sm:p-3 bg-indigo-100 rounded-lg">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+          <div class="overflow-auto max-h-48">
+            <ul class="divide-y divide-gray-200">
+              <li v-for="request in todayCollectionRequests" :key="request.id" 
+                class="py-2 flex flex-col cursor-pointer hover:bg-indigo-50 transition-colors rounded-lg px-3"
+                @click="viewCollectionRequest(request.id)">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-900">{{ request.collectorName }}</span>
+                  <span class="text-xs text-gray-500">{{ request.collectionDate }}</span>
+                </div>
+                <div class="mt-1 text-xs text-gray-600">
+                  <span v-for="(item, index) in request.items.slice(0, 2)" :key="index" class="inline-block mr-2">
+                    {{ item.productName }}: {{ item.quantity }} {{ item.unitName }}
+                  </span>
+                  <span v-if="request.items.length > 2" class="text-gray-400">
+                    +{{ request.items.length - 2 }} more items
+                  </span>
+                </div>
+              </li>
+            </ul>
+            <div v-if="todayCollectionRequests.length === 0" class="py-6 text-center text-gray-500">
+              No approved collection requests scheduled for today
+            </div>
+          </div>
+        </div>
+
+        <!-- Low Stock Products Card -->
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-500">Low Stock Products</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ lowStockCount }}</p>
+            </div>
+            <div class="p-2 sm:p-3 bg-red-100 rounded-lg">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          </div>
+          <div class="overflow-auto max-h-48">
+            <ul class="divide-y divide-gray-200">
+              <li v-for="product in paginatedLowStockProducts" :key="product.id"
+                class="py-2 flex justify-between items-center cursor-pointer hover:bg-red-50 transition-colors rounded-lg px-3"
+                @click="viewFP_Details(product.fp_id)">
+                <div>
+                  <span class="text-sm font-medium text-gray-900">{{ product.productName }}</span>
+                  <span class="text-xs text-gray-500 ml-1">({{ product.locationName }})</span>
+                </div>
+                <div class="flex items-center">
+                  <span class="text-sm font-medium" :class="{'text-red-600': product.quantity <= 5, 'text-yellow-600': product.quantity > 5}">
+                    {{ product.quantity }} {{ product.measurementUnit }}
+                  </span>
+                </div>
+              </li>
+            </ul>
+            <div v-if="lowStockProducts.length === 0" class="py-6 text-center text-gray-500">
+              No products are currently low in stock
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Third row: Charts and product distribution -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 w-full">
           <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Most Collected Forest Products</h3>
@@ -427,9 +567,10 @@ onMounted(() => {
 
         <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
           <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Products Distribution</h3>
-          <div class="space-y-3 sm:space-y-4">
+          <!-- Changed the div to be scrollable just like the low stock products -->
+          <div class="overflow-auto max-h-96">
             <ul class="divide-y divide-gray-200">
-              <li v-for="item in paginatedData"
+              <li v-for="item in forestProductsData"
                 :key="item.id"
                 class="py-2 sm:py-3 flex items-center justify-between cursor-pointer hover:bg-green-100 transition-colors rounded-lg px-3 sm:px-4"
                 @click="viewFP_Details(item.fp_id)">
@@ -440,28 +581,8 @@ onMounted(() => {
                 <span class="text-xs sm:text-sm font-medium text-gray-900">{{ item.quantity }} {{ item.measurementUnit }}</span>
               </li>
             </ul>
-
-            <div class="flex items-center justify-between pt-3 sm:pt-4">
-              <button @click="prevPage"
-                :disabled="currentPage === 1"
-                :class="{'opacity-50 cursor-not-allowed': currentPage === 1}"
-                class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-              </button>
-              <span class="text-xs sm:text-sm text-gray-600">
-                Page {{ currentPage }} of {{ totalPages }}
-              </span>
-              <button @click="nextPage"
-                :disabled="currentPage === totalPages"
-                :class="{'opacity-50 cursor-not-allowed': currentPage === totalPages}"
-                class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-                
-              </button>
+            <div v-if="forestProductsData.length === 0" class="py-6 text-center text-gray-500">
+              No products available
             </div>
           </div>
         </div>

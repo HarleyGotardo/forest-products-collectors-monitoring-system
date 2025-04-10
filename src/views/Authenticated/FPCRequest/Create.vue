@@ -57,6 +57,7 @@ const fetchForestProducts = async () => {
       unit_name: item.forest_products.measurement_units.unit_name,
       quantity: item.quantity,
       requested_quantity: 0,
+      quantityError: false // Add a flag to track quantity validation errors
     }));
     filteredForestProducts.value = forestProducts.value;
   }
@@ -69,19 +70,65 @@ watch(searchQuery, (newQuery) => {
   );
 });
 
+// Add validation function to check quantity
+const validateProductQuantity = (product) => {
+  if (product.requested_quantity > product.quantity) {
+    product.quantityError = true;
+    return false;
+  } else if (product.requested_quantity < 0) {
+    product.quantityError = true;
+    return false;
+  } else {
+    product.quantityError = false;
+    return true;
+  }
+};
+
+// Watch changes to requested quantities and validate them
+watch(() => [...selectedForestProducts.value], (products) => {
+  products.forEach(product => {
+    validateProductQuantity(product);
+  });
+}, { deep: true });
+
+const hasQuantityErrors = computed(() => {
+  return selectedForestProducts.value.some(product => product.quantityError);
+});
+
 const isFormComplete = computed(() => {
   return (
     selectedForestProducts.value.length > 0 &&
     collectionDate.value &&
-    selectedForestProducts.value.some(p => p.requested_quantity > 0)
+    selectedForestProducts.value.some(p => p.requested_quantity > 0) &&
+    !hasQuantityErrors.value
   );
 });
 
 const isCollectionDateValid = computed(() => {
-  return new Date(collectionDate.value) >= new Date();
+  const today = new Date();
+  const collectionDateTime = new Date(collectionDate.value);
+
+  if (collectionDateTime.toDateString() === today.toDateString()) {
+    // If the collection date is today, check if the current time is before 4 PM
+    const currentHour = today.getHours();
+    return currentHour < 16;
+  }
+
+  // Otherwise, ensure the collection date is in the future
+  return collectionDateTime >= today;
 });
 
 const handleSubmit = () => {
+  // Validate all quantities
+  selectedForestProducts.value.forEach(product => {
+    validateProductQuantity(product);
+  });
+  
+  if (hasQuantityErrors.value) {
+    toast.error('Some requested quantities exceed available amounts');
+    return;
+  }
+
   if (!isFormComplete.value) {
     toast.error('Please complete the form');
     return;
@@ -112,7 +159,7 @@ const confirmSubmit = async () => {
     return;
   }
 
-  // Validate quantities
+  // Final validation check
   const invalidProducts = validProducts.filter(
     product => product.requested_quantity > product.quantity || product.requested_quantity <= 0
   );
@@ -199,9 +246,22 @@ onMounted(() => {
         <div v-if="selectedForestProducts.length > 0" class="space-y-2">
           <label class="block text-sm font-medium text-gray-700">Selected Products ({{ selectedForestProducts.length }})</label>
           <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-            <div v-for="product in selectedForestProducts" :key="product.id" class="text-sm">
-              {{ product.forest_product_name }} - {{ product.requested_quantity > 0 ? product.requested_quantity : 'No' }} {{ product.unit_name }}(s)
+            <div v-for="product in selectedForestProducts" :key="product.id" class="text-sm mb-2">
+              <div class="flex justify-between items-center">
+                <span>
+                  {{ product.forest_product_name }} - {{ product.requested_quantity > 0 ? product.requested_quantity : 'No' }} {{ product.unit_name }}(s)
+                </span>
+                <span class="text-gray-500 text-xs">Available: {{ product.quantity }} {{ product.unit_name }}(s)</span>
+              </div>
+              <!-- Error message for quantity validation -->
+              <div v-if="product.quantityError" class="text-red-500 text-xs mt-1">
+                Requested quantity exceeds available amount
+              </div>
             </div>
+          </div>
+          <!-- Display warning if there are any quantity errors -->
+          <div v-if="hasQuantityErrors" class="text-red-500 text-sm font-medium">
+            Please correct the requested quantities before submitting
           </div>
         </div>
 
@@ -276,16 +336,23 @@ onMounted(() => {
                   Available: {{ product.quantity }} {{ product.unit_name }}(s)
                 </div>
               </div>
-              <div v-if="selectedForestProducts.includes(product)" class="flex items-center space-x-2">
-                <label class="text-sm text-gray-600">Quantity:</label>
-                <input
-                  type="number"
-                  v-model="product.requested_quantity"
-                  min="0"
-                  :max="product.quantity"
-                  placeholder="Qty"
-                  class="w-24 text-center border border-gray-300 rounded p-1"
-                />
+              <div v-if="selectedForestProducts.includes(product)" class="flex flex-col">
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600">Quantity:</label>
+                  <input
+                    type="number"
+                    v-model="product.requested_quantity"
+                    min="0"
+                    :max="product.quantity"
+                    placeholder="Qty"
+                    @input="validateProductQuantity(product)"
+                    :class="['w-24 text-center border rounded p-1', product.quantityError ? 'border-red-500 bg-red-50' : 'border-gray-300']"
+                  />
+                </div>
+                <!-- Inline error message -->
+                <div v-if="product.quantityError" class="text-red-500 text-xs mt-1 text-right">
+                  Max: {{ product.quantity }}
+                </div>
               </div>
             </div>
           </div>

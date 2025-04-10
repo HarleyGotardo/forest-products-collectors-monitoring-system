@@ -4,6 +4,17 @@ import { useRoute } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'vue-sonner';
 import { useRouter } from 'vue-router';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const route = useRoute();
 const router = useRouter();
@@ -14,6 +25,7 @@ const user = ref({ first_name: '', last_name: '' });
 const approver = ref({ first_name: '', last_name: '' });
 const error = ref(null);
 const isLoading = ref(true); // Added loading state
+const isApproving = ref(false); // New state for tracking approval process
 
 const fetchRequestDetails = async () => {
   isLoading.value = true;
@@ -150,6 +162,62 @@ watch(request, async (newRequest) => {
   }
 });
 
+// New function to handle request approval
+const approveRequest = async () => {
+  if (!request.value || request.value.approved_at) return;
+  
+  isApproving.value = true;
+  try {
+    // Get current user's ID for approved_by field
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
+    if (!currentUser) {
+      throw new Error('User authentication required');
+    }
+    
+    const now = new Date().toISOString();
+    
+    // Update the request with approval information
+    const { error: updateError } = await supabase
+      .from('collection_requests')
+      .update({
+        approved_at: now,
+        approved_by: currentUser.id,
+        updated_at: now
+      })
+      .eq('id', requestId);
+      
+    if (updateError) {
+      throw updateError;
+    }
+    
+    // Update local request object to reflect changes
+    request.value.approved_at = now;
+    request.value.approved_by = currentUser.id;
+    request.value.updated_at = now;
+    
+    // Fetch approver details to display name
+    const { data: approverData, error: approverError } = await supabase
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+      
+    if (!approverError && approverData) {
+      approver.value = approverData;
+    } else {
+      approver.value = { first_name: 'Current', last_name: 'User' };
+    }
+    
+    toast.success('Collection request approved successfully');
+  } catch (err) {
+    console.error('Error approving request:', err);
+    toast.error(`Failed to approve request: ${err.message}`);
+  } finally {
+    isApproving.value = false;
+  }
+};
+
 onMounted(() => {
   fetchRequestDetails();
 });
@@ -265,6 +333,70 @@ const formatDateTime = (dateTimeString) => {
     </div>
 
     <div v-if="request && !isLoading" class="space-y-6">
+      <!-- Action button for pending requests -->
+      <div v-if="request && !request.approved_at && !request.deleted_at" class="flex justify-end">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              :disabled="isApproving"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg 
+                v-if="!isApproving" 
+                class="-ml-1 mr-2 h-5 w-5" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              <svg 
+                v-else 
+                class="-ml-1 mr-2 h-5 w-5 animate-spin" 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24"
+              >
+                <circle 
+                  class="opacity-25" 
+                  cx="12" 
+                  cy="12" 
+                  r="10" 
+                  stroke="currentColor" 
+                  stroke-width="4"
+                ></circle>
+                <path 
+                  class="opacity-75" 
+                  fill="currentColor" 
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              {{ isApproving ? 'Approving...' : 'Approve Request' }}
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Approval</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to approve this collection request? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="approveRequest">
+                Approve
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
       <div
         class="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden"
       >
@@ -590,7 +722,7 @@ const formatDateTime = (dateTimeString) => {
                       aria-hidden="true"
                     >
                       <path
-                        stroke-linecap="round"
+                      stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="1.5"
                         d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
@@ -605,7 +737,7 @@ const formatDateTime = (dateTimeString) => {
         </div>
       </div>
 
-      <div class="mt-8 flex justify-start">
+      <div class="mt-8 flex justify-between">
         <button
           type="button"
           @click="router.back()"
