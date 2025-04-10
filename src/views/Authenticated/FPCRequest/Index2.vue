@@ -55,19 +55,19 @@ const paginateRequests = () => {
   const end = start + itemsPerPage;
   paginatedRequests.value = filteredRequests.value.slice(start, end);
 };
-
 const filteredRequests = computed(() => {
   // First filter by search query
   let filtered = requests.value;
-  
+
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(request =>
       request.id.toString().includes(query) ||
-      (request.approved_at ? 'approved' : 'pending').includes(query) 
+      (request.approved_at ? 'approved' : 'pending').includes(query) ||
+      `${request.profiles.first_name} ${request.profiles.last_name}`.toLowerCase().includes(query)
     );
   }
-  
+
   // Then filter by status
   if (statusFilter.value !== 'all') {
     if (statusFilter.value === 'approved') {
@@ -76,7 +76,7 @@ const filteredRequests = computed(() => {
       filtered = filtered.filter(request => request.approved_at === null);
     }
   }
-  
+
   // Then filter by recorded status
   if (recordedFilter.value !== 'all') {
     if (recordedFilter.value === 'recorded') {
@@ -85,7 +85,7 @@ const filteredRequests = computed(() => {
       filtered = filtered.filter(request => request.is_recorded === false);
     }
   }
-  
+
   return filtered;
 });
 

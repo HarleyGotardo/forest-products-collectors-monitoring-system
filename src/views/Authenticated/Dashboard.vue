@@ -515,6 +515,7 @@ onMounted(() => {
               </li>
             </ul>
             <div v-if="todayCollectionRequests.length === 0" class="py-6 text-center text-gray-500">
+              <img src="@/assets/no-result.png" alt="No Results" class="w-16 h-16 mx-auto mb-4" />
               No approved collection requests scheduled for today
             </div>
           </div>

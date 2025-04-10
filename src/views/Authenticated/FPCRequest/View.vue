@@ -280,61 +280,8 @@ const formatDateTime = (dateTimeString) => {
           Deleted
         </div>
       </div>
-    </div>
-
-    <div
-      v-if="error && !isLoading"
-      class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg shadow-md"
-    >
-      <div class="flex items-center gap-3">
-        <svg
-          class="h-5 w-5 text-red-400 flex-shrink-0"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1.293-8.707a1 1 0 011.414-1.414L10 8.586l1.293-1.293a1 1 0 111.414 1.414L11.414 10l1.293 1.293a1 1 0 01-1.414 1.414L10 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L8.586 10 7.293 8.707z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        <p class="font-medium">{{ error }}</p>
-      </div>
-    </div>
-
-    <div v-if="isLoading" class="space-y-6 animate-pulse">
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="flex justify-between items-center mb-6">
-          <div class="h-7 bg-gray-200 rounded w-1/3"></div>
-          <div class="h-5 bg-gray-200 rounded w-1/4"></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-4">
-            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-5 bg-gray-200 rounded w-2/3"></div>
-            <div class="h-5 bg-gray-200 rounded w-1/2"></div>
-          </div>
-          <div class="space-y-4">
-            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-5 bg-gray-200 rounded w-2/3"></div>
-            <div class="h-5 bg-gray-200 rounded w-1/2"></div>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
-        <div class="space-y-3">
-          <div class="h-10 bg-gray-200 rounded w-full"></div>
-          <div class="h-10 bg-gray-200 rounded w-full"></div>
-          <div class="h-10 bg-gray-200 rounded w-full"></div>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="request && !isLoading" class="space-y-6">
-      <!-- Action button for pending requests -->
-      <div v-if="request && !request.approved_at && !request.deleted_at" class="flex justify-end">
+            <!-- Action button for pending requests -->
+            <div v-if="request && !request.approved_at && !request.deleted_at" class="flex justify-end">
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
@@ -396,7 +343,59 @@ const formatDateTime = (dateTimeString) => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+    </div>
 
+    <div
+      v-if="error && !isLoading"
+      class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg shadow-md"
+    >
+      <div class="flex items-center gap-3">
+        <svg
+          class="h-5 w-5 text-red-400 flex-shrink-0"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1.293-8.707a1 1 0 011.414-1.414L10 8.586l1.293-1.293a1 1 0 111.414 1.414L11.414 10l1.293 1.293a1 1 0 01-1.414 1.414L10 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L8.586 10 7.293 8.707z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <p class="font-medium">{{ error }}</p>
+      </div>
+    </div>
+
+    <div v-if="isLoading" class="space-y-6 animate-pulse">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex justify-between items-center mb-6">
+          <div class="h-7 bg-gray-200 rounded w-1/3"></div>
+          <div class="h-5 bg-gray-200 rounded w-1/4"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+            <div class="h-5 bg-gray-200 rounded w-2/3"></div>
+            <div class="h-5 bg-gray-200 rounded w-1/2"></div>
+          </div>
+          <div class="space-y-4">
+            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+            <div class="h-5 bg-gray-200 rounded w-2/3"></div>
+            <div class="h-5 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
+        <div class="space-y-3">
+          <div class="h-10 bg-gray-200 rounded w-full"></div>
+          <div class="h-10 bg-gray-200 rounded w-full"></div>
+          <div class="h-10 bg-gray-200 rounded w-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="request && !isLoading" class="space-y-6">
       <div
         class="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden"
       >
