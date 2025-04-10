@@ -416,7 +416,7 @@ const goToLoginPage = () => {
     </div>
     
     <!-- Feature Column - Hidden on mobile, visible on desktop -->
-    <div class="hidden lg:flex lg:w-1/2 bg-green-50 flex-col justify-center items-center p-12">
+    <div class="hidden lg:flex lg:w-1/2 bg-green-50 flex-col items-center p-12">
       <div class="max-w-lg">
         <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
           Forest Product Collectors Monitoring System
