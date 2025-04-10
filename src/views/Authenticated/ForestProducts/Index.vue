@@ -72,23 +72,25 @@ const paginateForestProducts = () => {
 }
 
 const filteredForestProducts = computed(() => {
-  let products = allForestProducts.value
+  let products = allForestProducts.value;
 
   if (selectedType.value) {
-    products = products.filter(product => product.type === selectedType.value)
+    products = products.filter(product => product.type === selectedType.value);
   }
 
   if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
+    const query = searchQuery.value.toLowerCase();
     products = products.filter(product =>
       product.id.toString().includes(query) ||
       product.name.toLowerCase().includes(query) ||
-      product.locations.some(location => location.name.toLowerCase().includes(query))
-    )
+      product.fp_and_locations.some(fp => 
+        fp.locations && fp.locations.name.toLowerCase().includes(query)
+      )
+    );
   }
 
-  return products
-})
+  return products;
+});
 
 const nextPage = () => {
   if ((currentPage.value * itemsPerPage) < filteredForestProducts.value.length) {
