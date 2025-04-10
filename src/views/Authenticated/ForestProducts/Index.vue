@@ -261,110 +261,178 @@ watch(selectedType, () => {
     <!-- Forest Products Table -->
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-700">
-            <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Name</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Type</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Price</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Locations</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-if="filteredForestProducts.length === 0">
-              <td colspan="8" class="px-6 py-12 text-center">
-                <div class="flex flex-col items-center">
-                  <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+  <table class="min-w-full border-collapse sm:border-separate sm:border-spacing-0">
+    <thead class="bg-gray-700 hidden sm:table-header-group">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">ID</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Name</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Type</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Price</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Locations</th>
+        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody class="bg-white">
+
+      <tr v-if="filteredForestProducts.length === 0" class="block sm:table-row">
+        <td colspan="6" class="px-6 py-12 text-center block sm:table-cell">
+          <div class="flex flex-col items-center">
+             <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+             </svg>
+            <p class="text-gray-900 text-sm">No forest products found matching your criteria</p>
+          </div>
+        </td>
+      </tr>
+
+      <tr
+        v-for="product in forestProducts"
+        :key="product.id"
+        class="block mb-4 rounded-lg shadow-md border border-gray-200 bg-white sm:table-row sm:mb-0 sm:rounded-none sm:shadow-none sm:border-0 sm:border-b sm:border-gray-200 sm:hover:bg-gray-50 transition-colors duration-150"
+        @click="viewProduct(product.id, $event)"
+      >
+
+        <td class="block p-4 sm:hidden" colspan="6">
+          <div class="flex items-start space-x-4 mb-3">
+             <div class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-lg bg-blue-50">
+               <img :src="product.image_url" alt="Product Image" class="h-12 w-12 rounded-lg object-cover" />
+             </div>
+             <div class="flex-grow min-w-0"> <h3 class="text-base font-semibold text-gray-900 mb-0.5 truncate">{{ product.name }}</h3> <p class="text-xs text-gray-500">ID: #{{ product.id }}</p>
+             </div>
+             <div class="flex-shrink-0 flex items-center space-x-1" @click.stop> <Button
+                  v-if="isForestRanger || isFPUAdmin"
+                  @click="editProduct(product.id, $event)"
+                  aria-label="Edit product"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  <p class="text-gray-900 text-sm">No forest products found matching your criteria</p>
-                </div>
-              </td>
-            </tr>
-            <tr 
-              v-for="product in forestProducts" 
-              :key="product.id" 
-              class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-              @click="viewProduct(product.id, $event)"
-            >
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                #{{ product.id }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50">
-                    <img :src="product.image_url" alt="Forest Product Image" class="h-10 w-10 rounded-lg object-cover" />
-                  </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">
-                  {{ product.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">
-                  ₱{{ product.price_based_on_measurement_unit }} per {{ product.unit_name }}
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex flex-wrap gap-1">
-                  <span 
-                    v-for="location in product.locations" 
-                    :key="location?.id"
-                    class="bg-gray-100 px-2 py-1 rounded-full text-sm"
-                  >
-                    {{ location?.name }}
-                  </span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
-                <div class="flex items-center justify-end space-x-3">
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                     <Button
+                       v-if="isForestRanger || isFPUAdmin"
+                       aria-label="Delete product"
+                     >
+                       <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                       </svg>
+                     </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                     <AlertDialogHeader>
+                       <AlertDialogTitle>Delete Forest Product?</AlertDialogTitle>
+                       <AlertDialogDescription>
+                         This forest product will be transferred to the recycle bin.
+                       </AlertDialogDescription>
+                     </AlertDialogHeader>
+                     <AlertDialogFooter>
+                       <AlertDialogCancel>Cancel</AlertDialogCancel>
+                       <AlertDialogAction @click="deleteProduct(product.id)">Delete</AlertDialogAction>
+                     </AlertDialogFooter>
+                   </AlertDialogContent>
+                </AlertDialog>
+             </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm border-t border-gray-100 pt-3">
+             <div>
+               <span class="block text-xs text-gray-500 font-medium">Type</span>
+               <p class="text-gray-800">{{ product.type === 'Timber' ? 'Timber' : 'Non-Timber' }}</p>
+             </div>
+             <div>
+               <span class="block text-xs text-gray-500 font-medium">Price</span>
+               <p class="text-gray-800">
+                 ₱{{ product.price_based_on_measurement_unit }}
+                 <span class="text-gray-500 text-xs">/ {{ product.unit_name }}</span>
+               </p>
+             </div>
+             <div class="col-span-2">
+               <span class="block text-xs text-gray-500 font-medium">Locations</span>
+               <div class="flex flex-wrap gap-1 mt-1">
+                 <span
+                   v-for="location in product.locations"
+                   :key="location?.id"
+                   class="bg-gray-100 px-2 py-0.5 rounded-full text-xs text-gray-700"
+                 >
+                   {{ location?.name }}
+                 </span>
+                 <span v-if="!product.locations || product.locations.length === 0" class="text-xs text-gray-400 italic">
+                   N/A
+                 </span>
+               </div>
+             </div>
+          </div>
+        </td>
+        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200">
+          #{{ product.id }}
+        </td>
+        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap border-b border-gray-200">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50">
+              <img :src="product.image_url" alt="Forest Product Image" class="h-10 w-10 rounded-lg object-cover" />
+            </div>
+            <div class="ml-4 min-w-0"> <div class="text-sm font-medium text-gray-900 truncate">{{ product.name }}</div> </div>
+          </div>
+        </td>
+        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200">
+          {{ product.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
+        </td>
+        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200">
+           ₱{{ product.price_based_on_measurement_unit }} <span class="text-gray-500 text-xs">per {{ product.unit_name }}</span>
+        </td>
+        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap border-b border-gray-200">
+           <div class="flex flex-wrap gap-1">
+             <span
+               v-for="location in product.locations"
+               :key="location?.id"
+               class="bg-gray-100 px-2 py-1 rounded-full text-sm"
+             >
+               {{ location?.name }}
+             </span>
+             <span v-if="!product.locations || product.locations.length === 0" class="text-sm text-gray-400 italic">N/A</span>
+           </div>
+        </td>
+        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right text-sm font-medium border-b border-gray-200" @click.stop>
+           <div class="flex items-center justify-end space-x-2"> <Button
+               v-if="isForestRanger || isFPUAdmin"
+               @click="editProduct(product.id, $event)"
+               aria-label="Edit product"
+             >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+             </Button>
+             <AlertDialog>
+               <AlertDialogTrigger asChild>
                   <Button
-                    v-if="isForestRanger || isFPUAdmin" 
-                    @click="editProduct(product.id, $event)"
+                    v-if="isForestRanger || isFPUAdmin"
+                    aria-label="Delete product"
                   >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger>
-                      <Button 
-                        v-if="isForestRanger || isFPUAdmin"
-                      >
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Forest Product?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This forest product will be transferred to the recycle bin.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="deleteProduct(product.id)">Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+               </AlertDialogTrigger>
+               <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Forest Product?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This forest product will be transferred to the recycle bin.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction @click="deleteProduct(product.id)">Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+             </AlertDialog>
+           </div>
+        </td>
+        </tr>
+    </tbody>
+  </table>
+</div>
 
       <!-- Pagination -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
@@ -374,10 +442,10 @@ watch(selectedType, () => {
         :disabled="currentPage === 1"
         class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
-        Previous
+        <span class="hidden sm:inline ml-2">Previous</span>
           </button>
           <div 
         class="text-sm text-gray-700"
@@ -396,8 +464,8 @@ watch(selectedType, () => {
         :disabled="forestProducts.length < itemsPerPage"
         class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-        Next
-        <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span class="hidden sm:inline mr-2">Next</span>
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
           </button>
