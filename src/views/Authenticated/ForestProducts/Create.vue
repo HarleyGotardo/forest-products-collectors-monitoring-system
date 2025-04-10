@@ -74,7 +74,11 @@ const fetchLocations = async () => {
   if (error) {
     console.error('Error fetching locations:', error);
   } else {
-    locations.value = data;
+    // Initialize each location with a quantity property set to 0
+    locations.value = data.map(loc => ({
+      ...loc,
+      quantity: 0
+    }));
   }
 };
 
@@ -119,6 +123,21 @@ const initializeMap = (latitude, longitude, name) => {
 
 const handleImageChange = (event) => {
   image.value = event.target.files[0];
+};
+
+const updateLocationQuantity = (location, event) => {
+  const value = parseFloat(event.target.value);
+  const index = locations.value.findIndex(loc => loc.id === location.id);
+
+  if (index !== -1) {
+    locations.value[index].quantity = isNaN(value) ? 0 : value;
+  }
+
+  // If this location is selected, update its quantity in selectedLocations as well
+  const selectedIndex = selectedLocations.value.findIndex(loc => loc.id === location.id);
+  if (selectedIndex !== -1) {
+    selectedLocations.value[selectedIndex].quantity = isNaN(value) ? 0 : value;
+  }
 };
 
 const handleSubmit = async () => {
@@ -230,7 +249,20 @@ const selectedLocationsNote = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  return name.value && description.value && type.value && selectedMeasurementUnit.value && price_based_on_measurement_unit.value !== null && selectedLocations.value.length > 0;
+  // Check if all required fields are filled
+  const hasBasicInfo = name.value && description.value && type.value && selectedMeasurementUnit.value;
+
+  // Check if at least one location is selected with a quantity greater than 0
+  const hasValidLocations = selectedLocations.value.length > 0 &&
+    selectedLocations.value.some(loc => loc.quantity > 0);
+
+  // Return true only if all conditions are met
+  return hasBasicInfo && hasValidLocations;
+});
+
+// Add a computed property to check for zero-quantity locations
+const hasZeroQuantityLocations = computed(() => {
+  return selectedLocations.value.some(loc => !loc.quantity || loc.quantity <= 0);
 });
 
 onMounted(() => {
@@ -255,7 +287,6 @@ onMounted(() => {
             alt="Forest Map"
             class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
           />
-
         </div>
         <div class="ml-5">
           <h2 class="text-2xl font-bold text-gray-800">
@@ -395,6 +426,13 @@ onMounted(() => {
                 @input="(e) => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); quantity.value = parseFloat(e.target.value) || 0; }"
               />
             </div>
+            <p
+              v-if="!price_based_on_measurement_unit || parseFloat(price_based_on_measurement_unit) === 0"
+              class="text-sm text-gray-500 mt-1"
+            >
+              Setting the price to 0 or leaving it blank indicates that this
+              product is free.
+            </p>
           </div>
 
           <!-- Location & Image section -->
@@ -435,94 +473,128 @@ onMounted(() => {
               <span class="font-medium">Selected:</span>
               {{ selectedLocationsNote }}
             </p>
+            <!-- Add this below the selected locations section -->
+            <div
+              v-if="hasZeroQuantityLocations && selectedLocations.length > 0"
+              class="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 rounded-md"
+            >
+              <div class="flex items-start">
+                <svg
+                  class="h-5 w-5 text-yellow-400 mr-3 flex-shrink-0 mt-0.5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <p>
+                  One or more locations have no quantity. Please enter a
+                  quantity greater than 0 for each selected location.
+                </p>
+              </div>
+            </div>
           </div>
 
-            <!-- Image input with confirmation text -->
-            <div class="space-y-2">
+          <!-- Image input with confirmation text -->
+          <div class="space-y-2">
             <Label for="image" class="text-gray-700">Product Image</Label>
             <div
               class="border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-emerald-300 transition-colors"
             >
               <input
-              id="image"
-              type="file"
-              @change="handleImageChange"
-              class="hidden"
+                id="image"
+                type="file"
+                @change="handleImageChange"
+                class="hidden"
               />
               <label
-              for="image"
-              class="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                for="image"
+                class="cursor-pointer flex flex-col items-center justify-center space-y-2"
               >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-8 w-8 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <span class="text-sm text-gray-500"
-                >Click to upload product image</span
-              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-8 w-8 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <span class="text-sm text-gray-500"
+                  >Click to upload product image</span
+                >
               </label>
             </div>
             <!-- Show confirmation text if image is uploaded -->
             <div v-if="image" class="mt-4 flex items-center space-x-2">
               <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 text-emerald-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-emerald-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
-                clip-rule="evenodd"
-              />
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                  clip-rule="evenodd"
+                />
               </svg>
-                <p class="text-sm text-gray-600">Image uploaded. Upload again to replace the image.</p>
+              <p class="text-sm text-gray-600">
+                Image uploaded. Upload again to replace the image.
+              </p>
             </div>
-            </div>
+          </div>
         </div>
       </div>
-
+      <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-md">
+        <p class="text-sm text-blue-700">
+          Complete the form and select at least one location with a quantity to enable the "Create Product" button.
+        </p>
+      </div>
       <!-- Submit button section -->
       <div class="bg-gray-50 px-6 py-4 flex justify-end">
         <AlertDialog>
           <AlertDialogTrigger>
-            <button
-              type="button"
-              :disabled="!isFormValid"
-              class="disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-600 text-white font-medium py-2 px-6 rounded-md shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-300"
-            >
-              Create Product
-            </button>
+        <button
+          type="button"
+          :disabled="!isFormValid"
+          :class="[
+          'font-medium py-2 px-6 rounded-md shadow transition-colors duration-300',
+          isFormValid 
+        ? 'bg-emerald-600 text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500' 
+        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        ]"
+        >
+          Create Product
+        </button>
           </AlertDialogTrigger>
           <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Creation</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to create this forest product with the
-                provided information?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                class="bg-gray-100 hover:bg-gray-200 text-gray-800"
-                >Cancel</AlertDialogCancel
-              >
-              <AlertDialogAction
-                @click="handleSubmit"
-                class="bg-emerald-600 hover:bg-emerald-700"
-                >Create</AlertDialogAction
-              >
-            </AlertDialogFooter>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirm Creation</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to create this forest product with the
+            provided information?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            class="bg-gray-100 hover:bg-gray-200 text-gray-800"
+            >Cancel</AlertDialogCancel
+          >
+          <AlertDialogAction
+            @click="handleSubmit"
+            class="bg-emerald-600 hover:bg-emerald-700"
+            >Create</AlertDialogAction
+          >
+        </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
@@ -602,6 +674,7 @@ onMounted(() => {
                 <div class="ml-4 flex items-center">
                   <label class="mr-2 text-sm text-gray-600"
                     >Quantity ({{ selectedMeasurementUnit ? measurementUnits.find(unit => unit.id === selectedMeasurementUnit)?.unit_name : ''
+
                     }}):</label
                   >
                   <input
