@@ -178,12 +178,7 @@
               >
                 ID
               </th>
-              <th
-                scope="col"
-                class="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                LOCATION
-              </th>
+
               <th
                 scope="col"
                 class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
@@ -255,11 +250,6 @@
                 class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
               >
                 #{{ record.id }}
-              </td>
-              <td
-                class="hidden sm:table-cell px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm"
-              >
-                {{ record.location_name }}
               </td>
               <td
                 class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm"
