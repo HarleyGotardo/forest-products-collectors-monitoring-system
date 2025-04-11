@@ -234,7 +234,7 @@ const routes = [
         component: SalesReport,
         meta: {
           title: "Sales Report - Nature Cart",
-          requiresRole: [4, 2, 1],
+          requiresRole: [4, 3, 1],
         },
       },
       {

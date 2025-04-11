@@ -263,7 +263,7 @@ watch(selectedType, () => {
     <!-- Forest Products Table -->
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
-  <table class="min-w-full border-collapse sm:border-separate sm:border-spacing-0">
+  <table class="min-w-full border-collapse sm:border-separate sm:border-spacing-0 cursor-pointer">
     <thead class="bg-gray-700 hidden sm:table-header-group">
       <tr>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">ID</th>
