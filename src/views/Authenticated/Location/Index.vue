@@ -247,7 +247,7 @@ watch(currentPage, () => {
     </div>
 
 <!-- Responsive Locations Table/Cards -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div v-show="!loading" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
   <!-- Desktop Table View - Hidden on mobile -->
   <div class="hidden md:block overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
