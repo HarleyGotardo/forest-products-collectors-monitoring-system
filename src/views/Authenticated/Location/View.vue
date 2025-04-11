@@ -464,7 +464,7 @@ onMounted(async () => {
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
         <div class="p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Map View</h3>
+            <h3 class="text-lg font-semibold text-gray-900">Map View of {{ location.name }}</h3>
             <div class="px-3 py-1 bg-blue-50 rounded-full">
               <span class="text-sm text-blue-700">Interactive Map</span>
             </div>

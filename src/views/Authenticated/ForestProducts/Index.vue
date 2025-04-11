@@ -385,7 +385,10 @@ watch(selectedType, () => {
           {{ product.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
         </td>
         <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200">
-           ₱{{ product.price_based_on_measurement_unit }} <span class="text-gray-500 text-xs">per {{ product.unit_name }}</span>
+           <span v-if="product.price_based_on_measurement_unit && product.price_based_on_measurement_unit > 0">
+             ₱{{ product.price_based_on_measurement_unit }} <span class="text-gray-500 text-xs">per {{ product.unit_name }}</span>
+           </span>
+           <span v-else class="text-green-600 font-semibold">Free</span>
         </td>
         <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap border-b border-gray-200">
            <div class="flex flex-wrap gap-1">
