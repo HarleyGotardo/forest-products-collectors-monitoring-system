@@ -197,17 +197,40 @@ const isFormValid = computed(() => {
 })
 
 // Computed property to check if there are actual changes to save
+// Improved hasChanges computed property
 const hasChanges = computed(() => {
+  // Compare basic form fields with original data
   const hasBasicChanges = (
     name.value !== originalData.value.name ||
     description.value !== originalData.value.description ||
     type.value !== originalData.value.type ||
-    parseFloat(price_based_on_measurement_unit.value) !== originalData.value.price_based_on_measurement_unit ||
+    // Special handling for price to avoid issues with null/0/undefined comparisons
+    !arePricesEqual(price_based_on_measurement_unit.value, originalData.value.price_based_on_measurement_unit) ||
     selectedMeasurementUnit.value !== originalData.value.measurement_unit_id
   )
   
   return hasBasicChanges || haveLocationsChanged()
 })
+
+// Helper function to properly compare price values
+const arePricesEqual = (price1, price2) => {
+  // Convert both to numbers for comparison
+  const num1 = parseFloat(price1)
+  const num2 = parseFloat(price2)
+  
+  // Handle special cases: both null/undefined/empty or both zero
+  if ((!price1 && !price2) || (num1 === 0 && num2 === 0)) {
+    return true
+  }
+  
+  // Handle NaN cases
+  if (isNaN(num1) && isNaN(num2)) {
+    return true
+  }
+  
+  // Normal number comparison
+  return num1 === num2
+}
 
 // Checking for zero-quantity locations
 const hasZeroQuantityLocations = computed(() => {
@@ -755,32 +778,35 @@ const getUnitName = computed(() => {
   </div>
 
   <AlertDialog>
-    <AlertDialogTrigger>
-      <button
-        type="button"
-        :disabled="!isFormValid || hasZeroQuantityLocations || !hasChanges"
-        class="px-6 py-2 bg-emerald-600 text-white font-medium rounded-lg shadow-md hover:bg-emerald-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200"
-      >
-        Update Product
-      </button>
-    </AlertDialogTrigger>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>Confirm Update</AlertDialogTitle>
-        <AlertDialogDescription>
-          Are you sure you want to update this forest product with the provided changes?
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel class="bg-gray-100 hover:bg-gray-200 text-gray-800">
-          Cancel
-        </AlertDialogCancel>
-        <AlertDialogAction @click="handleSubmit" class="bg-emerald-600 hover:bg-emerald-700">
-          Update
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
+  <AlertDialogTrigger>
+    <button
+      type="button"
+      :disabled="!isFormValid || hasZeroQuantityLocations || !hasChanges"
+      class="px-6 py-2 font-medium rounded-lg shadow-md transition-all duration-200"
+      :class="isFormValid && !hasZeroQuantityLocations && hasChanges 
+        ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
+        : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
+    >
+      Update Product
+    </button>
+  </AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Confirm Update</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to update this forest product with the provided changes?
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel class="bg-gray-100 hover:bg-gray-200 text-gray-800">
+        Cancel
+      </AlertDialogCancel>
+      <AlertDialogAction @click="handleSubmit" class="bg-emerald-600 hover:bg-emerald-700">
+        Update
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
 </div>
     </form>
 
