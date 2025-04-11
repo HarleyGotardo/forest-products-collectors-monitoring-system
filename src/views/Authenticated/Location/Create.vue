@@ -216,7 +216,7 @@ const isFormValid = computed(() => {
       </div>
       <div>
         <h2 class="text-2xl font-bold text-gray-800">Create Location</h2>
-        <p class="text-sm text-gray-500 mt-1">Add a new location to your forest management system</p>
+        <p class="text-sm text-gray-500 mt-1">Add a new location</p>
       </div>
     </div>
 

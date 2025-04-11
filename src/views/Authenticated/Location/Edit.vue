@@ -12,21 +12,19 @@ import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
 import Button from "@/components/ui/button/Button.vue";
-
-const router = useRouter();
-const route = useRoute();
-const locationId = route.params.id;
-const name = ref(SeparatorConstant.EMPTY_STRING);
-const originalName = ref(SeparatorConstant.EMPTY_STRING);
-const error = ref(null);
-const isModalOpen = ref(false);
-const modalField = ref(SeparatorConstant.EMPTY_STRING);
-const modalValue = ref(null);
-let coordinatesObj = ref({ lat: 0, lng: 0 });
-let originalCoordinatesObj = { lat: 0, lng: 0 };
-const coordinates = ref("");
-let mapInstance = null;
-const allLocations = ref([]); // Store all existing locations
+import Input from "@/components/ui/input/Input.vue";
+import Label from "@/components/ui/label/Label.vue";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 // Fix for the default icon issue
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -41,6 +39,21 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow
 });
 
+const router = useRouter();
+const route = useRoute();
+const locationId = route.params.id;
+const name = ref(SeparatorConstant.EMPTY_STRING);
+const originalName = ref(SeparatorConstant.EMPTY_STRING);
+const error = ref(null);
+const isModalOpen = ref(false);
+const modalField = ref(SeparatorConstant.EMPTY_STRING);
+const modalValue = ref(null);
+let coordinatesObj = ref({ lat: 0, lng: 0 });
+let originalCoordinatesObj = { lat: 0, lng: 0 };
+const coordinates = ref("");
+let mapInstance = null;
+const existingLocations = ref([]); // Store all existing locations
+
 const fetchLocation = async () => {
   let { data, error: fetchError } = await supabase
     .from('locations')
@@ -50,6 +63,7 @@ const fetchLocation = async () => {
 
   if (fetchError) {
     error.value = fetchError.message
+    toast.error(fetchError.message, { duration: 3000 })
   } else {
     name.value = data.name
     originalName.value = data.name
@@ -59,17 +73,17 @@ const fetchLocation = async () => {
   }
 }
 
-const fetchAllLocations = async () => {
-  let { data, error: fetchError } = await supabase
+const fetchLocations = async () => {
+  const { data, error: fetchError } = await supabase
     .from('locations')
-    .select('*')
+    .select('*');
 
   if (fetchError) {
-    error.value = fetchError.message
+    toast.error(fetchError.message, { duration: 3000 });
   } else {
-    allLocations.value = data
+    existingLocations.value = data;
   }
-}
+};
 
 const handleSubmit = async () => {
   const currentDate = new Date();
@@ -92,6 +106,7 @@ const handleSubmit = async () => {
 
   if (updateError) {
     error.value = updateError.message
+    toast.error(updateError.message, { duration: 3000 })
   } else {
     toast.success('Location updated successfully', { duration: 2000 })
     router.push('/authenticated/locations')
@@ -104,7 +119,9 @@ const openModal = (field) => {
   isModalOpen.value = true;
 
   nextTick(() => {
-    initializeMap();
+    if (field === 'coordinates') {
+      initializeMap();
+    }
   });
 };
 
@@ -120,7 +137,9 @@ const closeModal = () => {
 };
 
 const saveModalValue = () => {
-  name.value = modalValue.value;
+  if (modalField.value === 'coordinates') {
+    name.value = modalValue.value;
+  }
   closeModal();
 };
 
@@ -148,22 +167,31 @@ const initializeMap = () => {
     maxZoom: CommonConstant.MAP_ZOOM_LEVEL.NINETEEN,
   }).addTo(mapInstance);
 
-  // Add existing location markers with tooltips (non-clickable)
-  allLocations.value.forEach(location => {
+  // Add existing location markers
+  existingLocations.value.forEach(location => {
     if (location.id !== locationId) {
       L.marker([location.latitude, location.longitude])
         .addTo(mapInstance)
-        .bindTooltip(location.name, {
-          permanent: true,
-          direction: 'top',
-          className: 'bg-white px-2 py-1 rounded shadow-lg'
-        })
-        .on('click', (e) => {
-          e.originalEvent.stopPropagation();
-          toast.error('Cannot select an existing location marker');
+        .bindPopup(location.name)
+        .on('click', () => {
+          toast.error('A location already exists at these coordinates', { duration: 3000 });
         });
     }
   });
+
+  // Add current location marker with different color
+  const currentLocationIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  L.marker([coordinatesObj.value.lat, coordinatesObj.value.lng], {icon: currentLocationIcon})
+    .addTo(mapInstance)
+    .bindPopup("Current location: " + name.value);
 
   mapInstance.on("click", (mapEvent) => {
     const latLngObj = {
@@ -172,12 +200,14 @@ const initializeMap = () => {
     };
 
     // Check if the clicked coordinates match any existing location
-    const isExistingLocation = allLocations.value.some(location => 
-      location.latitude === latLngObj.lat && location.longitude === latLngObj.lng
+    const isDuplicateLocation = existingLocations.value.some(location => 
+      location.id !== locationId && 
+      location.latitude === latLngObj.lat && 
+      location.longitude === latLngObj.lng
     );
 
-    if (isExistingLocation) {
-      toast.error('Cannot select an existing location marker');
+    if (isDuplicateLocation) {
+      toast.error('A location already exists at these coordinates', { duration: 3000 });
       return;
     }
 
@@ -216,91 +246,114 @@ const isFormChanged = computed(() => {
 
 onMounted(() => {
   fetchLocation();
-  fetchAllLocations();
+  fetchLocations();
 });
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-3xl mx-auto">
-      <!-- Main Card -->
-      <div class="bg-white rounded-xl shadow-lg p-8">
-        <!-- Header -->
-        <div class="mb-8">
-          <h2 class="text-3xl font-bold text-gray-900">Edit Location</h2>
-          <p class="mt-2 text-gray-600">Update your location details below</p>
-        </div>
-
-        <!-- Error Alert -->
-        <div v-if="error" class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm text-red-700">{{ error }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Form -->
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <!-- Location Name Field -->
-          <div>
-            <label for="name" class="block text-sm font-medium text-gray-700">
-              Location Name
-            </label>
-            <div class="mt-1 relative rounded-md shadow-sm">
-              <input
-                id="name"
-                v-model="name"
-                type="text"
-                class="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                placeholder="Enter location name"
-              />
-            </div>
-          </div>
-
-          <!-- Coordinates Field -->
-          <div>
-            <label for="coordinates" class="block text-sm font-medium text-gray-700">
-              Coordinates
-            </label>
-            <div class="mt-1 relative rounded-md shadow-sm">
-              <input
-                id="coordinates"
-                type="text"
-                readonly
-                v-model="coordinates"
-                @click="openModal('coordinates')"
-                class="block w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
-                placeholder="Click to set coordinates"
-              />
-              <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="pt-4">
-            <Button
-              type="submit"
-              :disabled="!isFormChanged"
-            >
-              Update Location
-            </Button>
-          </div>
-        </form>
+  <div class="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-xl shadow-md border border-gray-100 mt-8">
+    <!-- Header with improved design -->
+    <div class="flex items-center space-x-3 mb-8 pb-4 border-b border-gray-100">
+      <div class="bg-green-100 p-2 rounded-full">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800">Edit Location</h2>
+        <p class="text-sm text-gray-500 mt-1">Update location details of {{ name }}</p>
       </div>
     </div>
+
+    <!-- Error Alert with improved styling -->
+    <div v-if="error" class="mb-6 p-4 rounded-lg bg-red-50 border-l-4 border-red-500 flex items-center">
+      <svg class="w-5 h-5 text-red-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="text-red-700">{{ error }}</span>
+    </div>
+
+    <!-- Form with better spacing and visual hierarchy -->
+    <form @submit.prevent="showConfirmationDialog" class="space-y-6">
+      <!-- Location Name with helper text -->
+      <div class="space-y-2">
+        <Label for="name" class="text-gray-700 font-medium">
+          Location Name
+        </Label>
+        <Input
+          id="name"
+          v-model="name"
+          type="text"
+          class="w-full focus:ring-green-500 focus:border-green-500"
+          placeholder="Enter a descriptive name for this location"
+        />
+        <p class="text-xs text-gray-500 mt-1">Choose a clear, identifiable name for this forest location</p>
+      </div>
+
+      <!-- Coordinates with improved interaction design -->
+      <div class="space-y-2">
+        <Label for="coordinates" class="text-gray-700 font-medium">
+          Coordinates
+        </Label>
+        <div class="relative">
+          <button
+            type="button"
+            @click="openModal('coordinates')"
+            class="w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 transition-colors flex justify-between items-center"
+          >
+            <span class="block truncate">
+              {{ coordinates || "Click to set location coordinates" }}
+            </span>
+            <div class="flex items-center text-green-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Click to open the map and select precise coordinates</p>
+      </div>
+
+
+
+      <!-- Submit Button with improved styling -->
+      <div class="flex justify-end pt-4">
+        <AlertDialog>
+          <AlertDialogTrigger>
+            <button
+              type="button"
+              :disabled="!isFormChanged"
+              class="inline-flex items-center px-5 py-2.5 bg-green-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Update Location
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent class="rounded-lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle class="text-xl">Confirm Update</AlertDialogTitle>
+              <AlertDialogDescription class="text-gray-600">
+                Are you sure you want to update this location with the following details?
+                <div class="mt-3 p-3 bg-gray-50 rounded border border-gray-200 text-sm">
+                  <p><span class="font-medium">Name:</span> {{ name }}</p>
+                  <p><span class="font-medium">Coordinates:</span> {{ coordinates }}</p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel class="bg-gray-100 hover:bg-gray-200 text-gray-800">Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="handleSubmit" class="bg-green-600 hover:bg-green-700">Update Location</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </form>
   </div>
 
-  <!-- Modal -->
+  <!-- Improved Modal -->
   <div
     v-if="isModalOpen"
     class="fixed inset-0 z-50 overflow-y-auto"
@@ -308,36 +361,59 @@ onMounted(() => {
     role="dialog"
     aria-modal="true"
   >
-    <!-- Background overlay -->
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-
-    <!-- Modal panel -->
-    <div class="flex min-h-screen items-end justify-center p-4 text-center sm:items-center sm:p-0">
-      <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:p-6">
-        <!-- Modal header -->
-        <div class="mb-4">
-          <h3 class="text-xl font-semibold text-gray-900" id="modal-title">
-            Set {{ modalField }}
+    <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Background overlay with improved transition -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75" @click="closeModal"></div>
+      
+      <!-- Modal panel with smaller size and mobile-friendly styling -->
+      <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:align-middle">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+        <div class="mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-8 sm:w-8">
+          <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          </svg>
+        </div>
+        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+          <h3 class="text-base font-medium leading-6 text-gray-900" id="modal-title">
+            {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
           </h3>
+          <p class="mt-1 text-sm text-gray-500">
+            {{ modalField === 'coordinates' ? 'Click on the map to select precise coordinates for this location.' : '' }}
+          </p>
+        </div>
+          </div>
+
+          <!-- Modal Content with smaller map container -->
+          <div class="mt-4">
+        <!-- Map View -->
+        <div v-if="modalField === 'coordinates'" class="mt-2">
+          <div id="map" class="h-[300px] w-full rounded-lg border border-gray-200 shadow-inner"></div>
+          
+          <!-- Selected coordinates display -->
+          <div v-if="coordinates" class="mt-3 p-2 bg-green-50 border border-green-100 rounded-md text-sm text-green-800">
+            Selected coordinates: {{ coordinates }}
+          </div>
+        </div>
+          </div>
         </div>
 
-        <!-- Map container -->
-        <div class="rounded-lg overflow-hidden border border-gray-200">
-          <div id="map" class="h-[600px] w-full"></div>
-        </div>
-
-        <!-- Modal actions -->
-        <div class="mt-6 flex justify-end space-x-3">
-          <Button
-            @click="closeModal"
+        <!-- Modal Footer with improved button styling -->
+        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100">
+          <button
+        type="button"
+        @click="saveModalValue"
+        class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto"
           >
-            Cancel
-          </Button>
-          <Button
-            @click="saveModalValue"
+        Save Coordinates
+          </button>
+          <button
+        type="button"
+        @click="closeModal"
+        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto"
           >
-            Save Coordinates
-          </Button>
+        Cancel
+          </button>
         </div>
       </div>
     </div>

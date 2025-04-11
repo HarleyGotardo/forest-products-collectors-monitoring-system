@@ -275,27 +275,27 @@ onMounted(() => {
     <div
       class="mb-8 bg-gradient-to-r bg-gray-100 rounded-xl p-6 shadow-sm border border-green-100"
     >
-      <div class="flex items-center">
-        <div class="flex-shrink-0 bg-gray-50 rounded-full p-3 flex space-x-2">
-          <img
-            src="@/assets/add.png"
-            alt="Add"
-            class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
-          />
-          <img
-            src="@/assets/forest-product.png"
-            alt="Forest Map"
-            class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
-          />
-        </div>
-        <div class="ml-5">
-          <h2 class="text-2xl font-bold text-gray-800">
-            Create Forest Product
-          </h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Complete the form below to add a new forest product to the system
-          </p>
-        </div>
+      <div class="flex flex-col sm:flex-row items-center sm:items-start">
+      <div class="flex-shrink-0 bg-gray-50 rounded-full p-3 flex space-x-2 mb-4 sm:mb-0">
+        <img
+        src="@/assets/add.png"
+        alt="Add"
+        class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
+        />
+        <img
+        src="@/assets/forest-product.png"
+        alt="Forest Map"
+        class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
+        />
+      </div>
+      <div class="sm:ml-5 text-center sm:text-left">
+        <h2 class="text-2xl font-bold text-gray-800">
+        Create Forest Product
+        </h2>
+        <p class="mt-1 text-sm text-gray-600">
+        Complete the form below to add a new forest product to the system
+        </p>
+      </div>
       </div>
     </div>
 
