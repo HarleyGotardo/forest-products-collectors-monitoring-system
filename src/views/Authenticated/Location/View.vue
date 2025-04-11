@@ -541,9 +541,14 @@ onMounted(async () => {
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {{ product.name }}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {{ product.quantity }}
-                  </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <span v-if="product.quantity === null" class="text-red-500 font-semibold">
+                      (Out of Stock)
+                    </span>
+                    <span v-else>
+                      {{ product.quantity }}
+                    </span>
+                    </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {{ product.unit_name }}
                   </td>

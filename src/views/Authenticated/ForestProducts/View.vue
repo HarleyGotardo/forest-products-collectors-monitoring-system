@@ -1049,13 +1049,23 @@ onMounted(async () => {
                     <span class="font-medium">Long:</span>
                     <span>{{ location.longitude }}</span>
                   </div>
-                  <div class="flex items-center space-x-1">
-                    <span class="font-medium">Quantity:</span>
-                    <span
-                      >{{ location.quantity ? location.quantity : 'N/A' }}
-                      {{ forestProduct.measurement_units.unit_name }}(s)</span
-                    >
-                  </div>
+                    <div class="flex items-center space-x-1">
+                      <span class="font-medium">Quantity:</span>
+                      <span
+                      :class="{
+                        'text-red-500 font-bold': !location.quantity || location.quantity === 0
+                      }"
+                      >
+                      {{ location.quantity ? location.quantity : 'N/A' }}
+                      {{ location.quantity ? forestProduct.measurement_units.unit_name + '(s)' : '' }}
+                      </span>
+                      <span
+                      v-if="!location.quantity || location.quantity === 0"
+                      class="ml-2 text-xs text-white bg-red-500 px-2 py-1 rounded-full"
+                      >
+                      Out of Stock
+                      </span>
+                    </div>
                 </div>
               </div>
 
