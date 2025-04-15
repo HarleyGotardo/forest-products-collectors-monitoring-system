@@ -168,240 +168,332 @@
       v-else
       class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 overflow-hidden"
     >
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-700">
-            <tr>
-              <th
-                scope="col"
-                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                ID
-              </th>
-
-              <th
-                scope="col"
-                class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Date
-              </th>
-              <th
-                scope="col"
-                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                COLLECTOR
-              </th>
-              <th
-                scope="col"
-                class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Total Cost
-              </th>
-              <th
-                scope="col"
-                class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Processed By
-              </th>
-              <th
-                scope="col"
-                class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                class="px-2 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-if="paginatedRecords.length === 0">
-              <td colspan="7" class="px-4 sm:px-6 py-8 sm:py-12 text-center">
-                <div class="flex flex-col items-center">
-                  <svg
-                    class="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mb-3 sm:mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                  <p class="text-sm">
-                    No collection records found matching your criteria
-                  </p>
-                </div>
-              </td>
-            </tr>
-            <tr
-              v-for="record in paginatedRecords"
-              :key="record.id"
-              class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-              @click="viewCollectionRecord(record.id)"
+<!-- Desktop view (table) - hidden on small screens -->
+<div class="hidden sm:block overflow-x-auto">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-700">
+      <tr>
+        <th
+          scope="col"
+          class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
+        >
+          ID
+        </th>
+        <th
+          scope="col"
+          class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
+        >
+          Date
+        </th>
+        <th
+          scope="col"
+          class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
+        >
+          COLLECTOR
+        </th>
+        <th
+          scope="col"
+          class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
+        >
+          Total Cost
+        </th>
+        <th
+          scope="col"
+          class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
+        >
+          Processed By
+        </th>
+        <th
+          scope="col"
+          class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
+        >
+          Status
+        </th>
+        <th
+          scope="col"
+          class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white"
+        >
+          Actions
+        </th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr v-if="paginatedRecords.length === 0">
+        <td colspan="7" class="px-6 py-12 text-center">
+          <div class="flex flex-col items-center">
+            <svg
+              class="w-12 h-12 text-gray-300 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <td
-                class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-              >
-                #{{ record.id }}
-              </td>
-              <td
-                class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm"
-              >
-                {{ record.formatted_created_at }}
-              </td>
-              <td
-                class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm"
-              >
-                {{ record.user_name }}
-              </td>
-              <td
-                class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm"
-              >
-                ₱{{ record.total_cost }}
-              </td>
-
-              <td
-                class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm"
-              >
-                {{ record.created_by_name }}
-              </td>
-              <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                <span
-                  :class="[
-            'px-3 py-1 rounded-full text-xs font-medium',
-            record.is_paid 
-              ? 'bg-green-100 text-green-800'
-              : 'bg-yellow-100 text-yellow-800'
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <p class="text-gray-500 text-sm">
+              No collection records found matching your criteria
+            </p>
+          </div>
+        </td>
+      </tr>
+      <tr
+        v-for="record in paginatedRecords"
+        :key="record.id"
+        class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+        @click="viewCollectionRecord(record.id)"
+      >
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          #{{ record.id }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          {{ record.formatted_created_at }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          {{ record.user_name }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          ₱{{ record.total_cost }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          {{ record.created_by_name }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span
+            :class="[
+              'px-2.5 py-0.5 rounded-full text-xs font-medium',
+              record.is_paid 
+                ? 'bg-green-100 text-green-800'
+                : 'bg-yellow-100 text-yellow-800'
             ]"
-                >
-                  {{ record.is_paid ? 'Paid' : 'Unpaid' }}
-                </span>
-              </td>
-                <td
-                class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium"
-                @click.stop
-                >
-                <div
-                  class="flex items-center justify-end space-x-2 sm:space-x-3"
-                >
-                  <!-- Mark as Paid Button or Placeholder -->
-                  <span v-if="!record.is_paid" class="inline-block">
-                  <AlertDialog>
-                    <AlertDialogTrigger>
-                    <Button
-                      v-if="isVSUAdmin"
-                      class="p-1 sm:p-2 text-xs sm:text-sm"
-                    >
-                      <svg
-                      class="w-4 h-4 sm:w-5 sm:h-5"
+          >
+            {{ record.is_paid ? 'Paid' : 'Unpaid' }}
+          </span>
+        </td>
+        <td
+          class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+          @click.stop
+        >
+          <div class="flex items-center justify-end space-x-3">
+            <!-- Mark as Paid Button or Placeholder -->
+            <span v-if="!record.is_paid" class="inline-block">
+              <AlertDialog>
+                <AlertDialogTrigger>
+                  <Button v-if="isVSUAdmin" class="p-2">
+                    <svg
+                      class="w-5 h-5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
-                      >
+                    >
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
                         d="M5 13l4 4L19 7"
                       />
-                      </svg>
-                      <span class="hidden sm:inline ml-1">Paid</span>
-                    </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
-                      <AlertDialogDescription>
+                    </svg>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+                    <AlertDialogDescription>
                       This will mark the collection record as paid.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction @click="markAsPaid(record.id)"
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction @click="markAsPaid(record.id)"
                       >Mark as Paid</AlertDialogAction
-                      >
-                    </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  </span>
-                  <span v-else class="inline-block w-[40px]"></span>
-                  <!-- Placeholder for alignment -->
+                    >
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </span>
+            <span v-else class="inline-block w-[40px]"></span>
+            <!-- Placeholder for alignment -->
 
-                  <!-- Edit Button -->
-                  <Button
-                  v-if="(isFPUAdmin || isForestRanger) && !record.is_paid"
-                  class="p-1 sm:p-2"
-                  @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
-                  >
+            <!-- Edit Button -->
+            <Button
+              v-if="(isFPUAdmin || isForestRanger) && !record.is_paid"
+              class="p-2"
+              @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </Button>
+
+            <!-- Delete Button -->
+            <AlertDialog v-if="!record.is_paid">
+              <AlertDialogTrigger>
+                <Button v-if="isFPUAdmin || isForestRanger" class="p-2">
                   <svg
-                    class="w-4 h-4 sm:w-5 sm:h-5"
+                    class="w-5 h-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
                     <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                  </Button>
-
-                  <!-- Delete Button -->
-                  <AlertDialog v-if="!record.is_paid">
-                  <AlertDialogTrigger>
-                    <Button
-                    v-if="isFPUAdmin || isForestRanger"
-                    class="p-1 sm:p-2"
-                    >
-                    <svg
-                      class="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle
-                      >Delete Collection Record?</AlertDialogTitle
-                    >
-                    <AlertDialogDescription>
-                      This collection record will be transferred to the
-                      recycle bin.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      @click="deleteCollectionRecord(record.id)"
-                      >Delete</AlertDialogAction
-                    >
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-                </td>
-            </tr>
-          </tbody>
-        </table>
+                    />
+                  </svg>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This collection record will be transferred to the
+                    recycle bin.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="deleteCollectionRecord(record.id)"
+                    >Delete</AlertDialogAction
+                  >
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Mobile view (cards) - only shown on small screens -->
+<div class="sm:hidden px-4 py-4 space-y-4">
+  <!-- Empty state when no records are found -->
+  <div v-if="paginatedRecords.length === 0" class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
+    <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+    <p class="text-gray-500 text-sm">No collection records found matching your criteria</p>
+  </div>
+
+  <!-- Card for each record -->
+  <div 
+    v-for="record in paginatedRecords" 
+    :key="record.id"
+    class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden"
+    @click="viewCollectionRecord(record.id)"
+  >
+    <!-- Card header with ID and status badges -->
+    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+      <div class="flex items-center">
+        <span class="font-medium text-gray-800 mr-2">#{{ record.id }}</span>
       </div>
+      <div>
+        <span
+          :class="record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+        >
+          {{ record.is_paid ? 'Paid' : 'Unpaid' }}
+        </span>
+      </div>
+    </div>
+    
+    <!-- Card body with record details -->
+    <div class="p-4">
+      <div class="space-y-3">
+        <div class="flex justify-between">
+          <div>
+            <div class="text-xs text-gray-500">Date</div>
+            <div class="font-medium text-sm">{{ record.formatted_created_at }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500">Total Cost</div>
+            <div class="font-medium text-sm">₱{{ record.total_cost }}</div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="text-xs text-gray-500">Collector</div>
+          <div class="font-medium text-sm">{{ record.user_name }}</div>
+        </div>
+        
+        <div>
+          <div class="text-xs text-gray-500">Processed By</div>
+          <div class="font-medium text-sm">{{ record.created_by_name }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Card actions -->
+    <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between" @click.stop>
+      <!-- Mark as Paid Button -->
+      <Button 
+        v-if="isVSUAdmin && !record.is_paid" 
+        class="text-sm"
+        @click="() => {}"
+      >
+        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M5 13l4 4L19 7" />
+        </svg>
+        Mark as Paid
+      </Button>
+      
+      <!-- Edit Button -->
+      <Button 
+        v-if="(isFPUAdmin || isForestRanger) && !record.is_paid" 
+        class="text-sm"
+        @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
+      >
+        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        Edit
+      </Button>
+      
+      <!-- Delete Button -->
+      <AlertDialog v-if="!record.is_paid && (isFPUAdmin || isForestRanger)">
+        <AlertDialogTrigger asChild>
+          <Button class="text-sm">
+            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This collection record will be transferred to the recycle bin.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction @click="deleteCollectionRecord(record.id)">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  </div>
+</div>
 
       <!-- Pagination - Modified for responsive design -->
       <div
