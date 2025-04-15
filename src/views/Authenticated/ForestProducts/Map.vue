@@ -719,14 +719,12 @@ onMounted(async () => {
                 Close
               </button>
 
-              <button
-                v-if="selectedLocation"
-                @click="goToForestProduct(selectedLocationProducts?.[0]?.id)"
+                <button
+                @click="router.push('/authenticated/forest-products')"
                 class="flex-1 px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
-                :disabled="!selectedLocationProducts.length"
-              >
+                >
                 View All Products
-              </button>
+                </button>
             </div>
           </div>
         </div>
