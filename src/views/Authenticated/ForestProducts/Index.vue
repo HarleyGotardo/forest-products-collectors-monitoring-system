@@ -41,7 +41,8 @@ const fetchAllForestProducts = async () => {
       fp_and_locations (
         locations (
           id,
-          name
+          name,
+          deleted_at
         )
       ),
       measurement_units:measurement_unit_id (
@@ -56,7 +57,9 @@ const fetchAllForestProducts = async () => {
     // Transform the data to include locations and measurement unit symbol
     allForestProducts.value = forest_products.map(product => ({
       ...product,
-      locations: product.fp_and_locations.map(fp => fp.locations),
+      locations: product.fp_and_locations
+        .map(fp => fp.locations)
+        .filter(location => location.deleted_at === null), // Exclude locations with non-null deleted_at
       unit_name: product.measurement_units ? product.measurement_units.unit_name : 'N/A',
       image_url: JSON.parse(product.image_url).data.publicUrl // Extract the actual URL from the JSON string
     }))

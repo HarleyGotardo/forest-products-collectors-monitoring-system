@@ -173,16 +173,29 @@ const fetchForestProduct = async () => {
 const fetchLocations = async () => {
   let { data, error: fetchError } = await supabase
     .from('fp_and_locations')
-    .select('locations (id, name, latitude, longitude), quantity')
+    .select(`
+      locations (
+        id, 
+        name, 
+        latitude, 
+        longitude,
+        deleted_at
+      ), 
+      quantity
+    `)
     .eq('forest_product_id', productId)
 
   if (fetchError) {
     error.value = fetchError.message
   } else {
-    locations.value = data.map(fp => ({
-      ...fp.locations,
-      quantity: fp.quantity
-    }))
+    // Filter out locations that have been deleted
+    locations.value = data
+      .filter(fp => fp.locations && fp.locations.deleted_at === null)
+      .map(fp => ({
+        ...fp.locations,
+        quantity: fp.quantity
+      }))
+    
     nextTick(() => {
       initializeMap()
     })
@@ -193,6 +206,7 @@ const fetchAllLocations = async () => {
   let { data, error: fetchError } = await supabase
     .from('locations')
     .select('*')
+    .is('deleted_at', null)  // Only select non-deleted locations
 
   if (fetchError) {
     error.value = fetchError.message
