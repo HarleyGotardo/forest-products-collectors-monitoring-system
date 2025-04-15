@@ -145,7 +145,6 @@ watch(currentPage, () => {
   paginateRequests();
 });
 </script>
-
 <template>
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
@@ -186,58 +185,59 @@ watch(currentPage, () => {
       </div>
     </div>
 
-<!-- Loading Skeleton -->
-<div v-if="loading" class="animate-pulse">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="animate-pulse">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3"></th>
-                        <th scope="col" class="px-6 py-3"></th>
-                        <th scope="col" class="px-6 py-3"></th>
-                        <th scope="col" class="px-6 py-3"></th>
-                        <th scope="col" class="px-6 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="n in 7" :key="n">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="h-4 bg-gray-200 rounded w-16"></div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="h-4 bg-gray-200 rounded w-32"></div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="h-4 bg-gray-200 rounded w-32"></div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="h-4 bg-gray-200 rounded w-32"></div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right">
-                            <div class="flex items-center justify-end space-x-3">
-                                <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
-                                <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3"></th>
+                <th scope="col" class="px-6 py-3"></th>
+                <th scope="col" class="px-6 py-3"></th>
+                <th scope="col" class="px-6 py-3"></th>
+                <th scope="col" class="px-6 py-3"></th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="n in 7" :key="n">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-16"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-32"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-32"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-32"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <div class="flex items-center justify-end space-x-3">
+                    <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
+                    <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
-</div>
 
-    <!-- Requests Table -->
+    <!-- Requests Table/Cards -->
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- Desktop view (table) - hidden on small screens -->
+      <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+          <thead class="bg-gray-700">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested At</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collection Date</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deleted At</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Requested At</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Collection Date</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Deleted At</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -332,6 +332,111 @@ watch(currentPage, () => {
         </table>
       </div>
 
+      <!-- Mobile view (cards) - only shown on small screens -->
+      <div class="sm:hidden px-4 py-4 space-y-4">
+        <!-- Empty state when no requests are found -->
+        <div v-if="paginatedRequests.length === 0" class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
+          <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <p class="text-gray-500 text-sm">No deleted requests found</p>
+        </div>
+
+        <!-- Card for each request -->
+        <div 
+          v-for="request in paginatedRequests" 
+          :key="request.id"
+          class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden"
+          @click="viewRequest(request.id)"
+        >
+          <!-- Card header with ID -->
+          <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center">
+              <span class="font-medium text-gray-800">#{{ request.id }}</span>
+            </div>
+          </div>
+          
+          <!-- Card body with request details -->
+          <div class="p-4">
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <div>
+                  <div class="text-xs text-gray-500">Requested At</div>
+                  <div class="font-medium text-sm">{{ new Date(request.requested_at).toLocaleDateString() }}</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Collection Date</div>
+                  <div class="font-medium text-sm">{{ new Date(request.collection_date).toLocaleDateString() }}</div>
+                </div>
+              </div>
+              
+              <div>
+                <div class="text-xs text-gray-500">Deleted At</div>
+                <div class="font-medium text-sm">{{ new Date(request.deleted_at).toLocaleDateString() }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Card actions -->
+          <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between" @click.stop>
+            <!-- Restore Button -->
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button class="text-sm">
+                  <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path 
+                      stroke-linecap="round" 
+                      stroke-linejoin="round" 
+                      stroke-width="2" 
+                      d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" 
+                    />
+                  </svg>
+                  Restore
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Restore Request?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This request will be moved back to your active requests.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="restoreRequest(request.id)">Restore</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            
+            <!-- Delete Permanently Button -->
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button class="text-sm bg-red-600 hover:bg-red-700">
+                  <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Permanently?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This request will be permanently removed from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="deletePermanently(request.id)" class="bg-red-600 hover:bg-red-700">Delete Permanently</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </div>
+
       <!-- Pagination -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200" v-if="filteredRequests.length > 0">
         <div class="flex items-center justify-between">
@@ -340,16 +445,16 @@ watch(currentPage, () => {
             :disabled="currentPage === 1"
             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Previous
+            <span class="hidden sm:inline ml-2">Previous</span>
           </button>
           <div class="text-sm text-gray-700">
-            <span :class="{'hidden sm:inline': true}">
+            <span class="hidden sm:inline">
               Page {{ currentPage }} of {{ totalPages }}
             </span>
-            <span :class="{'sm:hidden': true}">
+            <span class="sm:hidden">
               {{ currentPage }}/{{ totalPages }}
             </span>
           </div>
@@ -358,8 +463,8 @@ watch(currentPage, () => {
             :disabled="currentPage >= totalPages"
             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
-            <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span class="hidden sm:inline mr-2">Next</span>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>

@@ -309,216 +309,194 @@ onMounted(() => {
       v-else
       class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
     >
-      <div class="w-full overflow-x-auto sm:overflow-visible">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-700">
-            <tr>
-              <th
-                scope="col"
-                class="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-              >
-                ID
-              </th>
-              <th
-                scope="col"
-                class="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-              >
-                Requested At
-              </th>
-              <th
-                scope="col"
-                class="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider hidden md:table-cell"
-              >
-                Collection Date
-              </th>
-              <th
-                scope="col"
-                class="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider hidden sm:table-cell"
-              >
-                Requested By
-              </th>
-              <th
-                scope="col"
-                class="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                class="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider hidden sm:table-cell"
-              >
-                Recording
-              </th>
-              <th
-                v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
-                scope="col"
-                class="px-2 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-white uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-if="filteredRequests.length === 0">
-              <td colspan="7" class="px-2 sm:px-6 py-6 sm:py-12 text-center">
-                <div class="flex flex-col items-center">
-                  <svg
-                    class="w-8 h-8 sm:w-12 sm:h-12 text-gray-300 mb-2 sm:mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                  <p class="text-gray-500 text-xs sm:text-sm">
-                    No requests found matching your criteria
-                  </p>
-                </div>
-              </td>
-            </tr>
-            <tr
-              v-for="request in paginatedRequests"
-              :key="request.id"
-              class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-              @click="viewRequest(request.id)"
-            >
-              <td
-                class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500"
-              >
-                #{{ request.id }}
-              </td>
-              <td
-                class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500"
-              >
-                {{ new Date(request.requested_at).toLocaleDateString() }}
-              </td>
-              <td
-                class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden md:table-cell"
-              >
-                {{ new Date(request.collection_date).toLocaleDateString() }}
-              </td>
-              <td
-                class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell"
-              >
-                {{ request.profiles.first_name }}
-                {{ request.profiles.last_name }}
-              </td>
-              <td class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                <span
-                  :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
-                  class="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium"
-                >
-                  <template v-if="request.approved_at">
-                    <svg
-                      class="w-4 h-4 sm:hidden"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span class="hidden sm:inline">Approved</span>
-                  </template>
-                  <template v-else>
-                    <svg
-                      class="w-4 h-4 sm:hidden"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 8v4m0 4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
-                      />
-                    </svg>
-                    <span class="hidden sm:inline">Pending</span>
-                  </template>
-                </span>
-              </td>
-              <td
-                class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap hidden sm:table-cell"
-              >
-                <span
-                  :class="request.is_recorded ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'"
-                  class="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium"
-                >
-                  {{ request.is_recorded ? 'Recorded' : 'Unrecorded' }}
-                </span>
-              </td>
-              <td
-                class="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium"
-                @click.stop
-              >
-                <div
-                  class="flex items-center justify-end space-x-1 sm:space-x-3"
-                >
-                  <template v-if="request.approved_at">
-                    <span
-                      class="text-xs sm:text-sm text-gray-500 hidden sm:inline"
-                      >Approved at
-                      {{ new Date(request.approved_at).toLocaleDateString() }}</span
-                    >
-                  </template>
-                  <template v-else>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          v-if="isFPUAdmin || isForestRanger"
-                          class="text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
-                          @click="confirmApproveRequest(request.id)"
-                        >
-                          <svg
-                            class="w-3 h-3 sm:w-5 sm:h-5 mr-1"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span class="hidden sm:inline">Approve</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Approve Request</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to approve this request?
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel @click="showDialog = false"
-                            >Cancel</AlertDialogCancel
-                          >
-                          <AlertDialogAction @click="approveRequest"
-                            >Approve</AlertDialogAction
-                          >
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </template>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Desktop view (table) - hidden on small screens -->
+  <div class="hidden sm:block overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-700">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+            ID
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+            Requested At
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider hidden md:table-cell">
+            Collection Date
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+            Requested By
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+            Status
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+            Recording
+          </th>
+          <th v-if="isFPUAdmin || isForestRanger || isVSUAdmin" scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <tr v-if="filteredRequests.length === 0">
+          <td colspan="7" class="px-6 py-12 text-center">
+            <div class="flex flex-col items-center">
+              <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <p class="text-gray-500 text-sm">No requests found matching your criteria</p>
+            </div>
+          </td>
+        </tr>
+        <tr v-for="request in paginatedRequests" :key="request.id" class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer" @click="viewRequest(request.id)">
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            #{{ request.id }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ new Date(request.requested_at).toLocaleDateString() }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+            {{ new Date(request.collection_date).toLocaleDateString() }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ request.profiles.first_name }} {{ request.profiles.last_name }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+              {{ request.approved_at ? 'Approved' : 'Pending' }}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span :class="request.is_recorded ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+              {{ request.is_recorded ? 'Recorded' : 'Unrecorded' }}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
+            <div class="flex items-center justify-end space-x-3">
+              <template v-if="request.approved_at">
+                <span class="text-sm text-gray-500">Approved at {{ new Date(request.approved_at).toLocaleDateString() }}</span>
+              </template>
+              <template v-else>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button v-if="isFPUAdmin || isForestRanger" class="text-sm px-3 py-2" @click="confirmApproveRequest(request.id)">
+                      <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Approve</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Approve Request</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to approve this request?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
+                      <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </template>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile view (cards) - only shown on small screens -->
+  <div class="sm:hidden px-4 py-4 space-y-4">
+    <!-- Empty state when no requests are found -->
+    <div v-if="filteredRequests.length === 0" class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
+      <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+      <p class="text-gray-500 text-sm">No requests found matching your criteria</p>
+    </div>
+
+    <!-- Card for each request -->
+    <div 
+      v-for="request in paginatedRequests" 
+      :key="request.id"
+      class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden"
+      @click="viewRequest(request.id)"
+    >
+      <!-- Card header with ID and status badges -->
+      <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <div class="flex items-center">
+          <span class="font-medium text-gray-800 mr-2">#{{ request.id }}</span>
+        </div>
+        <div class="flex space-x-2">
+          <span
+            :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+          >
+            {{ request.approved_at ? 'Approved' : 'Pending' }}
+          </span>
+          <span
+            :class="request.is_recorded ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'"
+            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+          >
+            {{ request.is_recorded ? 'Recorded' : 'Unrecorded' }}
+          </span>
+        </div>
       </div>
+      
+      <!-- Card body with request details -->
+      <div class="p-4">
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <div>
+              <div class="text-xs text-gray-500">Requested At</div>
+              <div class="font-medium text-sm">{{ new Date(request.requested_at).toLocaleDateString() }}</div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Collection Date</div>
+              <div class="font-medium text-sm">{{ new Date(request.collection_date).toLocaleDateString() }}</div>
+            </div>
+          </div>
+          
+          <div>
+            <div class="text-xs text-gray-500">Requested By</div>
+            <div class="font-medium text-sm">{{ request.profiles.first_name }} {{ request.profiles.last_name }}</div>
+          </div>
+          
+          <div v-if="request.approved_at">
+            <div class="text-xs text-gray-500">Approved At</div>
+            <div class="font-medium text-sm">{{ new Date(request.approved_at).toLocaleDateString() }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div v-if="!request.approved_at && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
+  <AlertDialog>
+    <AlertDialogTrigger asChild>
+      <Button class="w-full justify-center text-sm" @click="confirmApproveRequest(request.id)">
+        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Approve Request
+      </Button>
+    </AlertDialogTrigger>
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Approve Request</AlertDialogTitle>
+        <AlertDialogDescription>
+          Are you sure you want to approve this request?
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel>Cancel</AlertDialogCancel>
+        <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+</div>
+    </div>
+  </div>
 
       <!-- Pagination -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">

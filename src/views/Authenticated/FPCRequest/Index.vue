@@ -148,7 +148,6 @@ watch(currentPage, () => {
   paginateRequests();
 });
 </script>
-
 <template>
   <div class="max-w-7xl mx-auto p-6">
     <!-- Header Section -->
@@ -160,12 +159,12 @@ watch(currentPage, () => {
           <p class="mt-1 text-sm">View and manage all your collection requests</p>
         </div>
       </div>
-      <div class="flex space-x-4">
+      <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
         <div class="relative flex-1 sm:flex-none">
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search by ID"
+            placeholder="Search by ID..."
             class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
           />
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -218,63 +217,64 @@ watch(currentPage, () => {
       </div>
     </div>
 
-<!-- Loading Skeleton -->
-<div v-if="loading" class="animate-pulse">
-  <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-100">
-          <tr>
-            <th scope="col" class="px-6 py-3 h-10"></th>
-            <th scope="col" class="px-6 py-3 h-10"></th>
-            <th scope="col" class="px-6 py-3 h-10"></th>
-            <th scope="col" class="px-6 py-3 h-10"></th>
-            <th scope="col" class="px-6 py-3 h-10"></th>
-            <th scope="col" class="px-6 py-3 h-10"></th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="n in 5" :key="n">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="h-4 bg-gray-200 rounded w-10"></div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="h-4 bg-gray-200 rounded w-24"></div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="h-4 bg-gray-200 rounded w-24"></div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="h-5 bg-gray-200 rounded-full w-20"></div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="h-5 bg-gray-200 rounded-full w-20"></div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right">
-              <div class="flex items-center justify-end space-x-3">
-                <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
-                <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="animate-pulse">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-200">
+              <tr>
+                <th scope="col" class="px-6 py-3 h-10"></th>
+                <th scope="col" class="px-6 py-3 h-10"></th>
+                <th scope="col" class="px-6 py-3 h-10"></th>
+                <th scope="col" class="px-6 py-3 h-10"></th>
+                <th scope="col" class="px-6 py-3 h-10"></th>
+                <th scope="col" class="px-6 py-3 h-10"></th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="n in 5" :key="n">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-10"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <div class="flex items-center justify-end space-x-3">
+                    <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
+                    <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-    <!-- Requests Table -->
+    <!-- Requests Table/Cards -->
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- Desktop view (table) - hidden on small screens -->
+      <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+          <thead class="bg-gray-700">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested At</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collection Date</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recording</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Requested At</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider hidden md:table-cell">Collection Date</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Recording</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -299,7 +299,7 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ new Date(request.requested_at).toLocaleDateString() }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                 {{ new Date(request.collection_date).toLocaleDateString() }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -349,6 +349,102 @@ watch(currentPage, () => {
         </table>
       </div>
 
+      <!-- Mobile view (cards) - only shown on small screens -->
+      <div class="sm:hidden px-4 py-4 space-y-4">
+        <!-- Empty state when no requests are found -->
+        <div v-if="filteredRequests.length === 0" class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
+          <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <p class="text-gray-500 text-sm">No requests found matching your criteria</p>
+        </div>
+
+        <!-- Card for each request -->
+        <div 
+          v-for="request in paginatedRequests" 
+          :key="request.id"
+          class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden"
+          @click="viewRequest(request.id)"
+        >
+          <!-- Card header with ID and status badges -->
+          <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center">
+              <span class="font-medium text-gray-800 mr-2">#{{ request.id }}</span>
+            </div>
+            <div class="flex space-x-2">
+              <span
+                :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+              >
+                {{ request.approved_at ? 'Approved' : 'Pending' }}
+              </span>
+              <span
+                :class="request.is_recorded ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'"
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+              >
+                {{ request.is_recorded ? 'Recorded' : 'Unrecorded' }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Card body with request details -->
+          <div class="p-4">
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <div>
+                  <div class="text-xs text-gray-500">Requested At</div>
+                  <div class="font-medium text-sm">{{ new Date(request.requested_at).toLocaleDateString() }}</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Collection Date</div>
+                  <div class="font-medium text-sm">{{ new Date(request.collection_date).toLocaleDateString() }}</div>
+                </div>
+              </div>
+              
+              <div v-if="request.approved_at">
+                <div class="text-xs text-gray-500">Approved At</div>
+                <div class="font-medium text-sm">{{ new Date(request.approved_at).toLocaleDateString() }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Card actions -->
+          <div v-if="!request.approved_at" class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between" @click.stop>
+            <Button class="text-sm" @click="editRequest(request.id, $event)">
+              <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button class="text-sm" @click="confirmDeleteRequest(request.id)">
+                  <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Request?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This request will be transferred to the recycle bin.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="deleteRequest">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </div>
+
       <!-- Pagination -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200" v-if="filteredRequests.length > 0">
         <div class="flex items-center justify-between">
@@ -357,26 +453,24 @@ watch(currentPage, () => {
             :disabled="currentPage === 1"
             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Previous
+            <span class="hidden sm:inline ml-2">Previous</span>
           </button>
-          <div class="text-sm text-gray-700">
-            <span :class="{'hidden sm:inline': true}">
-              Page {{ currentPage }} of {{ Math.ceil(filteredRequests.length / itemsPerPage) || 1 }}
-            </span>
-            <span :class="{'sm:hidden': true}">
-              {{ currentPage }}/{{ Math.ceil(filteredRequests.length / itemsPerPage) || 1 }}
-            </span>
-          </div>
+          <span class="text-sm text-gray-700 hidden sm:inline">
+            Page {{ currentPage }} of {{ Math.ceil(filteredRequests.length / itemsPerPage) || 1 }}
+          </span>
+          <span class="text-sm text-gray-700 inline sm:hidden">
+            {{ currentPage }}/{{ Math.ceil(filteredRequests.length / itemsPerPage) || 1 }}
+          </span>
           <button 
             @click="nextPage" 
             :disabled="currentPage * itemsPerPage >= filteredRequests.length"
             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
-            <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span class="hidden sm:inline mr-2">Next</span>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>

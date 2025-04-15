@@ -95,11 +95,15 @@ const hasQuantityErrors = computed(() => {
   return selectedForestProducts.value.some(product => product.quantityError);
 });
 
+const hasZeroQuantityError = computed(() => {
+  return selectedForestProducts.value.some(product => product.requested_quantity === 0);
+});
+
 const isFormComplete = computed(() => {
   return (
     selectedForestProducts.value.length > 0 &&
     collectionDate.value &&
-    selectedForestProducts.value.some(p => p.requested_quantity > 0) &&
+    selectedForestProducts.value.every(p => p.requested_quantity > 0) &&
     !hasQuantityErrors.value
   );
 });
@@ -225,20 +229,20 @@ onMounted(() => {
         <div>
           <label for="forestProducts" class="block text-sm font-medium text-gray-700 mb-2">Forest Products</label>
           <button
-            type="button"
-            @click="showModal = true"
-            class="w-full flex items-center justify-between bg-white border border-gray-300 rounded-lg py-3 px-4 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+        type="button"
+        @click="showModal = true"
+        class="w-full flex items-center justify-between bg-white border border-gray-300 rounded-lg py-3 px-4 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
           >
-            <span class="text-gray-700">
-              {{ selectedForestProducts.length ? `${selectedForestProducts.length} products selected` : 'Select forest products' }}
-            </span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clip-rule="evenodd"
-              />
-            </svg>
+        <span class="text-gray-700">
+          {{ selectedForestProducts.length ? `${selectedForestProducts.length} products selected` : 'Select forest products' }}
+        </span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          />
+        </svg>
           </button>
         </div>
 
@@ -246,22 +250,30 @@ onMounted(() => {
         <div v-if="selectedForestProducts.length > 0" class="space-y-2">
           <label class="block text-sm font-medium text-gray-700">Selected Products ({{ selectedForestProducts.length }})</label>
           <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-            <div v-for="product in selectedForestProducts" :key="product.id" class="text-sm mb-2">
-              <div class="flex justify-between items-center">
-                <span>
-                  {{ product.forest_product_name }} - {{ product.requested_quantity > 0 ? product.requested_quantity : 'No' }} {{ product.unit_name }}(s)
-                </span>
-                <span class="text-gray-500 text-xs">Available: {{ product.quantity }} {{ product.unit_name }}(s)</span>
-              </div>
-              <!-- Error message for quantity validation -->
-              <div v-if="product.quantityError" class="text-red-500 text-xs mt-1">
-                Requested quantity exceeds available amount
-              </div>
-            </div>
+        <div v-for="product in selectedForestProducts" :key="product.id" class="text-sm mb-2">
+          <div class="flex justify-between items-center">
+            <span>
+          {{ product.forest_product_name }} - {{ product.requested_quantity > 0 ? product.requested_quantity : 'No' }} {{ product.unit_name }}(s)
+            </span>
+            <span class="text-gray-500 text-xs">Available: {{ product.quantity }} {{ product.unit_name }}(s)</span>
+          </div>
+          <!-- Error message for quantity validation -->
+          <div v-if="product.quantityError" class="text-red-500 text-xs mt-1">
+            Requested quantity exceeds available amount
+          </div>
+          <!-- Error message for 0 quantity validation -->
+          <div v-if="product.requested_quantity === 0" class="text-red-500 text-xs mt-1">
+            Please enter a valid quantity.
+          </div>
+        </div>
           </div>
           <!-- Display warning if there are any quantity errors -->
           <div v-if="hasQuantityErrors" class="text-red-500 text-sm font-medium">
-            Please correct the requested quantities before submitting
+        Please correct the requested quantities before submitting
+          </div>
+          <!-- Display warning if no quantity is entered for selected products -->
+          <div v-if="!selectedForestProducts.some(p => p.requested_quantity > 0)" class="text-yellow-500 text-sm font-medium">
+        Please enter a quantity for your selected forest product(s)
           </div>
         </div>
 
@@ -269,10 +281,10 @@ onMounted(() => {
         <div>
           <label for="collectionDate" class="block text-sm font-medium text-gray-700 mb-2">Collection Date</label>
           <input
-            type="date"
-            v-model="collectionDate"
-            id="collectionDate"
-            class="block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        type="date"
+        v-model="collectionDate"
+        id="collectionDate"
+        class="block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-green-500 focus:border-green-500"
           />
         </div>
 
@@ -340,14 +352,18 @@ onMounted(() => {
                 <div class="flex items-center space-x-2">
                   <label class="text-sm text-gray-600">Quantity:</label>
                   <input
-                    type="number"
-                    v-model="product.requested_quantity"
-                    min="0"
-                    :max="product.quantity"
-                    placeholder="Qty"
-                    @input="validateProductQuantity(product)"
-                    :class="['w-24 text-center border rounded p-1', product.quantityError ? 'border-red-500 bg-red-50' : 'border-gray-300']"
+                  type="number"
+                  v-model="product.requested_quantity"
+                  min="0"
+                  :max="product.quantity"
+                  placeholder="Qty"
+                  @input="validateProductQuantity(product)"
+                  :class="['w-24 text-center border rounded p-1', product.quantityError || product.requested_quantity === 0 ? 'border-red-500 bg-red-50' : 'border-gray-300']"
                   />
+                </div>
+                <!-- Warning for zero quantity -->
+                <div v-if="product.requested_quantity === 0" class="text-red-500 text-xs mt-1 text-right">
+                  Please enter a valid quantity.
                 </div>
                 <!-- Inline error message -->
                 <div v-if="product.quantityError" class="text-red-500 text-xs mt-1 text-right">
