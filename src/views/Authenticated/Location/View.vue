@@ -60,12 +60,15 @@ const fetchForestProducts = async () => {
   let { data, error: fetchError } = await supabase
     .from('fp_and_locations')
     .select(`
-      forest_product:forest_products ( id, name, measurement_unit_id ),
+      forest_product:forest_products ( id, name, measurement_unit_id, deleted_at ),
       quantity
     `)
     .eq('location_id', locationId)
     .then(async ({ data }) => {
-      const productIds = data.map(item => item.forest_product.measurement_unit_id);
+      const productIds = data
+        .filter(item => item.forest_product.deleted_at === null)
+        .map(item => item.forest_product.measurement_unit_id);
+
       const { data: units, error: unitsError } = await supabase
         .from('measurement_units')
         .select('id, unit_name')
@@ -74,11 +77,13 @@ const fetchForestProducts = async () => {
       if (unitsError) {
         error.value = unitsError.message;
       } else {
-        forestProducts.value = data.map(item => ({
-          ...item.forest_product,
-          quantity: item.quantity,
-          unit_name: units.find(unit => unit.id === item.forest_product.measurement_unit_id)?.unit_name
-        }));
+        forestProducts.value = data
+          .filter(item => item.forest_product.deleted_at === null)
+          .map(item => ({
+            ...item.forest_product,
+            quantity: item.quantity,
+            unit_name: units.find(unit => unit.id === item.forest_product.measurement_unit_id)?.unit_name
+          }));
       }
     });
 
