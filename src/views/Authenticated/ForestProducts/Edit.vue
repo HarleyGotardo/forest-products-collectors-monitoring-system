@@ -466,25 +466,25 @@ const getUnitName = computed(() => {
     <div
       class="mb-8 bg-gradient-to-r bg-gray-100 rounded-xl p-6 shadow-sm border border-green-100"
     >
-      <div class="flex items-center">
-        <div class="flex-shrink-0 bg-gray-50 rounded-full p-3 flex space-x-2">
-          <img
-            src="@/assets/edit.png"
-            alt="Edit"
-            class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
-          />
-          <img
-            src="@/assets/forest-product.png"
-            alt="Forest Product"
-            class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
-          />
-        </div>
-        <div class="ml-5">
-          <h2 class="text-2xl font-bold text-gray-800">Edit Forest Product</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Update the details of your forest product
-          </p>
-        </div>
+      <div class="flex flex-col items-center sm:flex-row sm:items-start">
+      <div class="flex-shrink-0 bg-gray-50 rounded-full p-3 flex space-x-2">
+        <img
+        src="@/assets/edit.png"
+        alt="Edit"
+        class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
+        />
+        <img
+        src="@/assets/forest-product.png"
+        alt="Forest Product"
+        class="w-8 h-8 transition-all duration-300 group-hover:scale-110"
+        />
+      </div>
+      <div class="mt-4 sm:mt-0 sm:ml-5 text-center sm:text-left">
+        <h2 class="text-2xl font-bold text-gray-800">Edit Forest Product</h2>
+        <p class="mt-1 text-sm text-gray-600">
+        Update the details of your forest product
+        </p>
+      </div>
       </div>
     </div>
 
