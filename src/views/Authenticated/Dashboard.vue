@@ -158,25 +158,29 @@ const fetchDashboardData = async () => {
 
     // Fetch forest products quantity distribution with unit_name
     const { data: fpAndLocation, error: fpAndLocationError } = await supabase
-      .from('fp_and_locations')
-      .select(`
-        id,
-        forest_product_id,
-        location_id,
-        quantity,
-        forest_products (
-          id,
-          name,
-          measurement_units:measurement_unit_id (
-            unit_name
-          )
-        ),
-        locations (
-          name
-        )
-      `)
+  .from('fp_and_locations')
+  .select(`
+    id,
+    forest_product_id,
+    location_id,
+    quantity,
+    forest_products!inner (
+      id,
+      name,
+      deleted_at,
+      measurement_units:measurement_unit_id (
+        unit_name
+      )
+    ),
+    locations!inner (
+      name,
+      deleted_at
+    )
+  `)
+  .is('forest_products.deleted_at', null)  // Only get non-deleted forest products
+  .is('locations.deleted_at', null);       // Only get non-deleted locations
 
-    if (fpAndLocationError) throw fpAndLocationError
+if (fpAndLocationError) throw fpAndLocationError
 
     forestProductsData.value = fpAndLocation
       .filter(record => record.forest_products) // Filter out records with deleted products
@@ -190,19 +194,20 @@ const fetchDashboardData = async () => {
       }));
 
     // NEW FEATURE: Find products with low stock
-    lowStockProducts.value = fpAndLocation
-      .filter(record => record.forest_products && record.quantity <= lowStockThreshold)
-      .map(record => ({
-        id: record.id,
-        productName: record.forest_products?.name || 'Unknown Product',
-        locationName: record.locations?.name || 'Unknown Location',
-        measurementUnit: record.forest_products?.measurement_units?.unit_name || 'N/A',
-        fp_id: record.forest_product_id,
-        quantity: record.quantity
-      }))
-      .sort((a, b) => a.quantity - b.quantity); // Sort ascending (lowest quantities first)
+// Update the low stock products filtering
+lowStockProducts.value = fpAndLocation
+  .filter(record => record.quantity <= lowStockThreshold)
+  .map(record => ({
+    id: record.id,
+    productName: record.forest_products.name,
+    locationName: record.locations.name,
+    measurementUnit: record.forest_products.measurement_units?.unit_name || 'N/A',
+    fp_id: record.forest_product_id,
+    quantity: record.quantity
+  }))
+  .sort((a, b) => a.quantity - b.quantity);
 
-    lowStockCount.value = lowStockProducts.value.length;
+lowStockCount.value = lowStockProducts.value.length;
 
     // NEW FEATURE: Fetch today's collection requests
     const today = new Date();
