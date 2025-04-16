@@ -6,7 +6,7 @@ import { RouterNamesConstant } from "@/components/constants/routerNames.constant
 import { SeparatorConstant } from "@/components/constants/separators.constant";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { nextTick, ref, watch, onMounted, computed } from "vue";
+import { nextTick, ref, watch, onMounted, computed, onBeforeUnmount } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabaseClient'
@@ -49,10 +49,47 @@ const isModalOpen = ref(false);
 const modalField = ref(SeparatorConstant.EMPTY_STRING);
 const modalValue = ref(null);
 let coordinatesObj = ref({ lat: 0, lng: 0 });
-let originalCoordinatesObj = { lat: 0, lng: 0 };
+let originalCoordinatesObj = ref({ lat: 0, lng: 0 });
 const coordinates = ref("");
 let mapInstance = null;
-const existingLocations = ref([]); // Store all existing locations
+let previewMapInstance = null;
+const existingLocations = ref([]);
+const tempCoordinatesObj = ref(null);
+const tempCoordinates = ref("");
+
+const initializePreviewMap = () => {
+  nextTick(() => {
+    const previewMapContainer = document.getElementById("preview-map");
+    if (!previewMapContainer || !coordinatesObj.value) return;
+
+    // Clear existing preview map if it exists
+    if (previewMapInstance) {
+      previewMapInstance.remove();
+      previewMapInstance = null;
+    }
+
+    // Create new preview map
+    previewMapInstance = L.map("preview-map", {
+      zoomControl: false,
+      scrollWheelZoom: false,
+      dragging: false,
+      touchZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+    }).setView(
+      [coordinatesObj.value.lat, coordinatesObj.value.lng],
+      CommonConstant.MAP_ZOOM_LEVEL.SIXTEEN
+    );
+
+    L.tileLayer(CommonConstant.MAP_LAYER, {
+      maxZoom: CommonConstant.MAP_ZOOM_LEVEL.NINETEEN,
+    }).addTo(previewMapInstance);
+
+    // Add marker at selected location
+    L.marker([coordinatesObj.value.lat, coordinatesObj.value.lng]).addTo(previewMapInstance);
+  });
+};
 
 const fetchLocation = async () => {
   let { data, error: fetchError } = await supabase
@@ -68,8 +105,12 @@ const fetchLocation = async () => {
     name.value = data.name
     originalName.value = data.name
     coordinatesObj.value = { lat: data.latitude, lng: data.longitude }
-    originalCoordinatesObj = { lat: data.latitude, lng: data.longitude }
+    originalCoordinatesObj.value = { lat: data.latitude, lng: data.longitude }
     coordinates.value = `${data.latitude}, ${data.longitude}`
+    
+    nextTick(() => {
+      initializePreviewMap();
+    });
   }
 }
 
@@ -118,17 +159,25 @@ const openModal = (field) => {
   modalValue.value = name.value;
   isModalOpen.value = true;
 
-  nextTick(() => {
-    if (field === 'coordinates') {
+  if (field === 'coordinates') {
+    // Initialize temporary coordinate from current coordinateObj
+    tempCoordinatesObj.value = coordinatesObj.value ? { ...coordinatesObj.value } : null;
+    tempCoordinates.value = coordinates.value || "";
+
+    nextTick(() => {
       initializeMap();
-    }
-  });
+    });
+  }
 };
 
 const closeModal = () => {
   isModalOpen.value = false;
   modalField.value = "";
   modalValue.value = null;
+
+  // Clear temporary coordinates on close
+  tempCoordinatesObj.value = null;
+  tempCoordinates.value = "";
 
   if (mapInstance) {
     mapInstance.remove();
@@ -137,8 +186,10 @@ const closeModal = () => {
 };
 
 const saveModalValue = () => {
-  if (modalField.value === 'coordinates') {
-    name.value = modalValue.value;
+  if (modalField.value === 'coordinates' && tempCoordinatesObj.value) {
+    coordinatesObj.value = { ...tempCoordinatesObj.value };
+    coordinates.value = tempCoordinates.value;
+    initializePreviewMap();
   }
   closeModal();
 };
@@ -147,7 +198,7 @@ const initializeMap = () => {
   const mapContainer = document.getElementById("map");
   let currentMark = null;
 
-  if (!mapContainer || mapInstance || CommonConstant.INTEGERS.ZERO === mapContainer.offsetHeight) {
+  if (!mapContainer || mapInstance || mapContainer.offsetHeight === 0) {
     return;
   }
 
@@ -159,7 +210,7 @@ const initializeMap = () => {
     keyboard: false,
     dragging: true,
   }).setView(
-    CoordinatesConstant.VISAYAS_STATE_UNIVERSITY_COORDINATES,
+    [coordinatesObj.value.lat, coordinatesObj.value.lng],
     CommonConstant.MAP_ZOOM_LEVEL.SIXTEEN
   );
 
@@ -174,7 +225,7 @@ const initializeMap = () => {
         .addTo(mapInstance)
         .bindPopup(location.name)
         .on('click', () => {
-          toast.error('A location already exists at these coordinates', { duration: 3000 });
+          toast.error('This location already exists. Please select a different one.', { duration: 3000 });
         });
     }
   });
@@ -189,9 +240,10 @@ const initializeMap = () => {
     shadowSize: [41, 41]
   });
 
-  L.marker([coordinatesObj.value.lat, coordinatesObj.value.lng], {icon: currentLocationIcon})
-    .addTo(mapInstance)
-    .bindPopup("Current location: " + name.value);
+  // If there is a temporary coordinate, show marker on it
+  if (tempCoordinatesObj.value) {
+    currentMark = L.marker([tempCoordinatesObj.value.lat, tempCoordinatesObj.value.lng]).addTo(mapInstance);
+  }
 
   mapInstance.on("click", (mapEvent) => {
     const latLngObj = {
@@ -220,33 +272,45 @@ const initializeMap = () => {
     L.popup()
       .setLatLng(mapEvent.latlng)
       .setContent(
-        `${CommonConstant.COMPONENT_TEXTS.YOU_CLICKED_THE_MAP_AT} 
-        ${latLngObj.lat.toFixed(CommonConstant.INTEGERS.TWO)}, 
+        `${CommonConstant.COMPONENT_TEXTS.YOU_CLICKED_THE_MAP_AT}
+        ${latLngObj.lat.toFixed(CommonConstant.INTEGERS.TWO)},
         ${latLngObj.lng.toFixed(CommonConstant.INTEGERS.TWO)}.`
       )
       .openOn(mapInstance);
 
-    coordinatesObj.value = latLngObj;
-    coordinates.value = `${latLngObj.lat}, ${latLngObj.lng}`;
-
-    watch(coordinatesObj, (newValue) => {
-      if (newValue) {
-        const { lat, lng } = newValue;
-        coordinates.value = `${lat}, ${lng}`;
-      }
-    });
+    // Update temporary coordinate only
+    tempCoordinatesObj.value = latLngObj;
+    tempCoordinates.value = `${latLngObj.lat}, ${latLngObj.lng}`;
   });
+};
+
+const clearCoordinates = () => {
+  // Reset to original coordinates
+  coordinatesObj.value = { ...originalCoordinatesObj.value };
+  coordinates.value = `${originalCoordinatesObj.value.lat}, ${originalCoordinatesObj.value.lng}`;
+  
+  // Reinitialize preview map
+  initializePreviewMap();
 };
 
 const isFormChanged = computed(() => {
   return name.value !== originalName.value || 
-         coordinatesObj.value.lat !== originalCoordinatesObj.lat || 
-         coordinatesObj.value.lng !== originalCoordinatesObj.lng;
+         coordinatesObj.value.lat !== originalCoordinatesObj.value.lat || 
+         coordinatesObj.value.lng !== originalCoordinatesObj.value.lng;
 });
 
 onMounted(() => {
   fetchLocation();
   fetchLocations();
+});
+
+onBeforeUnmount(() => {
+  if (mapInstance) {
+    mapInstance.remove();
+  }
+  if (previewMapInstance) {
+    previewMapInstance.remove();
+  }
 });
 </script>
 
@@ -296,11 +360,11 @@ onMounted(() => {
         <Label for="coordinates" class="text-gray-700 font-medium">
           Coordinates
         </Label>
-        <div class="relative">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
           <button
             type="button"
             @click="openModal('coordinates')"
-            class="w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 transition-colors flex justify-between items-center"
+            class="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 transition-colors flex justify-between items-center"
           >
             <span class="block truncate">
               {{ coordinates || "Click to set location coordinates" }}
@@ -315,7 +379,63 @@ onMounted(() => {
         <p class="text-xs text-gray-500 mt-1">Click to open the map and select precise coordinates</p>
       </div>
 
-
+      <!-- Preview section -->
+      <div
+        v-if="coordinates"
+        class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 relative z-0"
+      >
+        <h3 class="text-sm font-medium text-gray-700 mb-2">
+          Selected Location Preview
+        </h3>
+        <div class="space-y-3">
+          <!-- Map preview container -->
+          <div
+            id="preview-map"
+            class="h-48 w-full rounded-lg border border-gray-200 overflow-hidden"
+          ></div>
+          <!-- Coordinates display -->
+          <div
+            class="flex items-center justify-between px-3 py-2 bg-green-50 rounded-md border border-green-100"
+          >
+            <div class="flex items-center space-x-2">
+              <svg
+                class="w-5 h-5 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+              </svg>
+              <span class="text-sm text-gray-600">{{ coordinates }}</span>
+            </div>
+            <button
+              type="button"
+              @click="clearCoordinates"
+              class="text-red-600 hover:text-red-700 focus:outline-none"
+              title="Reset coordinates"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Submit Button with improved styling -->
       <div class="flex justify-end pt-4">
@@ -363,56 +483,69 @@ onMounted(() => {
   >
     <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
       <!-- Background overlay with improved transition -->
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75" @click="closeModal"></div>
-      
-      <!-- Modal panel with smaller size and mobile-friendly styling -->
-      <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:align-middle">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeModal"></div>
+
+      <!-- Modal panel with improved styling -->
+      <div class="inline-block transform overflow-hidden rounded-xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle">
+        <div class="bg-white px-6 pt-5 pb-4">
           <div class="sm:flex sm:items-start">
-        <div class="mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-8 sm:w-8">
-          <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          </svg>
-        </div>
-        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-          <h3 class="text-base font-medium leading-6 text-gray-900" id="modal-title">
-            {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
-          </h3>
-          <p class="mt-1 text-sm text-gray-500">
-            {{ modalField === 'coordinates' ? 'Click on the map to select precise coordinates for this location.' : '' }}
-          </p>
-        </div>
+            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+              <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
+                {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                {{ modalField === 'coordinates' ? 'Click on the map to select precise coordinates for this location.' : '' }}
+              </p>
+            </div>
           </div>
 
-          <!-- Modal Content with smaller map container -->
-          <div class="mt-4">
-        <!-- Map View -->
-        <div v-if="modalField === 'coordinates'" class="mt-2">
-          <div id="map" class="h-[300px] w-full rounded-lg border border-gray-200 shadow-inner"></div>
-          
-          <!-- Selected coordinates display -->
-          <div v-if="coordinates" class="mt-3 p-2 bg-green-50 border border-green-100 rounded-md text-sm text-green-800">
-            Selected coordinates: {{ coordinates }}
-          </div>
-        </div>
+          <!-- Modal Content with improved map container -->
+          <div class="mt-6">
+            <!-- Map View -->
+            <div v-if="modalField === 'coordinates'" class="mt-4">
+              <div id="map" class="h-[450px] w-full rounded-lg border border-gray-200 shadow-inner"></div>
+
+              <div
+                v-if="tempCoordinates"
+                class="mt-3 p-3 bg-green-50 border border-green-100 rounded-md text-sm text-green-800 flex justify-between items-center"
+              >
+                <span>Selected coordinates: {{ tempCoordinates }}</span>
+                <button
+                  type="button"
+                  @click="clearCoordinates"
+                  class="text-red-600 hover:text-red-800 focus:outline-none"
+                  title="Reset coordinates"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Modal Footer with improved button styling -->
-        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100">
+        <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100">
           <button
-        type="button"
-        @click="saveModalValue"
-        class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto"
+            v-if="tempCoordinatesObj"
+            type="button"
+            @click="saveModalValue"
+            class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-5 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
           >
-        Save Coordinates
+            Save Coordinates
           </button>
           <button
-        type="button"
-        @click="closeModal"
-        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto"
+            type="button"
+            @click="closeModal"
+            class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-5 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
           >
-        Cancel
+            Cancel
           </button>
         </div>
       </div>
