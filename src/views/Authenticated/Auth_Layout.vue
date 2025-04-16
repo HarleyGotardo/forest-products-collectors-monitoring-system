@@ -269,7 +269,7 @@ onMounted(async () => {
             </FPC_Request>
 
             <Records
-              v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
+              v-if="isFPUAdmin || isForestRanger || isVSUAdmin || isFPCollector"
               :isDropdownOpen="isRecordsDropdownOpen"
               @toggleDropdown="toggleRecordsDropdown"
               label="Collection Records"
@@ -278,6 +278,15 @@ onMounted(async () => {
               <router-link 
                 v-if="isFPUAdmin || isForestRanger || isVSUAdmin" 
                 to="/authenticated/collection-records" 
+                class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+                @click="closeSidebar"
+              >
+                <img src="@/assets/records2.png" alt="View Records" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+                <span class="font-medium text-gray-700 group-hover:text-emerald-600">View Records</span>
+              </router-link>
+              <router-link 
+                v-if="isFPCollector" 
+                to="/authenticated/fpc-collection-records" 
                 class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
                 @click="closeSidebar"
               >

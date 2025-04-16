@@ -405,7 +405,7 @@ onMounted(() => {
         <div class="flex flex-col gap-5">
           <div>
             <h2 class="text-lg font-semibold text-gray-900">
-              Collection Receipt
+              Collection Record Invoice
             </h2>
             <p class="text-sm text-gray-500 mt-0.5">
               Forest Products Collection Record Details
@@ -416,7 +416,7 @@ onMounted(() => {
               <p
                 class="text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Receipt No.
+                Invoice No.
               </p>
               <p class="text-sm font-semibold text-gray-900 mt-1">
                 #{{ record.id }}
@@ -428,9 +428,9 @@ onMounted(() => {
               >
                 Date Issued
               </p>
-              <p class="text-sm text-gray-900 mt-1">
-                {{ new Date(record.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) }}
-              </p>
+                <p class="text-sm text-gray-900 mt-1">
+                {{ new Date(record.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) }}
+                </p>
             </div>
             <div>
               <p
@@ -663,15 +663,15 @@ onMounted(() => {
                   <div
                     class="flex justify-between items-center border-t border-gray-200 pt-3"
                   >
-                    <dt class="text-gray-600">Approved By</dt>
+                    <dt class="text-gray-600">Maked Paid By</dt>
                     <dd class="text-gray-800">
                       {{ record.approved_by ? `${record.approved_by.first_name} ${record.approved_by.last_name}` : 'N/A' }}
                     </dd>
                   </div>
                   <div class="flex justify-between items-center">
-                    <dt class="text-gray-600">Approved At</dt>
+                    <dt class="text-gray-600">Payment Date</dt>
                     <dd class="text-gray-800">
-                      {{ record.approved_at ? new Date(record.approved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A' }}
+                      {{ record.approved_at ? new Date(record.approved_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A' }}
                     </dd>
                   </div>
                 </template>
