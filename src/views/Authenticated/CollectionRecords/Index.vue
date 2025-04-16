@@ -1,3 +1,332 @@
+
+<script setup>
+import { createApp } from 'vue';
+import PermitTemplate from './PermitTemplate.vue';
+import { ref, onMounted, computed, watch } from 'vue'
+import { format } from 'date-fns'
+import { supabase } from '@/lib/supabaseClient'
+import { toast } from 'vue-sonner'
+import { isFPUAdmin, isForestRanger, isVSUAdmin } from '@/router/routeGuard'
+import router from '@/router'
+import Button from '@/components/ui/button/Button.vue'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import html2pdf from 'html2pdf.js';
+
+const collectionRecords = ref([])
+const currentPage = ref(1)
+const itemsPerPage = 8
+const error = ref(null)
+const searchQuery = ref('')
+const paymentFilter = ref('all') // 'all', 'paid', 'unpaid'
+const loading = ref(true);
+
+const fetchCollectionRecords = async () => {
+  loading.value = true; // Start loading
+  try {
+    // First, fetch the collection records
+    let { data: records, error: fetchError } = await supabase
+      .from('collection_records')
+      .select(`
+        id,
+        created_at,
+        user_id,
+        user:profiles!forest_product_collection_records_user_id_fkey (id, first_name, last_name),
+        created_by,
+        creator:profiles!collection_records_created_by_fkey (id, first_name, last_name),
+        approved_by,
+        approver:profiles!collection_records_approved_by_fkey (id, first_name, last_name),
+        approved_at,
+        deleted_at,
+        is_paid,
+        collection_request_id,
+        purpose
+      `)
+      .is('deleted_at', null)
+
+    if (fetchError) {
+      error.value = fetchError.message
+      return
+    }
+
+    // For each record, fetch the collection_record_items to calculate the total cost
+    const recordsWithItems = await Promise.all(records.map(async (record) => {
+      // Fetch items for this collection record
+      const { data: items, error: itemsError } = await supabase
+        .from('collection_record_items')
+        .select(`
+          id,
+          total_cost,
+          fp_and_location_id,
+          fp_and_location:fp_and_locations (
+            id,
+            forest_product:forest_products (id, name)
+          )
+        `)
+        .eq('collection_record_id', record.id)
+
+      if (itemsError) {
+        console.error('Error fetching items:', itemsError)
+        return null
+      }
+
+      // Calculate total cost from all items
+      const totalCost = items.reduce((sum, item) => sum + (item.total_cost || 0), 0)
+
+      // Format the record with all necessary data
+      return {
+        id: record.id,
+        created_at: record.created_at,
+        formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
+        user_name: `${record.user.first_name} ${record.user.last_name}`,
+        location_id: record.location_id,
+        location_name: record.location ? record.location.name : 'Unknown Location',
+        items: items,
+        total_cost: totalCost.toFixed(2),
+        created_by_name: record.creator ? `${record.creator.first_name} ${record.creator.last_name}` : 'Unknown',
+        approved_by_name: record.approver ? `${record.approver.first_name} ${record.approver.last_name}` : null,
+        approved_at: record.approved_at ? format(new Date(record.approved_at), 'MMMM dd, yyyy') : null,
+        is_paid: record.is_paid,
+        collection_request_id: record.collection_request_id,
+        purpose: record.purpose,
+      }
+    }))
+
+    // Filter out any null records (in case of errors)
+    collectionRecords.value = recordsWithItems.filter(record => record !== null)
+    paginateRecords()
+  } catch (err) {
+    console.error('Error in fetchCollectionRecords:', err)
+    error.value = 'Failed to load collection records'
+  } finally {
+    loading.value = false; // End loading
+  }
+}
+
+const paginateRecords = () => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  paginatedRecords.value = filteredRecords.value.slice(start, end)
+}
+
+const filteredRecords = computed(() => {
+  let records = collectionRecords.value
+
+  // Apply payment filter
+  if (paymentFilter.value !== 'all') {
+    records = records.filter(record =>
+      paymentFilter.value === 'paid' ? record.is_paid : !record.is_paid
+    )
+  }
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    records = records.filter(record =>
+      record.id.toString().includes(query) ||
+      record.user_name.toLowerCase().includes(query) ||
+      record.location_name.toLowerCase().includes(query) ||
+      record.created_by_name.toLowerCase().includes(query)
+    )
+  }
+
+  return records
+})
+
+const paginatedRecords = ref([])
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredRecords.value.length / itemsPerPage)
+})
+
+const goToPage = (page) => {
+  currentPage.value = page
+  paginateRecords()
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+    paginateRecords()
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    paginateRecords()
+  }
+}
+
+const createCollectionRecord = () => {
+  router.push('/authenticated/collection-records/create')
+}
+
+const markAsPaid = async (recordId) => {
+  try {
+    // Get the current user's ID from the auth session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error('User authentication error:', userError);
+      error.value = 'Failed to authenticate user';
+      return;
+    }
+
+    // Update the record as paid
+    const { error: updateError } = await supabase
+      .from('collection_records')
+      .update({
+        is_paid: true,
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', recordId);
+
+    if (updateError) {
+      console.error('Supabase update error:', updateError);
+      error.value = 'Failed to update collection record';
+      return;
+    }
+
+    // Fetch the record details for the permit
+    const record = collectionRecords.value.find((r) => r.id === recordId);
+
+    if (!record) {
+      console.error('Record not found in collectionRecords:', recordId);
+      error.value = 'Record not found';
+      return;
+    }
+
+    // Fetch the collection record items
+    const { data: items, error: itemsError } = await supabase
+      .from('collection_record_items')
+      .select(`
+        id,
+        purchased_quantity,
+        total_cost,
+        fp_and_location:fp_and_locations (
+          location:locations (name),
+          forest_product:forest_products (name)
+        )
+      `)
+      .eq('collection_record_id', recordId);
+
+    if (itemsError) {
+      console.error('Error fetching collection record items:', itemsError);
+      error.value = 'Failed to fetch collection record items';
+      return;
+    }
+
+    // Format the list of forest products
+    const forestProductsList = items.map((item) => {
+      const productName = item.fp_and_location.forest_product.name;
+      const locationName = item.fp_and_location.location.name;
+      const quantity = item.purchased_quantity;
+      const totalCost = item.total_cost.toFixed(2);
+      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
+    }).join('; ');
+
+    // Check if any product is firewood
+    const firewoodNote = items.some((item) =>
+      item.fp_and_location.forest_product.name.toLowerCase() === 'firewood'
+    )
+      ? 'Firewood Permits are intended for family consumption but not for sale. It is limited to dead branches up to 10cm diameter, 1 meter length.'
+      : '';
+
+    // Prepare permit data
+    const permitData = {
+      permitNo: record.id, // Permit Number is the record ID
+      dateIssued: new Date(record.created_at).toLocaleDateString(), // Date the record was created
+      name: record.user_name,
+      permission: `collect the forest products: ${forestProductsList}`, // Updated to "permission"
+      purpose: record.purpose, // Official, Personal, or Others
+      collectionRequestId: record.collection_request_id, // Collection Request ID
+      expiryDate: new Date(new Date(record.created_at).setFullYear(new Date(record.created_at).getFullYear() + 1)).toLocaleDateString(),
+      chargesPaid: record.total_cost,
+      issuedBy: record.created_by_name, // Name of the user who created the record
+      inspectedBy: record.created_by_name, // Same as "Issued by"
+      note: firewoodNote, // Add the firewood note if applicable
+    };
+
+    // Generate the PDF
+    const permitElement = document.createElement('div');
+    document.body.appendChild(permitElement);
+
+    const app = createApp(PermitTemplate, { permitData });
+    app.mount(permitElement);
+
+    const options = {
+      margin: [0.3, 0.3, 0.3, 0.3],
+      filename: `Forest_Conservation_Permit_${recordId}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+    };
+
+    await html2pdf().from(permitElement).set(options).save();
+
+    app.unmount();
+    document.body.removeChild(permitElement);
+
+    // Show success message
+    toast.success('Collection record marked as paid successfully. Check your downloads to see the permit.', { duration: 2000 });
+
+    // Refresh the records
+    fetchCollectionRecords();
+  } catch (err) {
+    console.error('Error marking as paid:', err);
+    error.value = 'Failed to mark as paid';
+  }
+};
+
+const deleteCollectionRecord = async (recordId) => {
+  const currentDate = new Date().toISOString()
+  const { error: deleteError } = await supabase
+    .from('collection_records')
+    .update({ deleted_at: currentDate })
+    .eq('id', recordId)
+
+  if (deleteError) {
+    error.value = deleteError.message
+  } else {
+    fetchCollectionRecords()
+    toast.success('Collection record deleted successfully', { duration: 2000 })
+  }
+}
+
+const viewCollectionRecord = (recordId) => {
+  router.push({ name: 'CollectionRecordsView', params: { id: recordId } })
+}
+
+onMounted(() => {
+  fetchCollectionRecords()
+})
+
+watch(searchQuery, () => {
+  currentPage.value = 1
+  paginateRecords()
+})
+
+watch(currentPage, () => {
+  paginateRecords()
+})
+
+watch(paymentFilter, () => {
+  currentPage.value = 1
+  paginateRecords()
+})
+</script>
+
+
 <template>
   <div class="max-w-7xl mx-auto p-4 sm:p-6">
     <!-- Header Section -->
@@ -551,330 +880,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { createApp } from 'vue';
-import PermitTemplate from './PermitTemplate.vue';
-import { ref, onMounted, computed, watch } from 'vue'
-import { format } from 'date-fns'
-import { supabase } from '@/lib/supabaseClient'
-import { toast } from 'vue-sonner'
-import { isFPUAdmin, isForestRanger, isVSUAdmin } from '@/router/routeGuard'
-import router from '@/router'
-import Button from '@/components/ui/button/Button.vue'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import html2pdf from 'html2pdf.js';
-
-const collectionRecords = ref([])
-const currentPage = ref(1)
-const itemsPerPage = 8
-const error = ref(null)
-const searchQuery = ref('')
-const paymentFilter = ref('all') // 'all', 'paid', 'unpaid'
-const loading = ref(true);
-
-const fetchCollectionRecords = async () => {
-  loading.value = true; // Start loading
-  try {
-    // First, fetch the collection records
-    let { data: records, error: fetchError } = await supabase
-      .from('collection_records')
-      .select(`
-        id,
-        created_at,
-        user_id,
-        user:profiles!forest_product_collection_records_user_id_fkey (id, first_name, last_name),
-        created_by,
-        creator:profiles!collection_records_created_by_fkey (id, first_name, last_name),
-        approved_by,
-        approver:profiles!collection_records_approved_by_fkey (id, first_name, last_name),
-        approved_at,
-        deleted_at,
-        is_paid,
-        collection_request_id,
-        purpose
-      `)
-      .is('deleted_at', null)
-
-    if (fetchError) {
-      error.value = fetchError.message
-      return
-    }
-
-    // For each record, fetch the collection_record_items to calculate the total cost
-    const recordsWithItems = await Promise.all(records.map(async (record) => {
-      // Fetch items for this collection record
-      const { data: items, error: itemsError } = await supabase
-        .from('collection_record_items')
-        .select(`
-          id,
-          total_cost,
-          fp_and_location_id,
-          fp_and_location:fp_and_locations (
-            id,
-            forest_product:forest_products (id, name)
-          )
-        `)
-        .eq('collection_record_id', record.id)
-
-      if (itemsError) {
-        console.error('Error fetching items:', itemsError)
-        return null
-      }
-
-      // Calculate total cost from all items
-      const totalCost = items.reduce((sum, item) => sum + (item.total_cost || 0), 0)
-
-      // Format the record with all necessary data
-      return {
-        id: record.id,
-        created_at: record.created_at,
-        formatted_created_at: format(new Date(record.created_at), 'MMMM dd, yyyy'),
-        user_name: `${record.user.first_name} ${record.user.last_name}`,
-        location_id: record.location_id,
-        location_name: record.location ? record.location.name : 'Unknown Location',
-        items: items,
-        total_cost: totalCost.toFixed(2),
-        created_by_name: record.creator ? `${record.creator.first_name} ${record.creator.last_name}` : 'Unknown',
-        approved_by_name: record.approver ? `${record.approver.first_name} ${record.approver.last_name}` : null,
-        approved_at: record.approved_at ? format(new Date(record.approved_at), 'MMMM dd, yyyy') : null,
-        is_paid: record.is_paid,
-        collection_request_id: record.collection_request_id,
-        purpose: record.purpose,
-      }
-    }))
-
-    // Filter out any null records (in case of errors)
-    collectionRecords.value = recordsWithItems.filter(record => record !== null)
-    paginateRecords()
-  } catch (err) {
-    console.error('Error in fetchCollectionRecords:', err)
-    error.value = 'Failed to load collection records'
-  } finally {
-    loading.value = false; // End loading
-  }
-}
-
-const paginateRecords = () => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  paginatedRecords.value = filteredRecords.value.slice(start, end)
-}
-
-const filteredRecords = computed(() => {
-  let records = collectionRecords.value
-
-  // Apply payment filter
-  if (paymentFilter.value !== 'all') {
-    records = records.filter(record =>
-      paymentFilter.value === 'paid' ? record.is_paid : !record.is_paid
-    )
-  }
-
-  // Apply search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    records = records.filter(record =>
-      record.id.toString().includes(query) ||
-      record.user_name.toLowerCase().includes(query) ||
-      record.location_name.toLowerCase().includes(query) ||
-      record.created_by_name.toLowerCase().includes(query)
-    )
-  }
-
-  return records
-})
-
-const paginatedRecords = ref([])
-
-const totalPages = computed(() => {
-  return Math.ceil(filteredRecords.value.length / itemsPerPage)
-})
-
-const goToPage = (page) => {
-  currentPage.value = page
-  paginateRecords()
-}
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-    paginateRecords()
-  }
-}
-
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-    paginateRecords()
-  }
-}
-
-const createCollectionRecord = () => {
-  router.push('/authenticated/collection-records/create')
-}
-
-const markAsPaid = async (recordId) => {
-  try {
-    // Get the current user's ID from the auth session
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error('User authentication error:', userError);
-      error.value = 'Failed to authenticate user';
-      return;
-    }
-
-    // Update the record as paid
-    const { error: updateError } = await supabase
-      .from('collection_records')
-      .update({
-        is_paid: true,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      })
-      .eq('id', recordId);
-
-    if (updateError) {
-      console.error('Supabase update error:', updateError);
-      error.value = 'Failed to update collection record';
-      return;
-    }
-
-    // Fetch the record details for the permit
-    const record = collectionRecords.value.find((r) => r.id === recordId);
-
-    if (!record) {
-      console.error('Record not found in collectionRecords:', recordId);
-      error.value = 'Record not found';
-      return;
-    }
-
-    // Fetch the collection record items
-    const { data: items, error: itemsError } = await supabase
-      .from('collection_record_items')
-      .select(`
-        id,
-        purchased_quantity,
-        total_cost,
-        fp_and_location:fp_and_locations (
-          location:locations (name),
-          forest_product:forest_products (name)
-        )
-      `)
-      .eq('collection_record_id', recordId);
-
-    if (itemsError) {
-      console.error('Error fetching collection record items:', itemsError);
-      error.value = 'Failed to fetch collection record items';
-      return;
-    }
-
-    // Format the list of forest products
-    const forestProductsList = items.map((item) => {
-      const productName = item.fp_and_location.forest_product.name;
-      const locationName = item.fp_and_location.location.name;
-      const quantity = item.purchased_quantity;
-      const totalCost = item.total_cost.toFixed(2);
-      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
-    }).join('; ');
-
-    // Check if any product is firewood
-    const firewoodNote = items.some((item) =>
-      item.fp_and_location.forest_product.name.toLowerCase() === 'firewood'
-    )
-      ? 'Firewood Permits are intended for family consumption but not for sale. It is limited to dead branches up to 10cm diameter, 1 meter length.'
-      : '';
-
-    // Prepare permit data
-    const permitData = {
-      permitNo: record.id, // Permit Number is the record ID
-      dateIssued: new Date(record.created_at).toLocaleDateString(), // Date the record was created
-      name: record.user_name,
-      permission: `collect the forest products: ${forestProductsList}`, // Updated to "permission"
-      purpose: record.purpose, // Official, Personal, or Others
-      collectionRequestId: record.collection_request_id, // Collection Request ID
-      expiryDate: new Date(new Date(record.created_at).setFullYear(new Date(record.created_at).getFullYear() + 1)).toLocaleDateString(),
-      chargesPaid: record.total_cost,
-      issuedBy: record.created_by_name, // Name of the user who created the record
-      inspectedBy: record.created_by_name, // Same as "Issued by"
-      note: firewoodNote, // Add the firewood note if applicable
-    };
-
-    // Generate the PDF
-    const permitElement = document.createElement('div');
-    document.body.appendChild(permitElement);
-
-    const app = createApp(PermitTemplate, { permitData });
-    app.mount(permitElement);
-
-    const options = {
-      margin: [0.3, 0.3, 0.3, 0.3],
-      filename: `Forest_Conservation_Permit_${recordId}.pdf`,
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-    };
-
-    await html2pdf().from(permitElement).set(options).save();
-
-    app.unmount();
-    document.body.removeChild(permitElement);
-
-    // Show success message
-    toast.success('Collection record marked as paid successfully. Check your downloads to see the permit.', { duration: 2000 });
-
-    // Refresh the records
-    fetchCollectionRecords();
-  } catch (err) {
-    console.error('Error marking as paid:', err);
-    error.value = 'Failed to mark as paid';
-  }
-};
-
-const deleteCollectionRecord = async (recordId) => {
-  const currentDate = new Date().toISOString()
-  const { error: deleteError } = await supabase
-    .from('collection_records')
-    .update({ deleted_at: currentDate })
-    .eq('id', recordId)
-
-  if (deleteError) {
-    error.value = deleteError.message
-  } else {
-    fetchCollectionRecords()
-    toast.success('Collection record deleted successfully', { duration: 2000 })
-  }
-}
-
-const viewCollectionRecord = (recordId) => {
-  router.push({ name: 'CollectionRecordsView', params: { id: recordId } })
-}
-
-onMounted(() => {
-  fetchCollectionRecords()
-})
-
-watch(searchQuery, () => {
-  currentPage.value = 1
-  paginateRecords()
-})
-
-watch(currentPage, () => {
-  paginateRecords()
-})
-
-watch(paymentFilter, () => {
-  currentPage.value = 1
-  paginateRecords()
-})
-</script>

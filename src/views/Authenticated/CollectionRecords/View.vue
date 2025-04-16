@@ -6,7 +6,6 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import Button from '@/components/ui/button/Button.vue'
-import { isVSUAdmin } from '@/router/routeGuard'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { toast } from 'vue-sonner'
+import { isFPUAdmin, isForestRanger, isVSUAdmin } from '@/router/routeGuard'
 
 const route = useRoute()
 const router = useRouter()
@@ -40,7 +40,8 @@ const fetchCollectionRecord = async () => {
       created_by:profiles!collection_records_created_by_fkey (first_name, last_name),
       approved_by:profiles!collection_records_approved_by_fkey (first_name, last_name),
       purpose,
-      collection_request_id
+      collection_request_id,
+      is_paid
     `)
     .eq('id', recordId)
     .single()
@@ -80,6 +81,29 @@ const fetchCollectionRecord = async () => {
     error.value = itemsError.message
   } else {
     recordItems.value = itemsData
+  }
+}
+
+const deleteCollectionRecord = async (recordId) => {
+  try {
+    const currentDate = new Date().toISOString()
+    const { error: deleteError } = await supabase
+      .from('collection_records')
+      .update({ deleted_at: currentDate })
+      .eq('id', recordId)
+
+    if (deleteError) {
+      error.value = deleteError.message
+      toast.error(`Failed to delete record: ${deleteError.message}`, { duration: 3000 })
+    } else {
+      toast.success('Collection record deleted successfully', { duration: 2000 })
+      // Navigate back after successful deletion instead of fetching records
+      router.back()
+    }
+  } catch (err) {
+    console.error('Error deleting record:', err)
+    error.value = 'An unexpected error occurred while deleting the record'
+    toast.error('An unexpected error occurred while deleting the record', { duration: 3000 })
   }
 }
 
@@ -198,7 +222,7 @@ onMounted(() => {
 <template>
   <div class="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
     <div
-      class="max-w-5xl mx-auto mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
+      class="max-w-5xl mx-auto mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
     >
       <div class="flex items-center space-x-3 sm:space-x-4">
         <Button
@@ -234,28 +258,87 @@ onMounted(() => {
           Collection Record
         </h1>
       </div>
-      <Button
-        v-if="record?.is_paid"
-        @click="downloadPermit"
-        size="sm"
-        class="mt-2 sm:mt-0 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 mr-1.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
+      <div class="flex items-center space-x-3 sm:space-x-4">
+        <Button
+          v-if="record?.is_paid"
+          @click="downloadPermit"
+          size="sm"
+          class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-          />
-        </svg>
-        Download Permit
-      </Button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          Download Permit
+        </Button>
+        <AlertDialog v-if="record && !record.is_paid">
+          <AlertDialogTrigger>
+            <div class="flex items-center space-x-2">
+              <Button
+                v-if="(isFPUAdmin || isForestRanger) && !record.is_paid"
+                class="p-2 flex items-center justify-center"
+                @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </Button>
+              <Button
+                v-if="isFPUAdmin || isForestRanger"
+                class="p-2 flex items-center justify-center"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </Button>
+            </div>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This collection record will be transferred to the recycle bin.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="deleteCollectionRecord(record.id)">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
 
     <div
@@ -611,9 +694,13 @@ onMounted(() => {
 
     <div v-else class="flex flex-col justify-center items-center py-10">
       <div class="flex flex-row gap-2">
-      <div class="w-4 h-4 rounded-full bg-blue-700 animate-bounce"></div>
-      <div class="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.3s]"></div>
-      <div class="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.5s]"></div>
+        <div class="w-4 h-4 rounded-full bg-blue-700 animate-bounce"></div>
+        <div
+          class="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.3s]"
+        ></div>
+        <div
+          class="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.5s]"
+        ></div>
       </div>
       <p class="mt-4 text-sm text-gray-600">Loading record...</p>
     </div>
