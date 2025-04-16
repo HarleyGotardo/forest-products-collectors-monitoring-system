@@ -1,7 +1,7 @@
 <script setup>
 import { createApp } from 'vue';
 import html2pdf from 'html2pdf.js';
-import PermitTemplate from './PermitTemplate.vue'; 
+import PermitTemplate from './PermitTemplate.vue';
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
@@ -100,7 +100,7 @@ const downloadPermit = async () => {
     }).join('; ');
 
     // Check if any product is firewood
-    const firewoodNote = recordItems.value.some((item) => 
+    const firewoodNote = recordItems.value.some((item) =>
       item.fp_and_location.forest_product.name.toLowerCase() === 'firewood'
     )
       ? 'Firewood Permits are intended for family consumption but not for sale. It is limited to dead branches up to 10cm diameter, 1 meter length.'
@@ -197,18 +197,42 @@ onMounted(() => {
 </script>
 <template>
   <div class="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div
+      class="max-w-5xl mx-auto mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
+    >
       <div class="flex items-center space-x-3 sm:space-x-4">
-        <Button @click="router.back()" variant="outline" size="sm" class="flex items-center">
-           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-           </svg>
-           Back
+        <Button
+          @click="router.back()"
+          variant="outline"
+          size="sm"
+          class="flex items-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Back
         </Button>
         <div class="flex-shrink-0 p-2 rounded-full">
-             <img src="@/assets/records2.png" alt="Record Icon" class="w-6 h-6 sm:w-7 sm:h-7">
-             </div>
-        <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">Collection Record</h1>
+          <img
+            src="@/assets/records2.png"
+            alt="Record Icon"
+            class="w-6 h-6 sm:w-7 sm:h-7"
+          />
+        </div>
+        <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">
+          Collection Record
+        </h1>
       </div>
       <Button
         v-if="record?.is_paid"
@@ -216,8 +240,19 @@ onMounted(() => {
         size="sm"
         class="mt-2 sm:mt-0 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 mr-1.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
         </svg>
         Download Permit
       </Button>
@@ -229,9 +264,19 @@ onMounted(() => {
     >
       <div class="flex items-center">
         <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L10 8.586 7.707 6.293a1 1 0 00-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 101.414 1.414L10 11.414l2.293 2.293a1 1 0 001.414-1.414L11.414 10l2.293-2.293z" clip-rule="evenodd" />
-           </svg>
+          <svg
+            class="h-5 w-5 text-red-400"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L10 8.586 7.707 6.293a1 1 0 00-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 101.414 1.414L10 11.414l2.293 2.293a1 1 0 001.414-1.414L11.414 10l2.293-2.293z"
+              clip-rule="evenodd"
+            />
+          </svg>
         </div>
         <div class="ml-3">
           <p class="text-sm font-medium text-red-800">{{ error }}</p>
@@ -239,28 +284,55 @@ onMounted(() => {
       </div>
     </div>
 
-    <div v-if="record" class="max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    <div
+      v-if="record"
+      class="max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden"
+    >
       <div class="border-b border-gray-200 px-6 py-5">
         <div class="flex flex-col gap-5">
           <div>
-            <h2 class="text-lg font-semibold text-gray-900">Collection Receipt</h2>
-            <p class="text-sm text-gray-500 mt-0.5">Forest Products Collection Record Details</p>
+            <h2 class="text-lg font-semibold text-gray-900">
+              Collection Receipt
+            </h2>
+            <p class="text-sm text-gray-500 mt-0.5">
+              Forest Products Collection Record Details
+            </p>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
             <div>
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt No.</p>
-              <p class="text-sm font-semibold text-gray-900 mt-1">#{{ record.id }}</p>
+              <p
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Receipt No.
+              </p>
+              <p class="text-sm font-semibold text-gray-900 mt-1">
+                #{{ record.id }}
+              </p>
             </div>
             <div>
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Date Issued</p>
-              <p class="text-sm text-gray-900 mt-1">{{ new Date(record.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) }}</p>
+              <p
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Date Issued
+              </p>
+              <p class="text-sm text-gray-900 mt-1">
+                {{ new Date(record.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) }}
+              </p>
             </div>
             <div>
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose</p>
+              <p
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Purpose
+              </p>
               <p class="text-sm text-gray-900 mt-1">{{ record.purpose }}</p>
             </div>
             <div>
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</p>
+              <p
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Request ID
+              </p>
               <p
                 class="text-sm text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer hover:underline mt-1"
                 @click="router.push(`/authenticated/collection-requests/${record.collection_request_id}`)"
@@ -281,7 +353,9 @@ onMounted(() => {
             </p>
           </div>
           <div>
-            <h3 class="text-sm font-medium text-gray-500 mb-1">Collector Details</h3>
+            <h3 class="text-sm font-medium text-gray-500 mb-1">
+              Collector Details
+            </h3>
             <p class="text-sm text-gray-900">
               {{ record.user ? `${record.user.first_name} ${record.user.last_name}` : 'N/A' }}
             </p>
@@ -289,42 +363,96 @@ onMounted(() => {
         </div>
 
         <div class="mb-8">
-          <h3 class="text-sm font-medium text-gray-500 mb-3">Collection Details</h3>
+          <h3 class="text-sm font-medium text-gray-500 mb-3">
+            Collection Details
+          </h3>
 
-          <div class="hidden sm:block border border-gray-200 rounded-lg overflow-hidden">
+          <div
+            class="hidden sm:block border border-gray-200 rounded-lg overflow-hidden"
+          >
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forest Product</th>
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                  <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Collected Qty</th>
-                  <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Price / Unit</th>
-                  <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th
+                    scope="col"
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Forest Product
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Location
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Collected Qty
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                  >
+                    Price / Unit
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Amount
+                  </th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="item in recordItems" :key="item.id">
                   <td class="px-4 py-4 text-sm text-gray-800 align-top">
-                     <span class="font-medium">{{ item.fp_and_location?.forest_product?.name || 'N/A' }}</span>
-                     <div class="mt-1 text-xs text-gray-500 space-y-0.5">
-                       <p>Initial Qty: {{ item.quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
-                       <p>Collected: {{ item.deducted_quantity }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
-                       <p>Remaining: {{ item.remaining_quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
-                     </div>
+                    <span
+                      class="font-medium"
+                      >{{ item.fp_and_location?.forest_product?.name || 'N/A' }}</span
+                    >
+                    <div class="mt-1 text-xs text-gray-500 space-y-0.5">
+                      <p>
+                        Initial Qty: {{ item.quantity_during_purchase }}
+                        {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                      </p>
+                      <p>
+                        Collected: {{ item.deducted_quantity }}
+                        {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                      </p>
+                      <p>
+                        Remaining:
+                        {{ item.remaining_quantity_during_purchase }}
+                        {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                      </p>
+                    </div>
                   </td>
-                  <td class="px-4 py-4 text-sm text-gray-600 align-top">{{ item.fp_and_location?.location?.name || 'N/A' }}</td>
-                  <td class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap">
-                    {{ item.deducted_quantity }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                  <td class="px-4 py-4 text-sm text-gray-600 align-top">
+                    {{ item.fp_and_location?.location?.name || 'N/A' }}
                   </td>
-                  <td class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap">
+                  <td
+                    class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap"
+                  >
+                    {{ item.deducted_quantity }}
+                    {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                  </td>
+                  <td
+                    class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap"
+                  >
                     ₱{{ Number(item.price_per_unit_during_purchase).toFixed(2) }}
                   </td>
-                  <td class="px-4 py-4 text-sm text-gray-900 font-semibold text-right align-top whitespace-nowrap">
+                  <td
+                    class="px-4 py-4 text-sm text-gray-900 font-semibold text-right align-top whitespace-nowrap"
+                  >
                     ₱{{ Number(item.total_cost).toFixed(2) }}
                   </td>
                 </tr>
                 <tr v-if="recordItems.length === 0">
-                  <td colspan="5" class="px-4 py-6 text-sm text-gray-500 text-center">
+                  <td
+                    colspan="5"
+                    class="px-4 py-6 text-sm text-gray-500 text-center"
+                  >
                     No items found in this collection record.
                   </td>
                 </tr>
@@ -333,40 +461,64 @@ onMounted(() => {
           </div>
 
           <div class="sm:hidden space-y-4">
-            <div v-for="item in recordItems" :key="item.id" class="bg-white border border-gray-200 rounded-lg p-4">
+            <div
+              v-for="item in recordItems"
+              :key="item.id"
+              class="bg-white border border-gray-200 rounded-lg p-4"
+            >
               <div class="mb-3 pb-3 border-b border-gray-200">
-                  <p class="text-sm font-semibold text-gray-900">{{ item.fp_and_location?.forest_product?.name || 'N/A' }}</p>
-                  <p class="text-xs text-gray-500 mt-0.5">{{ item.fp_and_location?.location?.name || 'N/A' }}</p>
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ item.fp_and_location?.forest_product?.name || 'N/A' }}
+                </p>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  {{ item.fp_and_location?.location?.name || 'N/A' }}
+                </p>
               </div>
 
               <div class="grid grid-cols-3 gap-x-2 gap-y-1 mb-3 text-xs">
-                   <div>
-                      <p class="font-medium text-gray-500">Initial</p>
-                      <p class="text-gray-700">{{ item.quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
-                   </div>
-                    <div>
-                      <p class="font-medium text-gray-500">Collected</p>
-                      <p class="text-gray-700">{{ item.deducted_quantity }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
-                   </div>
-                    <div>
-                      <p class="font-medium text-gray-500">Remaining</p>
-                      <p class="text-gray-700">{{ item.remaining_quantity_during_purchase }} {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}</p>
-                   </div>
+                <div>
+                  <p class="font-medium text-gray-500">Initial</p>
+                  <p class="text-gray-700">
+                    {{ item.quantity_during_purchase }}
+                    {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                  </p>
+                </div>
+                <div>
+                  <p class="font-medium text-gray-500">Collected</p>
+                  <p class="text-gray-700">
+                    {{ item.deducted_quantity }}
+                    {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                  </p>
+                </div>
+                <div>
+                  <p class="font-medium text-gray-500">Remaining</p>
+                  <p class="text-gray-700">
+                    {{ item.remaining_quantity_during_purchase }}
+                    {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                  </p>
+                </div>
               </div>
 
               <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                  <div>
-                     <p class="text-xs font-medium text-gray-500">Price/Unit</p>
-                     <p class="text-gray-800">₱{{ Number(item.price_per_unit_during_purchase).toFixed(2) }}</p>
-                  </div>
-                   <div>
-                     <p class="text-xs font-medium text-gray-500">Total Amount</p>
-                     <p class="font-semibold text-gray-900">₱{{ Number(item.total_cost).toFixed(2) }}</p>
-                  </div>
-               </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Price/Unit</p>
+                  <p class="text-gray-800">
+                    ₱{{ Number(item.price_per_unit_during_purchase).toFixed(2) }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Total Amount</p>
+                  <p class="font-semibold text-gray-900">
+                    ₱{{ Number(item.total_cost).toFixed(2) }}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div v-if="recordItems.length === 0" class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+            <div
+              v-if="recordItems.length === 0"
+              class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center"
+            >
               <p class="text-sm text-gray-500">No items found.</p>
             </div>
           </div>
@@ -374,56 +526,73 @@ onMounted(() => {
 
         <div class="border-t border-gray-200 pt-6">
           <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-6">
-             <div class="w-full sm:w-auto sm:max-w-xs flex-grow"> <dl class="space-y-3 text-sm">
-                  <div class="flex justify-between items-center">
-                     <dt class="text-gray-600">Total Amount</dt>
-                     <dd class="text-lg font-semibold text-gray-900">₱{{ calculateTotalCost().toFixed(2) }}</dd>
+            <div class="w-full sm:w-auto sm:max-w-xs flex-grow">
+              <dl class="space-y-3 text-sm">
+                <div class="flex justify-between items-center">
+                  <dt class="text-gray-600">Total Amount</dt>
+                  <dd class="text-lg font-semibold text-gray-900">
+                    ₱{{ calculateTotalCost().toFixed(2) }}
+                  </dd>
+                </div>
+                <div
+                  class="flex justify-between items-center border-t border-gray-200 pt-3"
+                >
+                  <dt class="text-gray-600">Payment Status</dt>
+                  <dd
+                    class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                    :class="record.is_paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                  >
+                    {{ record.is_paid ? 'PAID' : 'UNPAID' }}
+                  </dd>
+                </div>
+
+                <template v-if="record.is_paid">
+                  <div
+                    class="flex justify-between items-center border-t border-gray-200 pt-3"
+                  >
+                    <dt class="text-gray-600">Approved By</dt>
+                    <dd class="text-gray-800">
+                      {{ record.approved_by ? `${record.approved_by.first_name} ${record.approved_by.last_name}` : 'N/A' }}
+                    </dd>
                   </div>
-                   <div class="flex justify-between items-center border-t border-gray-200 pt-3">
-                     <dt class="text-gray-600">Payment Status</dt>
-                     <dd class="px-2.5 py-0.5 rounded-full text-xs font-semibold" :class="record.is_paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                       {{ record.is_paid ? 'PAID' : 'UNPAID' }}
-                     </dd>
-                   </div>
+                  <div class="flex justify-between items-center">
+                    <dt class="text-gray-600">Approved At</dt>
+                    <dd class="text-gray-800">
+                      {{ record.approved_at ? new Date(record.approved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A' }}
+                    </dd>
+                  </div>
+                </template>
 
-                   <template v-if="record.is_paid">
-                     <div class="flex justify-between items-center border-t border-gray-200 pt-3">
-                       <dt class="text-gray-600">Approved By</dt>
-                       <dd class="text-gray-800">
-                         {{ record.approved_by ? `${record.approved_by.first_name} ${record.approved_by.last_name}` : 'N/A' }}
-                       </dd>
-                     </div>
-                     <div class="flex justify-between items-center">
-                       <dt class="text-gray-600">Approved At</dt>
-                       <dd class="text-gray-800">
-                         {{ record.approved_at ? new Date(record.approved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A' }}
-                       </dd>
-                     </div>
-                   </template>
-
-                   <div v-if="isVSUAdmin && !record.is_paid" class="pt-4">
-                     <AlertDialog>
-                       <AlertDialogTrigger asChild> <Button class="w-full bg-green-600 hover:bg-green-700 text-white">
-                           Mark as Paid
-                         </Button>
-                       </AlertDialogTrigger>
-                       <AlertDialogContent>
-                         <AlertDialogHeader>
-                           <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
-                           <AlertDialogDescription>
-                             Are you sure you want to mark this collection record as paid? This action cannot be undone easily.
-                           </AlertDialogDescription>
-                         </AlertDialogHeader>
-                         <AlertDialogFooter>
-                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                           <AlertDialogAction @click="markAsPaid" class="bg-green-600 hover:bg-green-700">
-                             Confirm Mark as Paid
-                           </AlertDialogAction>
-                         </AlertDialogFooter>
-                       </AlertDialogContent>
-                     </AlertDialog>
-                   </div>
-               </dl>
+                <div v-if="isVSUAdmin && !record.is_paid" class="pt-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        class="w-full bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Mark as Paid
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to mark this collection record
+                          as paid? This action cannot be undone easily.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          @click="markAsPaid"
+                          class="bg-green-600 hover:bg-green-700"
+                        >
+                          Confirm Mark as Paid
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </dl>
             </div>
           </div>
         </div>
@@ -432,13 +601,21 @@ onMounted(() => {
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
         <div class="text-xs text-gray-500 text-center">
           <p>Thank you for processing this collection.</p>
-          <p>Generated on: {{ new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</p>
+          <p>
+            Generated on:
+            {{ new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+          </p>
         </div>
       </div>
     </div>
 
-     <div v-else class="text-center py-10">
-        <p class="text-gray-500">Loading record details...</p>
-        </div>
+    <div v-else class="flex flex-col justify-center items-center py-10">
+      <div class="flex flex-row gap-2">
+      <div class="w-4 h-4 rounded-full bg-blue-700 animate-bounce"></div>
+      <div class="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.3s]"></div>
+      <div class="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.5s]"></div>
+      </div>
+      <p class="mt-4 text-sm text-gray-600">Loading record...</p>
+    </div>
   </div>
 </template>
