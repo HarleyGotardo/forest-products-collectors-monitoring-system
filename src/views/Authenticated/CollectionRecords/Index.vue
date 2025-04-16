@@ -171,6 +171,7 @@ const createCollectionRecord = () => {
   router.push('/authenticated/collection-records/create')
 }
 
+// Update the markAsPaid function to include quantity deduction
 const markAsPaid = async (recordId) => {
   try {
     // Get the current user's ID from the auth session
@@ -179,6 +180,24 @@ const markAsPaid = async (recordId) => {
     if (userError || !user) {
       console.error('User authentication error:', userError);
       error.value = 'Failed to authenticate user';
+      return;
+    }
+
+    // Fetch the collection record items to get quantities for deduction
+    const { data: recordItems, error: itemsError } = await supabase
+      .from('collection_record_items')
+      .select(`
+        id,
+        purchased_quantity,
+        fp_and_location_id,
+        deducted_quantity,
+        quantity_during_purchase
+      `)
+      .eq('collection_record_id', recordId);
+
+    if (itemsError) {
+      console.error('Error fetching record items:', itemsError);
+      error.value = 'Failed to fetch record items';
       return;
     }
 
@@ -198,6 +217,36 @@ const markAsPaid = async (recordId) => {
       return;
     }
 
+    // Deduct the quantities from fp_and_locations
+    for (const item of recordItems) {
+      // Get current quantity from fp_and_locations
+      const { data: fpLocationData, error: fpLocationError } = await supabase
+        .from('fp_and_locations')
+        .select('quantity')
+        .eq('id', item.fp_and_location_id)
+        .single();
+
+      if (fpLocationError) {
+        console.error('Error fetching fp_and_location:', fpLocationError);
+        continue; // Skip this item but continue with others
+      }
+
+      // Calculate new quantity
+      const newQuantity = fpLocationData.quantity - item.deducted_quantity;
+
+      // Update the fp_and_locations table
+      const { error: updateFpLocationError } = await supabase
+        .from('fp_and_locations')
+        .update({ quantity: newQuantity })
+        .eq('id', item.fp_and_location_id);
+
+      if (updateFpLocationError) {
+        console.error('Error updating fp_and_location quantity:', updateFpLocationError);
+        // Continue with other items despite this error
+      }
+    }
+
+    // Rest of the function for generating permit remains the same
     // Fetch the record details for the permit
     const record = collectionRecords.value.find((r) => r.id === recordId);
 
@@ -208,7 +257,7 @@ const markAsPaid = async (recordId) => {
     }
 
     // Fetch the collection record items
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: permitItemsError } = await supabase
       .from('collection_record_items')
       .select(`
         id,
@@ -221,8 +270,8 @@ const markAsPaid = async (recordId) => {
       `)
       .eq('collection_record_id', recordId);
 
-    if (itemsError) {
-      console.error('Error fetching collection record items:', itemsError);
+    if (permitItemsError) {
+      console.error('Error fetching collection record items:', permitItemsError);
       error.value = 'Failed to fetch collection record items';
       return;
     }
@@ -245,17 +294,17 @@ const markAsPaid = async (recordId) => {
 
     // Prepare permit data
     const permitData = {
-      permitNo: record.id, // Permit Number is the record ID
-      dateIssued: new Date(record.created_at).toLocaleDateString(), // Date the record was created
+      permitNo: record.id,
+      dateIssued: new Date(record.created_at).toLocaleDateString(),
       name: record.user_name,
-      permission: `collect the forest products: ${forestProductsList}`, // Updated to "permission"
-      purpose: record.purpose, // Official, Personal, or Others
-      collectionRequestId: record.collection_request_id, // Collection Request ID
+      permission: `collect the forest products: ${forestProductsList}`,
+      purpose: record.purpose,
+      collectionRequestId: record.collection_request_id,
       expiryDate: new Date(new Date(record.created_at).setFullYear(new Date(record.created_at).getFullYear() + 1)).toLocaleDateString(),
       chargesPaid: record.total_cost,
-      issuedBy: record.created_by_name, // Name of the user who created the record
-      inspectedBy: record.created_by_name, // Same as "Issued by"
-      note: firewoodNote, // Add the firewood note if applicable
+      issuedBy: record.created_by_name,
+      inspectedBy: record.created_by_name,
+      note: firewoodNote,
     };
 
     // Generate the PDF

@@ -255,6 +255,7 @@ const handleSubmit = () => {
   showReceiptPreview.value = true;
 };
 
+// In the confirmSubmit method, remove the quantity deduction logic
 const confirmSubmit = async () => {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
@@ -278,8 +279,8 @@ const confirmSubmit = async () => {
           collection_request_id: selectedRequest.value, // Save the selected request number
           purpose: finalPurpose, // Save the selected or custom purpose
           is_paid: isPaid, // Automatically mark as paid if total cost is 0
-          approved_by: user.id, // Save the authenticated user as the approver
-          approved_at: new Date().toISOString(), // Save the current timestamp as approved_at
+          approved_by: isPaid ? user.id : null, // Save the authenticated user as the approver if isPaid
+          approved_at: isPaid ? new Date().toISOString() : null, // Save the current timestamp as approved_at if isPaid
         }
       ])
       .select('id');
@@ -315,12 +316,7 @@ const confirmSubmit = async () => {
         return;
       }
 
-      // Deduct the quantity from the fp_and_locations table
-      const newQuantity = item.currentQuantity - item.purchasedQuantity;
-      await supabase
-        .from('fp_and_locations')
-        .update({ quantity: newQuantity })
-        .eq('id', item.fp_and_location_id);
+      // REMOVED: The quantity deduction code that was here
     }
 
     // Update the collection_requests table to set 'is_recorded' to true

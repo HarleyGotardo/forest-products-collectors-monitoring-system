@@ -171,6 +171,7 @@ const downloadPermit = async () => {
   }
 };
 
+// Update the markAsPaid function in View.vue to include quantity deduction
 const markAsPaid = async () => {
   try {
     // Get the current user's ID from the auth session
@@ -196,6 +197,35 @@ const markAsPaid = async () => {
       console.error('Supabase update error:', updateError);
       error.value = 'Failed to update collection record';
       return;
+    }
+
+    // Deduct quantities from fp_and_locations
+    for (const item of recordItems.value) {
+      // Get current quantity from fp_and_locations
+      const { data: fpLocationData, error: fpLocationError } = await supabase
+        .from('fp_and_locations')
+        .select('quantity')
+        .eq('id', item.fp_and_location.id)
+        .single();
+
+      if (fpLocationError) {
+        console.error('Error fetching fp_and_location:', fpLocationError);
+        continue; // Skip this item but continue with others
+      }
+
+      // Calculate new quantity
+      const newQuantity = fpLocationData.quantity - item.deducted_quantity;
+
+      // Update the fp_and_locations table
+      const { error: updateFpLocationError } = await supabase
+        .from('fp_and_locations')
+        .update({ quantity: newQuantity })
+        .eq('id', item.fp_and_location.id);
+
+      if (updateFpLocationError) {
+        console.error('Error updating fp_and_location quantity:', updateFpLocationError);
+        // Continue with other items despite this error
+      }
     }
 
     // Show success message
