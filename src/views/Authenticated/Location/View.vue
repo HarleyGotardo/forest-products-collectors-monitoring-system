@@ -210,6 +210,15 @@ onMounted(async () => {
   <div class="max-w-4xl mx-auto p-6">
     <!-- Header Section -->
     <div class="mb-6 flex items-center space-x-4">
+      <button
+          @click="router.back()"
+      class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back
+        </button>
       <img src="@/assets/location2.png" alt="Location" class="w-16 h-16" />
       <div>
         <h2 class="text-xl font-bold text-gray-900">Location Details</h2>
