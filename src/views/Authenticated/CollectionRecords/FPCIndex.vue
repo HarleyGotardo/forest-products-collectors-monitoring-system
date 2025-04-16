@@ -6,17 +6,6 @@ import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
 import { user, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, getUser } from '@/router/routeGuard'
 import Button from '@/components/ui/button/Button.vue'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 
 const loading = ref(true);
 const router = useRouter()
@@ -182,27 +171,6 @@ const viewRecord = (recordId) => {
   router.push(`/authenticated/collection-records/${recordId}`)
 }
 
-const editRecord = (recordId) => {
-  router.push(`/authenticated/collection-records/${recordId}/edit`)
-}
-
-const deleteRecord = async (recordId) => {
-  const currentDate = new Date()
-  const formattedDate = format(currentDate, 'yyyy-MM-dd HH:mm:ss')
-
-  const { error: updateError } = await supabase
-    .from('collection_records')
-    .update({ deleted_at: formattedDate })
-    .eq('id', recordId)
-
-  if (updateError) {
-    toast.error(updateError.message, { duration: 3000 })
-  } else {
-    toast.success('Collection record deleted successfully', { duration: 3000 })
-    fetchAllCollectionRecords() 
-  }
-}
-
 onMounted(() => {
   fetchUserDetails()
   fetchAllCollectionRecords()
@@ -341,14 +309,13 @@ watch(selectedStatus, () => {
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Location</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Quantity</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Status</th>
-        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Actions</th>
       </tr>
     </thead>
 
     <tbody class="bg-white">
 
       <tr v-if="filteredCollectionRecords.length === 0" class="block sm:table-row">
-        <td colspan="6" class="px-6 py-12 text-center block sm:table-cell">
+        <td colspan="5" class="px-6 py-12 text-center block sm:table-cell">
           <div class="flex flex-col items-center">
             <img
               src="@/assets/page-not-found.png"
@@ -367,7 +334,7 @@ watch(selectedStatus, () => {
         @click="viewRecord(record.id, $event)"
       >
 
-        <td class="block p-4 sm:hidden" colspan="6">
+        <td class="block p-4 sm:hidden" colspan="5">
           <div class="flex items-start space-x-4 mb-3">
              <div class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-lg bg-blue-50">
                <img :src="record.image_url" alt="Product Image" class="h-12 w-12 rounded-lg object-cover" />
@@ -375,43 +342,6 @@ watch(selectedStatus, () => {
              <div class="flex-grow min-w-0"> 
                 <h3 class="text-base font-semibold text-gray-900 mb-0.5 truncate">{{ record.product_name }}</h3> 
                 <p class="text-xs text-gray-500">ID: #{{ record.id }}</p>
-             </div>
-             <div class="flex-shrink-0 flex items-center space-x-1" @click.stop> 
-                <Button
-                  v-if="isFPCollector && record.status === 'Pending'"
-                  @click="editRecord(record.id, $event)"
-                  aria-label="Edit record"
-                >
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                     <Button
-                       v-if="isFPCollector && record.status === 'Pending'"
-                       aria-label="Delete record"
-                     >
-                       <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                       </svg>
-                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                     <AlertDialogHeader>
-                       <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
-                       <AlertDialogDescription>
-                         This collection record will be transferred to the recycle bin.
-                       </AlertDialogDescription>
-                     </AlertDialogHeader>
-                     <AlertDialogFooter>
-                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                       <AlertDialogAction @click="deleteRecord(record.id)">Delete</AlertDialogAction>
-                     </AlertDialogFooter>
-                   </AlertDialogContent>
-                </AlertDialog>
              </div>
           </div>
 
@@ -484,39 +414,6 @@ watch(selectedStatus, () => {
            </span>
            <div class="text-xs text-gray-500 mt-1">
              {{ new Date(record.created_at).toLocaleDateString() }}
-           </div>
-        </td>
-        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right text-sm font-medium border-b border-gray-200" @click.stop>
-           <div class="flex items-center justify-end space-x-2"> 
-             <Button
-               v-if="isFPCollector && record.status === 'Pending'"
-               @click="editRecord(record.id, $event)"
-               aria-label="Edit record"
-             >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-             </Button>
-             <AlertDialog>
-               <AlertDialogTrigger asChild>
-                  <Button
-                    v-if="isFPCollector && record.status === 'Pending'"
-                    aria-label="Delete record"
-                  >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                  </Button>
-               </AlertDialogTrigger>
-               <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This collection record will be transferred to the recycle bin.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction @click="deleteRecord(record.id)">Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-             </AlertDialog>
            </div>
         </td>
         </tr>
