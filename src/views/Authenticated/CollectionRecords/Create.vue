@@ -278,8 +278,8 @@ const confirmSubmit = async () => {
           collection_request_id: selectedRequest.value, // Save the selected request number
           purpose: finalPurpose, // Save the selected or custom purpose
           is_paid: isPaid, // Automatically mark as paid if total cost is 0
-          approved_by: user.id, // Save the authenticated user as the approver
-          approved_at: new Date().toISOString(), // Save the current timestamp as approved_at
+          approved_by: isPaid ? user.id : null, // Only save approver if paid
+          approved_at: isPaid ? new Date().toISOString() : null, // Only save timestamp if paid
         }
       ])
       .select('id');
@@ -315,12 +315,16 @@ const confirmSubmit = async () => {
         return;
       }
 
-      // Deduct the quantity from the fp_and_locations table
-      const newQuantity = item.currentQuantity - item.purchasedQuantity;
-      await supabase
-        .from('fp_and_locations')
-        .update({ quantity: newQuantity })
-        .eq('id', item.fp_and_location_id);
+      // The quantity deduction is removed from here and moved to markAsPaid
+      // Only deduct quantity if the record is automatically marked as paid (total cost is 0)
+      if (isPaid) {
+        // Deduct the quantity from the fp_and_locations table
+        const newQuantity = item.currentQuantity - item.purchasedQuantity;
+        await supabase
+          .from('fp_and_locations')
+          .update({ quantity: newQuantity })
+          .eq('id', item.fp_and_location_id);
+      }
     }
 
     // Update the collection_requests table to set 'is_recorded' to true
