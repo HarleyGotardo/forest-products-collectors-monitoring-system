@@ -182,23 +182,6 @@ const markAsPaid = async (recordId) => {
       return;
     }
 
-    // Fetch the collection record items to get the quantities to deduct
-    const { data: recordItems, error: itemsError } = await supabase
-      .from('collection_record_items')
-      .select(`
-        id,
-        fp_and_location_id,
-        purchased_quantity,
-        deducted_quantity
-      `)
-      .eq('collection_record_id', recordId);
-
-    if (itemsError) {
-      console.error('Error fetching collection record items:', itemsError);
-      error.value = 'Failed to fetch collection record items';
-      return;
-    }
-
     // Update the record as paid
     const { error: updateError } = await supabase
       .from('collection_records')
@@ -215,34 +198,6 @@ const markAsPaid = async (recordId) => {
       return;
     }
 
-    // Deduct the quantities from the fp_and_locations table
-    for (const item of recordItems) {
-      // First, get the current quantity from fp_and_locations
-      const { data: fpLocation, error: fpError } = await supabase
-        .from('fp_and_locations')
-        .select('quantity')
-        .eq('id', item.fp_and_location_id)
-        .single();
-
-      if (fpError) {
-        console.error('Error fetching forest product location:', fpError);
-        continue;
-      }
-
-      // Calculate the new quantity
-      const newQuantity = fpLocation.quantity - item.purchased_quantity;
-
-      // Update the quantity in fp_and_locations
-      const { error: updateFpError } = await supabase
-        .from('fp_and_locations')
-        .update({ quantity: newQuantity })
-        .eq('id', item.fp_and_location_id);
-
-      if (updateFpError) {
-        console.error('Error updating forest product quantity:', updateFpError);
-      }
-    }
-
     // Fetch the record details for the permit
     const record = collectionRecords.value.find((r) => r.id === recordId);
 
@@ -252,9 +207,8 @@ const markAsPaid = async (recordId) => {
       return;
     }
 
-    // Rest of the existing permit generation code...
     // Fetch the collection record items
-    const { data: items, error: permitItemsError } = await supabase
+    const { data: items, error: itemsError } = await supabase
       .from('collection_record_items')
       .select(`
         id,
@@ -267,8 +221,8 @@ const markAsPaid = async (recordId) => {
       `)
       .eq('collection_record_id', recordId);
 
-    if (permitItemsError) {
-      console.error('Error fetching collection record items:', permitItemsError);
+    if (itemsError) {
+      console.error('Error fetching collection record items:', itemsError);
       error.value = 'Failed to fetch collection record items';
       return;
     }
@@ -291,17 +245,17 @@ const markAsPaid = async (recordId) => {
 
     // Prepare permit data
     const permitData = {
-      permitNo: record.id,
-      dateIssued: new Date(record.created_at).toLocaleDateString(),
+      permitNo: record.id, // Permit Number is the record ID
+      dateIssued: new Date(record.created_at).toLocaleDateString(), // Date the record was created
       name: record.user_name,
-      permission: `collect the forest products: ${forestProductsList}`,
-      purpose: record.purpose,
-      collectionRequestId: record.collection_request_id,
+      permission: `collect the forest products: ${forestProductsList}`, // Updated to "permission"
+      purpose: record.purpose, // Official, Personal, or Others
+      collectionRequestId: record.collection_request_id, // Collection Request ID
       expiryDate: new Date(new Date(record.created_at).setFullYear(new Date(record.created_at).getFullYear() + 1)).toLocaleDateString(),
       chargesPaid: record.total_cost,
-      issuedBy: record.created_by_name,
-      inspectedBy: record.created_by_name,
-      note: firewoodNote,
+      issuedBy: record.created_by_name, // Name of the user who created the record
+      inspectedBy: record.created_by_name, // Same as "Issued by"
+      note: firewoodNote, // Add the firewood note if applicable
     };
 
     // Generate the PDF

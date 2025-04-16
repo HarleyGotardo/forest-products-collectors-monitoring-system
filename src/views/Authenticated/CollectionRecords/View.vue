@@ -198,34 +198,6 @@ const markAsPaid = async () => {
       return;
     }
 
-    // Deduct the quantities from the fp_and_locations table
-    for (const item of recordItems.value) {
-      // First, get the current quantity from fp_and_locations
-      const { data: fpLocation, error: fpError } = await supabase
-        .from('fp_and_locations')
-        .select('quantity')
-        .eq('id', item.fp_and_location_id)
-        .single();
-
-      if (fpError) {
-        console.error('Error fetching forest product location:', fpError);
-        continue;
-      }
-
-      // Calculate the new quantity
-      const newQuantity = fpLocation.quantity - item.purchased_quantity;
-
-      // Update the quantity in fp_and_locations
-      const { error: updateFpError } = await supabase
-        .from('fp_and_locations')
-        .update({ quantity: newQuantity })
-        .eq('id', item.fp_and_location_id);
-
-      if (updateFpError) {
-        console.error('Error updating forest product quantity:', updateFpError);
-      }
-    }
-
     // Show success message
     toast.success('Collection record marked as paid successfully. Downloading permit...', { duration: 2000 });
 
