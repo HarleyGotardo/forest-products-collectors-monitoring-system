@@ -337,8 +337,9 @@ const formatDateTime = (dateTimeString) => {
     </div>
 
     <!-- Approve Request Button and Back Button Side by Side -->
-    <div class="mt-6 flex gap-4 justify-between mb-4">
+    <div v-if="!isLoading" class="mt-6 flex gap-4 justify-between mb-4">
       <button
+
       type="button"
       @click="router.back()"
       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"

@@ -418,22 +418,41 @@ onMounted(() => {
         <button
           v-if="isForestRanger || isFPUAdmin"
           @click="createCollectionRoute"
-          class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
+          class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
         >
-          <span class="mr-2">+</span> New Collection
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Collection Record
         </button>
         <button
           v-if="isForestRanger || isFPUAdmin"
           @click="createNewProduct"
-          class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto"
+          class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
         >
-          <span class="mr-2">+</span> New Product
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Forest Product
         </button>
         <button
           @click="refreshData"
-          class="inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors w-full sm:w-auto"
+          class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
         >
-          <span class="mr-2">🔄</span> Refresh
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+                      />
+                    </svg>
+          Refresh
         </button>
       </div>
     </div>
@@ -646,12 +665,12 @@ onMounted(() => {
             </ul>
             <div
               v-if="(isFPCollector ? filteredTodayCollectionRequests.length : todayCollectionRequests.length) === 0"
-              class="py-6 text-center text-gray-500"
+              class="py-6 text-center text-gray-500 flex flex-col items-center"
             >
               <img
-                src="@/assets/no-result.png"
-                alt="No Results"
-                class="w-16 h-16 mx-auto mb-4"
+              src="@/assets/chill.png"
+              alt="No Records Found"
+              class="w-24 h-24 mb-4"
               />
               No approved collection requests scheduled for today
             </div>
@@ -716,8 +735,13 @@ onMounted(() => {
             </ul>
             <div
               v-if="lowStockProducts.length === 0"
-              class="py-6 text-center text-gray-500"
+              class="py-6 text-center text-gray-500 flex flex-col items-center"
             >
+            <img
+              src="@/assets/full-stock.png"
+              alt="No Records Found"
+              class="w-24 h-24 mb-4"
+              />
               No products are currently low in stock
             </div>
           </div>
@@ -763,8 +787,13 @@ onMounted(() => {
             </ul>
             <div
               v-if="forestProductsData.length === 0"
-              class="py-6 text-center text-gray-500"
+              class="py-6 text-center text-gray-500 flex flex-col items-center"
             >
+            <img
+              src="@/assets/chill.png"
+              alt="No Records Found"
+              class="w-24 h-24 mb-4"
+              />
               No products available
             </div>
           </div>
