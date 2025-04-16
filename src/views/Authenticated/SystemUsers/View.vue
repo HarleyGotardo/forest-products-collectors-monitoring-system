@@ -356,11 +356,34 @@ onMounted(() => {
     </div>
 
     <!-- User Profile Card -->
+         <!-- Back to users button -->
+    <div class="max-w-5xl mx-auto mb-4">
+      <button
+        @click="router.push('/authenticated/system-users')"
+      class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
+      >
+        <svg 
+          class="mr-2 -ml-1 h-5 w-5" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+        Back to Users
+      </button>
+    </div>
     <div v-if="user" class="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-xl mb-8">
       <!-- Profile Header with Background -->
+       
       <div class="relative">
         <!-- Cover Image/Background -->
-        <div class="h-32 sm:h-48 bg-gradient-to-r from-emerald-600 to-teal-500"></div>
+        <div class="h-32 sm:h-48 bg-gray-200"></div>
         
         <!-- Profile Info with Avatar Overlay -->
         <div class="px-4 sm:px-6 pb-5 pt-0 relative">
@@ -1216,29 +1239,6 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Back to users button -->
-    <div class="max-w-5xl mx-auto mt-8 flex justify-end">
-      <button
-        @click="router.push('/authenticated/system-users')"
-        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200"
-      >
-        <svg 
-          class="mr-2 -ml-1 h-5 w-5" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path 
-            stroke-linecap="round" 
-            stroke-linejoin="round" 
-            stroke-width="2" 
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"
-          />
-        </svg>
-        Back to Users
-      </button>
     </div>
   </div>
 </template>
