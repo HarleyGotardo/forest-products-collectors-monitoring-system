@@ -1129,15 +1129,27 @@ onMounted(async () => {
             </div>
             <div class="flex items-center space-x-1">
               <span class="font-medium text-gray-700">Quantity:</span>
-              <span :class="{ 'text-red-600 font-semibold': !location.quantity || location.quantity === 0 }">
-                {{ location.quantity ? location.quantity : 'N/A' }}
-                {{ location.quantity ? ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') : '' }}
+              <span 
+              :class="{
+                'text-red-600 font-semibold': !location.quantity || location.quantity === 0,
+                'text-orange-600 font-semibold': location.quantity > 0 && location.quantity <= 10,
+                'text-green-600 font-semibold': location.quantity > 0 && location.quantity > 10
+              }"
+              >
+              {{ location.quantity ? location.quantity : 'N/A' }}
+              {{ location.quantity ? ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') : '' }}
               </span>
               <span
-                v-if="!location.quantity || location.quantity === 0"
-                class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-               >
-                Out of Stock
+              v-if="!location.quantity || location.quantity === 0"
+              class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+              >
+              Out of Stock
+              </span>
+              <span
+              v-else-if="location.quantity > 0 && location.quantity <= 10"
+              class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
+              >
+              Almost Out of Stock
               </span>
             </div>
           </div>
