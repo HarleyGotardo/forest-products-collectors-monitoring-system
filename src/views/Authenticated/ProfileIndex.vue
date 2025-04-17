@@ -274,7 +274,10 @@ onMounted(async () => {
 
       <!-- Contact Information Section -->
       <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h2>
+        <div class="flex items-center mb-3">
+          <img src="@/assets/contact-info-logo2.png" alt="Contact Info Logo" class="w-6 h-6 mr-2">
+          <h2 class="text-lg font-semibold text-gray-800">Contact Information</h2>
+        </div>
         <div class="space-y-3">
           <div class="flex items-center">
             <div class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0">
@@ -317,7 +320,10 @@ onMounted(async () => {
 
       <!-- Personal Information Section (conditional for individuals) -->
       <div v-if="isIndividual" class="bg-white rounded-lg shadow-sm p-4 mb-4">
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Personal Information</h2>
+        <div class="flex items-center mb-3">
+          <img src="@/assets/contact-info-logo.png" alt="Contact Info Logo" class="w-6 h-6 mr-2">
+          <h2 class="text-lg font-semibold text-gray-800">Personal Information</h2>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="flex items-center">
             <div class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0">
@@ -359,7 +365,10 @@ onMounted(async () => {
 
       <!-- Account Information Section -->
       <div class="bg-white rounded-lg shadow-sm p-4">
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Account Information</h2>
+        <div class="flex items-center mb-3">
+          <img src="@/assets/account-info.png" alt="Contact Info Logo" class="w-6 h-6 mr-2">
+          <h2 class="text-lg font-semibold text-gray-800">Account Information</h2>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="flex items-center">
             <div class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0">
