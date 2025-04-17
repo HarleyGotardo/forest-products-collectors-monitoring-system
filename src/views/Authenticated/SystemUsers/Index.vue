@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
-import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
+import { getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,14 +37,14 @@ const newRoleId = ref('')
 // Replace your existing changeRole method with this
 const changeRole = (user, event) => {
   if (!isFPUAdmin) return
-  
-  userToChangeRole.value = user.id  
+
+  userToChangeRole.value = user.id
   // Parse the value to ensure it's a number
   newRoleId.value = parseInt(event.target.value, 10)
-  
+
   console.log('Changing role for user:', user.first_name, user.last_name)
   console.log('New role ID:', newRoleId.value)
-  
+
   showChangeRoleDialog.value = true
 }
 
@@ -53,7 +53,7 @@ const handleRoleChangeConfirm = async () => {
   try {
     console.log('Confirming role change - User ID:', userToChangeRole.value)
     console.log('New role ID to apply:', newRoleId.value)
-    
+
     const { error } = await supabase
       .from('profiles')
       .update({ role_id: newRoleId.value })
@@ -473,7 +473,10 @@ onMounted(async () => {
             <tr
               v-for="user in paginatedUsers"
               :key="user.id"
-              class="hover:bg-gray-50 transition-colors cursor-pointer"
+              :class="{
+              'hover:bg-gray-50 transition-colors cursor-pointer': true,
+              'bg-green-50': user.id === getUser().id
+              }"
             >
               <router-link
                 :to="{ name: 'SystemUsersView', params: { id: user.id } }"
@@ -521,60 +524,62 @@ onMounted(async () => {
                   <span
                     class="px-2 py-1 inline-flex text-xs font-medium rounded-full"
                     :class="{
-                  'bg-pink-100 text-pink-800': user.user_type === 'Individual',
-                  'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
-                  'bg-lime-100 text-lime-800': user.user_type === 'Organization',
-                  'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
-                  }"
+                'bg-pink-100 text-pink-800': user.user_type === 'Individual',
+                'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
+                'bg-lime-100 text-lime-800': user.user_type === 'Organization',
+                'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
+                }"
                   >
                     {{ user.user_type }}
                   </span>
                 </td>
               </router-link>
               <!-- Replace the existing Role column in the main table with this -->
-              <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                <div v-if="isFPUAdmin">
-                    <div class="relative">
-                    <select
-                      :value="user.role.id"
-                      @change="changeRole(user, $event)"
-                      class="block w-full px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition appearance-none"
+                <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+                <div v-if="isFPUAdmin && user.id !== getUser().id">
+                  <div class="relative">
+                  <select
+                    :value="user.role.id"
+                    @change="changeRole(user, $event)"
+                    class="block w-full px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition appearance-none"
+                  >
+                    <option value="1">Forest Ranger</option>
+                    <option value="2">Forest Product Collector</option>
+                    <option value="3">VSU Administrator</option>
+                    <option value="4">FPU Administrator</option>
+                  </select>
+                  <div
+                    class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
+                  >
+                    <svg
+                    class="w-4 h-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                     >
-                      <option value="1">Forest Ranger</option>
-                      <option value="2">Forest Product Collector</option>
-                      <option value="3">VSU Administrator</option>
-                      <option value="4">FPU Administrator</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <svg
-                      class="w-4 h-4 text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                      </svg>
-                    </div>
-                    </div>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                    </svg>
+                  </div>
+                  </div>
                 </div>
                 <span
                   v-else
                   class="px-2 py-1 inline-flex text-xs font-medium rounded-full"
                   :class="{
-      'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
-      'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
-      'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
-      'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
-    }"
+              'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
+              'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
+              'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
+              'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
+            }"
                 >
                   {{ user.role.name }}
                 </span>
-              </td>
+                </td>
             </tr>
           </tbody>
         </table>
@@ -611,6 +616,7 @@ onMounted(async () => {
             >
             <span class="sm:hidden"
               >{{ currentPageApproved
+
               }}/{{ Math.ceil(filteredUsers.length / itemsPerPage) }}</span
             >
           </span>
@@ -676,16 +682,16 @@ onMounted(async () => {
               />
             </svg>
           </button>
-            <div class="flex items-center space-x-3 mb-4">
-              <img
+          <div class="flex items-center space-x-3 mb-4">
+            <img
               src="@/assets/pending.png"
               alt="Pending Users"
               class="w-8 h-8"
-              />
-              <h2 class="text-2xl font-bold text-gray-900">
+            />
+            <h2 class="text-2xl font-bold text-gray-900">
               Pending Users for Approval
-              </h2>
-            </div>
+            </h2>
+          </div>
 
           <!-- Search Input for Unapproved Users -->
           <div class="mb-4">
