@@ -291,7 +291,7 @@ onMounted(async () => {
                 @click="closeSidebar"
               >
                 <img src="@/assets/records2.png" alt="View Records" class="w-6 h-6 group-hover:scale-110 transition-transform" />
-                <span class="font-medium text-gray-700 group-hover:text-emerald-600">View Records</span>
+                <span class="font-medium text-gray-700 group-hover:text-emerald-600">Your Records</span>
               </router-link>
               <router-link 
                 v-if="isFPUAdmin || isForestRanger" 
