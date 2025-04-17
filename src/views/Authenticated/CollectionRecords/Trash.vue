@@ -15,6 +15,17 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import Button from '@/components/ui/button/Button.vue';
+import {
+  Pagination,
+  PaginationList,
+  PaginationListItem,
+  PaginationFirst,
+  PaginationLast,
+  PaginationNext,
+  PaginationPrev,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
+import { useRouter } from 'vue-router';
 
 const collectionRecords = ref([]);
 const currentPage = ref(1);
@@ -22,7 +33,6 @@ const itemsPerPage = 8;
 const error = ref(null);
 const searchQuery = ref('');
 const loading = ref(true); // Added loading state
-import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const fetchDeletedCollectionRecords = async () => {
@@ -649,61 +659,63 @@ watch(currentPage, () => {
 </div>
 
       <!-- Pagination -->
-      <div
-        class="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200"
-        v-if="filteredRecords.length > 0"
-      >
-        <div class="flex items-center justify-between">
-          <button
-            @click="prevPage"
-            :disabled="currentPage === 1"
-            class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg
-              class="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Previous
-          </button>
-          <div class="text-sm sm:text-base text-gray-700">
-            <span v-if="totalPages >= 1">
-              <span class="sm:hidden"
-                >{{ currentPage }} / {{ totalPages }}</span
-              >
-              <span class="hidden sm:inline"
-                >Page {{ currentPage }} of {{ totalPages }}</span
-              >
-            </span>
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-sm text-gray-600 hidden sm:block">
+            Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredRecords.length) }} of {{ filteredRecords.length }} items
           </div>
-          <button
-            @click="nextPage"
-            :disabled="paginatedRecords.length < itemsPerPage"
-            class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          <Pagination
+            v-slot="{ page }"
+            :total="filteredRecords.length"
+            :items-per-page="itemsPerPage"
+            :sibling-count="1"
+            show-edges
+            :default-page="currentPage"
+            @update:page="(newPage) => {
+              currentPage = newPage;
+              paginateRecords();
+            }"
+            class="w-full sm:w-auto"
           >
-            Next
-            <svg
-              class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+            <div class="flex items-center justify-center sm:justify-end gap-2">
+              <!-- Mobile View -->
+              <div class="flex items-center gap-2 sm:hidden">
+                <PaginationPrev class="!w-12 !h-12" />
+                <div class="text-sm font-medium">
+                  {{ currentPage }} / {{ Math.ceil(filteredRecords.length / itemsPerPage) }}
+                </div>
+                <PaginationNext class="!w-12 !h-12" />
+              </div>
+
+              <!-- Desktop View -->
+              <div class="hidden sm:flex items-center gap-1">
+                <PaginationFirst />
+                <PaginationPrev />
+                <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                  <template v-for="(item, index) in items">
+                    <PaginationListItem
+                      v-if="item.type === 'page'"
+                      :key="index"
+                      :value="item.value"
+                      :class="[
+                        'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
+                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                      ]"
+                    >
+                      {{ item.value }}
+                    </PaginationListItem>
+                    <PaginationEllipsis
+                      v-else
+                      :key="item.type"
+                      :index="index"
+                    />
+                  </template>
+                </PaginationList>
+                <PaginationNext />
+                <PaginationLast />
+              </div>
+            </div>
+          </Pagination>
         </div>
       </div>
     </div>

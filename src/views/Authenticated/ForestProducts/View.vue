@@ -24,6 +24,16 @@ import {
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import {
+  Pagination,
+  PaginationList,
+  PaginationListItem,
+  PaginationFirst,
+  PaginationLast,
+  PaginationNext,
+  PaginationPrev,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -246,121 +256,16 @@ const initializeMap = () => {
   mapInstance.value.fitBounds(bounds)
 }
 
-const totalPages = computed(() => {
-  if (!locations.value) return 1
-  return Math.ceil(locations.value.length / itemsPerPage)
-})
-
-
-const initializeModalMap = () => {
-  if (mapInstance.value) {
-    mapInstance.value.remove()
-  }
-
-  mapInstance.value = L.map("modalMap").setView([10.744340, 124.791995], 16);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19
-  }).addTo(mapInstance.value);
-
-  // Add existing location markers with tooltips
-  allLocations.value.forEach(location => {
-    L.marker([location.latitude, location.longitude])
-      .addTo(mapInstance.value)
-      .bindTooltip(location.name, {
-        permanent: true,
-        direction: 'top',
-        className: 'bg-white px-2 py-1 rounded shadow-lg'
-      })
-      .on('click', async () => {
-        // Check if the location is already added for the forest product
-        const existingLocation = locations.value.find(loc => loc.id === location.id);
-        if (existingLocation) {
-          toast.error('Location already added for this forest product', { duration: 2000 });
-          return;
-        }
-
-        const { value: quantity } = await Swal.fire({
-          title: "Forest Product's Quantity",
-          input: 'number',
-          inputLabel: `Enter quantity (${forestProduct.value.measurement_units.unit_name})`,
-          showCancelButton: true,
-          inputValidator: (value) => {
-            if (!value) return 'Quantity is required';
-          }
-        });
-
-        if (quantity) {
-          selectedLocation.value = location;
-          selectedLocation.value.quantity = quantity; // Add quantity to selectedLocation
-          showLocationModal.value = false;
-          await upsertLocation();
-        }
-      });
-  });
-
-  // Handle map click for new location
-  mapInstance.value.on('click', async (e) => {
-    if (tempMarker.value) {
-      mapInstance.value.removeLayer(tempMarker.value);
-    }
-
-    const { value: locationName } = await Swal.fire({
-      title: 'New Location',
-      input: 'text',
-      inputLabel: 'Enter location name',
-      showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) return 'Location name is required';
-      }
-    });
-
-    if (locationName) {
-      const { value: quantity } = await Swal.fire({
-        title: 'Quantity',
-        input: 'number',
-        inputLabel: `Enter quantity (${forestProduct.value.measurement_units.unit_name})`,
-        showCancelButton: true,
-        inputValidator: (value) => {
-          if (!value) return 'Quantity is required';
-        }
-      });
-
-      if (quantity) {
-        const newLocation = {
-          name: locationName,
-          latitude: e.latlng.lat,
-          longitude: e.latlng.lng
-        };
-
-        const { data, error } = await supabase
-          .from('locations')
-          .insert([newLocation])
-          .select()
-          .single();
-
-        if (error) {
-          toast.error(error.message, { duration: 2000 });
-        } else {
-          selectedLocation.value = data;
-          selectedLocation.value.quantity = quantity; // Add quantity to selectedLocation
-          showLocationModal.value = false;
-          await upsertLocation();
-        }
-      }
-    }
-  });
-};
-
 const paginatedLocations = computed(() => {
-  if (!locations.value) return []
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
   return locations.value.slice(start, end)
 })
 
+const totalPages = computed(() => Math.ceil(locations.value.length / itemsPerPage))
+
 const nextPage = () => {
-  if ((currentPage.value * itemsPerPage) < (locations.value?.length || 0)) {
+  if (currentPage.value < totalPages.value) {
     currentPage.value++
   }
 }
@@ -1199,29 +1104,63 @@ onMounted(async () => {
   </div>
 </div>
 
-<div v-if="locations.length > 0 && totalPages > 1" class="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50">
-  <button
-    @click="prevPage"
-    :disabled="currentPage === 1"
-    class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
-  >
-    <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-    </svg>
-    Previous
-  </button>
-  <span class="text-sm text-gray-700">
-    Page {{ currentPage }} of {{ totalPages }}
-  </span>
-  <button
-     @click="nextPage"
-     :disabled="currentPage >= totalPages"  class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
-  >
-    Next
-    <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-    </svg>
-  </button>
+<div v-if="locations.length > 0 && totalPages > 1" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="text-sm text-gray-600 hidden sm:block">
+      Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, locations.length) }} of {{ locations.length }} items
+    </div>
+    <Pagination
+      v-slot="{ page }"
+      :total="locations.length"
+      :items-per-page="itemsPerPage"
+      :sibling-count="1"
+      show-edges
+      :default-page="currentPage"
+      @update:page="(newPage) => {
+        currentPage = newPage;
+      }"
+      class="w-full sm:w-auto"
+    >
+      <div class="flex items-center justify-center sm:justify-end gap-2">
+        <!-- Mobile View -->
+        <div class="flex items-center gap-2 sm:hidden">
+          <PaginationPrev class="!w-12 !h-12" />
+          <div class="text-sm font-medium">
+            {{ currentPage }} / {{ totalPages }}
+          </div>
+          <PaginationNext class="!w-12 !h-12" />
+        </div>
+
+        <!-- Desktop View -->
+        <div class="hidden sm:flex items-center gap-1">
+          <PaginationFirst />
+          <PaginationPrev />
+          <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+            <template v-for="(item, index) in items">
+              <PaginationListItem
+                v-if="item.type === 'page'"
+                :key="index"
+                :value="item.value"
+                :class="[
+                  'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
+                  item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                ]"
+              >
+                {{ item.value }}
+              </PaginationListItem>
+              <PaginationEllipsis
+                v-else
+                :key="item.type"
+                :index="index"
+              />
+            </template>
+          </PaginationList>
+          <PaginationNext />
+          <PaginationLast />
+        </div>
+      </div>
+    </Pagination>
+  </div>
 </div>
 
 <div v-if="showEditLocationModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">

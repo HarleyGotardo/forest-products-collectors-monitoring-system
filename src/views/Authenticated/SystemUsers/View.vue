@@ -3,6 +3,16 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { format } from 'date-fns'
+import {
+  Pagination,
+  PaginationList,
+  PaginationListItem,
+  PaginationFirst,
+  PaginationLast,
+  PaginationNext,
+  PaginationPrev,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
 
 const route = useRoute()
 const router = useRouter()
@@ -260,41 +270,6 @@ const fetchApprovedByRecords = async () => {
   }
 }
 
-const paginatedApprovedByRecords = computed(() => {
-  const start = (currentApprovedByPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return approvedByRecords.value.slice(start, end)
-})
-
-const totalApprovedByPages = computed(() => {
-  return Math.ceil(approvedByRecords.value.length / itemsPerPage)
-})
-
-const nextApprovedByPage = () => {
-  if (currentApprovedByPage.value < totalApprovedByPages.value) {
-    currentApprovedByPage.value++
-  }
-}
-
-const prevApprovedByPage = () => {
-  if (currentApprovedByPage.value > 1) {
-    currentApprovedByPage.value--
-  }
-}
-
-const profilePictureUrl = computed(() => {
-  if (user.value && user.value.profile_picture) {
-    try {
-      const parsedProfilePicture = JSON.parse(user.value.profile_picture)
-      return parsedProfilePicture.data.publicUrl
-    } catch (e) {
-      console.error('Error parsing profile picture URL:', e)
-      return null
-    }
-  }
-  return null
-})
-
 const paginatedRecords = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
@@ -307,12 +282,22 @@ const paginatedCreatedByRecords = computed(() => {
   return createdByRecords.value.slice(start, end)
 })
 
+const paginatedApprovedByRecords = computed(() => {
+  const start = (currentApprovedByPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return approvedByRecords.value.slice(start, end)
+})
+
 const totalPages = computed(() => {
   return Math.ceil(collectionRecords.value.length / itemsPerPage)
 })
 
 const totalCreatedByPages = computed(() => {
   return Math.ceil(createdByRecords.value.length / itemsPerPage)
+})
+
+const totalApprovedByPages = computed(() => {
+  return Math.ceil(approvedByRecords.value.length / itemsPerPage)
 })
 
 const nextPage = () => {
@@ -338,6 +323,31 @@ const prevCreatedByPage = () => {
     currentCreatedByPage.value--
   }
 }
+
+const nextApprovedByPage = () => {
+  if (currentApprovedByPage.value < totalApprovedByPages.value) {
+    currentApprovedByPage.value++
+  }
+}
+
+const prevApprovedByPage = () => {
+  if (currentApprovedByPage.value > 1) {
+    currentApprovedByPage.value--
+  }
+}
+
+const profilePictureUrl = computed(() => {
+  if (user.value && user.value.profile_picture) {
+    try {
+      const parsedProfilePicture = JSON.parse(user.value.profile_picture)
+      return parsedProfilePicture.data.publicUrl
+    } catch (e) {
+      console.error('Error parsing profile picture URL:', e)
+      return null
+    }
+  }
+  return null
+})
 
 onMounted(() => {
   fetchUser()
@@ -707,61 +717,63 @@ onMounted(() => {
           </table>
         </div>
 
-        <!-- Pagination Controls -->
+        <!-- Collection Records Pagination -->
         <div class="bg-gray-50 px-4 sm:px-6 py-4 border-t border-gray-200">
-          <div class="flex items-center justify-between">
-            <button
-              @click="prevCreatedByPage"
-              :disabled="currentCreatedByPage === 1 || totalCreatedByPages === 0"
-              class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentCreatedByPage === 1 || totalCreatedByPages === 0 ? 'text-gray-400' : 'text-gray-700'"
-            >
-              <svg
-                class="mr-1 sm:mr-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span class="hidden xs:inline">Previous</span>
-            </button>
-
-            <div
-              v-if="totalCreatedByPages > 0"
-              class="flex items-center px-3 sm:px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
-            >
-              <span class="text-xs sm:text-sm font-medium text-gray-700">
-                {{ currentCreatedByPage }}/{{ totalCreatedByPages }}
-              </span>
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-gray-600 hidden sm:block">
+              Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, collectionRecords.length) }} of {{ collectionRecords.length }} items
             </div>
-
-            <button
-              @click="nextCreatedByPage"
-              :disabled="currentCreatedByPage === totalCreatedByPages || totalCreatedByPages === 0"
-              class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentCreatedByPage === totalCreatedByPages || totalCreatedByPages === 0 ? 'text-gray-400' : 'text-gray-700'"
+            <Pagination
+              v-slot="{ page }"
+              :total="collectionRecords.length"
+              :items-per-page="itemsPerPage"
+              :sibling-count="1"
+              show-edges
+              :default-page="currentPage"
+              @update:page="(newPage) => {
+                currentPage = newPage;
+              }"
+              class="w-full sm:w-auto"
             >
-              <span class="hidden xs:inline">Next</span>
-              <svg
-                class="ml-1 sm:ml-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+              <div class="flex items-center justify-center sm:justify-end gap-2">
+                <!-- Mobile View -->
+                <div class="flex items-center gap-2 sm:hidden">
+                  <PaginationPrev class="!w-12 !h-12" />
+                  <div class="text-sm font-medium">
+                    {{ currentPage }} / {{ Math.ceil(collectionRecords.length / itemsPerPage) }}
+                  </div>
+                  <PaginationNext class="!w-12 !h-12" />
+                </div>
+
+                <!-- Desktop View -->
+                <div class="hidden sm:flex items-center gap-1">
+                  <PaginationFirst />
+                  <PaginationPrev />
+                  <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                    <template v-for="(item, index) in items">
+                      <PaginationListItem
+                        v-if="item.type === 'page'"
+                        :key="index"
+                        :value="item.value"
+                        :class="[
+                          'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
+                          item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        ]"
+                      >
+                        {{ item.value }}
+                      </PaginationListItem>
+                      <PaginationEllipsis
+                        v-else
+                        :key="item.type"
+                        :index="index"
+                      />
+                    </template>
+                  </PaginationList>
+                  <PaginationNext />
+                  <PaginationLast />
+                </div>
+              </div>
+            </Pagination>
           </div>
         </div>
       </div>
@@ -945,61 +957,63 @@ onMounted(() => {
           </table>
         </div>
 
-        <!-- Pagination Controls - Consistent with other pagination controls -->
+        <!-- Collection Records Pagination -->
         <div class="bg-gray-50 px-4 sm:px-6 py-4 border-t border-gray-200">
-          <div class="flex items-center justify-between">
-            <button
-              @click="prevPage"
-              :disabled="currentPage === 1 || totalPages === 0"
-              class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentPage === 1 || totalPages === 0 ? 'text-gray-400' : 'text-gray-700'"
-            >
-              <svg
-                class="mr-1 sm:mr-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span class="hidden xs:inline">Previous</span>
-            </button>
-
-            <div
-              v-if="totalPages > 0"
-              class="flex items-center px-3 sm:px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
-            >
-              <span class="text-xs sm:text-sm font-medium text-gray-700">
-                {{ currentPage }}/{{ totalPages }}
-              </span>
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-gray-600 hidden sm:block">
+              Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, collectionRecords.length) }} of {{ collectionRecords.length }} items
             </div>
-
-            <button
-              @click="nextPage"
-              :disabled="currentPage === totalPages || totalPages === 0"
-              class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentPage === totalPages || totalPages === 0 ? 'text-gray-400' : 'text-gray-700'"
+            <Pagination
+              v-slot="{ page }"
+              :total="collectionRecords.length"
+              :items-per-page="itemsPerPage"
+              :sibling-count="1"
+              show-edges
+              :default-page="currentPage"
+              @update:page="(newPage) => {
+                currentPage = newPage;
+              }"
+              class="w-full sm:w-auto"
             >
-              <span class="hidden xs:inline">Next</span>
-              <svg
-                class="ml-1 sm:ml-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+              <div class="flex items-center justify-center sm:justify-end gap-2">
+                <!-- Mobile View -->
+                <div class="flex items-center gap-2 sm:hidden">
+                  <PaginationPrev class="!w-12 !h-12" />
+                  <div class="text-sm font-medium">
+                    {{ currentPage }} / {{ Math.ceil(collectionRecords.length / itemsPerPage) }}
+                  </div>
+                  <PaginationNext class="!w-12 !h-12" />
+                </div>
+
+                <!-- Desktop View -->
+                <div class="hidden sm:flex items-center gap-1">
+                  <PaginationFirst />
+                  <PaginationPrev />
+                  <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                    <template v-for="(item, index) in items">
+                      <PaginationListItem
+                        v-if="item.type === 'page'"
+                        :key="index"
+                        :value="item.value"
+                        :class="[
+                          'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
+                          item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        ]"
+                      >
+                        {{ item.value }}
+                      </PaginationListItem>
+                      <PaginationEllipsis
+                        v-else
+                        :key="item.type"
+                        :index="index"
+                      />
+                    </template>
+                  </PaginationList>
+                  <PaginationNext />
+                  <PaginationLast />
+                </div>
+              </div>
+            </Pagination>
           </div>
         </div>
       </div>
@@ -1181,61 +1195,63 @@ onMounted(() => {
           </table>
         </div>
 
-        <!-- Pagination Controls - Consistent with other sections -->
+        <!-- Approved Records Pagination -->
         <div class="bg-gray-50 px-4 sm:px-6 py-4 border-t border-gray-200">
-          <div class="flex items-center justify-between">
-            <button
-              @click="prevApprovedByPage"
-              :disabled="currentApprovedByPage === 1 || totalApprovedByPages === 0"
-              class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentApprovedByPage === 1 || totalApprovedByPages === 0 ? 'text-gray-400' : 'text-gray-700'"
-            >
-              <svg
-                class="mr-1 sm:mr-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span class="hidden xs:inline">Previous</span>
-            </button>
-
-            <div
-              v-if="totalApprovedByPages > 0"
-              class="flex items-center px-3 sm:px-4 py-2 rounded-lg bg-white border border-gray-200 shadow-sm"
-            >
-              <span class="text-xs sm:text-sm font-medium text-gray-700">
-                {{ currentApprovedByPage }}/{{ totalApprovedByPages }}
-              </span>
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-gray-600 hidden sm:block">
+              Showing {{ ((currentApprovedByPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentApprovedByPage * itemsPerPage, approvedByRecords.length) }} of {{ approvedByRecords.length }} items
             </div>
-
-            <button
-              @click="nextApprovedByPage"
-              :disabled="currentApprovedByPage === totalApprovedByPages || totalApprovedByPages === 0"
-              class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              :class="currentApprovedByPage === totalApprovedByPages || totalApprovedByPages === 0 ? 'text-gray-400' : 'text-gray-700'"
+            <Pagination
+              v-slot="{ page }"
+              :total="approvedByRecords.length"
+              :items-per-page="itemsPerPage"
+              :sibling-count="1"
+              show-edges
+              :default-page="currentApprovedByPage"
+              @update:page="(newPage) => {
+                currentApprovedByPage = newPage;
+              }"
+              class="w-full sm:w-auto"
             >
-              <span class="hidden xs:inline">Next</span>
-              <svg
-                class="ml-1 sm:ml-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+              <div class="flex items-center justify-center sm:justify-end gap-2">
+                <!-- Mobile View -->
+                <div class="flex items-center gap-2 sm:hidden">
+                  <PaginationPrev class="!w-12 !h-12" />
+                  <div class="text-sm font-medium">
+                    {{ currentApprovedByPage }} / {{ Math.ceil(approvedByRecords.length / itemsPerPage) }}
+                  </div>
+                  <PaginationNext class="!w-12 !h-12" />
+                </div>
+
+                <!-- Desktop View -->
+                <div class="hidden sm:flex items-center gap-1">
+                  <PaginationFirst />
+                  <PaginationPrev />
+                  <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                    <template v-for="(item, index) in items">
+                      <PaginationListItem
+                        v-if="item.type === 'page'"
+                        :key="index"
+                        :value="item.value"
+                        :class="[
+                          'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
+                          item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        ]"
+                      >
+                        {{ item.value }}
+                      </PaginationListItem>
+                      <PaginationEllipsis
+                        v-else
+                        :key="item.type"
+                        :index="index"
+                      />
+                    </template>
+                  </PaginationList>
+                  <PaginationNext />
+                  <PaginationLast />
+                </div>
+              </div>
+            </Pagination>
           </div>
         </div>
       </div>

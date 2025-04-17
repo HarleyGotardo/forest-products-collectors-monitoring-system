@@ -14,6 +14,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Pagination,
+  PaginationList,
+  PaginationListItem,
+  PaginationFirst,
+  PaginationLast,
+  PaginationNext,
+  PaginationPrev,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
 
 const showRejectDialog = ref(false) // State for reject confirmation dialog
 const userToReject = ref(null) // Store the user ID to reject
@@ -587,60 +597,61 @@ onMounted(async () => {
 
       <!-- Pagination Controls -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-        <div class="flex items-center justify-between">
-          <button
-            @click="prevPageApproved"
-            :disabled="currentPageApproved === 1"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Previous page"
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-sm text-gray-600 hidden sm:block">
+            Showing {{ ((currentPageApproved - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPageApproved * itemsPerPage, filteredUsers.length) }} of {{ filteredUsers.length }} items
+          </div>
+          <Pagination
+            v-slot="{ page }"
+            :total="filteredUsers.length"
+            :items-per-page="itemsPerPage"
+            :sibling-count="1"
+            show-edges
+            :default-page="currentPageApproved"
+            @update:page="(newPage) => {
+              currentPageApproved = newPage;
+            }"
+            class="w-full sm:w-auto"
           >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            <span class="hidden sm:inline">Previous</span>
-          </button>
-          <span v-if="filteredUsers.length > 0" class="text-sm text-gray-700">
-            <span class="hidden sm:inline"
-              >Page {{ currentPageApproved }} of
-              {{ Math.ceil(filteredUsers.length / itemsPerPage) }}</span
-            >
-            <span class="sm:hidden"
-              >{{ currentPageApproved
+            <div class="flex items-center justify-center sm:justify-end gap-2">
+              <!-- Mobile View -->
+              <div class="flex items-center gap-2 sm:hidden">
+                <PaginationPrev class="!w-12 !h-12" />
+                <div class="text-sm font-medium">
+                  {{ currentPageApproved }} / {{ Math.ceil(filteredUsers.length / itemsPerPage) }}
+                </div>
+                <PaginationNext class="!w-12 !h-12" />
+              </div>
 
-              }}/{{ Math.ceil(filteredUsers.length / itemsPerPage) }}</span
-            >
-          </span>
-          <button
-            @click="nextPageApproved"
-            :disabled="(currentPageApproved * itemsPerPage) >= filteredUsers.length"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Next page"
-          >
-            <span class="hidden sm:inline">Next</span>
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+              <!-- Desktop View -->
+              <div class="hidden sm:flex items-center gap-1">
+                <PaginationFirst />
+                <PaginationPrev />
+                <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                  <template v-for="(item, index) in items">
+                    <PaginationListItem
+                      v-if="item.type === 'page'"
+                      :key="index"
+                      :value="item.value"
+                      :class="[
+                        'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
+                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                      ]"
+                    >
+                      {{ item.value }}
+                    </PaginationListItem>
+                    <PaginationEllipsis
+                      v-else
+                      :key="item.type"
+                      :index="index"
+                    />
+                  </template>
+                </PaginationList>
+                <PaginationNext />
+                <PaginationLast />
+              </div>
+            </div>
+          </Pagination>
         </div>
       </div>
     </div>
@@ -899,56 +910,63 @@ onMounted(async () => {
           </div>
 
           <!-- Pagination Controls -->
-          <div
-            v-if="filteredUnapprovedUsers.length > 0"
-            class="flex justify-between items-center mt-4"
-          >
-            <button
-              @click="prevPage"
-              :disabled="currentPage === 1"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Previous page"
-            >
-              <svg
-                class="mr-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div v-if="filteredUnapprovedUsers.length > 0" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="text-sm text-gray-600 hidden sm:block">
+                Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredUnapprovedUsers.length) }} of {{ filteredUnapprovedUsers.length }} items
+              </div>
+              <Pagination
+                v-slot="{ page }"
+                :total="filteredUnapprovedUsers.length"
+                :items-per-page="itemsPerPage"
+                :sibling-count="1"
+                show-edges
+                :default-page="currentPage"
+                @update:page="(newPage) => {
+                  currentPage = newPage;
+                }"
+                class="w-full sm:w-auto"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Previous
-            </button>
-            <span class="text-sm text-gray-700">
-              Page {{ currentPage }} of
-              {{ Math.ceil(filteredUnapprovedUsers.length / itemsPerPage) }}
-            </span>
-            <button
-              @click="nextPage"
-              :disabled="(currentPage * itemsPerPage) >= filteredUnapprovedUsers.length"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Next page"
-            >
-              Next
-              <svg
-                class="ml-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+                <div class="flex items-center justify-center sm:justify-end gap-2">
+                  <!-- Mobile View -->
+                  <div class="flex items-center gap-2 sm:hidden">
+                    <PaginationPrev class="!w-12 !h-12" />
+                    <div class="text-sm font-medium">
+                      {{ currentPage }} / {{ Math.ceil(filteredUnapprovedUsers.length / itemsPerPage) }}
+                    </div>
+                    <PaginationNext class="!w-12 !h-12" />
+                  </div>
+
+                  <!-- Desktop View -->
+                  <div class="hidden sm:flex items-center gap-1">
+                    <PaginationFirst />
+                    <PaginationPrev />
+                    <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                      <template v-for="(item, index) in items">
+                        <PaginationListItem
+                          v-if="item.type === 'page'"
+                          :key="index"
+                          :value="item.value"
+                          :class="[
+                            'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
+                            item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                          ]"
+                        >
+                          {{ item.value }}
+                        </PaginationListItem>
+                        <PaginationEllipsis
+                          v-else
+                          :key="item.type"
+                          :index="index"
+                        />
+                      </template>
+                    </PaginationList>
+                    <PaginationNext />
+                    <PaginationLast />
+                  </div>
+                </div>
+              </Pagination>
+            </div>
           </div>
         </div>
       </div>

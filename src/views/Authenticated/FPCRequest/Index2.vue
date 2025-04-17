@@ -15,6 +15,16 @@ import AlertDialogCancel from '@/components/ui/alert-dialog/AlertDialogCancel.vu
 import AlertDialogHeader from '@/components/ui/alert-dialog/AlertDialogHeader.vue';
 import AlertDialogFooter from '@/components/ui/alert-dialog/AlertDialogFooter.vue';
 import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard';
+import {
+  Pagination,
+  PaginationList,
+  PaginationListItem,
+  PaginationFirst,
+  PaginationLast,
+  PaginationNext,
+  PaginationPrev,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
 
 const router = useRouter();
 const requests = ref([]); // Store all requests
@@ -500,59 +510,62 @@ onMounted(() => {
 
       <!-- Pagination -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-        <div class="flex items-center justify-between">
-          <button
-            @click="prevPage"
-            :disabled="currentPage === 1"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-sm text-gray-600 hidden sm:block">
+            Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredRequests.length) }} of {{ filteredRequests.length }} items
+          </div>
+          <Pagination
+            v-slot="{ page }"
+            :total="filteredRequests.length"
+            :items-per-page="itemsPerPage"
+            :sibling-count="1"
+            show-edges
+            :default-page="currentPage"
+            @update:page="(newPage) => {
+              currentPage = newPage;
+              paginateRequests();
+            }"
+            class="w-full sm:w-auto"
           >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            <span class="hidden sm:inline ml-2">Previous</span>
-          </button>
-          <span
-            :class="{'text-sm text-gray-700': true, 'hidden sm:inline': true, 'inline sm:hidden': false}"
-          >
-            Page {{ currentPage }} of
-            {{ Math.ceil(filteredRequests.length / itemsPerPage) || 1 }}
-          </span>
-          <span
-            :class="{'text-sm text-gray-700': true, 'inline sm:hidden': true, 'hidden sm:inline': false}"
-          >
-            {{ currentPage
-            }}/{{ Math.ceil(filteredRequests.length / itemsPerPage) || 1 }}
-          </span>
-          <button
-            @click="nextPage"
-            :disabled="currentPage * itemsPerPage >= filteredRequests.length"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span class="hidden sm:inline mr-2">Next</span>
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+            <div class="flex items-center justify-center sm:justify-end gap-2">
+              <!-- Mobile View -->
+              <div class="flex items-center gap-2 sm:hidden">
+                <PaginationPrev class="!w-12 !h-12" />
+                <div class="text-sm font-medium">
+                  {{ currentPage }} / {{ Math.ceil(filteredRequests.length / itemsPerPage) }}
+                </div>
+                <PaginationNext class="!w-12 !h-12" />
+              </div>
+
+              <!-- Desktop View -->
+              <div class="hidden sm:flex items-center gap-1">
+                <PaginationFirst />
+                <PaginationPrev />
+                <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                  <template v-for="(item, index) in items">
+                    <PaginationListItem
+                      v-if="item.type === 'page'"
+                      :key="index"
+                      :value="item.value"
+                      :class="[
+                        'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
+                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                      ]"
+                    >
+                      {{ item.value }}
+                    </PaginationListItem>
+                    <PaginationEllipsis
+                      v-else
+                      :key="item.type"
+                      :index="index"
+                    />
+                  </template>
+                </PaginationList>
+                <PaginationNext />
+                <PaginationLast />
+              </div>
+            </div>
+          </Pagination>
         </div>
       </div>
     </div>
