@@ -585,15 +585,27 @@ onMounted(() => {
       </div>
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
         <button @click="downloadReport"
-          class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto">
+        class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
           </svg>
           Download Report
         </button>
         <button @click="fetchSalesReportData"
-          class="inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors w-full sm:w-auto">
-          <span class="mr-2">🔄</span> Refresh
+        class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto">
+          <span class="mr-2">          <svg
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+            />
+          </svg></span> Refresh
         </button>
       </div>
     </div>
@@ -772,8 +784,94 @@ onMounted(() => {
       <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
         <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Sales Transactions</h3>
         
-        <!-- Table -->
-        <div class="overflow-x-auto">
+        <!-- Mobile Card View -->
+        <div class="block sm:hidden space-y-4">
+          <div v-if="paginatedData.length === 0" class="p-8 text-center">
+            <div class="flex flex-col items-center">
+              <svg
+                class="w-12 h-12 text-gray-300 mb-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+              <p class="text-gray-500 mb-1 text-sm">No sales data found</p>
+              <p class="text-xs text-gray-400">
+                Sales transactions will appear here
+              </p>
+            </div>
+          </div>
+          
+          <div v-else>
+            <div
+              v-for="record in paginatedData"
+              :key="record.id"
+              class="bg-white border border-gray-100 rounded-lg p-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer"
+              @click="viewCollectionDetails(record.id)"
+            >
+              <!-- Header with ID and Status -->
+              <div class="flex justify-between items-start mb-3">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                  <span class="font-medium text-blue-600">#{{ record.id }}</span>
+                </div>
+                <span
+                  :class="[
+                    'px-2 py-0.5 rounded-full text-xs font-medium',
+                    record.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  ]"
+                >
+                  {{ record.isPaid ? 'Paid' : 'Unpaid' }}
+                </span>
+              </div>
+
+              <!-- Date and Amount -->
+              <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="text-sm text-gray-500">{{ record.formattedDate }}</span>
+                </div>
+                <span class="text-sm font-medium text-gray-900">
+                  {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(record.totalAmount) }}
+                </span>
+              </div>
+
+              <!-- Collector Info -->
+              <div class="flex items-center gap-2 mb-3">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <div>
+                  <div class="text-sm font-medium text-gray-900">{{ record.collectorName }}</div>
+                  <div class="text-xs text-gray-500">{{ record.collectorEmail }}</div>
+                </div>
+              </div>
+
+              <!-- Products -->
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <div class="text-sm text-gray-500">
+                  {{ record.items.map(item => item.productName).join(', ') }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Table View -->
+        <div class="hidden sm:block overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
