@@ -420,8 +420,19 @@ onMounted(() => {
           @click="createCollectionRoute"
           class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Collection Record
         </button>
@@ -430,8 +441,19 @@ onMounted(() => {
           @click="createNewProduct"
           class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Forest Product
         </button>
@@ -439,19 +461,19 @@ onMounted(() => {
           @click="refreshData"
           class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
         >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
-                      />
-                    </svg>
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+            />
+          </svg>
           Refresh
         </button>
       </div>
@@ -545,7 +567,7 @@ onMounted(() => {
           <div class="flex items-center justify-between">
             <div class="flex-1">
               <p class="text-sm font-medium text-gray-500">
-                Total Collection Records
+                Total Records
               </p>
               <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
                 {{ totalRoutes }}
@@ -607,9 +629,9 @@ onMounted(() => {
         >
           <div class="flex items-center justify-between mb-4">
             <div class="flex-1">
-                <p class="text-sm font-medium text-gray-500">
+              <p class="text-sm font-medium text-gray-500">
                 {{ isFPCollector ? "Your Collection Requests Today" : "Today's Collection Requests" }}
-                </p>
+              </p>
               <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
                 {{ isFPCollector ? filteredTodayCollectionCount : todayCollectionCount }}
               </p>
@@ -668,9 +690,9 @@ onMounted(() => {
               class="py-6 text-center text-gray-500 flex flex-col items-center"
             >
               <img
-              src="@/assets/chill.png"
-              alt="No Records Found"
-              class="w-24 h-24 mb-4"
+                src="@/assets/chill.png"
+                alt="No Records Found"
+                class="w-24 h-24 mb-4"
               />
               No approved collection requests scheduled for today
             </div>
@@ -737,10 +759,10 @@ onMounted(() => {
               v-if="lowStockProducts.length === 0"
               class="py-6 text-center text-gray-500 flex flex-col items-center"
             >
-            <img
-              src="@/assets/full-stock.png"
-              alt="No Records Found"
-              class="w-24 h-24 mb-4"
+              <img
+                src="@/assets/full-stock.png"
+                alt="No Records Found"
+                class="w-24 h-24 mb-4"
               />
               No products are currently low in stock
             </div>
@@ -751,22 +773,36 @@ onMounted(() => {
       <!-- Third row: Charts and product distribution -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 w-full">
-          <h3
-            class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center"
-          >
-            Most Collected Forest Products
-          </h3>
+          <div class="flex items-center justify-center mb-4">
+            <img
+              src="@/assets/graph.png"
+              alt="Forest Logo"
+              class="w-8 h-8 mr-2"
+            />
+            <h3
+              class="text-base sm:text-lg font-semibold text-gray-800 text-center"
+            >
+              Most Collected Forest Products
+            </h3>
+          </div>
           <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px]">
             <canvas id="mostCollectedChart"></canvas>
           </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-          <h3
-            class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6"
-          >
-            Products Distribution
-          </h3>
+            <div class="flex items-center justify-center mb-4">
+            <img
+              src="@/assets/stocks.png"
+              alt="Forest Logo"
+              class="w-8 h-8 mr-2"
+            />
+            <h3
+              class="text-base sm:text-lg font-semibold text-gray-800 text-center"
+            >
+              Forest Products Available
+            </h3>
+            </div>
           <!-- Changed the div to be scrollable just like the low stock products -->
           <div class="overflow-auto max-h-96">
             <ul class="divide-y divide-gray-200">
@@ -781,7 +817,7 @@ onMounted(() => {
                   <span class="text-gray-400">({{ item.locationName }})</span>
                 </span>
                 <span class="text-xs sm:text-sm font-medium text-gray-900"
-                  >{{ item.quantity }} {{ item.measurementUnit }}</span
+                  >{{ item.quantity }} {{ item.measurementUnit }}(s)</span
                 >
               </li>
             </ul>
@@ -789,10 +825,10 @@ onMounted(() => {
               v-if="forestProductsData.length === 0"
               class="py-6 text-center text-gray-500 flex flex-col items-center"
             >
-            <img
-              src="@/assets/chill.png"
-              alt="No Records Found"
-              class="w-24 h-24 mb-4"
+              <img
+                src="@/assets/chill.png"
+                alt="No Records Found"
+                class="w-24 h-24 mb-4"
               />
               No products available
             </div>
