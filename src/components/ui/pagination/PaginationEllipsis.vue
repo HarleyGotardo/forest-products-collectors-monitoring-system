@@ -12,7 +12,6 @@ const props = defineProps({
 
 const delegatedProps = computed(() => {
   const { class: _, ...delegated } = props;
-
   return delegated;
 });
 </script>
@@ -20,10 +19,15 @@ const delegatedProps = computed(() => {
 <template>
   <PaginationEllipsis
     v-bind="delegatedProps"
-    :class="cn('w-9 h-9 flex items-center justify-center', props.class)"
+    :class="cn(
+      'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center',
+      'text-gray-500 hover:text-gray-700',
+      'transition-colors duration-200',
+      props.class
+    )"
   >
     <slot>
-      <MoreHorizontal />
+      <MoreHorizontal class="h-5 w-5 sm:h-4 sm:w-4" />
     </slot>
   </PaginationEllipsis>
 </template>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'vue-sonner';
@@ -26,6 +26,27 @@ const approver = ref({ first_name: '', last_name: '' });
 const error = ref(null);
 const isLoading = ref(true); // Added loading state
 const isApproving = ref(false); // New state for tracking approval process
+
+// Add pagination states
+const currentPage = ref(1);
+const itemsPerPage = ref(5);
+
+// Add computed property for paginated items
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return requestItems.value.slice(start, end);
+});
+
+// Add computed property for total pages
+const totalPages = computed(() => {
+  return Math.ceil(requestItems.value.length / itemsPerPage.value);
+});
+
+// Add function to change page
+const changePage = (page) => {
+  currentPage.value = page;
+};
 
 const fetchRequestDetails = async () => {
   isLoading.value = true;
@@ -566,7 +587,7 @@ const formatDateTime = (dateTimeString) => {
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr
-                v-for="item in requestItems"
+                v-for="item in paginatedItems"
                 :key="item.id"
                 class="hover:bg-gray-50 transition-colors duration-150"
               >
@@ -605,7 +626,100 @@ const formatDateTime = (dateTimeString) => {
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination Controls -->
+        <div v-if="requestItems.length > 0" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-gray-600">
+              Showing {{ (currentPage - 1) * itemsPerPage + 1 }} of {{ requestItems.length }} items
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <!-- Mobile Navigation -->
+              <div class="flex items-center justify-between w-full sm:hidden">
+                <button
+                  @click="changePage(currentPage - 1)"
+                  :disabled="currentPage === 1"
+                  class="flex-1 px-4 py-2 border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors mr-2"
+                  :class="currentPage === 1 ? 'border-gray-300 text-gray-400' : 'border-gray-300 text-gray-700'"
+                >
+                  <span class="flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </span>
+                </button>
+                <div class="flex items-center gap-1 mx-2">
+                  <span class="text-sm text-gray-700">{{ currentPage }}</span>
+                  <span class="text-sm text-gray-400">/</span>
+                  <span class="text-sm text-gray-700">{{ totalPages }}</span>
+                </div>
+                <button
+                  @click="changePage(currentPage + 1)"
+                  :disabled="currentPage === totalPages"
+                  class="flex-1 px-4 py-2 border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors ml-2"
+                  :class="currentPage === totalPages ? 'border-gray-300 text-gray-400' : 'border-gray-300 text-gray-700'"
+                >
+                  <span class="flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+
+              <!-- Desktop Navigation -->
+              <div class="hidden sm:flex items-center gap-2">
+                <button
+                  @click="changePage(currentPage - 1)"
+                  :disabled="currentPage === 1"
+                  class="px-3 py-1.5 border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                  :class="currentPage === 1 ? 'border-gray-300 text-gray-400' : 'border-gray-300 text-gray-700'"
+                >
+                  Previous
+                </button>
+                <div class="flex items-center gap-1">
+                  <button
+                    v-for="page in totalPages"
+                    :key="page"
+                    @click="changePage(page)"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors"
+                    :class="currentPage === page ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'"
+                  >
+                    {{ page }}
+                  </button>
+                </div>
+                <button
+                  @click="changePage(currentPage + 1)"
+                  :disabled="currentPage === totalPages"
+                  class="px-3 py-1.5 border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                  :class="currentPage === totalPages ? 'border-gray-300 text-gray-400' : 'border-gray-300 text-gray-700'"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Add responsive styles for pagination */
+@media (max-width: 640px) {
+  .pagination-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .pagination-info {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .pagination-buttons {
+    justify-content: center;
+  }
+}
+</style>
