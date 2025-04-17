@@ -25,6 +25,7 @@ const showModal = ref(false);
 const searchQuery = ref(''); // Search query for filtering
 const showConfirmDialog = ref(false); // State for showing the confirmation dialog
 const router = useRouter();
+const selectAll = ref(false); // Add this line for select all state
 
 // Updated fetchForestProducts function with snapshot availability
 const fetchForestProducts = async () => {
@@ -143,11 +144,35 @@ const validateProductQuantity = (product) => {
   }
 };
 
+// Add this new function for select all functionality
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    // Select all filtered products
+    selectedForestProducts.value = [...filteredForestProducts.value];
+  } else {
+    // Deselect all products
+    selectedForestProducts.value = [];
+  }
+};
+
+// Add this watch to handle select all state changes
+watch(selectAll, (newValue) => {
+  toggleSelectAll();
+});
+
+// Add this watch to update select all checkbox state
+watch(selectedForestProducts, (newValue) => {
+  selectAll.value = newValue.length === filteredForestProducts.value.length && filteredForestProducts.value.length > 0;
+}, { deep: true });
+
+// Update the watch for searchQuery to handle select all state
 watch(searchQuery, (newQuery) => {
   filteredForestProducts.value = forestProducts.value.filter(product =>
     product.forest_product_name.toLowerCase().includes(newQuery.toLowerCase()) ||
     product.location_name.toLowerCase().includes(newQuery.toLowerCase())
   );
+  // Reset select all when search changes
+  selectAll.value = false;
 });
 
 // Watch changes to requested quantities and validate them
@@ -404,6 +429,16 @@ onMounted(() => {
             No forest products found matching your search
           </div>
           <div v-else class="space-y-3">
+            <!-- Add Select All checkbox -->
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+              <input
+                type="checkbox"
+                v-model="selectAll"
+                class="form-checkbox h-5 w-5 text-green-600 rounded"
+              />
+              <div class="font-medium text-gray-700">Select All Forest Products</div>
+            </div>
+            
             <div v-for="product in filteredForestProducts" :key="product.id" 
                  class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
               <input
@@ -466,25 +501,32 @@ onMounted(() => {
 
     <!-- Confirmation Dialog -->
     <AlertDialog :open="showConfirmDialog">
-      <AlertDialogContent class="rounded-lg shadow-lg border border-gray-200">
+      <AlertDialogContent class="rounded-lg shadow-lg border border-gray-200 max-h-[80vh] flex flex-col">
         <AlertDialogHeader class="bg-gray-900 text-white px-6 py-4 rounded-t-lg">
           <AlertDialogTitle class="text-lg font-bold">Confirm Collection Request</AlertDialogTitle>
         </AlertDialogHeader>
-        <AlertDialogDescription class="px-6 py-4 bg-gray-50">
+        <AlertDialogDescription class="px-6 py-4 bg-gray-50 flex-1 overflow-y-auto">
           <p class="text-sm text-gray-700 mb-4">
             Please review the details of your collection request before submitting:
           </p>
-          <ul class="text-sm text-gray-700 space-y-2 bg-white p-4 rounded-lg shadow-inner border border-gray-200">
-            <li v-for="product in selectedForestProducts.filter(p => p.requested_quantity > 0)" :key="product.id" class="flex justify-between">
-              <span><strong>{{ product.forest_product_name }}</strong> ({{ product.location_name }})</span>
-              <span>{{ product.requested_quantity }} {{ product.unit_name }}</span>
-            </li>
-          </ul>
-          <p class="text-sm text-gray-700 mt-4">
-            <strong>Collection Date:</strong> {{ collectionDate }}
-          </p>
+          <div class="bg-white p-4 rounded-lg shadow-inner border border-gray-200 max-h-[40vh] overflow-y-auto">
+            <ul class="text-sm text-gray-700 space-y-2">
+              <li v-for="product in selectedForestProducts.filter(p => p.requested_quantity > 0)" :key="product.id" class="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                <span class="font-medium">{{ product.forest_product_name }}</span>
+                <div class="text-right">
+                  <div class="text-gray-500 text-xs">{{ product.location_name }}</div>
+                  <div>{{ product.requested_quantity }} {{ product.unit_name }}</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 bg-white p-4 rounded-lg border border-gray-200">
+            <p class="text-sm text-gray-700">
+              <span class="font-medium">Collection Date:</span> {{ collectionDate }}
+            </p>
+          </div>
         </AlertDialogDescription>
-        <AlertDialogFooter class="bg-gray-100 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
+        <AlertDialogFooter class="bg-gray-100 px-6 py-4 flex justify-end space-x-3 rounded-b-lg border-t border-gray-200">
           <AlertDialogCancel
             @click="showConfirmDialog = false"
             class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
