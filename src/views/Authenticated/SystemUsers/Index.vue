@@ -676,9 +676,16 @@ onMounted(async () => {
               />
             </svg>
           </button>
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">
-            Unapproved Users
-          </h2>
+            <div class="flex items-center space-x-3 mb-4">
+              <img
+              src="@/assets/pending.png"
+              alt="Pending Users"
+              class="w-8 h-8"
+              />
+              <h2 class="text-2xl font-bold text-gray-900">
+              Pending Users for Approval
+              </h2>
+            </div>
 
           <!-- Search Input for Unapproved Users -->
           <div class="mb-4">
@@ -759,7 +766,7 @@ onMounted(async () => {
                             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                           />
                         </svg>
-                        <p class="text-gray-500">No unapproved users found</p>
+                        <p class="text-gray-500">No pending users found</p>
                       </div>
                     </td>
                   </tr>
