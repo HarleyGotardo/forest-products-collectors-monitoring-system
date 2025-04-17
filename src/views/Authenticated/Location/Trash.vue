@@ -169,7 +169,8 @@ watch(currentPage, () => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clip-rule="evenodd"
               />
             </svg>
           </div>
@@ -200,38 +201,35 @@ watch(currentPage, () => {
 
     <!-- Loading Skeleton -->
     <div v-if="loading" class="animate-pulse">
-      <div
-        class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
-      >
+      <!-- Desktop Table Skeleton -->
+      <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-200">
+            <thead class="bg-gray-700">
               <tr>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="n in 5" :key="n">
+              <tr v-for="n in 7" :key="n">
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="h-4 bg-gray-200 rounded w-10"></div>
+                  <div class="h-4 bg-gray-200 rounded w-12"></div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div
-                      class="flex-shrink-0 h-10 w-10 rounded-lg bg-gray-200"
-                    ></div>
+                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50">
+                      <div class="h-5 w-5 bg-gray-200 rounded"></div>
+                    </div>
                     <div class="ml-4">
                       <div class="h-4 bg-gray-200 rounded w-24"></div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-200 h-6 w-32"
-                  ></div>
+                  <div class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-200 h-6 w-32"></div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                   <div class="flex items-center justify-end space-x-3">
@@ -242,6 +240,56 @@ watch(currentPage, () => {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Mobile Cards Skeleton -->
+      <div class="block md:hidden">
+        <div v-for="n in 7" :key="n" class="p-4 border-b border-gray-200">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-lg bg-blue-50 mr-3">
+                <div class="h-4 w-4 bg-gray-200 rounded"></div>
+              </div>
+              <div class="h-4 bg-gray-200 rounded w-24"></div>
+            </div>
+            <div class="h-4 bg-gray-200 rounded w-12"></div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="inline-flex items-center px-3 py-1 rounded-xl bg-gray-200 h-6 w-32"></div>
+            <div class="flex space-x-2">
+              <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
+              <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination Skeleton -->
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="h-4 bg-gray-200 rounded w-48 hidden sm:block"></div>
+          <div class="flex items-center gap-2">
+            <!-- Mobile Pagination Skeleton -->
+            <div class="flex items-center gap-2 sm:hidden">
+              <div class="h-12 w-12 bg-gray-200 rounded-lg"></div>
+              <div class="h-4 bg-gray-200 rounded w-16"></div>
+              <div class="h-12 w-12 bg-gray-200 rounded-lg"></div>
+            </div>
+            
+            <!-- Desktop Pagination Skeleton -->
+            <div class="hidden sm:flex items-center gap-1">
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="flex items-center gap-1">
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              </div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

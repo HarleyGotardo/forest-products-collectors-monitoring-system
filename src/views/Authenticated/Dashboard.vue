@@ -377,7 +377,7 @@ const renderCharts = async (labels, quantities, units) => {
         mostCollectedChartInstance = null;
       }
 
-      const displayLimit = 5;
+      const displayLimit = 10;
       const displayLabels = Array.isArray(labels) ? labels.slice(0, displayLimit) : [];
       const displayQuantities = Array.isArray(quantities) ? quantities.slice(0, displayLimit) : [];
       const displayUnits = Array.isArray(units) ? units.slice(0, displayLimit) : [];
@@ -393,48 +393,65 @@ const renderCharts = async (labels, quantities, units) => {
         `${label} (${displayUnits[index]})`
       );
 
-      // Create the chart
+      // Create the pie chart
       mostCollectedChartInstance = new Chart(mostCollectedCtx, {
-        type: 'bar',
+        type: 'pie',
         data: {
           labels: formattedLabels,
           datasets: [{
             label: 'Most Collected Forest Products',
             data: displayQuantities,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1,
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.6)',
+              'rgba(54, 162, 235, 0.6)',
+              'rgba(255, 206, 86, 0.6)',
+              'rgba(75, 192, 192, 0.6)',
+              'rgba(153, 102, 255, 0.6)',
+              'rgba(255, 159, 64, 0.6)',
+              'rgba(201, 203, 207, 0.6)',
+              'rgba(255, 99, 71, 0.6)',
+              'rgba(60, 179, 113, 0.6)',
+              'rgba(238, 130, 238, 0.6)'
+            ],
+            borderColor: [
+              'rgba(255, 99, 132, 1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 206, 86, 1)',
+              'rgba(75, 192, 192, 1)',
+              'rgba(153, 102, 255, 1)',
+              'rgba(255, 159, 64, 1)',
+              'rgba(201, 203, 207, 1)',
+              'rgba(255, 99, 71, 1)',
+              'rgba(60, 179, 113, 1)',
+              'rgba(238, 130, 238, 1)'
+            ],
+            borderWidth: 1
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Total Collected Quantity'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Forest Products'
-              }
-            }
-          },
           plugins: {
             title: {
               display: true,
               text: 'Most Collected Forest Products'
+            },
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 12,
+                padding: 10,
+                font: {
+                  size: 10
+                }
+              }
             },
             tooltip: {
               callbacks: {
                 label: (context) => {
                   const index = context.dataIndex;
                   const unit = displayUnits[index] || 'N/A';
-                  return `Quantity: ${context.raw.toLocaleString()} ${unit}`;
+                  return `${context.label}: ${context.raw.toLocaleString()} ${unit}`;
                 }
               }
             }
@@ -535,21 +552,45 @@ onMounted(() => {
 
     <!-- Loading Skeleton -->
     <div v-if="loading" class="animate-pulse">
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6"
-      >
+      <!-- First row of cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
         <div class="h-24 bg-gray-200 rounded-lg"></div>
         <div class="h-24 bg-gray-200 rounded-lg"></div>
         <div class="h-24 bg-gray-200 rounded-lg"></div>
         <div class="h-24 bg-gray-200 rounded-lg"></div>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
+
+      <!-- Second row of cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
+        <div class="h-48 bg-gray-200 rounded-lg"></div>
+        <div class="h-48 bg-gray-200 rounded-lg"></div>
       </div>
+
+      <!-- Third row: Charts and product distribution -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div class="h-96 bg-gray-200 rounded-lg"></div>
-        <div class="h-96 bg-gray-200 rounded-lg"></div>
+        <!-- Pie Chart Skeleton -->
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+          <div class="flex items-center justify-center mb-4">
+            <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+            <div class="ml-2 w-32 h-6 bg-gray-200 rounded"></div>
+          </div>
+          <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px] bg-gray-200 rounded-lg"></div>
+        </div>
+
+        <!-- Product Distribution Skeleton -->
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+          <div class="flex items-center justify-center mb-4">
+            <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+            <div class="ml-2 w-48 h-6 bg-gray-200 rounded"></div>
+          </div>
+          <div class="space-y-3">
+            <div class="h-12 bg-gray-200 rounded-lg"></div>
+            <div class="h-12 bg-gray-200 rounded-lg"></div>
+            <div class="h-12 bg-gray-200 rounded-lg"></div>
+            <div class="h-12 bg-gray-200 rounded-lg"></div>
+            <div class="h-12 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
       </div>
     </div>
 

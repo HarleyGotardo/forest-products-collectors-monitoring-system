@@ -329,30 +329,126 @@ const formatDateTime = (dateTimeString) => {
 
     <!-- Loading Skeleton -->
     <div v-if="isLoading" class="space-y-6 animate-pulse">
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="flex justify-between items-center mb-6">
-          <div class="h-7 bg-gray-200 rounded w-1/3"></div>
-          <div class="h-5 bg-gray-200 rounded w-1/4"></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-4">
-            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-5 bg-gray-200 rounded w-2/3"></div>
-            <div class="h-5 bg-gray-200 rounded w-1/2"></div>
+      <!-- Request Information Card Skeleton -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="border-b border-gray-200 p-5 bg-gray-50">
+          <div class="flex items-center justify-between">
+            <div class="h-6 bg-gray-200 rounded w-32"></div>
+            <div class="h-4 bg-gray-200 rounded w-48"></div>
           </div>
-          <div class="space-y-4">
-            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-5 bg-gray-200 rounded w-2/3"></div>
-            <div class="h-5 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        
+        <div class="p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Left Column -->
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
+                <div class="space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-5 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
+                <div class="space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-5 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+              
+              <div class="flex items-start gap-3">
+                <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
+                <div class="space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-5 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
+                <div class="space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-5 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
+                <div class="space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-5 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
+                <div class="space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-5 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
-        <div class="space-y-3">
-          <div class="h-10 bg-gray-200 rounded w-full"></div>
-          <div class="h-10 bg-gray-200 rounded w-full"></div>
-          <div class="h-10 bg-gray-200 rounded w-full"></div>
+
+      <!-- Requested Products Card Skeleton -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-5 border-b border-gray-200 bg-gray-50">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
+            <div class="h-6 bg-gray-200 rounded w-48"></div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="n in 5" :key="n">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-32"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-32"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <div class="h-4 bg-gray-200 rounded w-16"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-16"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Skeleton -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="h-4 bg-gray-200 rounded w-48"></div>
+            <div class="flex items-center gap-2">
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="flex items-center gap-1">
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              </div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

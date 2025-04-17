@@ -266,20 +266,19 @@ onMounted(() => {
 
     <!-- Loading Skeleton -->
     <div v-if="loading" class="animate-pulse">
-      <div
-        class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
-      >
+      <!-- Desktop Table Skeleton -->
+      <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-200">
+            <thead class="bg-gray-700">
               <tr>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
-                <th scope="col" class="px-6 py-3 h-10"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12 hidden md:table-cell"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="px-6 py-3 h-12"></th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -290,17 +289,17 @@ onMounted(() => {
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="h-4 bg-gray-200 rounded w-24"></div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                   <div class="h-4 bg-gray-200 rounded w-24"></div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="h-4 bg-gray-200 rounded w-32"></div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+                  <div class="h-6 bg-gray-200 rounded-full w-20"></div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+                  <div class="h-6 bg-gray-200 rounded-full w-20"></div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                   <div class="flex items-center justify-end">
@@ -310,6 +309,64 @@ onMounted(() => {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Mobile Cards Skeleton -->
+      <div class="sm:hidden px-4 py-4 space-y-4">
+        <div v-for="n in 5" :key="n" class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
+          <!-- Card header skeleton -->
+          <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="h-4 bg-gray-200 rounded w-16"></div>
+            <div class="flex space-x-2">
+              <div class="h-6 bg-gray-200 rounded-full w-20"></div>
+              <div class="h-6 bg-gray-200 rounded-full w-20"></div>
+            </div>
+          </div>
+          
+          <!-- Card body skeleton -->
+          <div class="p-4">
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <div>
+                  <div class="h-3 bg-gray-200 rounded w-20 mb-1"></div>
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                </div>
+                <div>
+                  <div class="h-3 bg-gray-200 rounded w-20 mb-1"></div>
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                </div>
+              </div>
+              
+              <div>
+                <div class="h-3 bg-gray-200 rounded w-20 mb-1"></div>
+                <div class="h-4 bg-gray-200 rounded w-32"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Card footer skeleton -->
+          <div class="px-4 py-3 bg-gray-50 border-t border-gray-100">
+            <div class="h-8 bg-gray-200 rounded w-full"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination Skeleton -->
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="h-4 bg-gray-200 rounded w-48 hidden sm:block"></div>
+          <div class="flex items-center gap-2">
+            <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+            <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+            <div class="flex items-center gap-1">
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+            </div>
+            <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+            <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+          </div>
         </div>
       </div>
     </div>

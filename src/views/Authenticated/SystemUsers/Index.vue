@@ -388,15 +388,17 @@ onMounted(async () => {
     </div>
 
     <!-- Loading Skeleton -->
-    <div v-if="isLoading" class="animate-pulse mb-6">
+    <div v-if="isLoading" class="animate-pulse">
+      <!-- Table Skeleton -->
       <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-100">
+            <thead class="bg-gray-800">
               <tr>
-                <th class="px-6 py-3 h-10"></th>
-                <th class="hidden sm:table-cell px-6 py-3 h-10"></th>
-                <th class="hidden sm:table-cell px-6 py-3 h-10"></th>
+                <th class="px-6 py-3 h-12"></th>
+                <th class="hidden sm:table-cell px-6 py-3 h-12"></th>
+                <th class="hidden sm:table-cell px-6 py-3 h-12"></th>
+                <th class="hidden sm:table-cell px-6 py-3 h-12"></th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -405,22 +407,44 @@ onMounted(async () => {
                   <div class="flex items-center">
                     <div class="h-10 w-10 rounded-full bg-gray-200"></div>
                     <div class="ml-4">
-                      <div class="h-4 bg-gray-200 rounded w-28"></div>
-                      <div
-                        class="block sm:hidden h-3 bg-gray-200 rounded w-32 mt-2"
-                      ></div>
+                      <div class="h-4 bg-gray-200 rounded w-32"></div>
+                      <div class="block sm:hidden mt-2">
+                        <div class="h-3 bg-gray-200 rounded w-40"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24 mt-2"></div>
+                      </div>
                     </div>
                   </div>
                 </td>
                 <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                  <div class="h-4 bg-gray-200 rounded w-36"></div>
+                  <div class="h-4 bg-gray-200 rounded w-48"></div>
                 </td>
                 <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                  <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+                  <div class="h-6 bg-gray-200 rounded-full w-24"></div>
+                </td>
+                <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+                  <div class="h-6 bg-gray-200 rounded-full w-24"></div>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Pagination Skeleton -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="h-4 bg-gray-200 rounded w-48 hidden sm:block"></div>
+            <div class="flex items-center gap-2">
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="flex items-center gap-1">
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              </div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+              <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

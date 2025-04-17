@@ -495,28 +495,47 @@ onMounted(async () => {
   <div class="max-w-4xl mx-auto p-3">
     <!-- Header Section -->
     <div
-      class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 mt-2 space-y-4 sm:space-y-0"
+      class="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 mt-2 space-y-3 sm:space-y-0"
     >
-      <div class="flex items-center space-x-4">
+      <div class="flex items-center justify-between w-full sm:w-auto">
+      <div class="flex items-center space-x-3">
         <button
-          @click="router.back()"
-      class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
+        @click="router.back()"
+        class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
         >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-          Back
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
         </button>
         <img
-          src="@/assets/forest-product.png"
-          alt="Forest Product"
-          class="w-10 h-10"
+        src="@/assets/forest-product.png"
+        alt="Forest Product"
+        class="w-8 h-8 sm:w-10 sm:h-10"
         />
-        <h2 class="text-3xl font-bold text-gray-900">Forest Product Details</h2>
+        <h2
+        class="text-xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left"
+        >
+        Forest Product Details
+        </h2>
+      </div>
       </div>
       <div
+      class="flex flex-col sm:flex-row items-center sm:items-center space-y-2 sm:space-y-0 sm:space-x-3"
+      >
+      <div
         v-if="loading"
-        class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 animate-pulse w-36"
+        class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 animate-pulse w-24 sm:w-36"
       >
         &nbsp;
       </div>
@@ -533,6 +552,7 @@ onMounted(async () => {
       >
         Deleted at
         {{ format(new Date(forestProduct.deleted_at), 'MMMM dd, yyyy - hh:mm a') }}
+      </div>
       </div>
     </div>
 
@@ -1588,7 +1608,7 @@ onMounted(async () => {
               <button
                 type="button"
                 @click="showImageModal = false"
-                class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
+                class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
               >
                 Cancel
               </button>
