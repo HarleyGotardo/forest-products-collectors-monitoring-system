@@ -24,6 +24,7 @@ const lowStockProducts = ref([])
 const lowStockCount = ref(0)
 const lowStockThreshold = 10 // Define a threshold for "low stock" - adjust as needed
 
+// Updated fetchDashboardData function with adjusted quantity calculation
 const fetchDashboardData = async () => {
   loading.value = true
   try {
@@ -158,56 +159,109 @@ const fetchDashboardData = async () => {
 
     // Fetch forest products quantity distribution with unit_name
     const { data: fpAndLocation, error: fpAndLocationError } = await supabase
-  .from('fp_and_locations')
-  .select(`
-    id,
-    forest_product_id,
-    location_id,
-    quantity,
-    forest_products!inner (
-      id,
-      name,
-      deleted_at,
-      measurement_units:measurement_unit_id (
-        unit_name
-      )
-    ),
-    locations!inner (
-      name,
-      deleted_at
-    )
-  `)
-  .is('forest_products.deleted_at', null)  // Only get non-deleted forest products
-  .is('locations.deleted_at', null);       // Only get non-deleted locations
+      .from('fp_and_locations')
+      .select(`
+        id,
+        forest_product_id,
+        location_id,
+        quantity,
+        forest_products!inner (
+          id,
+          name,
+          deleted_at,
+          measurement_units:measurement_unit_id (
+            unit_name
+          )
+        ),
+        locations!inner (
+          name,
+          deleted_at
+        )
+      `)
+      .is('forest_products.deleted_at', null)  // Only get non-deleted forest products
+      .is('locations.deleted_at', null);       // Only get non-deleted locations
 
-if (fpAndLocationError) throw fpAndLocationError
+    if (fpAndLocationError) throw fpAndLocationError
 
+    // NEW CODE: Fetch approved but unrecorded collection requests
+    console.log("Fetching approved but unrecorded collection requests...");
+    const { data: approvedRequests, error: approvedRequestsError } = await supabase
+      .from('collection_requests')
+      .select(`
+        id,
+        is_recorded,
+        approved_at,
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id
+        ),
+        collection_records (
+          id,
+          is_paid
+        )
+      `)
+      .is('deleted_at', null)
+      .not('approved_at', 'is', null)
+
+    if (approvedRequestsError) {
+      console.error('Error fetching approved requests:', approvedRequestsError);
+      throw approvedRequestsError;
+    }
+
+    console.log(`Found ${approvedRequests.length} approved but unrecorded requests`);
+
+    // Create a map to track pending quantities by fp_and_location_id
+    const pendingQuantities = {};
+
+    // Process each approved request
+    approvedRequests.forEach(request => {
+      // Check if there's a related collection record that is paid
+      const hasPaidRecord = request.collection_records && 
+                            request.collection_records.some(record => record.is_paid === true);
+      
+      // Only consider this request as pending if it's not recorded AND doesn't have a paid record
+      if (!hasPaidRecord) {
+        request.collection_request_items.forEach(item => {
+          const fpLocationId = item.fp_and_location_id;
+          if (!pendingQuantities[fpLocationId]) {
+            pendingQuantities[fpLocationId] = 0;
+          }
+          pendingQuantities[fpLocationId] += item.requested_quantity;
+        });
+      }
+    });
+
+    console.log("Pending quantities by location:", pendingQuantities);
+
+    // Create forestProductsData with adjusted quantities
     forestProductsData.value = fpAndLocation
       .filter(record => record.forest_products) // Filter out records with deleted products
-      .map(record => ({
-        id: record.id,
-        productName: record.forest_products?.name || 'Unknown Product',
-        locationName: record.locations?.name || 'Unknown Location',
-        measurementUnit: record.forest_products?.measurement_units?.unit_name || 'N/A',
-        fp_id: record.forest_product_id,
-        quantity: record.quantity
-      }));
+      .map(record => {
+        // Calculate adjusted quantity
+        const currentQuantity = record.quantity || 0;
+        const pendingAmount = pendingQuantities[record.id] || 0;
+        const adjustedQuantity = Math.max(0, currentQuantity - pendingAmount);
+        
+        return {
+          id: record.id,
+          productName: record.forest_products?.name || 'Unknown Product',
+          locationName: record.locations?.name || 'Unknown Location',
+          measurementUnit: record.forest_products?.measurement_units?.unit_name || 'N/A',
+          fp_id: record.forest_product_id,
+          quantity: currentQuantity,
+          adjustedQuantity: adjustedQuantity,
+          pendingQuantity: pendingAmount,
+          hasPendingRequests: pendingAmount > 0
+        };
+      });
 
-    // NEW FEATURE: Find products with low stock
-// Update the low stock products filtering
-lowStockProducts.value = fpAndLocation
-  .filter(record => record.quantity <= lowStockThreshold)
-  .map(record => ({
-    id: record.id,
-    productName: record.forest_products.name,
-    locationName: record.locations.name,
-    measurementUnit: record.forest_products.measurement_units?.unit_name || 'N/A',
-    fp_id: record.forest_product_id,
-    quantity: record.quantity
-  }))
-  .sort((a, b) => a.quantity - b.quantity);
+    // Update low stock products with adjusted quantities
+    lowStockProducts.value = forestProductsData.value
+      .filter(product => product.adjustedQuantity <= lowStockThreshold)
+      .sort((a, b) => a.adjustedQuantity - b.adjustedQuantity);
 
-lowStockCount.value = lowStockProducts.value.length;
+    lowStockCount.value = lowStockProducts.value.length;
 
     // NEW FEATURE: Fetch today's collection requests
     const today = new Date();
@@ -216,45 +270,45 @@ lowStockCount.value = lowStockProducts.value.length;
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const { data: todayRequests, error: todayRequestsError } = await supabase
-  .from('collection_requests')
-  .select(`
-    id,
-    collection_date,
-    user_id,
-    profiles:user_id (first_name, last_name),
-    collection_request_items (
-      id,
-      requested_quantity,
-      fp_and_location_id,
-      fp_and_locations:fp_and_location_id (
+      .from('collection_requests')
+      .select(`
         id,
-        forest_product_id,
-        forest_products:forest_product_id (
-          name,
-          measurement_units:measurement_unit_id (unit_name)
+        collection_date,
+        user_id,
+        profiles:user_id (first_name, last_name),
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id,
+          fp_and_locations:fp_and_location_id (
+            id,
+            forest_product_id,
+            forest_products:forest_product_id (
+              name,
+              measurement_units:measurement_unit_id (unit_name)
+            )
+          )
         )
-      )
-    )
-  `)
-  .gte('collection_date', today.toISOString())
-  .lt('collection_date', tomorrow.toISOString())
-  .is('deleted_at', null)
-  .not('approved_at', 'is', null)
-  .eq('is_recorded', false);
+      `)
+      .gte('collection_date', today.toISOString())
+      .lt('collection_date', tomorrow.toISOString())
+      .is('deleted_at', null)
+      .not('approved_at', 'is', null)
+      .eq('is_recorded', false);
 
     if (todayRequestsError) throw todayRequestsError;
 
     todayCollectionRequests.value = todayRequests.map(request => ({
-  id: request.id,
-  user_id: request.user_id, // Add this line
-  collectionDate: new Date(request.collection_date).toLocaleDateString(),
-  collectorName: `${request.profiles?.first_name || 'Unknown'} ${request.profiles?.last_name || 'Collector'}`,
-  items: request.collection_request_items.map(item => ({
-    productName: item.fp_and_locations?.forest_products?.name || 'Unknown Product',
-    quantity: item.requested_quantity,
-    unitName: item.fp_and_locations?.forest_products?.measurement_units?.unit_name || 'N/A'
-  }))
-}));
+      id: request.id,
+      user_id: request.user_id, // Add this line
+      collectionDate: new Date(request.collection_date).toLocaleDateString(),
+      collectorName: `${request.profiles?.first_name || 'Unknown'} ${request.profiles?.last_name || 'Collector'}`,
+      items: request.collection_request_items.map(item => ({
+        productName: item.fp_and_locations?.forest_products?.name || 'Unknown Product',
+        quantity: item.requested_quantity,
+        unitName: item.fp_and_locations?.forest_products?.measurement_units?.unit_name || 'N/A'
+      }))
+    }));
 
     todayCollectionCount.value = todayCollectionRequests.value.length;
 
@@ -748,9 +802,9 @@ onMounted(() => {
                 <div class="flex items-center">
                   <span
                     class="text-sm font-medium"
-                    :class="{'text-red-600': product.quantity <= 5, 'text-yellow-600': product.quantity > 5}"
+                    :class="{'text-red-600': product.adjustedQuantity <= 5, 'text-yellow-600': product.adjustedQuantity > 5}"
                   >
-                    {{ product.quantity }} {{ product.measurementUnit }}
+                    {{ product.adjustedQuantity }} {{ product.measurementUnit }}
                   </span>
                 </div>
               </li>
@@ -800,7 +854,7 @@ onMounted(() => {
             <h3
               class="text-base sm:text-lg font-semibold text-gray-800 text-center"
             >
-              Forest Products Available
+              Forest Products Available (Available | Snapshot)
             </h3>
             </div>
           <!-- Changed the div to be scrollable just like the low stock products -->
@@ -816,9 +870,17 @@ onMounted(() => {
                   {{ item.productName }}
                   <span class="text-gray-400">({{ item.locationName }})</span>
                 </span>
-                <span class="text-xs sm:text-sm font-medium text-gray-900"
-                  >{{ item.quantity }} {{ item.measurementUnit }}(s)</span
-                >
+                <div class="flex flex-col items-end">
+                  <span class="text-xs sm:text-sm font-medium text-gray-900">
+                    {{ item.quantity }} {{ item.measurementUnit }}(s) in stock
+                  </span>
+                  <span 
+                    v-if="item.hasPendingRequests" 
+                    class="text-xs text-amber-600 font-medium"
+                  >
+                    {{ item.adjustedQuantity }} {{ item.measurementUnit }}(s) unrequested
+                  </span>
+                </div>
               </li>
             </ul>
             <div

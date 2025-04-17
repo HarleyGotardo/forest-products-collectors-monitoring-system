@@ -26,53 +26,112 @@ const searchQuery = ref(''); // Search query for filtering
 const showConfirmDialog = ref(false); // State for showing the confirmation dialog
 const router = useRouter();
 
+// Updated fetchForestProducts function with snapshot availability
 const fetchForestProducts = async () => {
-  const { data, error } = await supabase
-    .from('fp_and_locations')
-    .select(`
-      id,
-      forest_product_id,
-      location_id,
-      quantity,
-      forest_products (
+  try {
+    // First, get the forest products with their locations and quantities
+    const { data, error } = await supabase
+      .from('fp_and_locations')
+      .select(`
         id,
-        name,
-        price_based_on_measurement_unit,
-        measurement_unit_id,
-        measurement_units (unit_name)
-      ),
-      locations (name)
-    `);
-  if (error) {
-    console.error('Error fetching forest products:', error);
-    toast.error('Failed to load forest products');
-  } else {
-    forestProducts.value = data.map(item => ({
-      id: item.id,
-      forest_product_id: item.forest_product_id,
-      forest_product_name: item.forest_products.name,
-      location_id: item.location_id,
-      location_name: item.locations.name,
-      price: item.forest_products.price_based_on_measurement_unit,
-      unit_name: item.forest_products.measurement_units.unit_name,
-      quantity: item.quantity,
-      requested_quantity: 0,
-      quantityError: false // Add a flag to track quantity validation errors
-    }));
+        forest_product_id,
+        location_id,
+        quantity,
+        forest_products (
+          id,
+          name,
+          price_based_on_measurement_unit,
+          measurement_unit_id,
+          measurement_units (unit_name)
+        ),
+        locations (name)
+      `);
+      
+    if (error) {
+      console.error('Error fetching forest products:', error);
+      throw error;
+    }
+    
+    // Then, get approved but unrecorded collection requests
+    const { data: approvedRequests, error: approvedRequestsError } = await supabase
+      .from('collection_requests')
+      .select(`
+        id,
+        is_recorded,
+        approved_at,
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id
+        ),
+        collection_records (
+          id,
+          is_paid
+        )
+      `)
+      .is('deleted_at', null)
+      .not('approved_at', 'is', null)
+      
+    if (approvedRequestsError) {
+      console.error('Error fetching approved requests:', approvedRequestsError);
+      throw approvedRequestsError;
+    }
+    
+    // Calculate pending quantities for each forest product location
+    const pendingQuantities = {};
+    
+    // Process each approved request
+    approvedRequests.forEach(request => {
+      // Check if there's a related collection record that is paid
+      const hasPaidRecord = request.collection_records && 
+                            request.collection_records.some(record => record.is_paid === true);
+      
+      // Only consider this request as pending if it's not recorded AND doesn't have a paid record
+      if (!hasPaidRecord) {
+        request.collection_request_items.forEach(item => {
+          const fpLocationId = item.fp_and_location_id;
+          if (!pendingQuantities[fpLocationId]) {
+            pendingQuantities[fpLocationId] = 0;
+          }
+          pendingQuantities[fpLocationId] += item.requested_quantity;
+        });
+      }
+    });
+    
+    // Map the products with adjusted quantities
+    forestProducts.value = data.map(item => {
+      const pendingAmount = pendingQuantities[item.id] || 0;
+      const adjustedQuantity = Math.max(0, item.quantity - pendingAmount);
+      
+      return {
+        id: item.id,
+        forest_product_id: item.forest_product_id,
+        forest_product_name: item.forest_products.name,
+        location_id: item.location_id,
+        location_name: item.locations.name,
+        price: item.forest_products.price_based_on_measurement_unit,
+        unit_name: item.forest_products.measurement_units.unit_name,
+        quantity: item.quantity,
+        adjustedQuantity: adjustedQuantity,
+        pendingQuantity: pendingAmount,
+        hasPendingRequests: pendingAmount > 0,
+        requested_quantity: 0,
+        quantityError: false
+      };
+    });
+    
     filteredForestProducts.value = forestProducts.value;
+    
+  } catch (error) {
+    console.error('Error in fetchForestProducts:', error);
+    toast.error('Failed to load forest products');
   }
 };
 
-watch(searchQuery, (newQuery) => {
-  filteredForestProducts.value = forestProducts.value.filter(product =>
-    product.forest_product_name.toLowerCase().includes(newQuery.toLowerCase()) ||
-    product.location_name.toLowerCase().includes(newQuery.toLowerCase())
-  );
-});
-
-// Add validation function to check quantity
+// Update validateProductQuantity to check against adjusted quantity rather than total quantity
 const validateProductQuantity = (product) => {
-  if (product.requested_quantity > product.quantity) {
+  // Use adjustedQuantity instead of quantity for validation
+  if (product.requested_quantity > product.adjustedQuantity) {
     product.quantityError = true;
     return false;
   } else if (product.requested_quantity < 0) {
@@ -83,6 +142,13 @@ const validateProductQuantity = (product) => {
     return true;
   }
 };
+
+watch(searchQuery, (newQuery) => {
+  filteredForestProducts.value = forestProducts.value.filter(product =>
+    product.forest_product_name.toLowerCase().includes(newQuery.toLowerCase()) ||
+    product.location_name.toLowerCase().includes(newQuery.toLowerCase())
+  );
+});
 
 // Watch changes to requested quantities and validate them
 watch(() => [...selectedForestProducts.value], (products) => {
@@ -165,7 +231,7 @@ const confirmSubmit = async () => {
 
   // Final validation check
   const invalidProducts = validProducts.filter(
-    product => product.requested_quantity > product.quantity || product.requested_quantity <= 0
+    product => product.requested_quantity > product.adjustedQuantity || product.requested_quantity <= 0
   );
 
   if (invalidProducts.length > 0) {
@@ -255,7 +321,10 @@ onMounted(() => {
             <span>
           {{ product.forest_product_name }} - {{ product.requested_quantity > 0 ? product.requested_quantity : 'No' }} {{ product.unit_name }}(s)
             </span>
-            <span class="text-gray-500 text-xs">Available: {{ product.quantity }} {{ product.unit_name }}(s)</span>
+            <span class="text-gray-500 text-xs">
+              Available: {{ product.adjustedQuantity }} / {{ product.quantity }} {{ product.unit_name }}(s)
+              <span v-if="product.hasPendingRequests" class="text-amber-600">({{ product.pendingQuantity }} pending)</span>
+            </span>
           </div>
           <!-- Error message for quantity validation -->
           <div v-if="product.quantityError" class="text-red-500 text-xs mt-1">
@@ -307,7 +376,10 @@ onMounted(() => {
     >
       <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
-          <h2 class="text-lg font-semibold text-green-800">Select Forest Products</h2>
+            <div class="flex items-center space-x-2">
+            <img src="@/assets/forest-product.png" alt="Logo" class="w-6 h-6" />
+            <h2 class="text-lg font-semibold text-green-800">Select Forest Products</h2>
+            </div>
           <button @click="showModal = false" class="text-gray-500 hover:text-gray-700 p-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -345,7 +417,15 @@ onMounted(() => {
                 <div class="text-sm text-gray-500">
                   Location: {{ product.location_name }} | 
                   Price: ₱{{ product.price }} per {{ product.unit_name }} | 
+                  <span v-if="product.hasPendingRequests" class="text-green-600">
+                  Snapshot: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
+                  </span>
+                  <span v-else class="text-blue-600">
                   Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                  </span>
+                  <span v-if="product.hasPendingRequests" class="text-amber-600">
+                  ({{ product.pendingQuantity }} pending)
+                  </span>
                 </div>
               </div>
               <div v-if="selectedForestProducts.includes(product)" class="flex flex-col">
@@ -355,7 +435,7 @@ onMounted(() => {
                   type="number"
                   v-model="product.requested_quantity"
                   min="0"
-                  :max="product.quantity"
+                  :max="product.adjustedQuantity"
                   placeholder="Qty"
                   @input="validateProductQuantity(product)"
                   :class="['w-24 text-center border rounded p-1', product.quantityError || product.requested_quantity === 0 ? 'border-red-500 bg-red-50' : 'border-gray-300']"
@@ -367,7 +447,7 @@ onMounted(() => {
                 </div>
                 <!-- Inline error message -->
                 <div v-if="product.quantityError" class="text-red-500 text-xs mt-1 text-right">
-                  Max: {{ product.quantity }}
+                  Max: {{ product.adjustedQuantity }}
                 </div>
               </div>
             </div>
