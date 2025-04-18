@@ -340,12 +340,21 @@ const getCurrentLocation = () => {
         return;
       }
 
-      // Update temporary coordinates
+      // Update both temporary and main coordinates
       tempCoordinatesObj.value = latLngObj;
       tempCoordinates.value = `${latLngObj.lat.toFixed(6)}, ${latLngObj.lng.toFixed(6)}`;
+      coordinatesObj.value = latLngObj;
+      coordinates.value = tempCoordinates.value;
 
-      // Update map view if it exists
-      if (mapInstance) {
+      // Initialize or update the map
+      if (!mapInstance) {
+        // If map is not initialized, open the modal and initialize the map
+        openModal('coordinates');
+        nextTick(() => {
+          initializeMap();
+        });
+      } else {
+        // Update existing map
         mapInstance.setView([latLngObj.lat, latLngObj.lng], CommonConstant.MAP_ZOOM_LEVEL.SIXTEEN);
         
         // Clear existing markers
@@ -356,8 +365,11 @@ const getCurrentLocation = () => {
         L.marker([latLngObj.lat, latLngObj.lng]).addTo(mapInstance);
       }
 
+      // Initialize preview map
+      initializePreviewMap();
+
       isGettingLocation.value = false;
-      toast.success('Location coordinates retrieved successfully', { duration: 2000 });
+      toast.success('Location coordinates retrieved successfully. You can now name and save this location.', { duration: 3000 });
     },
     (error) => {
       isGettingLocation.value = false;
@@ -383,7 +395,7 @@ const getCurrentLocation = () => {
     },
     {
       enableHighAccuracy: true,
-      timeout: 10000, // Increased timeout to 10 seconds
+      timeout: 10000,
       maximumAge: 0
     }
   );
