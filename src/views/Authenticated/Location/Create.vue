@@ -51,6 +51,8 @@ const existingLocations = ref([]);
 const tempCoordinatesObj = ref(null);
 const tempCoordinates = ref("");
 let previewMapInstance = null;
+const isGettingLocation = ref(false);
+const locationError = ref(null);
 
 
 const initializePreviewMap = () => {
@@ -297,6 +299,95 @@ onBeforeUnmount(() => {
     previewMapInstance.remove();
   }
 });
+
+// Add this new function to get current location
+const getCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    locationError.value = "Geolocation is not supported by your browser";
+    toast.error("Geolocation is not supported by your browser. Please use a modern browser like Chrome, Firefox, or Edge.", { duration: 5000 });
+    return;
+  }
+
+  isGettingLocation.value = true;
+  locationError.value = null;
+
+  // First check if we're in a secure context (HTTPS or localhost)
+  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+    isGettingLocation.value = false;
+    locationError.value = "Geolocation requires a secure context (HTTPS)";
+    toast.error("Geolocation requires a secure connection (HTTPS). Please ensure you're using HTTPS or running on localhost.", { duration: 5000 });
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const latLngObj = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+
+      // Log the accuracy for debugging
+      console.log('Location accuracy:', position.coords.accuracy, 'meters');
+
+      // Check if the coordinates match any existing location
+      const isDuplicateLocation = existingLocations.value.some(location =>
+        location.latitude === latLngObj.lat && location.longitude === latLngObj.lng
+      );
+
+      if (isDuplicateLocation) {
+        toast.error('A location already exists at these coordinates', { duration: 3000 });
+        isGettingLocation.value = false;
+        return;
+      }
+
+      // Update temporary coordinates
+      tempCoordinatesObj.value = latLngObj;
+      tempCoordinates.value = `${latLngObj.lat.toFixed(6)}, ${latLngObj.lng.toFixed(6)}`;
+
+      // Update map view if it exists
+      if (mapInstance) {
+        mapInstance.setView([latLngObj.lat, latLngObj.lng], CommonConstant.MAP_ZOOM_LEVEL.SIXTEEN);
+        
+        // Clear existing markers
+        const markers = mapInstance.getLayers().filter(layer => layer instanceof L.Marker);
+        markers.forEach(marker => mapInstance.removeLayer(marker));
+        
+        // Add new marker
+        L.marker([latLngObj.lat, latLngObj.lng]).addTo(mapInstance);
+      }
+
+      isGettingLocation.value = false;
+      toast.success('Location coordinates retrieved successfully', { duration: 2000 });
+    },
+    (error) => {
+      isGettingLocation.value = false;
+      console.error('Geolocation error:', error);
+      
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          locationError.value = "Location access was denied";
+          toast.error("Please allow location access in your browser settings to use this feature. Click the lock icon in your browser's address bar to manage permissions.", { duration: 5000 });
+          break;
+        case error.POSITION_UNAVAILABLE:
+          locationError.value = "Location information is unavailable";
+          toast.error("Could not get your location. Please ensure your device's location services are enabled and you have a stable internet connection.", { duration: 5000 });
+          break;
+        case error.TIMEOUT:
+          locationError.value = "Location request timed out";
+          toast.error("Location request took too long. Please check your internet connection and try again.", { duration: 5000 });
+          break;
+        default:
+          locationError.value = "An unknown error occurred";
+          toast.error("An error occurred while getting your location. Please try again or use manual location selection.", { duration: 5000 });
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000, // Increased timeout to 10 seconds
+      maximumAge: 0
+    }
+  );
+};
 </script>
 <template>
   <div
@@ -400,10 +491,64 @@ onBeforeUnmount(() => {
                 />
               </svg>
             </div>
-          </button>   
+          </button>
+          <div class="relative group">
+            <button
+              type="button"
+              @click="getCurrentLocation"
+              :disabled="isGettingLocation"
+              class="mt-2 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+            >
+              <svg
+                v-if="isGettingLocation"
+                class="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <svg
+                v-else
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <span>{{ isGettingLocation ? 'Getting Location...' : 'Use Current Location' }}</span>
+            </button>
+            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+              Works best on mobile devices with GPS
+            </div>
+          </div>
         </div>
         <p class="text-xs text-gray-500 mt-1">
-          Click to open the map and select precise coordinates
+          Click to open the map and select precise coordinates. For best results, use a mobile device with GPS.
         </p>
       </div>
 
