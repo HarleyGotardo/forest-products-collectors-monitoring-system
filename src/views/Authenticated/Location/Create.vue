@@ -54,6 +54,17 @@ let previewMapInstance = null;
 const isGettingLocation = ref(false);
 const locationError = ref(null);
 
+// Add mobile device detection
+const isMobileDevice = computed(() => {
+  // Check if the device is a mobile device
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+  
+  // Also check screen size as an additional indicator
+  const isSmallScreen = window.innerWidth <= 768;
+  
+  return isMobile || isSmallScreen;
+});
 
 const initializePreviewMap = () => {
   nextTick(() => {
@@ -508,7 +519,7 @@ const getCurrentLocation = () => {
             <button
               type="button"
               @click="getCurrentLocation"
-              :disabled="isGettingLocation"
+              :disabled="isGettingLocation || !isMobileDevice"
               class="mt-2 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
             >
               <svg
@@ -554,7 +565,10 @@ const getCurrentLocation = () => {
               </svg>
               <span>{{ isGettingLocation ? 'Getting Location...' : 'Use Current Location' }}</span>
             </button>
-            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+            <div v-if="!isMobileDevice" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-100 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+              This feature is only available on mobile devices
+            </div>
+            <div v-else class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
               Works best on mobile devices with GPS
             </div>
           </div>
