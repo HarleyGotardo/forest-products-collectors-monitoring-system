@@ -25,7 +25,7 @@
               id="imageModalTitle"
               class="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate"
             >
-              {{ imageTitle || 'Image Viewer' }}
+              Image Viewer
             </h2>
           </div>
           
