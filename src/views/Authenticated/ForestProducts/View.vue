@@ -34,6 +34,7 @@ import {
   PaginationPrev,
   PaginationEllipsis,
 } from '@/components/ui/pagination'
+import ForestProductImageViewer from './ForestProductImageViewer.vue'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -73,11 +74,21 @@ const newLocation = ref({
   quantity: null
 })
 
+const isLoading = ref(true)
+const allImages = ref([])
+const imageTitle = ref('')
+
 const viewImage = (image, index) => {
-  currentImage.value = image; // Set the selected image
-  currentImageIndex.value = index; // Set the index of the selected image
-  showExtraImageModal.value = true; // Show the modal
-};
+  currentImage.value = image // Set the selected image
+  currentImageIndex.value = index // Set the index of the selected image
+  showExtraImageModal.value = true // Show the modal
+  
+  // Determine image title (you can customize this logic)
+  imageTitle.value = `${forestProduct.value?.name || 'Product'} - Image ${index + 1}`
+  
+  // Reset image view state when opening a new image
+  isLoading.value = true
+}
 
 const closeImageModal = () => {
   showExtraImageModal.value = false; // Close the modal
@@ -92,7 +103,15 @@ const fetchAdditionalImages = async () => {
   if (error) {
     console.error('Error fetching additional images:', error);
   } else {
+    // Get additional images
     additionalImages.value = data.map((img) => img.image_link);
+    
+    // Add main product image if it exists (add at beginning)
+    if (forestProduct.value?.image_url) {
+      allImages.value = [forestProduct.value.image_url, ...additionalImages.value];
+    } else {
+      allImages.value = [...additionalImages.value];
+    }
   }
 };
 
@@ -109,6 +128,11 @@ const editLocation = (location) => {
   locationToEdit.value = location
   editLocationQuantity.value = location.quantity
   showEditLocationModal.value = true
+}
+
+const selectImage = (image, index) => {
+  currentImage.value = image
+  currentImageIndex.value = index
 }
 
 const updateLocationQuantity = async () => {
@@ -442,6 +466,19 @@ const deleteImage = async (index) => {
     toast.error('An unexpected error occurred.');
   }
 };
+const showPreviousImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value -= 1
+    currentImage.value = additionalImages.value[currentImageIndex.value]
+  }
+}
+
+const showNextImage = () => {
+  if (currentImageIndex.value < additionalImages.value.length - 1) {
+    currentImageIndex.value += 1
+    currentImage.value = additionalImages.value[currentImageIndex.value]
+  }
+}
 
 const handleImageSubmit = async () => {
   if (!newImage.value) {
@@ -1638,170 +1675,23 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div
-      v-if="showExtraImageModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 transition-opacity duration-300"
-      @keydown.esc="closeImageModal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="imageModalTitle"
-    >
-      <div
-        class="relative flex flex-col bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl w-[95%] sm:w-[90%] max-h-[90vh] overflow-hidden transition-transform duration-300 scale-100 border border-gray-200 dark:border-gray-700/50"
-      >
-        <div
-          class="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-700/50 flex-shrink-0"
-        >
-          <div class="flex items-center space-x-2">
-            <img
-              src="@/assets/image-viewer.png"
-              alt="Dashboard"
-              class="w-6 h-6 group-hover:scale-110 transition-transform"
-            />
-            <h2
-              id="imageModalTitle"
-              class="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate"
-            >
-              Image Viewer
-            </h2>
-          </div>
-          <button
-            class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 rounded-md p-1 -mr-2"
-            @click="closeImageModal"
-            aria-label="Close modal"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
 
-        <div
-          class="relative flex-grow overflow-hidden bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center p-4"
-        >
-          <div
-            v-if="isLoading"
-            class="absolute inset-0 flex items-center justify-center z-10 bg-gray-50/50 dark:bg-gray-800/50"
-          >
-            <div
-              class="w-12 h-12 border-4 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin"
-            ></div>
-          </div>
-
-          <img
-            :src="currentImage"
-            alt="Image Preview"
-            class="block max-w-full max-h-[calc(90vh-150px)] object-contain transition-opacity duration-300"
-            :class="{'opacity-0': isLoading, 'opacity-100': !isLoading}"
-            @load="isLoading = false"
-          />
-
-          <button
-            v-if="imageCount > 1"
-            @click="showPreviousImage"
-            :disabled="!hasPreviousImage"
-            aria-label="Previous image"
-            class="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 sm:h-6 sm:w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <button
-            v-if="imageCount > 1"
-            @click="showNextImage"
-            :disabled="!hasNextImage"
-            aria-label="Next image"
-            class="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 sm:h-6 sm:w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div
-          v-if="isForestRanger || isFPUAdmin"
-          class="flex items-center justify-end px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-900/80 flex-shrink-0"
-        >
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button
-                class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 dark:focus:ring-offset-gray-900 transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5 mr-1.5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v11a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                Delete Image
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Image?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this image? This action cannot
-                  be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter class="flex justify-end space-x-3 mt-4">
-                <AlertDialogCancel
-                  class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
-                  >Cancel</AlertDialogCancel
-                >
-                <AlertDialogAction
-                  @click="deleteImage(currentImageIndex)"
-                  class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-900"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
-    </div>
+<!-- Replace your existing showExtraImageModal div with this -->
+<ForestProductImageViewer
+  :showExtraImageModal="showExtraImageModal"
+  :currentImage="currentImage"
+  :currentImageIndex="currentImageIndex"
+  :additionalImages="additionalImages"
+  :mainImage="forestProduct?.image_url"
+  :isForestRanger="isForestRanger"
+  :isFPUAdmin="isFPUAdmin"
+  :imageTitle="imageTitle"
+  @close-modal="closeImageModal"
+  @delete-image="deleteImage"
+  @previous-image="showPreviousImage"
+  @next-image="showNextImage"
+  @select-image="selectImage"
+/>
 
     <div v-if="showImageModal" class="fixed inset-0 z-50 overflow-y-auto">
       <div
