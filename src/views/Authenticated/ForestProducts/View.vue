@@ -73,6 +73,15 @@ const newLocation = ref({
   quantity: null
 })
 
+// Add these new reactive variables at the top with other refs
+const imageViewerZoom = ref(1)
+const imageViewerRotation = ref(0)
+const isDragging = ref(false)
+const startX = ref(0)
+const startY = ref(0)
+const translateX = ref(0)
+const translateY = ref(0)
+
 const viewImage = (image, index) => {
   currentImage.value = image; // Set the selected image
   currentImageIndex.value = index; // Set the index of the selected image
@@ -213,7 +222,12 @@ const fetchLocations = async () => {
         quantity: fp.quantity
       }))
     
+    // Ensure map is properly initialized after locations are loaded
     nextTick(() => {
+      if (mapInstance.value) {
+        mapInstance.value.remove()
+        mapInstance.value = null
+      }
       initializeMap()
     })
   }
@@ -238,18 +252,19 @@ const initializeMap = () => {
     return
   }
 
-  if (mapInstance.value) {
-    mapInstance.value.remove()
-  }
+  // Ensure the map container is empty
+  const mapContainer = document.getElementById('locationMap')
+  mapContainer.innerHTML = ''
 
+  // Create new map instance
   mapInstance.value = L.map('locationMap')
 
+  // Add tile layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19
   }).addTo(mapInstance.value)
 
-  const bounds = L.latLngBounds(locations.value.map(location => [location.latitude, location.longitude]))
-
+  // Add markers for locations
   locations.value.forEach(location => {
     L.marker([location.latitude, location.longitude])
       .addTo(mapInstance.value)
@@ -260,7 +275,14 @@ const initializeMap = () => {
       })
   })
 
-  mapInstance.value.fitBounds(bounds)
+  // Fit bounds to show all markers
+  if (locations.value.length > 0) {
+    const bounds = L.latLngBounds(locations.value.map(location => [location.latitude, location.longitude]))
+    mapInstance.value.fitBounds(bounds)
+  } else {
+    // Default view for Philippines if no locations
+    mapInstance.value.setView([10.744340, 124.791995], 16)
+  }
 }
 
 const paginatedLocations = computed(() => {
@@ -623,6 +645,54 @@ const saveLocation = async () => {
     console.error('Error adding location:', error)
     toast.error(error.message || 'Failed to add location')
   }
+}
+
+const reloadMap = () => {
+  // Remove existing map instance
+  if (mapInstance.value) {
+    mapInstance.value.remove()
+    mapInstance.value = null
+  }
+  
+  // Small delay to ensure cleanup is complete
+  setTimeout(() => {
+    nextTick(() => {
+      initializeMap()
+    })
+  }, 100)
+}
+
+const resetImageViewer = () => {
+  imageViewerZoom.value = 1
+  imageViewerRotation.value = 0
+  translateX.value = 0
+  translateY.value = 0
+}
+
+const handleWheel = (e) => {
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  imageViewerZoom.value = Math.max(0.5, Math.min(3, imageViewerZoom.value + delta))
+}
+
+const startDrag = (e) => {
+  isDragging.value = true
+  startX.value = e.clientX - translateX.value
+  startY.value = e.clientY - translateY.value
+}
+
+const onDrag = (e) => {
+  if (!isDragging.value) return
+  translateX.value = e.clientX - startX.value
+  translateY.value = e.clientY - startY.value
+}
+
+const endDrag = () => {
+  isDragging.value = false
+}
+
+const rotateImage = () => {
+  imageViewerRotation.value = (imageViewerRotation.value + 90) % 360
 }
 
 onMounted(async () => {
@@ -1076,791 +1146,264 @@ onMounted(async () => {
         <!-- Image Modal -->
         <div
           v-if="showExtraImageModal"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75 backdrop-blur-sm transition-opacity duration-300"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity duration-300"
+          @keydown.esc="closeImageModal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="imageModalTitle"
         >
           <div
-        class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden"
+            class="relative flex flex-col bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-6xl w-[95%] sm:w-[90%] max-h-[90vh] overflow-hidden transition-all duration-300 transform scale-100 border border-gray-200/20 dark:border-gray-700/20"
           >
-        <!-- Modal Header -->
-        <div
-          class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200"
-        >
-          <h4 class="text-lg font-medium text-gray-800">Image Viewer</h4>
-          <button
-            class="p-1 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
-            @click="closeImageModal"
-            aria-label="Close"
-          >
-            <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6 text-gray-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+            <!-- Header -->
+            <div
+              class="flex items-center justify-between px-6 py-4 border-b border-gray-200/20 dark:border-gray-700/20 bg-white/5 backdrop-blur-sm"
             >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-            </svg>
-          </button>
-        </div>
+              <div class="flex items-center space-x-3">
+                <div class="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                  <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2
+                    id="imageModalTitle"
+                    class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                  >
+                    Image Viewer
+                  </h2>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Image {{ currentImageIndex + 1 }} of {{ additionalImages.length }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <!-- Zoom Controls -->
+                <div class="flex items-center space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                  <button
+                    @click="imageViewerZoom = Math.max(0.5, imageViewerZoom - 0.1)"
+                    class="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <span class="text-sm text-gray-600 dark:text-gray-300">{{ Math.round(imageViewerZoom * 100) }}%</span>
+                  <button
+                    @click="imageViewerZoom = Math.min(3, imageViewerZoom + 0.1)"
+                    class="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+                <!-- Rotate Button -->
+                <button
+                  @click="rotateImage"
+                  class="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+                <!-- Close Button -->
+                <button
+                  @click="closeImageModal"
+                  class="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-        <!-- Modal Image -->
-        <div class="flex items-center justify-center bg-gray-100 p-2">
-          <img
-            :src="currentImage"
-            alt="Full Size Image"
-            class="max-h-96 w-auto object-contain"
-          />
-        </div>
+            <!-- Image Container -->
+            <div
+              class="relative flex-grow overflow-hidden bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center p-4"
+              @wheel.prevent="handleWheel"
+              @mousedown="startDrag"
+              @mousemove="onDrag"
+              @mouseup="endDrag"
+              @mouseleave="endDrag"
+            >
+              <!-- Loading Spinner -->
+              <div
+                v-if="isLoading"
+                class="absolute inset-0 flex items-center justify-center z-10 bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm"
+              >
+                <div class="w-12 h-12 border-4 border-gray-300 dark:border-gray-600 border-t-indigo-500 rounded-full animate-spin"></div>
+              </div>
 
-        <!-- Modal Footer -->
-        <div class="p-4 flex items-center justify-between bg-white">
-          <div class="text-sm text-gray-500">
-            Image {{ currentImageIndex + 1 }} of
-            {{ additionalImages.length }}
-          </div>
-          <div class="flex gap-3">
-            <button
-          v-if="isForestRanger || isFPUAdmin"
-          class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
-          @click="closeImageModal"
+              <!-- Image -->
+              <img
+                :src="currentImage"
+                alt="Image Preview"
+                class="block max-w-full max-h-[calc(90vh-150px)] object-contain transition-all duration-300"
+                :class="{'opacity-0': isLoading, 'opacity-100': !isLoading}"
+                :style="{
+                  transform: `scale(${imageViewerZoom}) rotate(${imageViewerRotation}deg)`,
+                  transformOrigin: 'center',
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  translate: `${translateX}px ${translateY}px`
+                }"
+                @load="isLoading = false"
+              />
+
+              <!-- Navigation Buttons -->
+              <button
+                v-if="imageCount > 1"
+                @click="showPreviousImage"
+                :disabled="!hasPreviousImage"
+                class="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-black/30 text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all backdrop-blur-sm"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                v-if="imageCount > 1"
+                @click="showNextImage"
+                :disabled="!hasNextImage"
+                class="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-black/30 text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all backdrop-blur-sm"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Footer -->
+            <div
+              v-if="isForestRanger || isFPUAdmin"
+              class="flex items-center justify-between px-6 py-4 border-t border-gray-200/20 dark:border-gray-700/20 bg-white/5 backdrop-blur-sm"
             >
-          Cancel
-            </button>
-            <button
-          v-if="isForestRanger || isFPUAdmin"
-          class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-          @click="deleteImage(currentImageIndex)"
-            >
-          Delete Image
-            </button>
-          </div>
-        </div>
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="resetImageViewer"
+                  class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  Reset View
+                </button>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                  >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Image
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Image?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this image? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter class="flex justify-end space-x-3 mt-4">
+                    <AlertDialogCancel
+                      class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      @click="deleteImage(currentImageIndex)"
+                      class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </div>
       <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-
-<div class="px-6 py-5 border-b border-gray-200">
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-    <div class="flex items-center space-x-3">
-      <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-      </svg>
-      <h3 class="text-xl font-semibold text-gray-800">
-        Product Locations
-      </h3>
-    </div>
-
-    <button
-      v-if="isForestRanger || isFPUAdmin && forestProduct.deleted_at === null"
-      @click="openAddLocationModal"
-      class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
-    >
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-      </svg>
-      Add Location
-    </button>
-  </div>
-</div>
-
-<div v-if="locations.length === 0" class="p-8 text-center">
-   <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-    <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0zm6-7l-2.828 2.828m-10.344 0L5 4" />
-  </svg>
-  <h3 class="mt-2 text-sm font-medium text-gray-900">No locations</h3>
-  <p class="mt-1 text-sm text-gray-500">This forest product currently has no registered locations.</p>
-</div>
-
-<div v-else class="divide-y divide-gray-200">
-  <div
-    v-for="location in paginatedLocations"
-    :key="location.id"
-    @click="goToLocation(location)"
-    class="p-5 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-  >
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-      <div class="flex items-start flex-grow mb-3 sm:mb-0">
-         <svg class="w-5 h-5 text-gray-500 mr-4 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-         </svg>
-
-        <div class="flex-grow">
-          <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
-          <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
-            <div class="flex items-center space-x-1">
-              <span class="font-medium text-gray-700">Lat:</span>
-              <span>{{ location.latitude }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium text-gray-700">Long:</span>
-              <span>{{ location.longitude }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium text-gray-700">Quantity:</span>
-              <span 
-              :class="{
-                'text-red-600 font-semibold': !location.quantity || location.quantity === 0,
-                'text-orange-600 font-semibold': location.quantity > 0 && location.quantity <= 10,
-                'text-green-600 font-semibold': location.quantity > 0 && location.quantity > 10
-              }"
-              >
-              {{ location.quantity ? location.quantity : 'N/A' }}
-              {{ location.quantity ? ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') : '' }}
-              </span>
-              <span
-              v-if="!location.quantity || location.quantity === 0"
-              class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-              >
-              Out of Stock
-              </span>
-              <span
-              v-else-if="location.quantity > 0 && location.quantity <= 10"
-              class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
-              >
-              Almost Out of Stock
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center space-x-2 flex-shrink-0 sm:ml-4" v-if="forestProduct.deleted_at === null && (isForestRanger || isFPUAdmin)">
-        <button
-          @click.stop="editLocation(location)"
-          class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
-          title="Edit Location Quantity"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-          </svg>
-           <span class="sr-only">Edit Location</span>
-        </button>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              @click.stop="confirmDeleteLocation(location.id)"
-               class="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500"
-              title="Delete Location"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        <div class="px-6 py-5 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <div class="flex items-center space-x-3">
+              <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
               </svg>
-               <span class="sr-only">Delete Location</span>
+              <h3 class="text-xl font-semibold text-gray-800">
+                Product Locations
+              </h3>
+            </div>
+
+            <button
+              v-if="isForestRanger || isFPUAdmin && forestProduct.deleted_at === null"
+              @click="openAddLocationModal"
+              class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              Add Location
             </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure you want to delete this location?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the location record for this forest product.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="deleteLocation">Delete Location</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div v-if="locations.length > 0 && totalPages > 1" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div class="text-sm text-gray-600 hidden sm:block">
-      Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, locations.length) }} of {{ locations.length }} items
-    </div>
-    <Pagination
-      v-slot="{ page }"
-      :total="locations.length"
-      :items-per-page="itemsPerPage"
-      :sibling-count="1"
-      show-edges
-      :default-page="currentPage"
-      @update:page="(newPage) => {
-        currentPage = newPage;
-      }"
-      class="w-full sm:w-auto"
-    >
-      <div class="flex items-center justify-center sm:justify-end gap-2">
-        <!-- Mobile View -->
-        <div class="flex items-center gap-2 sm:hidden">
-          <PaginationPrev class="!w-12 !h-12" />
-          <div class="text-sm font-medium">
-            {{ currentPage }} / {{ totalPages }}
-          </div>
-          <PaginationNext class="!w-12 !h-12" />
-        </div>
-
-        <!-- Desktop View -->
-        <div class="hidden sm:flex items-center gap-1">
-          <PaginationFirst />
-          <PaginationPrev />
-          <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-            <template v-for="(item, index) in items">
-              <PaginationListItem
-                v-if="item.type === 'page'"
-                :key="index"
-                :value="item.value"
-                :class="[
-                  'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                  item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
-                ]"
-              >
-                {{ item.value }}
-              </PaginationListItem>
-              <PaginationEllipsis
-                v-else
-                :key="item.type"
-                :index="index"
-              />
-            </template>
-          </PaginationList>
-          <PaginationNext />
-          <PaginationLast />
-        </div>
-      </div>
-    </Pagination>
-  </div>
-</div>
-
-<div v-if="showEditLocationModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showEditLocationModal = false"></div>
-
-    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-200">
-        <div class="flex items-start justify-between">
-          <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-            Edit Quantity
-          </h3>
-          <button
-            type="button"
-            @click="showEditLocationModal = false"
-            class="ml-3 bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-           >
-            <span class="sr-only">Close</span>
-            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="px-4 py-5 sm:p-6">
-        <p class="text-sm text-gray-600 mb-4">
-          Update the available quantity of <span class="font-medium">{{ forestProduct.name }}</span> at this location.
-        </p>
-        <div>
-          <label for="edit-quantity" class="block text-sm font-medium text-gray-700">
-            Quantity
-          </label>
-          <div class="mt-1 relative rounded-md shadow-sm">
-             <Input
-              type="number"
-              id="edit-quantity"
-              v-model="editLocationQuantity"
-              class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pl-3 pr-16" placeholder="Enter quantity"
-              min="0"
-              step="any" aria-describedby="quantity-unit"
-            />
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span class="text-gray-500 sm:text-sm" id="quantity-unit">
-                {{ forestProduct.measurement_units.unit_name }}
-              </span>
-            </div>
           </div>
         </div>
-      </div>
 
-      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-        <button
-          type="button"
-          @click="updateLocationQuantity"
-          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-        >
-          Save Changes
-        </button>
-        <button
-          type="button"
-          @click="showEditLocationModal = false"
-          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-         >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div v-if="locations.length > 0" class="px-4 sm:px-6 pt-6 pb-4">
-   <div class="flex items-center space-x-3 mb-4">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0 6l6-3m-6 3l6 3m6-3l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13v-6m0 6l-6-3m6 3L9 17" />
-      </svg>
-      <h3 class="text-lg font-medium text-gray-800">
-        {{ forestProduct.name }} Map Locations
-      </h3>
-    </div>
-    <div
-      v-if="!loading"
-      id="locationMap"
-      class="h-[450px] w-full rounded-lg overflow-hidden border border-gray-200 shadow-sm"
-      style="z-index: 1" ></div>
-    <div v-else class="h-[450px] w-full flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
-        <p class="text-gray-500">Loading map...</p> </div>
-</div>
-
-</div>
-    </div>
-
-    <!-- Map Modal -->
-    <div v-if="showLocationModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <!-- Background overlay -->
-        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" @click="closeAddLocationModal"></div>
-
-        <!-- Modal panel -->
-        <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle">
-          <!-- Modal header -->
-          <div class="bg-white px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="p-2 bg-indigo-50 rounded-full">
-                  <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-900">Add New Location</h3>
-                  <p class="text-sm text-gray-500">Select a location on the map or click to add a new one</p>
-                </div>
-              </div>
-              <button 
-                @click="closeAddLocationModal" 
-                class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full transition-colors"
-              >
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Modal content -->
-          <div class="px-6 py-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Form section -->
-              <div class="space-y-6">
-                <!-- Location name input -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
-                  <div class="relative rounded-md shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </div>
-                    <input
-                      v-model="newLocation.name"
-                      type="text"
-                      class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder="Enter location name"
-                      :readonly="!!newLocation.latitude && !!newLocation.longitude && allLocations.some(loc => loc.latitude === newLocation.latitude && loc.longitude === newLocation.longitude)"
-                    />
-                  </div>
-                </div>
-
-                <!-- Coordinates display -->
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-                    <div class="relative rounded-md shadow-sm">
-                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                        </svg>
-                      </div>
-                      <input
-                        v-model="newLocation.latitude"
-                        type="number"
-                        step="any"
-                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        readonly
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-                    <div class="relative rounded-md shadow-sm">
-                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                        </svg>
-                      </div>
-                      <input
-                        v-model="newLocation.longitude"
-                        type="number"
-                        step="any"
-                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        readonly
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Quantity input -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Quantity ({{ forestProduct?.measurement_units?.unit_name || 'units' }})</label>
-                  <div class="relative rounded-md shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <input
-                      v-model="newLocation.quantity"
-                      type="number"
-                      min="0"
-                      step="any"
-                      class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder="Enter quantity"
-                    />
-                  </div>
-                </div>
-
-                <!-- Instructions -->
-                <div class="bg-indigo-50 rounded-lg p-4">
-                  <div class="flex">
-                    <div class="flex-shrink-0">
-                      <svg class="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div class="ml-3">
-                      <h3 class="text-sm font-medium text-indigo-800">How to add a location</h3>
-                      <div class="mt-2 text-sm text-indigo-700">
-                        <ul class="list-disc pl-4 space-y-1">
-                          <li>Click on the map to add a new location</li>
-                          <li>Click on an existing marker to select it</li>
-                          <li>Enter the quantity in the form</li>
-                          <li>Click Save Location to confirm</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Map section -->
-              <div class="h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-                <div id="modalMap" class="w-full h-full"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal footer -->
-          <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg">
-            <div class="flex justify-end space-x-3">
-              <button
-                @click="closeAddLocationModal"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Cancel
-              </button>
-              <button
-                @click="saveLocation"
-                :disabled="!newLocation.name || !newLocation.latitude || !newLocation.longitude || !newLocation.quantity"
-                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Save Location
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-if="showExtraImageModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 transition-opacity duration-300"
-      @keydown.esc="closeImageModal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="imageModalTitle"
-    >
-      <div
-        class="relative flex flex-col bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl w-[95%] sm:w-[90%] max-h-[90vh] overflow-hidden transition-transform duration-300 scale-100 border border-gray-200 dark:border-gray-700/50"
-      >
-        <div
-          class="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-700/50 flex-shrink-0"
-        >
-          <div class="flex items-center space-x-2">
-            <img
-              src="@/assets/image-viewer.png"
-              alt="Dashboard"
-              class="w-6 h-6 group-hover:scale-110 transition-transform"
-            />
-            <h2
-              id="imageModalTitle"
-              class="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate"
-            >
-              Image Viewer
-            </h2>
-          </div>
-          <button
-            class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 rounded-md p-1 -mr-2"
-            @click="closeImageModal"
-            aria-label="Close modal"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+        <div v-if="locations.length === 0" class="p-8 text-center">
+           <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0zm6-7l-2.828 2.828m-10.344 0L5 4" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">No locations</h3>
+          <p class="mt-1 text-sm text-gray-500">This forest product currently has no registered locations.</p>
         </div>
 
-        <div
-          class="relative flex-grow overflow-hidden bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center p-4"
-        >
+        <div v-else class="divide-y divide-gray-200">
           <div
-            v-if="isLoading"
-            class="absolute inset-0 flex items-center justify-center z-10 bg-gray-50/50 dark:bg-gray-800/50"
+            v-for="location in paginatedLocations"
+            :key="location.id"
+            @click="goToLocation(location)"
+            class="p-5 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
           >
-            <div
-              class="w-12 h-12 border-4 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin"
-            ></div>
-          </div>
-
-          <img
-            :src="currentImage"
-            alt="Image Preview"
-            class="block max-w-full max-h-[calc(90vh-150px)] object-contain transition-opacity duration-300"
-            :class="{'opacity-0': isLoading, 'opacity-100': !isLoading}"
-            @load="isLoading = false"
-          />
-
-          <button
-            v-if="imageCount > 1"
-            @click="showPreviousImage"
-            :disabled="!hasPreviousImage"
-            aria-label="Previous image"
-            class="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 sm:h-6 sm:w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <button
-            v-if="imageCount > 1"
-            @click="showNextImage"
-            :disabled="!hasNextImage"
-            aria-label="Next image"
-            class="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 sm:h-6 sm:w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div
-          v-if="isForestRanger || isFPUAdmin"
-          class="flex items-center justify-end px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-900/80 flex-shrink-0"
-        >
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button
-                class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 dark:focus:ring-offset-gray-900 transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5 mr-1.5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v11a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                    clip-rule="evenodd"
-                  />
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+              <div class="flex items-start flex-grow mb-3 sm:mb-0">
+                <svg class="w-5 h-5 text-gray-500 mr-4 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
-                Delete Image
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Image?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this image? This action cannot
-                  be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter class="flex justify-end space-x-3 mt-4">
-                <AlertDialogCancel
-                  class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
-                  >Cancel</AlertDialogCancel
-                >
-                <AlertDialogAction
-                  @click="deleteImage(currentImageIndex)"
-                  class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-900"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
-    </div>
 
-    <div v-if="showImageModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div
-        class="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0"
-      >
-        <!-- Background overlay -->
-        <div
-          class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          @click="showImageModal = false"
-        ></div>
-
-        <!-- Modal panel -->
-        <div
-          class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle"
-        >
-          <div class="px-6 pt-5 pb-6">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center space-x-2">
-                <svg
-                  class="w-6 h-6 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <h3 class="text-lg font-medium text-gray-900">Update Image</h3>
-              </div>
-              <button
-                @click="showImageModal = false"
-                class="text-gray-400 hover:text-gray-500 focus:outline-none"
-              >
-                <svg
-                  class="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div class="mt-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Choose an image</label
-              >
-              <div
-                class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg"
-              >
-                <div class="space-y-1 text-center">
-                  <div class="flex text-sm text-gray-600">
-                    <label
-                      class="relative cursor-pointer rounded-md font-medium text-gray-900 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2"
-                    >
-                      <span>Upload a file</span>
-                      <input
-                        type="file"
-                        @change="handleImageChange"
-                        class="sr-only"
-                      />
-                    </label>
-                    <p class="pl-1">(image files only)</p>
+                <div class="flex-grow">
+                  <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
+                  <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                    <div class="flex items-center space-x-1">
+                      <span class="font-medium text-gray-700">Lat:</span>
+                      <span>{{ location.latitude }}</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                      <span class="font-medium text-gray-700">Long:</span>
+                      <span>{{ location.longitude }}</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                      <span class="font-medium text-gray-700">Quantity:</span>
+                      <span 
+                        :class="{
+                          'text-red-600 font-semibold': !location.quantity || location.quantity === 0,
+                          'text-orange-600 font-semibold': location.quantity > 0 && location.quantity <= 10,
+                          'text-green-600 font-semibold': location.quantity > 0 && location.quantity > 10
+                        }"
+                      >
+                        {{ location.quantity ? location.quantity : 'N/A' }}
+                        {{ location.quantity ? ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') : '' }}
+                      </span>
+                    </div>
                   </div>
-                  <!-- <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p> -->
                 </div>
               </div>
             </div>
-
-            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                @click="handleImageSubmit"
-                class="inline-flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Update
-              </button>
-              <button
-                type="button"
-                @click="showImageModal = false"
-                class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         </div>
       </div>
     </div>
-    <Toaster />
   </div>
 </template>
 
