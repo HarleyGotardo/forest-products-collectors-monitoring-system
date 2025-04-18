@@ -48,38 +48,103 @@ const fetchCollectors = async () => {
 };
 
 const fetchForestProducts = async () => {
-  const { data, error } = await supabase
-    .from('fp_and_locations')
-    .select(`
-      id,
-      forest_product_id,
-      location_id,
-      quantity,
-      forest_products (
+  try {
+    // First, get the forest products with their locations and quantities
+    const { data, error } = await supabase
+      .from('fp_and_locations')
+      .select(`
         id,
-        name,
-        price_based_on_measurement_unit,
-        measurement_unit_id,
-        measurement_units (unit_name)
-      ),
-      locations (name)
-    `);
-  if (error) {
-    console.error('Error fetching forest products:', error);
-    toast.error('Failed to load forest products');
-  } else {
-    forestProducts.value = data.map(item => ({
-      id: item.id,
-      forest_product_id: item.forest_product_id,
-      forest_product_name: item.forest_products.name,
-      location_id: item.location_id,
-      location_name: item.locations.name,
-      price: item.forest_products.price_based_on_measurement_unit,
-      unit_name: item.forest_products.measurement_units.unit_name,
-      quantity: item.quantity,
-      purchased_quantity: 0,
-    }));
+        forest_product_id,
+        location_id,
+        quantity,
+        forest_products (
+          id,
+          name,
+          price_based_on_measurement_unit,
+          measurement_unit_id,
+          measurement_units (unit_name)
+        ),
+        locations (name)
+      `);
+      
+    if (error) {
+      console.error('Error fetching forest products:', error);
+      throw error;
+    }
+    
+    // Then, get approved but unrecorded collection requests
+    const { data: approvedRequests, error: approvedRequestsError } = await supabase
+      .from('collection_requests')
+      .select(`
+        id,
+        is_recorded,
+        approved_at,
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id
+        ),
+        collection_records (
+          id,
+          is_paid
+        )
+      `)
+      .is('deleted_at', null)
+      .not('approved_at', 'is', null)
+      
+    if (approvedRequestsError) {
+      console.error('Error fetching approved requests:', approvedRequestsError);
+      throw approvedRequestsError;
+    }
+    
+    // Calculate pending quantities for each forest product location
+    const pendingQuantities = {};
+    
+    // Process each approved request
+    approvedRequests.forEach(request => {
+      // Check if there's a related collection record that is paid
+      const hasPaidRecord = request.collection_records && 
+                            request.collection_records.some(record => record.is_paid === true);
+      
+      // Only consider this request as pending if it's not recorded AND doesn't have a paid record
+      if (!hasPaidRecord) {
+        request.collection_request_items.forEach(item => {
+          const fpLocationId = item.fp_and_location_id;
+          if (!pendingQuantities[fpLocationId]) {
+            pendingQuantities[fpLocationId] = 0;
+          }
+          pendingQuantities[fpLocationId] += item.requested_quantity;
+        });
+      }
+    });
+    
+    // Map the products with adjusted quantities
+    forestProducts.value = data.map(item => {
+      const pendingAmount = pendingQuantities[item.id] || 0;
+      const adjustedQuantity = Math.max(0, item.quantity - pendingAmount);
+      
+      return {
+        id: item.id,
+        forest_product_id: item.forest_product_id,
+        forest_product_name: item.forest_products.name,
+        location_id: item.location_id,
+        location_name: item.locations.name,
+        price: item.forest_products.price_based_on_measurement_unit,
+        unit_name: item.forest_products.measurement_units.unit_name,
+        quantity: item.quantity,
+        adjustedQuantity: adjustedQuantity,
+        pendingQuantity: pendingAmount,
+        hasPendingRequests: pendingAmount > 0,
+        purchased_quantity: 0,
+        quantityError: false
+      };
+    });
+    
     filteredForestProducts.value = forestProducts.value;
+    
+  } catch (error) {
+    console.error('Error in fetchForestProducts:', error);
+    toast.error('Failed to load forest products');
   }
 };
 
@@ -217,7 +282,7 @@ const totalCost = computed(() => {
 const handleSubmit = () => {
   // Validate purchased quantities
   const invalidProducts = selectedForestProducts.value.filter(
-    product => product.purchased_quantity > product.quantity || product.purchased_quantity <= 0
+    product => product.purchased_quantity > product.adjustedQuantity || product.purchased_quantity <= 0
   );
   
   if (invalidProducts.length > 0) {
@@ -368,6 +433,21 @@ const updatePurchasedQuantity = (productId, quantity) => {
   const product = selectedForestProducts.value.find(p => p.id === productId);
   if (product) {
     product.purchased_quantity = quantity;
+  }
+};
+
+// Update validateProductQuantity to check against adjusted quantity rather than total quantity
+const validateProductQuantity = (product) => {
+  // Use adjustedQuantity instead of quantity for validation
+  if (product.purchased_quantity > product.adjustedQuantity) {
+    product.quantityError = true;
+    return false;
+  } else if (product.purchased_quantity < 0) {
+    product.quantityError = true;
+    return false;
+  } else {
+    product.quantityError = false;
+    return true;
   }
 };
 
@@ -566,20 +646,38 @@ onMounted(() => {
                 <div class="text-sm text-gray-500">
                   Location: {{ product.location_name }} | 
                   Price: ₱{{ product.price }} per {{ product.unit_name }} | 
-                  Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                  <span v-if="product.hasPendingRequests" class="text-green-600">
+                    Snapshot: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
+                  </span>
+                  <span v-else class="text-blue-600">
+                    Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                  </span>
+                  <span v-if="product.hasPendingRequests" class="text-amber-600">
+                    ({{ product.pendingQuantity }} pending)
+                  </span>
                 </div>
               </div>
-              <div v-if="isProductSelected(product.id)" class="flex items-center space-x-2">
-                <label class="text-sm text-gray-600">Quantity:</label>
-                <!-- Fixed: Using v-model instead of :value and @input -->
-                <input
-                  type="number"
-                  v-model.number="selectedForestProducts.find(p => p.id === product.id).purchased_quantity"
-                  min="0"
-                  :max="product.quantity"
-                  placeholder="Qty"
-                  class="w-24 text-center p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                />
+              <div v-if="isProductSelected(product.id)" class="flex flex-col">
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600">Quantity:</label>
+                  <input
+                    type="number"
+                    v-model.number="selectedForestProducts.find(p => p.id === product.id).purchased_quantity"
+                    min="0"
+                    :max="product.adjustedQuantity"
+                    placeholder="Qty"
+                    @input="validateProductQuantity(product)"
+                    :class="['w-24 text-center border rounded p-1', product.quantityError || product.purchased_quantity === 0 ? 'border-red-500 bg-red-50' : 'border-gray-300']"
+                  />
+                </div>
+                <!-- Warning for zero quantity -->
+                <div v-if="product.purchased_quantity === 0" class="text-red-500 text-xs mt-1 text-right">
+                  Please enter a valid quantity.
+                </div>
+                <!-- Inline error message -->
+                <div v-if="product.quantityError" class="text-red-500 text-xs mt-1 text-right">
+                  Max: {{ product.adjustedQuantity }}
+                </div>
               </div>
             </div>
           </div>
