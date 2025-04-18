@@ -62,9 +62,16 @@ const locationToEdit = ref(null)
 const currentPage = ref(1) // Current page for pagination
 const itemsPerPage = 4 // Items per page for pagination
 const additionalImages = ref([]); // Store additional images
-
 const currentImage = ref(null); // Store the currently selected image
 const currentImageIndex = ref(null); // Store the index of the selected image
+const modalMapInstance = ref(null)
+const isAddingLocation = ref(false)
+const newLocation = ref({
+  name: '',
+  latitude: null,
+  longitude: null,
+  quantity: null
+})
 
 const viewImage = (image, index) => {
   currentImage.value = image; // Set the selected image
@@ -473,6 +480,150 @@ const handleImageSubmit = async () => {
 const isDeleted = computed(() => {
   return forestProduct.value && forestProduct.value.deleted_at !== null;
 });
+
+const initializeModalMap = () => {
+  if (!document.getElementById('modalMap')) {
+    console.error('Modal map container not found.')
+    return
+  }
+
+  if (modalMapInstance.value) {
+    modalMapInstance.value.remove()
+  }
+
+  // Initialize map with Philippines view
+  modalMapInstance.value = L.map('modalMap').setView([10.744340, 124.791995], 16)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(modalMapInstance.value)
+
+  // Add click handler for selecting location
+  modalMapInstance.value.on('click', (e) => {
+    if (isAddingLocation.value) {
+      // Remove existing temporary marker if it exists
+      if (tempMarker.value) {
+        modalMapInstance.value.removeLayer(tempMarker.value)
+      }
+
+      // Add new marker at clicked location
+      tempMarker.value = L.marker(e.latlng).addTo(modalMapInstance.value)
+      
+      // Update coordinates
+      newLocation.value.latitude = e.latlng.lat
+      newLocation.value.longitude = e.latlng.lng
+      newLocation.value.name = '' // Reset name for new location
+      newLocation.value.quantity = null // Reset quantity
+    }
+  })
+
+  // Add existing locations as markers with tooltips
+  if (allLocations.value && allLocations.value.length > 0) {
+    allLocations.value.forEach(loc => {
+      if (loc.latitude && loc.longitude) {
+        L.marker([loc.latitude, loc.longitude])
+          .addTo(modalMapInstance.value)
+          .bindTooltip(loc.name, {
+            permanent: true,
+            direction: 'top',
+            className: 'bg-white px-2 py-1 rounded shadow-lg'
+          })
+          .on('click', () => {
+            // Check if the location is already added for the forest product
+            const existingLocation = locations.value.find(l => l.id === loc.id);
+            if (existingLocation) {
+              toast.error('Location already added for this forest product', { duration: 2000 });
+              return;
+            }
+
+            // Remove temporary marker if it exists
+            if (tempMarker.value) {
+              modalMapInstance.value.removeLayer(tempMarker.value)
+              tempMarker.value = null
+            }
+
+            // Populate the form with selected location data
+            newLocation.value = {
+              name: loc.name,
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+              quantity: null
+            }
+          });
+      }
+    })
+  }
+}
+
+const openAddLocationModal = async () => {
+  isAddingLocation.value = true
+  showLocationModal.value = true
+  
+  // Fetch all locations if not already fetched
+  if (allLocations.value.length === 0) {
+    await fetchAllLocations()
+  }
+
+  nextTick(() => {
+    initializeModalMap()
+  })
+}
+
+const closeAddLocationModal = () => {
+  showLocationModal.value = false
+  isAddingLocation.value = false
+  newLocation.value = {
+    name: '',
+    latitude: null,
+    longitude: null,
+    quantity: null
+  }
+  // Remove temporary marker if it exists
+  if (tempMarker.value) {
+    modalMapInstance.value?.removeLayer(tempMarker.value)
+    tempMarker.value = null
+  }
+}
+
+const saveLocation = async () => {
+  if (!newLocation.value.name || !newLocation.value.latitude || !newLocation.value.longitude || !newLocation.value.quantity) {
+    toast.error('Please fill in all required fields and select a location on the map')
+    return
+  }
+
+  try {
+    // First, save the location
+    const { data: locationData, error: locationError } = await supabase
+      .from('locations')
+      .insert([{
+        name: newLocation.value.name,
+        latitude: newLocation.value.latitude,
+        longitude: newLocation.value.longitude
+      }])
+      .select()
+      .single()
+
+    if (locationError) throw locationError
+
+    // Then, save the forest product location with quantity
+    const { error: fpLocationError } = await supabase
+      .from('fp_and_locations')
+      .insert([{
+        forest_product_id: forestProduct.value.id,
+        location_id: locationData.id,
+        quantity: newLocation.value.quantity
+      }])
+
+    if (fpLocationError) throw fpLocationError
+
+    toast.success('Location added successfully')
+    closeAddLocationModal()
+    fetchLocations() // Refresh the locations list
+  } catch (error) {
+    console.error('Error adding location:', error)
+    toast.error(error.message || 'Failed to add location')
+  }
+}
 
 onMounted(async () => {
   loading.value = true;
@@ -1008,7 +1159,7 @@ onMounted(async () => {
 
     <button
       v-if="isForestRanger || isFPUAdmin && forestProduct.deleted_at === null"
-      @click="showLocationModal = true; $nextTick(() => initializeModalMap())"
+      @click="openAddLocationModal"
       class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
     >
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1237,14 +1388,14 @@ onMounted(async () => {
         <button
           type="button"
           @click="updateLocationQuantity"
-          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out"
+          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
         >
           Save Changes
         </button>
         <button
           type="button"
           @click="showEditLocationModal = false"
-          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm transition duration-150 ease-in-out"
+          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
          >
           Cancel
         </button>
@@ -1276,77 +1427,169 @@ onMounted(async () => {
 
     <!-- Map Modal -->
     <div v-if="showLocationModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div
-        class="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0"
-      >
+      <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-        <div
-          class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          @click="showLocationModal = false"
-        ></div>
+        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" @click="closeAddLocationModal"></div>
 
         <!-- Modal panel -->
-        <div
-          class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle"
-        >
-          <div class="px-6 pt-5 pb-6">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center space-x-2">
-                <svg
-                  class="w-6 h-6 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                <h3 class="text-lg font-medium text-gray-900">
-                  Select Location
-                </h3>
+        <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle">
+          <!-- Modal header -->
+          <div class="bg-white px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 bg-indigo-50 rounded-full">
+                  <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Add New Location</h3>
+                  <p class="text-sm text-gray-500">Select a location on the map or click to add a new one</p>
+                </div>
               </div>
-              <button
-                @click="showLocationModal = false"
-                class="text-gray-400 hover:text-gray-500 focus:outline-none"
+              <button 
+                @click="closeAddLocationModal" 
+                class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full transition-colors"
               >
-                <svg
-                  class="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
+          </div>
 
-            <div
-              id="modalMap"
-              class="h-[400px] w-full rounded-lg border border-gray-200 shadow-inner mb-4"
-            ></div>
+          <!-- Modal content -->
+          <div class="px-6 py-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Form section -->
+              <div class="space-y-6">
+                <!-- Location name input -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
+                  <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      v-model="newLocation.name"
+                      type="text"
+                      class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      placeholder="Enter location name"
+                      :readonly="!!newLocation.latitude && !!newLocation.longitude && allLocations.some(loc => loc.latitude === newLocation.latitude && loc.longitude === newLocation.longitude)"
+                    />
+                  </div>
+                </div>
 
-            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <!-- Coordinates display -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                    <div class="relative rounded-md shadow-sm">
+                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                        </svg>
+                      </div>
+                      <input
+                        v-model="newLocation.latitude"
+                        type="number"
+                        step="any"
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        readonly
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                    <div class="relative rounded-md shadow-sm">
+                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                        </svg>
+                      </div>
+                      <input
+                        v-model="newLocation.longitude"
+                        type="number"
+                        step="any"
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        readonly
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quantity input -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Quantity ({{ forestProduct?.measurement_units?.unit_name || 'units' }})</label>
+                  <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <input
+                      v-model="newLocation.quantity"
+                      type="number"
+                      min="0"
+                      step="any"
+                      class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      placeholder="Enter quantity"
+                    />
+                  </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="bg-indigo-50 rounded-lg p-4">
+                  <div class="flex">
+                    <div class="flex-shrink-0">
+                      <svg class="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div class="ml-3">
+                      <h3 class="text-sm font-medium text-indigo-800">How to add a location</h3>
+                      <div class="mt-2 text-sm text-indigo-700">
+                        <ul class="list-disc pl-4 space-y-1">
+                          <li>Click on the map to add a new location</li>
+                          <li>Click on an existing marker to select it</li>
+                          <li>Enter the quantity in the form</li>
+                          <li>Click Save Location to confirm</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Map section -->
+              <div class="h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                <div id="modalMap" class="w-full h-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg">
+            <div class="flex justify-end space-x-3">
               <button
-                type="button"
-                @click="cancelMapModal"
-                class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
+                @click="closeAddLocationModal"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Cancel
+              </button>
+              <button
+                @click="saveLocation"
+                :disabled="!newLocation.name || !newLocation.latitude || !newLocation.longitude || !newLocation.quantity"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Save Location
               </button>
             </div>
           </div>
@@ -1486,7 +1729,7 @@ onMounted(async () => {
                 >
                   <path
                     fill-rule="evenodd"
-                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v11a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
                     clip-rule="evenodd"
                   />
                 </svg>
