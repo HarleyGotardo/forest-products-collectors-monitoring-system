@@ -43,6 +43,121 @@ const showDeleteDialog = ref(false)
 const forestProducts = ref([])
 const mapInitialized = ref(false)
 
+// Add these new refs
+const showAddDialog = ref(false)
+const showEditDialog = ref(false)
+const selectedProduct = ref(null)
+const quantityInput = ref('')
+const availableForestProducts = ref([])
+const currentEntryId = ref(null)
+const currentProduct = ref(null)
+
+// Add new reactive variable for delete confirmation
+const showDeleteConfirmDialog = ref(false)
+const productToDelete = ref(null)
+
+const fetchAvailableForestProducts = async () => {
+  try {
+    // Get IDs of already added products
+    const existingIds = forestProducts.value.map(fp => fp.id)
+    
+    // Fetch products not already linked and not deleted
+    const { data, error } = await supabase
+      .from('forest_products')
+      .select('id, name, measurement_unit_id')
+      .is('deleted_at', null)
+      .not('id', 'in', `(${existingIds.join(',')})`)
+
+    if (error) throw error
+    availableForestProducts.value = data
+  } catch (err) {
+    toast.error('Error fetching available products: ' + err.message)
+  }
+}
+
+const openAddDialog = async () => {
+  await fetchAvailableForestProducts()
+  showAddDialog.value = true
+}
+
+const addForestProduct = async () => {
+  try {
+    if (!selectedProduct.value || quantityInput.value === '') {
+      throw new Error('Please fill all fields')
+    }
+
+    const { error } = await supabase
+      .from('fp_and_locations')
+      .insert([{
+        forest_product_id: selectedProduct.value,
+        location_id: locationId,
+        quantity: parseFloat(quantityInput.value)
+      }])
+
+    if (error) throw error
+
+    toast.success('Forest product added successfully')
+    showAddDialog.value = false
+    selectedProduct.value = null
+    quantityInput.value = ''
+    await fetchForestProducts()
+  } catch (err) {
+    toast.error('Failed to add product: ' + err.message)
+  }
+}
+
+const openEditDialog = (product) => {
+  currentEntryId.value = product.fp_and_locations_id
+  currentProduct.value = product
+  quantityInput.value = product.quantity
+  showEditDialog.value = true
+}
+
+const updateForestProduct = async () => {
+  try {
+    if (!quantityInput.value) {
+      throw new Error('Please enter a quantity')
+    }
+
+    const { error } = await supabase
+      .from('fp_and_locations')
+      .update({ quantity: parseFloat(quantityInput.value) })
+      .eq('id', currentEntryId.value)
+
+    if (error) throw error
+
+    toast.success('Quantity updated successfully')
+    showEditDialog.value = false
+    await fetchForestProducts()
+  } catch (err) {
+    toast.error('Failed to update product: ' + err.message)
+  }
+}
+
+const confirmDelete = (product) => {
+  productToDelete.value = product
+  showDeleteConfirmDialog.value = true
+}
+
+const deleteForestProduct = async () => {
+  try {
+    const { error } = await supabase
+      .from('fp_and_locations')
+      .delete()
+      .eq('id', productToDelete.value.fp_and_locations_id)
+
+    if (error) throw error
+
+    toast.success('Product removed successfully')
+    await fetchForestProducts()
+    await fetchAvailableForestProducts()
+    showDeleteConfirmDialog.value = false
+    productToDelete.value = null
+  } catch (err) {
+    toast.error('Failed to remove product: ' + err.message)
+  }
+}
+
 const fetchLocation = async () => {
   let { data, error: fetchError } = await supabase
     .from('locations')
@@ -61,35 +176,38 @@ const fetchForestProducts = async () => {
   let { data, error: fetchError } = await supabase
     .from('fp_and_locations')
     .select(`
+      id,
       forest_product:forest_products ( id, name, measurement_unit_id, deleted_at ),
       quantity
     `)
     .eq('location_id', locationId)
-    .then(async ({ data }) => {
-      const productIds = data
-        .filter(item => item.forest_product.deleted_at === null)
-        .map(item => item.forest_product.measurement_unit_id);
-
-      const { data: units, error: unitsError } = await supabase
-        .from('measurement_units')
-        .select('id, unit_name')
-        .in('id', productIds);
-
-      if (unitsError) {
-        error.value = unitsError.message;
-      } else {
-        forestProducts.value = data
-          .filter(item => item.forest_product.deleted_at === null)
-          .map(item => ({
-            ...item.forest_product,
-            quantity: item.quantity,
-            unit_name: units.find(unit => unit.id === item.forest_product.measurement_unit_id)?.unit_name
-          }));
-      }
-    });
 
   if (fetchError) {
-    error.value = fetchError.message;
+    error.value = fetchError.message
+    return
+  }
+
+  // Process remaining data
+  const productIds = data
+    .filter(item => item.forest_product.deleted_at === null)
+    .map(item => item.forest_product.measurement_unit_id)
+
+  const { data: units, error: unitsError } = await supabase
+    .from('measurement_units')
+    .select('id, unit_name')
+    .in('id', productIds)
+
+  if (unitsError) {
+    error.value = unitsError.message
+  } else {
+    forestProducts.value = data
+      .filter(item => item.forest_product.deleted_at === null)
+      .map(item => ({
+        fp_and_locations_id: item.id, // Add this line
+        ...item.forest_product,
+        quantity: item.quantity,
+        unit_name: units.find(unit => unit.id === item.forest_product.measurement_unit_id)?.unit_name
+      }))
   }
 }
 
@@ -479,12 +597,18 @@ onMounted(async () => {
 
       <!-- Forest Products Section -->
       <div v-if="forestProducts.length" class="mt-6 sm:mt-12">
-        <div class="flex items-center space-x-2 mb-4 sm:mb-6">
-          <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
-          <h3 class="text-base sm:text-xl font-bold text-gray-800">
-            Forest Products in {{ location.name }}
-          </h3>
+        <div class="flex items-center justify-between space-x-2 mb-4 sm:mb-6">
+            <div class="flex items-center space-x-2">
+            <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+            <h3 class="text-base sm:text-xl font-bold text-gray-800">
+              Forest Products in {{ location.name }}
+            </h3>
+            </div>
+          <Button @click="openAddDialog" class="ml-4">
+            Add Forest Product
+          </Button>
         </div>
+        
 
         <!-- Forest Products Table -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
@@ -515,6 +639,14 @@ onMounted(async () => {
                     Qty: {{ product.quantity }}
                   </span>
                 </div>
+                <div class="mt-2 flex space-x-2">
+                  <Button variant="outline" size="sm" @click.stop="openEditDialog(product)">
+                    Edit
+                  </Button>
+                  <Button variant="destructive" size="sm" @click.stop="confirmDelete(product)">
+                    Delete
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -533,6 +665,9 @@ onMounted(async () => {
                   </th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Unit
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -556,6 +691,16 @@ onMounted(async () => {
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {{ product.unit_name }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex justify-end space-x-2">
+                      <Button variant="outline" size="sm" @click.stop="openEditDialog(product)">
+                        Edit Quantity
+                      </Button>
+                      <Button variant="destructive" size="sm" @click.stop="confirmDelete(product)">
+                        Remove
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -625,7 +770,97 @@ onMounted(async () => {
       </div>
     </div>
 
+    <!-- Add Forest Product Dialog -->
+    <AlertDialog v-model:open="showAddDialog">
+      <AlertDialogContent class="dialog-content">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Add Forest Product</AlertDialogTitle>
+        </AlertDialogHeader>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
+            <select 
+              v-model="selectedProduct"
+              class="w-full border rounded-md p-2"
+            >
+              <option value="" disabled>Select a product</option>
+              <option 
+                v-for="product in availableForestProducts" 
+                :key="product.id" 
+                :value="product.id"
+              >
+                {{ product.name }}
+              </option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+            <input
+              v-model.number="quantityInput"
+              type="number"
+              step="0.01"
+              class="w-full border rounded-md p-2"
+            >
+          </div>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="showAddDialog = false">Cancel</AlertDialogCancel>
+          <AlertDialogAction @click="addForestProduct">Add Product</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <!-- Edit Quantity Dialog -->
+    <AlertDialog v-model:open="showEditDialog">
+      <AlertDialogContent class="dialog-content">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Edit Quantity</AlertDialogTitle>
+          <AlertDialogDescription v-if="currentProduct">
+            Editing {{ currentProduct.name }}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+          <input
+            v-model.number="quantityInput"
+            type="number"
+            step="0.01"
+            class="w-full border rounded-md p-2"
+          >
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="showEditDialog = false">Cancel</AlertDialogCancel>
+          <AlertDialogAction @click="updateForestProduct">Update</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <!-- Add Delete Confirmation Dialog -->
+    <AlertDialog v-model:open="showDeleteConfirmDialog">
+      <AlertDialogContent class="dialog-content">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove Forest Product in this Location</AlertDialogTitle>
+          <AlertDialogDescription v-if="productToDelete">
+            Are you sure you want to remove {{ productToDelete.name }} from this location? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="showDeleteConfirmDialog = false">Cancel</AlertDialogCancel>
+          <AlertDialogAction @click="deleteForestProduct" variant="destructive">
+            Remove
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
     <Toaster />
+
   </div>
 </template>
 
