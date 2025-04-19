@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'vue-sonner';
 import { useRouter } from 'vue-router';
+import { isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin, getUser } from '@/router/routeGuard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,47 @@ const totalPages = computed(() => {
 const changePage = (page) => {
   currentPage.value = page;
 };
+
+// Add new states for managing request actions
+const isDeleting = ref(false);
+const isRestoring = ref(false);
+const isPermanentlyDeleting = ref(false);
+
+// Add computed property to check if current user is the request owner
+const isRequestOwner = computed(() => {
+  if (!request.value || !getUser()) return false;
+  return request.value.user_id === getUser().id;
+});
+
+// Add computed property to check if user can edit the request
+const canEditRequest = computed(() => {
+  if (!request.value) return false;
+  if (request.value.deleted_at) return false;
+  if (request.value.approved_at) return false;
+  return isRequestOwner.value && isFPCollector.value;
+});
+
+// Add computed property to check if user can delete the request
+const canDeleteRequest = computed(() => {
+  if (!request.value) return false;
+  if (request.value.deleted_at) return false;
+  if (request.value.approved_at) return false;
+  return isRequestOwner.value && isFPCollector.value;
+});
+
+// Add computed property to check if user can restore the request
+const canRestoreRequest = computed(() => {
+  if (!request.value) return false;
+  if (!request.value.deleted_at) return false;
+  return isRequestOwner.value && isFPCollector.value;
+});
+
+// Add computed property to check if user can permanently delete the request
+const canPermanentlyDeleteRequest = computed(() => {
+  if (!request.value) return false;
+  if (!request.value.deleted_at) return false;
+  return isFPCollector.value;
+});
 
 const fetchRequestDetails = async () => {
   isLoading.value = true;
@@ -239,6 +281,85 @@ const approveRequest = async () => {
   }
 };
 
+// Add function to delete request (soft delete)
+const deleteRequest = async () => {
+  if (!request.value) return;
+  
+  isDeleting.value = true;
+  try {
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from('collection_requests')
+      .update({ 
+        deleted_at: now,
+        updated_at: now
+      })
+      .eq('id', requestId);
+      
+    if (error) throw error;
+    
+    request.value.deleted_at = now;
+    request.value.updated_at = now;
+    toast.success('Request deleted successfully');
+  } catch (err) {
+    console.error('Error deleting request:', err);
+    toast.error(`Failed to delete request: ${err.message}`);
+  } finally {
+    isDeleting.value = false;
+  }
+};
+
+// Add function to restore request
+const restoreRequest = async () => {
+  if (!request.value) return;
+  
+  isRestoring.value = true;
+  try {
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from('collection_requests')
+      .update({ 
+        deleted_at: null,
+        updated_at: now
+      })
+      .eq('id', requestId);
+      
+    if (error) throw error;
+    
+    request.value.deleted_at = null;
+    request.value.updated_at = now;
+    toast.success('Request restored successfully');
+  } catch (err) {
+    console.error('Error restoring request:', err);
+    toast.error(`Failed to restore request: ${err.message}`);
+  } finally {
+    isRestoring.value = false;
+  }
+};
+
+// Add function to permanently delete request
+const permanentlyDeleteRequest = async () => {
+  if (!request.value) return;
+  
+  isPermanentlyDeleting.value = true;
+  try {
+    const { error } = await supabase
+      .from('collection_requests')
+      .delete()
+      .eq('id', requestId);
+      
+    if (error) throw error;
+    
+    toast.success('Request permanently deleted');
+    router.push('/authenticated/collection-requests');
+  } catch (err) {
+    console.error('Error permanently deleting request:', err);
+    toast.error(`Failed to permanently delete request: ${err.message}`);
+  } finally {
+    isPermanentlyDeleting.value = false;
+  }
+};
+
 onMounted(() => {
   fetchRequestDetails();
 });
@@ -302,6 +423,165 @@ const formatDateTime = (dateTimeString) => {
         >
           <span class="w-2 h-2 rounded-full bg-red-500"></span>
           Deleted
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2">
+          <!-- Edit Button -->
+          <button
+            v-if="canEditRequest"
+            @click="router.push(`/authenticated/collection-requests/${requestId}/edit`)"
+            class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit
+          </button>
+
+          <!-- Delete Button -->
+          <AlertDialog v-if="canDeleteRequest">
+            <AlertDialogTrigger asChild>
+              <button
+                :disabled="isDeleting"
+                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg
+                  v-if="!isDeleting"
+                  class="mr-2 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <svg
+                  v-else
+                  class="mr-2 h-4 w-4 animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this request? This action can be undone by restoring the request.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel class="border border-gray-200">Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  @click="deleteRequest"
+                  class="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <!-- Restore Button -->
+          <AlertDialog v-if="canRestoreRequest">
+            <AlertDialogTrigger asChild>
+              <button
+                :disabled="isRestoring"
+                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg
+                  v-if="!isRestoring"
+                  class="mr-2 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <svg
+                  v-else
+                  class="mr-2 h-4 w-4 animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ isRestoring ? 'Restoring...' : 'Restore' }}
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Restoration</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to restore this request? This will make the request active again.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel class="border border-gray-200">Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  @click="restoreRequest"
+                  class="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  Restore
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <!-- Permanently Delete Button -->
+          <AlertDialog v-if="canPermanentlyDeleteRequest">
+            <AlertDialogTrigger asChild>
+              <button
+                :disabled="isPermanentlyDeleting"
+                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg
+                  v-if="!isPermanentlyDeleting"
+                  class="mr-2 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <svg
+                  v-else
+                  class="mr-2 h-4 w-4 animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ isPermanentlyDeleting ? 'Deleting...' : 'Delete Permanently' }}
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Permanent Deletion</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to permanently delete this request? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel class="border border-gray-200">Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  @click="permanentlyDeleteRequest"
+                  class="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete Permanently
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>

@@ -26,6 +26,7 @@ const currentPage = ref(1)
 const itemsPerPage = 8
 const searchQuery = ref('')
 const selectedStatus = ref('') // New ref for selected status
+const showNotes = ref(true); // Add showNotes state
 
 const createCollectionRecord = () => {
   router.push('/authenticated/collection-records/create')
@@ -108,7 +109,7 @@ const fetchAllCollectionRecords = async () => {
           image_url: fp?.image_url ? JSON.parse(fp.image_url).data.publicUrl : null,
           quantity: item.purchased_quantity,
           total_value: item.total_cost || 0,
-          status: record.is_paid ? 'Approved' : 'Pending' // Simplified status logic
+          status: record.is_paid ? 'Paid' : 'Unpaid' // Updated status logic
         };
       }
       
@@ -122,7 +123,7 @@ const fetchAllCollectionRecords = async () => {
         image_url: null,
         quantity: 0,
         total_value: 0,
-        status: record.is_paid ? 'Approved' : 'Pending'
+        status: record.is_paid ? 'Paid' : 'Unpaid' // Updated status logic
       };
     }));
     
@@ -233,9 +234,8 @@ watch(selectedStatus, () => {
         class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
         >
         <option value="">All Status</option>
-        <option value="Pending">Pending</option>
-        <option value="Approved">Approved</option>
-        <option value="Rejected">Rejected</option>
+        <option value="Unpaid">Unpaid</option>
+        <option value="Paid">Paid</option>
         </select>
         <Button 
         v-if="isFPCollector"
@@ -255,6 +255,62 @@ watch(selectedStatus, () => {
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
         </svg>
         <p class="ml-3">{{ error }}</p>
+      </div>
+    </div>
+
+    <!-- Info Notes -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        <button
+          @click="showNotes = !showNotes"
+          class="flex items-center text-sm text-gray-500 hover:text-gray-700"
+        >
+          <span>{{ showNotes ? 'Hide Notes' : 'Show Notes' }}</span>
+          <svg
+            class="w-4 h-4 ml-1 transform transition-transform"
+            :class="{ 'rotate-180': showNotes }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      <div v-if="showNotes" class="space-y-4">
+        <!-- Payment Note -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-blue-700">
+                <span class="font-medium">Payment Process:</span> For unpaid records, please proceed to the VSU Registrar's Office to pay the required fees and obtain your collection permit. After payment, return to the Forest Protection Unit to complete your collection.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collection Process Note -->
+        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-green-700">
+                <span class="font-medium">Collection Process:</span> Once you have paid and obtained your collection permit from the VSU Registrar's Office, return to the Forest Protection Unit to proceed with your collection. Make sure to bring all required documentation. Remember the ID number of the collection record.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -442,9 +498,8 @@ watch(selectedStatus, () => {
                <span 
                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                  :class="{
-                   'bg-yellow-100 text-yellow-800': record.status === 'Pending',
-                   'bg-green-100 text-green-800': record.status === 'Approved',
-                   'bg-red-100 text-red-800': record.status === 'Rejected'
+                   'bg-yellow-100 text-yellow-800': record.status === 'Unpaid',
+                   'bg-green-100 text-green-800': record.status === 'Paid'
                  }"
                >
                  {{ record.status }}
@@ -481,9 +536,8 @@ watch(selectedStatus, () => {
            <span 
              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
              :class="{
-               'bg-yellow-100 text-yellow-800': record.status === 'Pending',
-               'bg-green-100 text-green-800': record.status === 'Approved',
-               'bg-red-100 text-red-800': record.status === 'Rejected'
+               'bg-yellow-100 text-yellow-800': record.status === 'Unpaid',
+               'bg-green-100 text-green-800': record.status === 'Paid'
              }"
            >
              {{ record.status }}

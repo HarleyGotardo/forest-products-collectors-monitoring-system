@@ -17,6 +17,7 @@ import Label from '@/components/ui/label/Label.vue';
 const route = useRoute();
 const router = useRouter();
 const recordId = route.params.id;
+const showNotes = ref(true);
 
 const collectionRequests = ref([]);
 const selectedRequest = ref(null);
@@ -31,6 +32,46 @@ const selectedForestProducts = ref([]);
 const initialSelectedForestProducts = ref([]); // Store initial selected products
 const isSubmitting = ref(false);
 const isModalOpen = ref(false);
+
+// Add these functions for product selection
+const isProductSelected = (productId) => {
+  return selectedForestProducts.value.some(p => p.id === productId);
+};
+
+const toggleProductSelection = (product) => {
+  const index = selectedForestProducts.value.findIndex(p => p.id === product.id);
+  if (index === -1) {
+    // Add to selected products with purchased_quantity = 1 as default
+    selectedForestProducts.value.push({
+      ...product,
+      purchased_quantity: 1
+    });
+  } else {
+    // Remove from selected products
+    selectedForestProducts.value.splice(index, 1);
+  }
+};
+
+const validateProductQuantity = (product) => {
+  const selectedProduct = selectedForestProducts.value.find(p => p.id === product.id);
+  if (!selectedProduct) return;
+
+  // Get the maximum allowed quantity (use quantity as default if adjustedQuantity is not defined)
+  const maxQuantity = product.adjustedQuantity || product.quantity;
+  
+  // Validate the quantity
+  if (selectedProduct.purchased_quantity > maxQuantity) {
+    selectedProduct.purchased_quantity = maxQuantity;
+    product.quantityError = true;
+  } else {
+    product.quantityError = false;
+  }
+
+  // Ensure the quantity is at least 1
+  if (selectedProduct.purchased_quantity < 1) {
+    selectedProduct.purchased_quantity = 0;
+  }
+};
 
 const fetchCollectors = async () => {
   const { data, error } = await supabase
@@ -47,9 +88,11 @@ const fetchCollectors = async () => {
 };
 
 const fetchForestProducts = async () => {
-  const { data, error } = await supabase
-    .from('fp_and_locations')
-    .select(`
+  try {
+    // First, get the forest products with their locations and quantities
+    const { data, error } = await supabase
+      .from('fp_and_locations')
+      .select(`
         id,
         forest_product_id,
         location_id,
@@ -63,22 +106,86 @@ const fetchForestProducts = async () => {
         ),
         locations (name)
       `);
-  if (error) {
-    console.error('Error fetching forest products:', error);
-    toast.error('Failed to load forest products');
-  } else {
-    forestProducts.value = data.map(item => ({
-      id: item.id,
-      forest_product_id: item.forest_product_id,
-      forest_product_name: item.forest_products.name,
-      location_id: item.location_id,
-      location_name: item.locations.name,
-      price: item.forest_products.price_based_on_measurement_unit,
-      unit_name: item.forest_products.measurement_units.unit_name,
-      quantity: item.quantity,
-      purchased_quantity: 0, // Initialize purchased_quantity
-    }));
+      
+    if (error) {
+      console.error('Error fetching forest products:', error);
+      throw error;
+    }
+    
+    // Then, get approved but unrecorded collection requests
+    const { data: approvedRequests, error: approvedRequestsError } = await supabase
+      .from('collection_requests')
+      .select(`
+        id,
+        is_recorded,
+        approved_at,
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id
+        ),
+        collection_records (
+          id,
+          is_paid
+        )
+      `)
+      .is('deleted_at', null)
+      .not('approved_at', 'is', null)
+      .eq('is_recorded', false);
+      
+    if (approvedRequestsError) {
+      console.error('Error fetching approved requests:', approvedRequestsError);
+      throw approvedRequestsError;
+    }
+    
+    // Calculate pending quantities for each forest product location
+    const pendingQuantities = {};
+    
+    // Process each approved request
+    approvedRequests.forEach(request => {
+      // Check if there's a related collection record that is paid
+      const hasPaidRecord = request.collection_records && 
+                          request.collection_records.some(record => record.is_paid === true);
+      
+      // Only consider this request as pending if it's not recorded AND doesn't have a paid record
+      if (!request.is_recorded && !hasPaidRecord) {
+        request.collection_request_items.forEach(item => {
+          const fpLocationId = item.fp_and_location_id;
+          if (!pendingQuantities[fpLocationId]) {
+            pendingQuantities[fpLocationId] = 0;
+          }
+          pendingQuantities[fpLocationId] += item.requested_quantity;
+        });
+      }
+    });
+    
+    // Map the products with adjusted quantities
+    forestProducts.value = data.map(item => {
+      const pendingAmount = pendingQuantities[item.id] || 0;
+      const adjustedQuantity = Math.max(0, item.quantity - pendingAmount);
+      
+      return {
+        id: item.id,
+        forest_product_id: item.forest_product_id,
+        forest_product_name: item.forest_products.name,
+        location_id: item.location_id,
+        location_name: item.locations.name,
+        price: item.forest_products.price_based_on_measurement_unit,
+        unit_name: item.forest_products.measurement_units.unit_name,
+        quantity: item.quantity,
+        adjustedQuantity: adjustedQuantity,
+        pendingQuantity: pendingAmount,
+        hasPendingRequests: pendingAmount > 0,
+        purchased_quantity: 0,
+        quantityError: false
+      };
+    });
+    
     filteredForestProducts.value = forestProducts.value;
+    
+  } catch (error) {
+    console.error('Error in fetchForestProducts:', error);
+    toast.error('Failed to load forest products');
   }
 };
 
@@ -98,18 +205,24 @@ const fetchCollectionRequests = async () => {
 };
 
 const fetchCollectionRecord = async () => {
+  // First, get the collection record details
   const { data, error } = await supabase
     .from('collection_records')
     .select(`
+      id,
+      user_id,
+      collection_request_id,
+      purpose,
+      collection_record_items (
         id,
-        user_id,
-        collection_request_id,
-        purpose,
-        collection_record_items (
-          fp_and_location_id,
-          purchased_quantity
-        )
-      `)
+        fp_and_location_id,
+        purchased_quantity,
+        deducted_quantity,
+        total_cost,
+        quantity_during_purchase,
+        price_per_unit_during_purchase
+      )
+    `)
     .eq('id', recordId)
     .single();
 
@@ -119,36 +232,57 @@ const fetchCollectionRecord = async () => {
     return;
   }
 
+  // Set basic record details
   selectedCollector.value = data.user_id;
   selectedRequest.value = data.collection_request_id;
   purpose.value = data.purpose === 'Official' || data.purpose === 'Personal' ? data.purpose : 'Others';
   customPurpose.value = purpose.value === 'Others' ? data.purpose : '';
 
-  // Pre-fill selected forest products and their quantities
+  // Create a map of existing forest products for easy lookup
+  const existingProductsMap = {};
+  data.collection_record_items.forEach(item => {
+    existingProductsMap[item.fp_and_location_id] = item;
+  });
+
+  // Pre-fill selected forest products with their quantities
   selectedForestProducts.value = data.collection_record_items.map(item => {
     const product = forestProducts.value.find(fp => fp.id === item.fp_and_location_id);
+    
     if (product) {
+      // Use the existing product data but update the purchased quantity
       return {
         ...product,
         purchased_quantity: item.purchased_quantity,
+        original_record_item_id: item.id, // Store the original record item ID for reference
+        // Also store other important values from the item
+        deducted_quantity: item.deducted_quantity,
+        total_cost: item.total_cost,
+        quantity_during_purchase: item.quantity_during_purchase,
+        price_per_unit_during_purchase: item.price_per_unit_during_purchase
       };
     }
     return null;
   }).filter(Boolean);
 
+  // Store a deep copy of the initial selection for comparison
   initialSelectedForestProducts.value = JSON.parse(JSON.stringify(selectedForestProducts.value));
 
-  // Update filteredForestProducts to pre-select items and their quantity.
+  // Update filteredForestProducts to reflect current selection status
   filteredForestProducts.value = forestProducts.value.map(fp => {
-    const selectedItem = selectedForestProducts.value.find(selected => selected.id === fp.id);
-    if (selectedItem) {
+    const existingItem = existingProductsMap[fp.id];
+    
+    if (existingItem) {
+      // This is a selected product
       return {
         ...fp,
-        purchased_quantity: selectedItem.purchased_quantity,
+        purchased_quantity: existingItem.purchased_quantity,
       };
     }
     return fp;
   });
+
+  console.log('Initial selected forest products:', initialSelectedForestProducts.value);
+  console.log('Current selected forest products:', selectedForestProducts.value);
 };
 
 watch(searchQuery, (newQuery) => {
@@ -223,28 +357,68 @@ const handleSubmit = async () => {
     // Update or insert collection record items
     for (const product of selectedForestProducts.value) {
       const initialProduct = initialSelectedForestProducts.value.find(initial => initial.id === product.id);
+      
+      // If the product hasn't changed, skip it
       if (initialProduct && initialProduct.purchased_quantity === product.purchased_quantity) {
-        continue; // Skip if no changes
+        continue;
       }
+      
+      // Get current quantity from fp_and_locations
+      const { data: fpLocationData, error: fpLocationError } = await supabase
+        .from('fp_and_locations')
+        .select('quantity')
+        .eq('id', product.id)
+        .single();
+        
+      if (fpLocationError) {
+        console.error('Error fetching fp_and_location:', fpLocationError);
+        toast.error('Error fetching product quantity - ' + fpLocationError.message);
+        continue;
+      }
+      
+      const totalCost = product.purchased_quantity * product.price;
+      
+      // Create record item values - different for new vs existing items
+      const recordItemValues = {
+        collection_record_id: recordId,
+        fp_and_location_id: product.id,
+        purchased_quantity: product.purchased_quantity,
+        deducted_quantity: product.purchased_quantity, // Set both the same for consistency
+        total_cost: totalCost,
+        quantity_during_purchase: fpLocationData.quantity,
+        price_per_unit_during_purchase: product.price,
+        remaining_quantity_during_purchase: fpLocationData.quantity // This will be updated when paid
+      };
 
-      const { error: itemError } = await supabase
-        .from('collection_record_items')
-        .upsert({
-          collection_record_id: recordId,
-          fp_and_location_id: product.id,
-          purchased_quantity: product.purchased_quantity,
-          total_cost: product.purchased_quantity * product.price,
-        });
+      // If this is a new product (not in initialSelectedForestProducts)
+      if (!initialProduct) {
+        const { error: insertError } = await supabase
+          .from('collection_record_items')
+          .insert([recordItemValues]);
 
-      if (itemError) {
-        console.error('Error updating collection record item:', itemError);
-        toast.error('Error updating collection record item - ' + itemError.message);
-        return;
+        if (insertError) {
+          console.error('Error inserting collection record item:', insertError);
+          toast.error('Error adding new forest product - ' + insertError.message);
+          return;
+        }
+      } else {
+        // This is an update to an existing product
+        const { error: updateItemError } = await supabase
+          .from('collection_record_items')
+          .update(recordItemValues)
+          .eq('collection_record_id', recordId)
+          .eq('fp_and_location_id', product.id);
+
+        if (updateItemError) {
+          console.error('Error updating collection record item:', updateItemError);
+          toast.error('Error updating forest product - ' + updateItemError.message);
+          return;
+        }
       }
     }
 
     toast.success('Collection record updated successfully');
-    router.push(`/authenticated/collection-records`);
+    router.push(`/authenticated/collection-records/${recordId}`);
   } catch (error) {
     console.error('Unexpected error during submission:', error);
     toast.error('An unexpected error occurred');
@@ -277,37 +451,80 @@ onMounted(async () => {
         <CardDescription class="text-gray-600">Edit the details of the collection record</CardDescription>
       </CardHeader>
       <CardContent class="p-6">
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <div class="space-y-2">
-            <Label for="collector" class="text-sm font-medium text-gray-700">Forest Product Collector</Label>
-            <select
-              v-model="selectedCollector"
-              class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        <!-- Info Notes -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+            <button
+              @click="showNotes = !showNotes"
+              class="flex items-center text-sm text-gray-500 hover:text-gray-700"
             >
-              <option value="" disabled>Select a collector</option>
-              <option v-for="collector in collectors" :key="collector.id" :value="collector.id">
-                {{ collector.first_name }} {{ collector.last_name }}
-              </option>
-            </select>
+              <span>{{ showNotes ? 'Hide Notes' : 'Show Notes' }}</span>
+              <svg
+                class="w-4 h-4 ml-1 transform transition-transform"
+                :class="{ 'rotate-180': showNotes }"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
 
-            <div class="space-y-2">
-            <Label for="requestNumber" class="text-sm font-medium text-gray-700">Request Number</Label>
-            <div v-if="collectionRequests.length === 0" class="text-sm text-gray-500">
-              There are no approved and unrecorded collection requests.
-            </div>
-            <select
-              v-else
-              v-model="selectedRequest"
-              class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            >
-              <option value="" disabled>Select a request number</option>
-              <option v-for="request in collectionRequests" :key="request.id" :value="request.id">
-              {{ request.id }}
-              </option>
-            </select>
+          <div v-if="showNotes" class="space-y-4">
+            <!-- Edit Restrictions Note -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-blue-700">
+                    <span class="font-medium">Edit Restrictions:</span> The request number and Forest Product Collector cannot be changed. You can only modify the forest products and their quantities.
+                  </p>
+                </div>
+              </div>
             </div>
 
+            <!-- Payment Process Note -->
+            <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-green-700">
+                    <span class="font-medium">Payment Process:</span> After successfully recording the collection, the Forest Product Collector can proceed to make the payment. Once payment is completed, a forest conservation permit will be generated and can be downloaded for collection.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form @submit.prevent="handleSubmit" class="space-y-6">
+          <!-- Request Number (Read-only) -->
+          <div class="space-y-2">
+            <Label for="requestNumber" class="text-sm font-medium text-gray-700">Request Number</Label>
+            <div class="p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+              {{ selectedRequest }}
+            </div>
+          </div>
+
+          <!-- Collector (Read-only) -->
+          <div class="space-y-2">
+            <Label for="collector" class="text-sm font-medium text-gray-700">Forest Product Collector</Label>
+            <div class="p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+              {{ collectors.find(c => c.id === selectedCollector)?.first_name }} {{ collectors.find(c => c.id === selectedCollector)?.last_name }}
+            </div>
+          </div>
+
+          <!-- Purpose Selection -->
           <div class="space-y-2">
             <Label for="purpose" class="text-sm font-medium text-gray-700">Purpose</Label>
             <div class="space-y-2">
@@ -351,6 +568,7 @@ onMounted(async () => {
             </div>
           </div>
 
+          <!-- Selected Products Summary -->
           <div v-if="selectedForestProducts.length > 0" class="space-y-2">
             <Label class="text-sm font-medium text-gray-700">Selected Products ({{ selectedForestProducts.length }})</Label>
             <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
@@ -360,6 +578,7 @@ onMounted(async () => {
             </div>
           </div>
 
+          <!-- Forest Product Modal Trigger -->
           <div>
             <button
               type="button"
@@ -371,6 +590,7 @@ onMounted(async () => {
             </button>
           </div>
 
+          <!-- Submit Button -->
           <button
             type="submit"
             :disabled="!isFormComplete"
@@ -382,11 +602,12 @@ onMounted(async () => {
       </CardContent>
       <CardFooter class="bg-gray-50 px-6 py-4 rounded-b-lg">
         <p class="text-xs text-gray-500 text-center">
-          Edit the collector and forest products to update the collection record
+          You can only modify the forest products and their quantities
         </p>
       </CardFooter>
     </Card>
 
+    <!-- Forest Product Modal -->
     <div
       v-if="isModalOpen"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
@@ -422,28 +643,42 @@ onMounted(async () => {
               class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
               <input
                 type="checkbox"
-                :value="product"
-                v-model="selectedForestProducts"
+                :checked="isProductSelected(product.id)"
+                @change="toggleProductSelection(product)"
                 class="form-checkbox h-5 w-5 text-green-600 rounded"
               />
               <div class="flex-1">
                 <div class="font-medium">{{ product.forest_product_name }}</div>
                 <div class="text-sm text-gray-500">
-                  Location: {{ product.location_name }} |
-                  Price: ₱{{ product.price }} per {{ product.unit_name }} |
-                  Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                  Location: {{ product.location_name }} | 
+                  Price: ₱{{ product.price }} per {{ product.unit_name }}
+                </div>
+                <div class="text-sm mt-1">
+                  <span class="text-blue-600 font-medium">
+                    Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                  </span>
+                  <span v-if="product.hasPendingRequests" class="ml-2 text-amber-600">
+                    • <span class="font-medium">{{ product.adjustedQuantity }}</span> {{ product.unit_name }}(s) after pending requests
+                  </span>
                 </div>
               </div>
-              <div v-if="selectedForestProducts.some(selected => selected.id === product.id)" class="flex items-center space-x-2">
-                <label class="text-sm text-gray-600">Quantity:</label>
-                <Input
-                  type="number"
-                  v-model="product.purchased_quantity"
-                  min="0"
-                  :max="product.quantity"
-                  placeholder="Qty"
-                  class="w-24 text-center"
-                />
+              <div v-if="isProductSelected(product.id)" class="flex flex-col">
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600">Quantity:</label>
+                  <input
+                    type="number"
+                    v-model.number="selectedForestProducts.find(p => p.id === product.id).purchased_quantity"
+                    min="1"
+                    :max="product.adjustedQuantity || product.quantity"
+                    placeholder="Qty"
+                    @input="validateProductQuantity(product)"
+                    :class="['w-24 text-center border rounded p-1', product.quantityError ? 'border-red-500 bg-red-50' : 'border-gray-300']"
+                  />
+                </div>
+                <!-- Inline error message -->
+                <div v-if="product.quantityError" class="text-red-500 text-xs mt-1 text-right">
+                  Max: {{ product.adjustedQuantity || product.quantity }}
+                </div>
               </div>
             </div>
           </div>

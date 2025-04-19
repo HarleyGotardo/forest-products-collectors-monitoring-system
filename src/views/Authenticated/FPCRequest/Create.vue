@@ -26,6 +26,7 @@ const searchQuery = ref(''); // Search query for filtering
 const showConfirmDialog = ref(false); // State for showing the confirmation dialog
 const router = useRouter();
 const selectAll = ref(false); // Add this line for select all state
+const showNotes = ref(true); // Add this line for show notes state
 
 // Updated fetchForestProducts function with snapshot availability
 const fetchForestProducts = async () => {
@@ -311,6 +312,79 @@ onMounted(() => {
         <div>
           <h2 class="text-2xl font-bold">Forest Product Collection Request</h2>
           <p class="text-black-100 mt-1">Request permission to harvest forest products</p>
+        </div>
+      </div>
+
+      <!-- Info Notes Toggle -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+          <button
+            @click="showNotes = !showNotes"
+            class="flex items-center text-sm text-gray-500 hover:text-gray-700"
+          >
+            <span>{{ showNotes ? 'Hide Notes' : 'Show Notes' }}</span>
+            <svg
+              class="w-4 h-4 ml-1 transform transition-transform"
+              :class="{ 'rotate-180': showNotes }"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Info Notes -->
+      <div v-if="showNotes" class="px-6 py-4 space-y-4 bg-gray-50">
+        <!-- Request Process Note -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-blue-700">
+                <span class="font-medium">Request Process:</span> Select the forest products you wish to collect, specify the quantities, and choose your preferred collection date. Your request will be reviewed by the Forest Protection Unit.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quantity Note -->
+        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-green-700">
+                <span class="font-medium">Quantity Guidelines:</span> The available quantities shown include pending requests. Make sure to check the snapshot availability before requesting quantities. You cannot request more than what is currently available.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collection Date Note -->
+        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-amber-700">
+                <span class="font-medium">Collection Date:</span> Choose a date for collection. Same-day collections must be requested before 4:00 PM. Future dates can be selected up to 30 days in advance.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

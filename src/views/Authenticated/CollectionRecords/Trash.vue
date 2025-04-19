@@ -414,129 +414,267 @@ watch(currentPage, () => {
       class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
     >
       <!-- Desktop view (table) - hidden on small screens -->
-<div class="hidden sm:block overflow-x-auto">
-  <table class="min-w-full divide-y divide-gray-200">
-    <thead class="bg-gray-700">
-      <tr>
-        <th
-          scope="col"
-          class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+      <div class="hidden sm:block overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-700">
+            <tr>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+              >
+                ID
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+              >
+                Created At
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+              >
+                User
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+              >
+                Location
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+              >
+                Total Cost
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+              >
+                Payment Status
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+              >
+                Created By
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-if="paginatedRecords.length === 0">
+              <td colspan="8" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center">
+                  <img
+                    src="@/assets/page-not-found.png"
+                    alt="No Records Found"
+                    class="w-24 h-24 mb-4"
+                  />
+                  <p class="text-gray-500 text-sm">
+                    No collection records found in the recycle bin
+                  </p>
+                </div>
+              </td>
+            </tr>
+            <tr
+              v-for="record in paginatedRecords"
+              :key="record.id"
+              class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+              @click="viewCollectionRecord(record.id)"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                #{{ record.id }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ record.formatted_created_at }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ record.user_name }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ record.location_name }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ₱{{ record.total_cost.toFixed(2) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  :class="`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`"
+                >
+                  {{ record.is_paid ? 'Paid' : 'Unpaid' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ record.created_by_name }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex items-center justify-end space-x-3" @click.stop>
+                  <!-- Restore Button -->
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <div @click.stop>
+                        <Button>
+                          <svg
+                            class="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+                            />
+                          </svg>
+                        </Button>
+                      </div>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Restore Collection Record?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This collection record will be restored.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="restoreRecord(record.id)"
+                          >Restore</AlertDialogAction
+                        >
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <!-- Delete Button -->
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <div @click.stop>
+                        <Button>
+                          <svg
+                            class="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </Button>
+                      </div>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Collection Record Permanently?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="deleteRecordPermanently(record.id)"
+                          >Delete</AlertDialogAction
+                        >
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile view (cards) - only shown on small screens -->
+      <div class="sm:hidden px-4 py-4 space-y-4">
+        <!-- Empty state when no records are found -->
+        <div v-if="paginatedRecords.length === 0" class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
+          <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <p class="text-gray-500 text-sm">No collection records found in the recycle bin</p>
+        </div>
+
+        <!-- Card for each record -->
+        <div 
+          v-for="record in paginatedRecords" 
+          :key="record.id"
+          class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden cursor-pointer"
+          @click="viewCollectionRecord(record.id)"
         >
-          ID
-        </th>
-        <th
-          scope="col"
-          class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-        >
-          Created At
-        </th>
-        <th
-          scope="col"
-          class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-        >
-          User
-        </th>
-        <th
-          scope="col"
-          class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-        >
-          Location
-        </th>
-        <th
-          scope="col"
-          class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-        >
-          Total Cost
-        </th>
-        <th
-          scope="col"
-          class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-        >
-          Payment Status
-        </th>
-        <th
-          scope="col"
-          class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-        >
-          Created By
-        </th>
-        <th
-          scope="col"
-          class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider"
-        >
-          Actions
-        </th>
-      </tr>
-    </thead>
-    <tbody class="bg-white divide-y divide-gray-200">
-      <tr v-if="paginatedRecords.length === 0">
-        <td colspan="8" class="px-6 py-12 text-center">
-          <div class="flex flex-col items-center">
-            <img
-              src="@/assets/page-not-found.png"
-              alt="No Records Found"
-              class="w-24 h-24 mb-4"
-            />
-            <p class="text-gray-500 text-sm">
-              No collection records found in the recycle bin
-            </p>
+          <!-- Card header with ID and payment status badges -->
+          <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center">
+              <span class="font-medium text-gray-800 mr-2">#{{ record.id }}</span>
+            </div>
+            <div>
+              <span
+                :class="`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`"
+              >
+                {{ record.is_paid ? 'Paid' : 'Unpaid' }}
+              </span>
+            </div>
           </div>
-        </td>
-      </tr>
-      <tr
-        v-for="record in paginatedRecords"
-        :key="record.id"
-        class="hover:bg-gray-50 transition-colors duration-200"
-      >
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          #{{ record.id }}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {{ record.formatted_created_at }}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {{ record.user_name }}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {{ record.location_name }}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          ₱{{ record.total_cost.toFixed(2) }}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-          <span
-            :class="`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-            }`"
-          >
-            {{ record.is_paid ? 'Paid' : 'Unpaid' }}
-          </span>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {{ record.created_by_name }}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-          <div class="flex items-center justify-end space-x-3">
+          
+          <!-- Card body with record details -->
+          <div class="p-4">
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <div>
+                  <div class="text-xs text-gray-500">Created At</div>
+                  <div class="font-medium text-sm">{{ record.formatted_created_at }}</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Total Cost</div>
+                  <div class="font-medium text-sm">₱{{ record.total_cost.toFixed(2) }}</div>
+                </div>
+              </div>
+              
+              <div>
+                <div class="text-xs text-gray-500">User</div>
+                <div class="font-medium text-sm">{{ record.user_name }}</div>
+              </div>
+              
+              <div>
+                <div class="text-xs text-gray-500">Location</div>
+                <div class="font-medium text-sm">{{ record.location_name }}</div>
+              </div>
+              
+              <div>
+                <div class="text-xs text-gray-500">Created By</div>
+                <div class="font-medium text-sm">{{ record.created_by_name }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Card actions -->
+          <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between" @click.stop>
             <!-- Restore Button -->
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <div @click.stop>
-                  <Button>
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
-                      />
-                    </svg>
-                  </Button>
-                </div>
+                <Button class="text-sm">
+                  <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
+                  </svg>
+                  Restore
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -547,33 +685,21 @@ watch(currentPage, () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="restoreRecord(record.id)"
-                    >Restore</AlertDialogAction
-                  >
+                  <AlertDialogAction @click="restoreRecord(record.id)">Restore</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-
+                  
             <!-- Delete Button -->
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <div @click.stop>
-                  <Button>
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </Button>
-                </div>
+                <Button class="text-sm">
+                  <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -584,137 +710,13 @@ watch(currentPage, () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="deleteRecordPermanently(record.id)"
-                    >Delete</AlertDialogAction
-                  >
+                  <AlertDialogAction @click="deleteRecordPermanently(record.id)">Delete</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- Mobile view (cards) - only shown on small screens -->
-<div class="sm:hidden px-4 py-4 space-y-4">
-  <!-- Empty state when no records are found -->
-  <div v-if="paginatedRecords.length === 0" class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
-    <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-    </svg>
-    <p class="text-gray-500 text-sm">No collection records found in the recycle bin</p>
-  </div>
-
-  <!-- Card for each record -->
-  <div 
-    v-for="record in paginatedRecords" 
-    :key="record.id"
-    class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden"
-  >
-    <!-- Card header with ID and payment status badges -->
-    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
-      <div class="flex items-center">
-        <span class="font-medium text-gray-800 mr-2">#{{ record.id }}</span>
-      </div>
-      <div>
-        <span
-          :class="`px-2 py-0.5 rounded-full text-xs font-medium ${
-            record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-          }`"
-        >
-          {{ record.is_paid ? 'Paid' : 'Unpaid' }}
-        </span>
-      </div>
-    </div>
-    
-    <!-- Card body with record details -->
-    <div class="p-4">
-      <div class="space-y-3">
-        <div class="flex justify-between">
-          <div>
-            <div class="text-xs text-gray-500">Created At</div>
-            <div class="font-medium text-sm">{{ record.formatted_created_at }}</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500">Total Cost</div>
-            <div class="font-medium text-sm">₱{{ record.total_cost.toFixed(2) }}</div>
-          </div>
-        </div>
-        
-        <div>
-          <div class="text-xs text-gray-500">User</div>
-          <div class="font-medium text-sm">{{ record.user_name }}</div>
-        </div>
-        
-        <div>
-          <div class="text-xs text-gray-500">Location</div>
-          <div class="font-medium text-sm">{{ record.location_name }}</div>
-        </div>
-        
-        <div>
-          <div class="text-xs text-gray-500">Created By</div>
-          <div class="font-medium text-sm">{{ record.created_by_name }}</div>
         </div>
       </div>
-    </div>
-    
-    <!-- Card actions -->
-    <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between">
-      <!-- Restore Button -->
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button class="text-sm">
-            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
-            </svg>
-            Restore
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Restore Collection Record?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This collection record will be restored.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction @click="restoreRecord(record.id)">Restore</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-            
-      <!-- Delete Button -->
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button class="text-sm">
-            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Delete
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Collection Record Permanently?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction @click="deleteRecordPermanently(record.id)">Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  </div>
-</div>
 
       <!-- Pagination -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">

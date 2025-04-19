@@ -36,6 +36,7 @@ const itemsPerPage = 7;
 const searchQuery = ref('');
 const requestToDelete = ref(null);
 const loading = ref(true); // Add loading state
+const showNotes = ref(true); // Add showNotes state
 
 // Add filter states
 const statusFilter = ref('all'); // 'all', 'approved', 'pending'
@@ -213,6 +214,62 @@ watch(currentPage, () => {
           <option value="recorded">Recorded</option>
           <option value="unrecorded">Unrecorded</option>
         </select>
+      </div>
+    </div>
+
+    <!-- Info Notes -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        <button
+          @click="showNotes = !showNotes"
+          class="flex items-center text-sm text-gray-500 hover:text-gray-700"
+        >
+          <span>{{ showNotes ? 'Hide Notes' : 'Show Notes' }}</span>
+          <svg
+            class="w-4 h-4 ml-1 transform transition-transform"
+            :class="{ 'rotate-180': showNotes }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      <div v-if="showNotes" class="space-y-4">
+        <!-- Request Management Note -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-blue-700">
+                <span class="font-medium">Request Management:</span> Collection requests can only be edited or deleted if they are pending. Once a request is approved, it becomes permanent and cannot be modified.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recording Status Note -->
+        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-green-700">
+                <span class="font-medium">Next Steps:</span> Once your request is approved, you can proceed to the Forest Protection Unit to record your collection and pay the required forest fees.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

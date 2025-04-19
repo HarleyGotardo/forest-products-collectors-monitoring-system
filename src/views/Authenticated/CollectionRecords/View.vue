@@ -36,6 +36,7 @@ const fetchCollectionRecord = async () => {
       created_at,
       is_paid,
       approved_at,
+      deleted_at,
       user:profiles!forest_product_collection_records_user_id_fkey (first_name, last_name),
       created_by:profiles!collection_records_created_by_fkey (first_name, last_name),
       approved_by:profiles!collection_records_approved_by_fkey (first_name, last_name),
@@ -104,6 +105,34 @@ const deleteCollectionRecord = async (recordId) => {
     console.error('Error deleting record:', err)
     error.value = 'An unexpected error occurred while deleting the record'
     toast.error('An unexpected error occurred while deleting the record', { duration: 3000 })
+  }
+}
+
+const restoreRecord = async (recordId) => {
+  const { error: updateError } = await supabase
+    .from('collection_records')
+    .update({ deleted_at: null })
+    .eq('id', recordId)
+
+  if (updateError) {
+    toast.error(updateError.message, { duration: 3000 })
+  } else {
+    toast.success('Collection record restored successfully', { duration: 3000 })
+    router.back()
+  }
+}
+
+const deleteRecordPermanently = async (recordId) => {
+  const { error: deleteError } = await supabase
+    .from('collection_records')
+    .delete()
+    .eq('id', recordId)
+
+  if (deleteError) {
+    toast.error(deleteError.message, { duration: 3000 })
+  } else {
+    toast.success('Collection record deleted permanently', { duration: 3000 })
+    router.back()
   }
 }
 
@@ -289,6 +318,27 @@ onMounted(() => {
         </h1>
       </div>
       <div class="flex items-center space-x-3 sm:space-x-4">
+        <div
+          v-if="record?.deleted_at"
+          class="px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700 border border-red-200 flex items-center gap-2"
+        >
+          <span class="w-2 h-2 rounded-full bg-red-500"></span>
+          Deleted {{ new Date(record.deleted_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
+        </div>
+        <div
+          v-if="record && record?.is_paid"
+          class="px-3 py-1 rounded-full text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-2"
+        >
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          Paid
+        </div>
+        <div
+          v-else-if="record && !record?.is_paid"
+          class="px-3 py-1 rounded-full text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-2"
+        >
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          Unpaid
+        </div>
         <Button
           v-if="record?.is_paid"
           @click="downloadPermit"
@@ -311,28 +361,28 @@ onMounted(() => {
           </svg>
           Download Permit
         </Button>
-        <AlertDialog v-if="record && !record.is_paid">
-          <AlertDialogTrigger>
-            <div class="flex items-center space-x-2">
-              <Button
-                v-if="(isFPUAdmin || isForestRanger) && !record.is_paid"
-                class="p-2 flex items-center justify-center"
-                @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-              </Button>
+        <div class="flex items-center space-x-2">
+          <Button
+            v-if="(isFPUAdmin || isForestRanger) && record && !record?.is_paid && !record?.deleted_at"
+            class="p-2 flex items-center justify-center"
+            @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record?.id } })"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </Button>
+          <AlertDialog v-if="record && !record.is_paid && !record?.deleted_at">
+            <AlertDialogTrigger>
               <Button
                 v-if="isFPUAdmin || isForestRanger"
                 class="p-2 flex items-center justify-center"
@@ -351,23 +401,94 @@ onMounted(() => {
                   />
                 </svg>
               </Button>
-            </div>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This collection record will be transferred to the recycle bin.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="deleteCollectionRecord(record.id)">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This collection record will be transferred to the recycle bin.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deleteCollectionRecord(record.id)">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <!-- Restore and Delete Permanently buttons for deleted records -->
+          <template v-if="record?.deleted_at">
+            <AlertDialog>
+              <AlertDialogTrigger>
+                <Button class="p-2 flex items-center justify-center">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+                    />
+                  </svg>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Restore Collection Record?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This collection record will be restored.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="restoreRecord(record.id)">
+                    Restore
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog>
+              <AlertDialogTrigger>
+                <Button class="p-2 flex items-center justify-center">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Collection Record Permanently?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="deleteRecordPermanently(record.id)">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </template>
+        </div>
       </div>
     </div>
 
