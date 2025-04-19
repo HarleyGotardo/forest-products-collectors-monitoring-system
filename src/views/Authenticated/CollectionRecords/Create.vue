@@ -439,18 +439,28 @@ const updatePurchasedQuantity = (productId, quantity) => {
 
 // Update validateProductQuantity to check against adjusted quantity rather than total quantity
 const validateProductQuantity = (product) => {
+  const selectedProduct = selectedForestProducts.value.find(p => p.id === product.id);
+  if (!selectedProduct) return false;
+  
   // Use adjustedQuantity instead of quantity for validation
-  if (product.purchased_quantity > product.adjustedQuantity) {
-    product.quantityError = true;
+  if (selectedProduct.purchased_quantity > product.adjustedQuantity) {
+    selectedProduct.quantityError = true;
     return false;
-  } else if (product.purchased_quantity < 0) {
-    product.quantityError = true;
+  } else if (selectedProduct.purchased_quantity <= 0) {
+    selectedProduct.quantityError = true;
     return false;
   } else {
-    product.quantityError = false;
+    selectedProduct.quantityError = false;
     return true;
   }
 };
+
+// Add computed property to check for validation errors
+const hasValidationErrors = computed(() => {
+  return selectedForestProducts.value.some(product => 
+    product.quantityError || product.purchased_quantity <= 0
+  );
+});
 
 onMounted(() => {
   fetchCollectors();
@@ -717,22 +727,27 @@ onMounted(() => {
               <div v-if="isProductSelected(product.id)" class="flex flex-col">
                 <div class="flex items-center space-x-2">
                   <label class="text-sm text-gray-600">Quantity:</label>
-                  <input
+                    <input
                     type="number"
                     v-model.number="selectedForestProducts.find(p => p.id === product.id).purchased_quantity"
-                    min="0"
+                    min="1"
                     :max="product.adjustedQuantity"
                     placeholder="Qty"
                     @input="validateProductQuantity(product)"
-                    :class="['w-24 text-center border rounded p-1', product.quantityError || product.purchased_quantity === 0 ? 'border-red-500 bg-red-50' : 'border-gray-300']"
-                  />
+                    @keydown="(e) => ['e', 'E', '-', '+', '.'].includes(e.key) && e.preventDefault()"
+                    :class="['w-24 text-center border rounded p-1', 
+                      selectedForestProducts.find(p => p.id === product.id).quantityError || 
+                      selectedForestProducts.find(p => p.id === product.id).purchased_quantity <= 0 
+                        ? 'border-red-500 bg-red-50' 
+                        : 'border-gray-300']"
+                    />
                 </div>
-                <!-- Warning for zero quantity -->
-                <div v-if="product.purchased_quantity === 0" class="text-red-500 text-xs mt-1 text-right">
-                  Please enter a valid quantity.
+                <!-- Warning for zero or invalid quantity -->
+                <div v-if="selectedForestProducts.find(p => p.id === product.id).purchased_quantity <= 0" class="text-red-500 text-xs mt-1 text-right">
+                  Please enter a quantity greater than 0.
                 </div>
-                <!-- Inline error message -->
-                <div v-if="product.quantityError" class="text-red-500 text-xs mt-1 text-right">
+                <!-- Inline error message for exceeding max quantity -->
+                <div v-else-if="selectedForestProducts.find(p => p.id === product.id).purchased_quantity > product.adjustedQuantity" class="text-red-500 text-xs mt-1 text-right">
                   Max: {{ product.adjustedQuantity }}
                 </div>
               </div>
@@ -741,8 +756,9 @@ onMounted(() => {
         </div>
         <div class="flex justify-end p-4 border-t">
           <button
-            class="bg-green-600 hover:bg-green-700 text-white rounded-lg px-6 py-2.5 font-medium"
+            class="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 font-medium"
             @click="isModalOpen = false"
+            :disabled="hasValidationErrors"
           >
             Done
           </button>
