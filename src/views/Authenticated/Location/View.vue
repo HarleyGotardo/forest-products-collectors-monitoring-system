@@ -56,6 +56,11 @@ const currentProduct = ref(null)
 const showDeleteConfirmDialog = ref(false)
 const productToDelete = ref(null)
 
+// Add computed property for form validation
+const isAddFormValid = computed(() => {
+  return selectedProduct.value && quantityInput.value !== '' && quantityInput.value > 0
+})
+
 const fetchAvailableForestProducts = async () => {
   try {
     // Get IDs of already added products
@@ -783,6 +788,7 @@ onMounted(async () => {
             <select 
               v-model="selectedProduct"
               class="w-full border rounded-md p-2"
+              :class="{ 'border-red-500': showAddDialog && !selectedProduct }"
             >
               <option value="" disabled>Select a product</option>
               <option 
@@ -793,6 +799,9 @@ onMounted(async () => {
                 {{ product.name }}
               </option>
             </select>
+            <p v-if="showAddDialog && !selectedProduct" class="mt-1 text-sm text-red-500">
+              Please select a product
+            </p>
           </div>
           
           <div>
@@ -801,14 +810,25 @@ onMounted(async () => {
               v-model.number="quantityInput"
               type="number"
               step="0.01"
+              min="0"
               class="w-full border rounded-md p-2"
+              :class="{ 'border-red-500': showAddDialog && (!quantityInput || quantityInput <= 0) }"
             >
+            <p v-if="showAddDialog && (!quantityInput || quantityInput <= 0)" class="mt-1 text-sm text-red-500">
+              Please enter a valid quantity greater than 0
+            </p>
           </div>
         </div>
 
         <AlertDialogFooter>
           <AlertDialogCancel @click="showAddDialog = false">Cancel</AlertDialogCancel>
-          <AlertDialogAction @click="addForestProduct">Add Product</AlertDialogAction>
+          <AlertDialogAction 
+            @click="addForestProduct" 
+            :disabled="!isAddFormValid"
+            :class="{ 'opacity-50 cursor-not-allowed': !isAddFormValid }"
+          >
+            Add Product
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -880,5 +900,14 @@ onMounted(async () => {
 
 .dialog-content {
   z-index: 1001 !important;
+}
+
+/* Add styles for disabled button */
+:deep(.opacity-50) {
+  opacity: 0.5;
+}
+
+:deep(.cursor-not-allowed) {
+  cursor: not-allowed;
 }
 </style>
