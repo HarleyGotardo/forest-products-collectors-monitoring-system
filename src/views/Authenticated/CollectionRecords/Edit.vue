@@ -33,6 +33,10 @@ const initialSelectedForestProducts = ref([]); // Store initial selected product
 const isSubmitting = ref(false);
 const isModalOpen = ref(false);
 
+// Add initial variables to track the original purpose values
+const initialPurpose = ref('');
+const initialCustomPurpose = ref('');
+
 // Add these functions for product selection
 const isProductSelected = (productId) => {
   return selectedForestProducts.value.some(p => p.id === productId);
@@ -237,6 +241,10 @@ const fetchCollectionRecord = async () => {
   selectedRequest.value = data.collection_request_id;
   purpose.value = data.purpose === 'Official' || data.purpose === 'Personal' ? data.purpose : 'Others';
   customPurpose.value = purpose.value === 'Others' ? data.purpose : '';
+  
+  // Store initial purpose values for change detection
+  initialPurpose.value = purpose.value;
+  initialCustomPurpose.value = customPurpose.value;
 
   // Create a map of existing forest products for easy lookup
   const existingProductsMap = {};
@@ -305,9 +313,65 @@ watch(searchQuery, (newQuery) => {
 });
 
 const isFormComplete = computed(() => {
-  return selectedCollector.value &&
+  // Basic requirements: must have a collector and at least one product with quantity > 0
+  const hasValidSelection = selectedCollector.value &&
     selectedForestProducts.value.length > 0 &&
     selectedForestProducts.value.some(product => product.purchased_quantity > 0);
+  
+  // Don't disable the button if there are valid changes
+  return hasValidSelection && !hasValidationErrors.value;
+});
+
+// Add computed property to check for validation errors
+const hasValidationErrors = computed(() => {
+  return selectedForestProducts.value.some(product => 
+    product.quantityError || product.purchased_quantity <= 0
+  );
+});
+
+const havePurposeChanged = computed(() => {
+  // Get the initial purpose from the database record
+  // Since we don't know the initial value directly, we need to infer it
+  // when the component loads
+  if (!initialPurpose.value) return false;
+  
+  // Check if purpose type changed
+  if (purpose.value !== initialPurpose.value) return true;
+  
+  // If purpose is "Others", also check if the custom purpose changed
+  if (purpose.value === 'Others' && customPurpose.value !== initialCustomPurpose.value) {
+    return true;
+  }
+  
+  return false;
+});
+
+// Add a function to check if there are changes in the selected products
+const haveProductsChanged = computed(() => {
+  // Different number of products indicates a change
+  if (selectedForestProducts.value.length !== initialSelectedForestProducts.value.length) {
+    return true;
+  }
+  
+  // Check each selected product for quantity changes
+  for (const current of selectedForestProducts.value) {
+    const original = initialSelectedForestProducts.value.find(p => p.id === current.id);
+    // If this product wasn't in the original selection, or its quantity changed
+    if (!original || original.purchased_quantity !== current.purchased_quantity) {
+      return true;
+    }
+  }
+  
+  // Check if any originally selected products were removed
+  for (const original of initialSelectedForestProducts.value) {
+    const current = selectedForestProducts.value.find(p => p.id === original.id);
+    if (!current) {
+      return true;
+    }
+  }
+  
+  // No changes detected
+  return false;
 });
 
 const handleSubmit = async () => {
@@ -593,7 +657,7 @@ onMounted(async () => {
           <!-- Submit Button -->
           <button
             type="submit"
-            :disabled="!isFormComplete"
+            :disabled="!isFormComplete || (!haveProductsChanged && !havePurposeChanged)"
             class="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all text-white rounded-lg py-3 font-medium"
           >
             Update Collection Record
@@ -672,11 +736,20 @@ onMounted(async () => {
                     :max="product.adjustedQuantity || product.quantity"
                     placeholder="Qty"
                     @input="validateProductQuantity(product)"
-                    :class="['w-24 text-center border rounded p-1', product.quantityError ? 'border-red-500 bg-red-50' : 'border-gray-300']"
+                    @keydown="(e) => ['e', 'E', '-', '+', '.'].includes(e.key) && e.preventDefault()"
+                    :class="['w-24 text-center border rounded p-1', 
+                      selectedForestProducts.find(p => p.id === product.id).quantityError || 
+                      selectedForestProducts.find(p => p.id === product.id).purchased_quantity <= 0 
+                        ? 'border-red-500 bg-red-50' 
+                        : 'border-gray-300']"
                   />
                 </div>
-                <!-- Inline error message -->
-                <div v-if="product.quantityError" class="text-red-500 text-xs mt-1 text-right">
+                <!-- Warning for zero or invalid quantity -->
+                <div v-if="selectedForestProducts.find(p => p.id === product.id).purchased_quantity <= 0" class="text-red-500 text-xs mt-1 text-right">
+                  Please enter a quantity greater than 0.
+                </div>
+                <!-- Inline error message for exceeding max quantity -->
+                <div v-else-if="selectedForestProducts.find(p => p.id === product.id).quantityError" class="text-red-500 text-xs mt-1 text-right">
                   Max: {{ product.adjustedQuantity || product.quantity }}
                 </div>
               </div>
@@ -685,8 +758,9 @@ onMounted(async () => {
         </div>
         <div class="flex justify-end p-4 border-t">
           <button
-            class="bg-green-600 hover:bg-green-700 text-white rounded-lg px-6 py-2.5 font-medium"
+            class="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 font-medium"
             @click="isModalOpen = false"
+            :disabled="hasValidationErrors"
           >
             Done
           </button>
