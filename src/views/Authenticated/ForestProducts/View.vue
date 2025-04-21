@@ -78,14 +78,26 @@ const isLoading = ref(true)
 const allImages = ref([])
 const imageTitle = ref('')
 
+// Add these with your other reactive variables
+const isGettingLocation = ref(false);
+const locationError = ref(null);
+
+// Add this computed property
+const isMobileDevice = computed(() => {
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+  const isSmallScreen = window.innerWidth <= 768;
+  return isMobile || isSmallScreen;
+});
+
 const viewImage = (image, index) => {
   currentImage.value = image // Set the selected image
   currentImageIndex.value = index // Set the index of the selected image
   showExtraImageModal.value = true // Show the modal
-  
+
   // Determine image title (you can customize this logic)
   imageTitle.value = `${forestProduct.value?.name || 'Product'} - Image ${index + 1}`
-  
+
   // Reset image view state when opening a new image
   isLoading.value = true
 }
@@ -105,7 +117,7 @@ const fetchAdditionalImages = async () => {
   } else {
     // Get additional images
     additionalImages.value = data.map((img) => img.image_link);
-    
+
     // Add main product image if it exists (add at beginning)
     if (forestProduct.value?.image_url) {
       allImages.value = [forestProduct.value.image_url, ...additionalImages.value];
@@ -216,12 +228,12 @@ const fetchLocations = async () => {
     .from('fp_and_locations')
     .select(`
       locations (
-        id, 
-        name, 
-        latitude, 
+        id,
+        name,
+        latitude,
         longitude,
         deleted_at
-      ), 
+      ),
       quantity
     `)
     .eq('forest_product_id', productId)
@@ -236,7 +248,7 @@ const fetchLocations = async () => {
         ...fp.locations,
         quantity: fp.quantity
       }))
-    
+
     // Ensure map is properly initialized after locations are loaded
     nextTick(() => {
       if (mapInstance.value) {
@@ -558,7 +570,7 @@ const initializeModalMap = () => {
 
       // Add new marker at clicked location
       tempMarker.value = L.marker(e.latlng).addTo(modalMapInstance.value)
-      
+
       // Update coordinates
       newLocation.value.latitude = e.latlng.lat
       newLocation.value.longitude = e.latlng.lng
@@ -608,7 +620,7 @@ const initializeModalMap = () => {
 const openAddLocationModal = async () => {
   isAddingLocation.value = true
   showLocationModal.value = true
-  
+
   // Fetch all locations if not already fetched
   if (allLocations.value.length === 0) {
     await fetchAllLocations()
@@ -681,7 +693,7 @@ const reloadMap = () => {
     mapInstance.value.remove()
     mapInstance.value = null
   }
-  
+
   // Small delay to ensure cleanup is complete
   setTimeout(() => {
     nextTick(() => {
@@ -751,6 +763,92 @@ const deletePermanently = async () => {
     router.push('/authenticated/forest-products')
   }
 }
+
+// Add this new function to get current location
+const getCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    locationError.value = "Geolocation is not supported by your browser";
+    toast.error("Geolocation is not supported by your browser. Please use a modern browser.", { duration: 5000 });
+    return;
+  }
+
+  isGettingLocation.value = true;
+  locationError.value = null;
+
+  // Check for secure context
+  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+    isGettingLocation.value = false;
+    locationError.value = "Geolocation requires a secure context (HTTPS)";
+    toast.error("Geolocation requires a secure connection (HTTPS).", { duration: 5000 });
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const latLngObj = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+
+      // Check for duplicate location
+      const isDuplicateLocation = allLocations.value.some(location =>
+        location.latitude === latLngObj.lat && location.longitude === latLngObj.lng
+      );
+
+      if (isDuplicateLocation) {
+        toast.error('A location already exists at these coordinates', { duration: 3000 });
+        isGettingLocation.value = false;
+        return;
+      }
+
+      // Update coordinates
+      newLocation.value.latitude = latLngObj.lat;
+      newLocation.value.longitude = latLngObj.lng;
+
+      // Update map if it exists
+      if (modalMapInstance.value) {
+        modalMapInstance.value.setView([latLngObj.lat, latLngObj.lng], CommonConstant.MAP_ZOOM_LEVEL.SIXTEEN);
+
+        // Clear existing markers
+        const markers = modalMapInstance.value.getLayers().filter(layer => layer instanceof L.Marker);
+        markers.forEach(marker => modalMapInstance.value.removeLayer(marker));
+
+        // Add new marker
+        L.marker([latLngObj.lat, latLngObj.lng]).addTo(modalMapInstance.value);
+      }
+
+      isGettingLocation.value = false;
+      toast.success('Location coordinates retrieved successfully', { duration: 3000 });
+    },
+    (error) => {
+      isGettingLocation.value = false;
+      console.error('Geolocation error:', error);
+
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          locationError.value = "Location access was denied";
+          toast.error("Please allow location access in your browser settings.", { duration: 5000 });
+          break;
+        case error.POSITION_UNAVAILABLE:
+          locationError.value = "Location information is unavailable";
+          toast.error("Could not get your location. Please check your device's location services.", { duration: 5000 });
+          break;
+        case error.TIMEOUT:
+          locationError.value = "Location request timed out";
+          toast.error("Location request took too long. Please try again.", { duration: 5000 });
+          break;
+        default:
+          locationError.value = "An unknown error occurred";
+          toast.error("An error occurred while getting your location.", { duration: 5000 });
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+};
 </script>
 
 <template>
@@ -760,150 +858,194 @@ const deletePermanently = async () => {
       class="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 mt-2 space-y-3 sm:space-y-0"
     >
       <div class="flex items-center justify-between w-full sm:w-auto">
-      <div class="flex items-center space-x-3">
-        <button
-          @click="router.back()"
-        class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
-        >
-        <svg
-          class="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M15 19l-7-7 7-7"
-          ></path>
-          </svg>
-        </button>
-        <img
-          src="@/assets/forest-product.png"
-          alt="Forest Product"
-        class="w-8 h-8 sm:w-10 sm:h-10"
-        />
-        <h2
-        class="text-xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left"
-        >
-        Forest Product Details
-        </h2>
-      </div>
-      </div>
-      <div
-      class="flex flex-col sm:flex-row items-center sm:items-center space-y-2 sm:space-y-0 sm:space-x-3"
-      >
-      <div
-        v-if="loading"
-        class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 animate-pulse w-24 sm:w-36"
-      >
-        &nbsp;
-      </div>
-      <div
-        v-else-if="forestProduct"
-        class="px-3 py-1 rounded-full text-sm font-medium"
-        :class="forestProduct.type === 'Timber' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'"
-      >
-        {{ forestProduct.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
-      </div>
-      <div
-        v-if="isDeleted"
-        class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"
-      >
-        Deleted at
-        {{ format(new Date(forestProduct.deleted_at), 'MMMM dd, yyyy - hh:mm a') }}
-      </div>
-
-      <!-- Action Buttons -->
-      <div v-if="!loading" class="flex items-center space-x-2">
-        <!-- Edit and Delete buttons for non-deleted products -->
-        <template v-if="!isDeleted && (isForestRanger || isFPUAdmin)">
-          <Button
-            @click="router.push(`/authenticated/forest-products/${productId}/edit`)"
-            class="p-2"
-            title="Edit forest product"
+        <div class="flex items-center space-x-3">
+          <button
+            @click="router.back()"
+            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              ></path>
             </svg>
-          </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button class="p-2" title="Delete forest product">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Forest Product?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This forest product will be transferred to the recycle bin.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="deleteProduct">Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </template>
-
-        <!-- Restore and Delete Permanently buttons for deleted products -->
-        <template v-if="isDeleted && (isForestRanger || isFPUAdmin)">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button class="p-2" title="Restore forest product">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
-                </svg>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Restore Forest Product?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to restore this product?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="restoreProduct">Restore</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button class="p-2" title="Delete permanently">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Product Permanently?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="deletePermanently">Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </template>
+          </button>
+          <img
+            src="@/assets/forest-product.png"
+            alt="Forest Product"
+            class="w-8 h-8 sm:w-10 sm:h-10"
+          />
+          <h2
+            class="text-xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left"
+          >
+            Forest Product Details
+          </h2>
+        </div>
       </div>
+      <div
+        class="flex flex-col sm:flex-row items-center sm:items-center space-y-2 sm:space-y-0 sm:space-x-3"
+      >
+        <div
+          v-if="loading"
+          class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 animate-pulse w-24 sm:w-36"
+        >
+          &nbsp;
+        </div>
+        <div
+          v-else-if="forestProduct"
+          class="px-3 py-1 rounded-full text-sm font-medium"
+          :class="forestProduct.type === 'Timber' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'"
+        >
+          {{ forestProduct.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
+        </div>
+        <div
+          v-if="isDeleted"
+          class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"
+        >
+          Deleted at
+          {{ format(new Date(forestProduct.deleted_at), 'MMMM dd, yyyy - hh:mm a') }}
+        </div>
+
+        <!-- Action Buttons -->
+        <div v-if="!loading" class="flex items-center space-x-2">
+          <!-- Edit and Delete buttons for non-deleted products -->
+          <template v-if="!isDeleted && (isForestRanger || isFPUAdmin)">
+            <Button
+              @click="router.push(`/authenticated/forest-products/${productId}/edit`)"
+              class="p-2"
+              title="Edit forest product"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </Button>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button class="p-2" title="Delete forest product">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Forest Product?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This forest product will be transferred to the recycle bin.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="deleteProduct"
+                    >Delete</AlertDialogAction
+                  >
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </template>
+
+          <!-- Restore and Delete Permanently buttons for deleted products -->
+          <template v-if="isDeleted && (isForestRanger || isFPUAdmin)">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button class="p-2" title="Restore forest product">
+                  <svg
+                    class="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+                    />
+                  </svg>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Restore Forest Product?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to restore this product?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="restoreProduct"
+                    >Restore</AlertDialogAction
+                  >
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button class="p-2" title="Delete permanently">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle
+                    >Delete Product Permanently?</AlertDialogTitle
+                  >
+                  <AlertDialogDescription>
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction @click="deletePermanently"
+                    >Delete</AlertDialogAction
+                  >
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </template>
+        </div>
       </div>
     </div>
 
@@ -1102,50 +1244,50 @@ const deletePermanently = async () => {
 
             <!-- Right Column -->
             <div class="space-y-4">
-                <div
+              <div
                 class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg transition hover:bg-gray-100"
-                >
+              >
                 <div class="p-2 bg-white rounded-full">
                   <svg
-                  class="w-5 h-5 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                    class="w-5 h-5 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
                   <p
-                  class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
                   >
-                  Price
+                    Price
                   </p>
                   <p
-                  class="text-gray-900 font-semibold"
-                  :class="{
+                    class="text-gray-900 font-semibold"
+                    :class="{
                     'text-green-600': !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
                   }"
                   >
-                  {{
+                    {{
                     !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
                     ? 'Free'
                     : `₱${forestProduct.price_based_on_measurement_unit.toLocaleString()}`
-                  }}
-                  <span
-                    v-if="forestProduct.price_based_on_measurement_unit && forestProduct.price_based_on_measurement_unit !== 0"
-                    class="text-sm font-normal text-gray-500"
-                  >
-                    per {{ forestProduct.measurement_units.unit_name }}
-                  </span>
+                    }}
+                    <span
+                      v-if="forestProduct.price_based_on_measurement_unit && forestProduct.price_based_on_measurement_unit !== 0"
+                      class="text-sm font-normal text-gray-500"
+                    >
+                      per {{ forestProduct.measurement_units.unit_name }}
+                    </span>
                   </p>
                 </div>
-                </div>
+              </div>
 
               <div
                 class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg transition hover:bg-gray-100"
@@ -1198,15 +1340,17 @@ const deletePermanently = async () => {
         </div>
       </div>
       <!-- Additional Images Section -->
-      <div class="mt-10 pt-8 border-t bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div
+        class="mt-10 pt-8 border-t bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+      >
         <!-- Section Header -->
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-bold text-gray-800">Additional Images</h3>
           <span
-        class="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full"
+            class="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full"
           >
-        {{ additionalImages.length }}
-        image{{ additionalImages.length !== 1 ? 's' : '' }}
+            {{ additionalImages.length }}
+            image{{ additionalImages.length !== 1 ? 's' : '' }}
           </span>
         </div>
 
@@ -1216,60 +1360,60 @@ const deletePermanently = async () => {
         >
           <!-- Display existing images -->
           <div
-        v-for="(image, index) in additionalImages"
-        :key="index"
-        class="relative group h-64 overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg border border-gray-200 cursor-pointer bg-white"
-        @click="viewImage(image, index)"
+            v-for="(image, index) in additionalImages"
+            :key="index"
+            class="relative group h-64 overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg border border-gray-200 cursor-pointer bg-white"
+            @click="viewImage(image, index)"
           >
-        <img
-          :src="image"
-          alt="Additional Image"
-          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div
-          class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        ></div>
-        <div
-          class="absolute bottom-0 left-0 p-3 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        >
-          <p class="text-white text-sm font-medium">View Image</p>
-        </div>
+            <img
+              :src="image"
+              alt="Additional Image"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            ></div>
+            <div
+              class="absolute bottom-0 left-0 p-3 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            >
+              <p class="text-white text-sm font-medium">View Image</p>
+            </div>
           </div>
 
           <!-- Add Image Placeholder -->
           <label
-        v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 8 && forestProduct.deleted_at === null"
-        for="additional-image-upload"
-        class="relative h-64 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6 transition-all hover:border-gray-400 bg-gray-50 hover:bg-gray-100 cursor-pointer"
+            v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 8 && forestProduct.deleted_at === null"
+            for="additional-image-upload"
+            class="relative h-64 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6 transition-all hover:border-gray-400 bg-gray-50 hover:bg-gray-100 cursor-pointer"
           >
-        <div class="p-3 rounded-full bg-gray-100 mb-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-8 w-8 text-gray-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 4v16m8-8H4"
+            <div class="p-3 rounded-full bg-gray-100 mb-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-8 w-8 text-gray-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Add Image</span>
+            <span class="text-xs text-gray-500 mt-1"
+              >{{ 8 - additionalImages.length }} slots remaining</span
+            >
+            <input
+              id="additional-image-upload"
+              type="file"
+              multiple
+              @change="handleAdditionalImageUpload"
+              class="hidden"
+              accept="image/*"
             />
-          </svg>
-        </div>
-        <span class="text-sm font-medium text-gray-700">Add Image</span>
-        <span class="text-xs text-gray-500 mt-1"
-          >{{ 8 - additionalImages.length }} slots remaining</span
-        >
-        <input
-          id="additional-image-upload"
-          type="file"
-          multiple
-          @change="handleAdditionalImageUpload"
-          class="hidden"
-          accept="image/*"
-        />
           </label>
         </div>
 
@@ -1279,394 +1423,606 @@ const deletePermanently = async () => {
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75 backdrop-blur-sm transition-opacity duration-300"
         >
           <div
-        class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden"
+            class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden"
           >
-        <!-- Modal Header -->
-        <div
-          class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200"
-        >
-          <h4 class="text-lg font-medium text-gray-800">Image Viewer</h4>
-          <button
-            class="p-1 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
-            @click="closeImageModal"
-            aria-label="Close"
-          >
-            <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6 text-gray-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+            <!-- Modal Header -->
+            <div
+              class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200"
             >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-            </svg>
-          </button>
-        </div>
+              <h4 class="text-lg font-medium text-gray-800">Image Viewer</h4>
+              <button
+                class="p-1 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+                @click="closeImageModal"
+                aria-label="Close"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
 
-        <!-- Modal Image -->
-        <div class="flex items-center justify-center bg-gray-100 p-2">
-          <img
-            :src="currentImage"
-            alt="Full Size Image"
-            class="max-h-96 w-auto object-contain"
-          />
-        </div>
+            <!-- Modal Image -->
+            <div class="flex items-center justify-center bg-gray-100 p-2">
+              <img
+                :src="currentImage"
+                alt="Full Size Image"
+                class="max-h-96 w-auto object-contain"
+              />
+            </div>
 
-        <!-- Modal Footer -->
-        <div class="p-4 flex items-center justify-between bg-white">
-          <div class="text-sm text-gray-500">
-            Image {{ currentImageIndex + 1 }} of
-            {{ additionalImages.length }}
-          </div>
-          <div class="flex gap-3">
-            <button
-          v-if="isForestRanger || isFPUAdmin"
-          class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
-          @click="closeImageModal"
-            >
-          Cancel
-            </button>
-            <button
-          v-if="isForestRanger || isFPUAdmin"
-          class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-          @click="deleteImage(currentImageIndex)"
-            >
-          Delete Image
-            </button>
-          </div>
-        </div>
+            <!-- Modal Footer -->
+            <div class="p-4 flex items-center justify-between bg-white">
+              <div class="text-sm text-gray-500">
+                Image {{ currentImageIndex + 1 }} of
+                {{ additionalImages.length }}
+              </div>
+              <div class="flex gap-3">
+                <button
+                  v-if="isForestRanger || isFPUAdmin"
+                  class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+                  @click="closeImageModal"
+                >
+                  Cancel
+                </button>
+                <button
+                  v-if="isForestRanger || isFPUAdmin"
+                  class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                  @click="deleteImage(currentImageIndex)"
+                >
+                  Delete Image
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-
-<div class="px-6 py-5 border-b border-gray-200">
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-    <div class="flex items-center space-x-3">
-      <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-      </svg>
-      <h3 class="text-xl font-semibold text-gray-800">
-        Product Locations
-      </h3>
-    </div>
-
-    <button
-      v-if="isForestRanger || isFPUAdmin && forestProduct.deleted_at === null"
-      @click="openAddLocationModal"
-      class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
-    >
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-      </svg>
-      Add Location
-    </button>
-  </div>
-</div>
-
-<div v-if="locations.length === 0" class="p-8 text-center">
-   <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-    <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0zm6-7l-2.828 2.828m-10.344 0L5 4" />
-  </svg>
-  <h3 class="mt-2 text-sm font-medium text-gray-900">No locations</h3>
-  <p class="mt-1 text-sm text-gray-500">This forest product currently has no registered locations.</p>
-</div>
-
-<div v-else class="divide-y divide-gray-200">
-  <div
-    v-for="location in paginatedLocations"
-    :key="location.id"
-    @click="goToLocation(location)"
-    class="p-5 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-  >
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-      <div class="flex items-start flex-grow mb-3 sm:mb-0">
-         <svg class="w-5 h-5 text-gray-500 mr-4 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-         </svg>
-
-        <div class="flex-grow">
-          <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
-          <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
-            <div class="flex items-center space-x-1">
-              <span class="font-medium text-gray-700">Lat:</span>
-              <span>{{ location.latitude }}</span>
+      <div
+        class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+      >
+        <div class="px-6 py-5 border-b border-gray-200">
+          <div
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0"
+          >
+            <div class="flex items-center space-x-3">
+              <svg
+                class="w-6 h-6 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                ></path>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-semibold text-gray-800">
+                Product Locations
+              </h3>
             </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium text-gray-700">Long:</span>
-              <span>{{ location.longitude }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium text-gray-700">Quantity:</span>
-              <span 
-              :class="{
+
+            <button
+              v-if="isForestRanger || isFPUAdmin && forestProduct.deleted_at === null"
+              @click="openAddLocationModal"
+              class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+            >
+              <svg
+                class="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                ></path>
+              </svg>
+              Add Location
+            </button>
+          </div>
+        </div>
+
+        <div v-if="locations.length === 0" class="p-8 text-center">
+          <svg
+            class="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              vector-effect="non-scaling-stroke"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0zm6-7l-2.828 2.828m-10.344 0L5 4"
+            />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">No locations</h3>
+          <p class="mt-1 text-sm text-gray-500">
+            This forest product currently has no registered locations.
+          </p>
+        </div>
+
+        <div v-else class="divide-y divide-gray-200">
+          <div
+            v-for="location in paginatedLocations"
+            :key="location.id"
+            @click="goToLocation(location)"
+            class="p-5 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+          >
+            <div
+              class="flex flex-col sm:flex-row items-start sm:items-center justify-between"
+            >
+              <div class="flex items-start flex-grow mb-3 sm:mb-0">
+                <svg
+                  class="w-5 h-5 text-gray-500 mr-4 flex-shrink-0 mt-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  ></path>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  ></path>
+                </svg>
+
+                <div class="flex-grow">
+                  <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
+                  <div
+                    class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600"
+                  >
+                    <div class="flex items-center space-x-1">
+                      <span class="font-medium text-gray-700">Lat:</span>
+                      <span>{{ location.latitude }}</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                      <span class="font-medium text-gray-700">Long:</span>
+                      <span>{{ location.longitude }}</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                      <span class="font-medium text-gray-700">Quantity:</span>
+                      <span
+                        :class="{
                 'text-red-600 font-semibold': !location.quantity || location.quantity === 0,
                 'text-orange-600 font-semibold': location.quantity > 0 && location.quantity <= 10,
                 'text-green-600 font-semibold': location.quantity > 0 && location.quantity > 10
               }"
+                      >
+                        {{ location.quantity ? location.quantity : 'N/A' }}
+                        {{ location.quantity ? ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') : '' }}
+                      </span>
+                      <span
+                        v-if="!location.quantity || location.quantity === 0"
+                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                      >
+                        Out of Stock
+                      </span>
+                      <span
+                        v-else-if="location.quantity > 0 && location.quantity <= 10"
+                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
+                      >
+                        Almost Out of Stock
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center space-x-2 flex-shrink-0 sm:ml-4"
+                v-if="forestProduct.deleted_at === null && (isForestRanger || isFPUAdmin)"
               >
-              {{ location.quantity ? location.quantity : 'N/A' }}
-              {{ location.quantity ? ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') : '' }}
-              </span>
-              <span
-              v-if="!location.quantity || location.quantity === 0"
-              class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-              >
-              Out of Stock
-              </span>
-              <span
-              v-else-if="location.quantity > 0 && location.quantity <= 10"
-              class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
-              >
-              Almost Out of Stock
-              </span>
+                <button
+                  @click.stop="editLocation(location)"
+                  class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                  title="Edit Location Quantity"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    ></path>
+                  </svg>
+                  <span class="sr-only">Edit Location</span>
+                </button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      @click.stop="confirmDeleteLocation(location.id)"
+                      class="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500"
+                      title="Delete Location"
+                    >
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        ></path>
+                      </svg>
+                      <span class="sr-only">Delete Location</span>
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle
+                        >Are you sure you want to delete this
+                        location?</AlertDialogTitle
+                      >
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently
+                        delete the location record for this forest product.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction @click="deleteLocation"
+                        >Delete Location</AlertDialogAction
+                      >
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="flex items-center space-x-2 flex-shrink-0 sm:ml-4" v-if="forestProduct.deleted_at === null && (isForestRanger || isFPUAdmin)">
-        <button
-          @click.stop="editLocation(location)"
-          class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
-          title="Edit Location Quantity"
+        <div
+          v-if="locations.length > 0 && totalPages > 1"
+          class="bg-gray-50 px-6 py-4 border-t border-gray-200"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-          </svg>
-           <span class="sr-only">Edit Location</span>
-        </button>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              @click.stop="confirmDeleteLocation(location.id)"
-               class="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500"
-              title="Delete Location"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-               <span class="sr-only">Delete Location</span>
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure you want to delete this location?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the location record for this forest product.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="deleteLocation">Delete Location</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div v-if="locations.length > 0 && totalPages > 1" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div class="text-sm text-gray-600 hidden sm:block">
-      Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, locations.length) }} of {{ locations.length }} items
-    </div>
-    <Pagination
-      v-slot="{ page }"
-      :total="locations.length"
-      :items-per-page="itemsPerPage"
-      :sibling-count="1"
-      show-edges
-      :default-page="currentPage"
-      @update:page="(newPage) => {
+          <div
+            class="flex flex-col sm:flex-row items-center justify-between gap-4"
+          >
+            <div class="text-sm text-gray-600 hidden sm:block">
+              Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to
+              {{ Math.min(currentPage * itemsPerPage, locations.length) }} of
+              {{ locations.length }} items
+            </div>
+            <Pagination
+              v-slot="{ page }"
+              :total="locations.length"
+              :items-per-page="itemsPerPage"
+              :sibling-count="1"
+              show-edges
+              :default-page="currentPage"
+              @update:page="(newPage) => {
         currentPage = newPage;
       }"
-      class="w-full sm:w-auto"
-    >
-      <div class="flex items-center justify-center sm:justify-end gap-2">
-        <!-- Mobile View -->
-        <div class="flex items-center gap-2 sm:hidden">
-          <PaginationPrev class="!w-12 !h-12" />
-          <div class="text-sm font-medium">
-            {{ currentPage }} / {{ totalPages }}
-          </div>
-          <PaginationNext class="!w-12 !h-12" />
-        </div>
+              class="w-full sm:w-auto"
+            >
+              <div
+                class="flex items-center justify-center sm:justify-end gap-2"
+              >
+                <!-- Mobile View -->
+                <div class="flex items-center gap-2 sm:hidden">
+                  <PaginationPrev class="!w-12 !h-12" />
+                  <div class="text-sm font-medium">
+                    {{ currentPage }} / {{ totalPages }}
+                  </div>
+                  <PaginationNext class="!w-12 !h-12" />
+                </div>
 
-        <!-- Desktop View -->
-        <div class="hidden sm:flex items-center gap-1">
-          <PaginationFirst />
-          <PaginationPrev />
-          <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-            <template v-for="(item, index) in items">
-              <PaginationListItem
-                v-if="item.type === 'page'"
-                :key="index"
-                :value="item.value"
-                :class="[
+                <!-- Desktop View -->
+                <div class="hidden sm:flex items-center gap-1">
+                  <PaginationFirst />
+                  <PaginationPrev />
+                  <PaginationList
+                    v-slot="{ items }"
+                    class="flex items-center gap-1"
+                  >
+                    <template v-for="(item, index) in items">
+                      <PaginationListItem
+                        v-if="item.type === 'page'"
+                        :key="index"
+                        :value="item.value"
+                        :class="[
                   'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
                   item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
                 ]"
+                      >
+                        {{ item.value }}
+                      </PaginationListItem>
+                      <PaginationEllipsis
+                        v-else
+                        :key="item.type"
+                        :index="index"
+                      />
+                    </template>
+                  </PaginationList>
+                  <PaginationNext />
+                  <PaginationLast />
+                </div>
+              </div>
+            </Pagination>
+          </div>
+        </div>
+
+        <div
+          v-if="showEditLocationModal"
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+          >
+            <div
+              class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              aria-hidden="true"
+              @click="showEditLocationModal = false"
+            ></div>
+
+            <span
+              class="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+              >&#8203;</span
+            >
+            <div
+              class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+            >
+              <div
+                class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-200"
               >
-                {{ item.value }}
-              </PaginationListItem>
-              <PaginationEllipsis
-                v-else
-                :key="item.type"
-                :index="index"
-              />
-            </template>
-          </PaginationList>
-          <PaginationNext />
-          <PaginationLast />
-        </div>
-      </div>
-    </Pagination>
-  </div>
-</div>
+                <div class="flex items-start justify-between">
+                  <h3
+                    class="text-lg leading-6 font-medium text-gray-900"
+                    id="modal-title"
+                  >
+                    Edit Quantity
+                  </h3>
+                  <button
+                    type="button"
+                    @click="showEditLocationModal = false"
+                    class="ml-3 bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    <span class="sr-only">Close</span>
+                    <svg
+                      class="h-6 w-6"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
-<div v-if="showEditLocationModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showEditLocationModal = false"></div>
+              <div class="px-4 py-5 sm:p-6">
+                <p class="text-sm text-gray-600 mb-4">
+                  Update the available quantity of
+                  <span class="font-medium">{{ forestProduct.name }}</span> at
+                  this location.
+                </p>
+                <div>
+                  <label
+                    for="edit-quantity"
+                    class="block text-sm font-medium text-gray-700"
+                  >
+                    Quantity
+                  </label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <Input
+                      type="number"
+                      id="edit-quantity"
+                      v-model="editLocationQuantity"
+                      class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pl-3 pr-16"
+                      placeholder="Enter quantity"
+                      min="0"
+                      step="any"
+                      aria-describedby="quantity-unit"
+                    />
+                    <div
+                      class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
+                    >
+                      <span class="text-gray-500 sm:text-sm" id="quantity-unit">
+                        {{ forestProduct.measurement_units.unit_name }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-200">
-        <div class="flex items-start justify-between">
-          <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-            Edit Quantity
-          </h3>
-          <button
-            type="button"
-            @click="showEditLocationModal = false"
-            class="ml-3 bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-           >
-            <span class="sr-only">Close</span>
-            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="px-4 py-5 sm:p-6">
-        <p class="text-sm text-gray-600 mb-4">
-          Update the available quantity of <span class="font-medium">{{ forestProduct.name }}</span> at this location.
-        </p>
-        <div>
-          <label for="edit-quantity" class="block text-sm font-medium text-gray-700">
-            Quantity
-          </label>
-          <div class="mt-1 relative rounded-md shadow-sm">
-             <Input
-              type="number"
-              id="edit-quantity"
-              v-model="editLocationQuantity"
-              class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pl-3 pr-16" placeholder="Enter quantity"
-              min="0"
-              step="any" aria-describedby="quantity-unit"
-            />
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span class="text-gray-500 sm:text-sm" id="quantity-unit">
-                {{ forestProduct.measurement_units.unit_name }}
-              </span>
+              <div
+                class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"
+              >
+                <button
+                  type="button"
+                  @click="updateLocationQuantity"
+                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  @click="showEditLocationModal = false"
+                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-        <button
-          type="button"
-          @click="updateLocationQuantity"
-          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-        >
-          Save Changes
-        </button>
-        <button
-          type="button"
-          @click="showEditLocationModal = false"
-          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-         >
-          Cancel
-        </button>
+        <div v-if="locations.length > 0" class="px-4 sm:px-6 pt-6 pb-4">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6 text-indigo-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0 6l6-3m-6 3l6 3m6-3l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13v-6m0 6l-6-3m6 3L9 17"
+                />
+              </svg>
+              <h3 class="text-lg font-medium text-gray-800">
+                {{ forestProduct.name }} Map Locations
+              </h3>
+            </div>
+            <button
+              @click="reloadMap"
+              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md transition-colors"
+            >
+              <svg
+                class="w-4 h-4 mr-1.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              Reload Map
+            </button>
+          </div>
+          <div
+            v-if="!loading"
+            id="locationMap"
+            class="h-[450px] w-full rounded-lg overflow-hidden border border-gray-200 shadow-sm"
+            style="z-index: 1"
+          ></div>
+          <div
+            v-else
+            class="h-[450px] w-full flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200"
+          >
+            <p class="text-gray-500">Loading map...</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<div v-if="locations.length > 0" class="px-4 sm:px-6 pt-6 pb-4">
-   <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center space-x-3">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0 6l6-3m-6 3l6 3m6-3l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13v-6m0 6l-6-3m6 3L9 17" />
-      </svg>
-      <h3 class="text-lg font-medium text-gray-800">
-        {{ forestProduct.name }} Map Locations
-      </h3>
-      </div>
-      <button
-        @click="reloadMap"
-        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md transition-colors"
-      >
-        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        Reload Map
-      </button>
-    </div>
-    <div
-      v-if="!loading"
-      id="locationMap"
-      class="h-[450px] w-full rounded-lg overflow-hidden border border-gray-200 shadow-sm"
-      style="z-index: 1"
-    ></div>
-    <div v-else class="h-[450px] w-full flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
-      <p class="text-gray-500">Loading map...</p>
-    </div>
-</div>
-
-</div>
     </div>
 
     <!-- Map Modal -->
     <div v-if="showLocationModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <div
+        class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0"
+      >
         <!-- Background overlay -->
-        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" @click="closeAddLocationModal"></div>
+        <div
+          class="fixed inset-0 bg-gray-500/75 transition-opacity"
+          @click="closeAddLocationModal"
+        ></div>
 
         <!-- Modal panel -->
-        <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle">
+        <div
+          class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle"
+        >
           <!-- Modal header -->
           <div class="bg-white px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-3">
                 <div class="p-2 bg-indigo-50 rounded-full">
-                  <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    class="w-6 h-6 text-indigo-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-900">Add New Location</h3>
-                  <p class="text-sm text-gray-500">Select a location on the map or click to add a new one</p>
+                  <h3 class="text-lg font-semibold text-gray-900">
+                    Add New Location
+                  </h3>
+                  <p class="text-sm text-gray-500">
+                    Select a location on the map or click to add a new one
+                  </p>
                 </div>
               </div>
-              <button 
-                @click="closeAddLocationModal" 
+              <button
+                @click="closeAddLocationModal"
                 class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full transition-colors"
               >
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -1679,12 +2035,31 @@ const deletePermanently = async () => {
               <div class="space-y-6">
                 <!-- Location name input -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Location Name</label
+                  >
                   <div class="relative rounded-md shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <div
+                      class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                    >
+                      <svg
+                        class="h-5 w-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                     </div>
                     <input
@@ -1696,15 +2071,92 @@ const deletePermanently = async () => {
                     />
                   </div>
                 </div>
-
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-medium text-gray-900">
+                    Select Location
+                  </h3>
+                  <div class="relative group">
+                    <button
+                      type="button"
+                      @click="getCurrentLocation"
+                      :disabled="isGettingLocation || !isMobileDevice"
+                      class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                    >
+                      <svg
+                        v-if="isGettingLocation"
+                        class="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <svg
+                        v-else
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      <span
+                        >{{ isGettingLocation ? 'Getting Location...' : 'Use Current Location' }}</span
+                      >
+                    </button>
+                    <div
+                      v-if="!isMobileDevice"
+                      class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
+                    >
+                      Available on mobile device
+                    </div>
+                  </div>
+                </div>
                 <!-- Coordinates display -->
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >Latitude</label
+                    >
                     <div class="relative rounded-md shadow-sm">
-                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                      <div
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      >
+                        <svg
+                          class="h-5 w-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                          />
                         </svg>
                       </div>
                       <input
@@ -1717,13 +2169,27 @@ const deletePermanently = async () => {
                     </div>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >Longitude</label
+                    >
                     <div class="relative rounded-md shadow-sm">
-                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                </svg>
-              </div>
+                      <div
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      >
+                        <svg
+                          class="h-5 w-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                          />
+                        </svg>
+                      </div>
                       <input
                         v-model="newLocation.longitude"
                         type="number"
@@ -1737,12 +2203,28 @@ const deletePermanently = async () => {
 
                 <!-- Quantity input -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Quantity ({{ forestProduct?.measurement_units?.unit_name || 'units' }})</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Quantity ({{ forestProduct?.measurement_units?.unit_name || 'units'
+
+                    }})</label
+                  >
                   <div class="relative rounded-md shadow-sm">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
+                    <div
+                      class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                    >
+                      <svg
+                        class="h-5 w-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                        />
+                      </svg>
                     </div>
                     <input
                       v-model="newLocation.quantity"
@@ -1753,18 +2235,30 @@ const deletePermanently = async () => {
                       placeholder="Enter quantity"
                     />
                   </div>
-            </div>
+                </div>
 
                 <!-- Instructions -->
                 <div class="bg-indigo-50 rounded-lg p-4">
                   <div class="flex">
                     <div class="flex-shrink-0">
-                      <svg class="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        class="h-5 w-5 text-indigo-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                     </div>
                     <div class="ml-3">
-                      <h3 class="text-sm font-medium text-indigo-800">How to add a location</h3>
+                      <h3 class="text-sm font-medium text-indigo-800">
+                        How to add a location
+                      </h3>
                       <div class="mt-2 text-sm text-indigo-700">
                         <ul class="list-disc pl-4 space-y-1">
                           <li>Click on the map to add a new location</li>
@@ -1779,14 +2273,18 @@ const deletePermanently = async () => {
               </div>
 
               <!-- Map section -->
-              <div class="h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+              <div
+                class="h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-sm"
+              >
                 <div id="modalMap" class="w-full h-full"></div>
               </div>
             </div>
           </div>
 
           <!-- Modal footer -->
-          <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg">
+          <div
+            class="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg"
+          >
             <div class="flex justify-end space-x-3">
               <button
                 @click="closeAddLocationModal"
@@ -1799,8 +2297,18 @@ const deletePermanently = async () => {
                 :disabled="!newLocation.name || !newLocation.latitude || !newLocation.longitude || !newLocation.quantity"
                 class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <svg
+                  class="-ml-1 mr-2 h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 Save Location
               </button>
@@ -1810,23 +2318,22 @@ const deletePermanently = async () => {
       </div>
     </div>
 
-
-<!-- Replace your existing showExtraImageModal div with this -->
-<ForestProductImageViewer
-  :showExtraImageModal="showExtraImageModal"
-  :currentImage="currentImage"
-  :currentImageIndex="currentImageIndex"
-  :additionalImages="additionalImages"
-  :mainImage="forestProduct?.image_url"
-  :isForestRanger="isForestRanger"
-  :isFPUAdmin="isFPUAdmin"
-  :imageTitle="imageTitle"
-  @close-modal="closeImageModal"
-  @delete-image="deleteImage"
-  @previous-image="showPreviousImage"
-  @next-image="showNextImage"
-  @select-image="selectImage"
-/>
+    <!-- Replace your existing showExtraImageModal div with this -->
+    <ForestProductImageViewer
+      :showExtraImageModal="showExtraImageModal"
+      :currentImage="currentImage"
+      :currentImageIndex="currentImageIndex"
+      :additionalImages="additionalImages"
+      :mainImage="forestProduct?.image_url"
+      :isForestRanger="isForestRanger"
+      :isFPUAdmin="isFPUAdmin"
+      :imageTitle="imageTitle"
+      @close-modal="closeImageModal"
+      @delete-image="deleteImage"
+      @previous-image="showPreviousImage"
+      @next-image="showNextImage"
+      @select-image="selectImage"
+    />
 
     <div v-if="showImageModal" class="fixed inset-0 z-50 overflow-y-auto">
       <div
