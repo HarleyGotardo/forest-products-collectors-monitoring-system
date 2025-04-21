@@ -785,45 +785,74 @@ const getCurrentLocation = () => {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      const latLngObj = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-      };
+      try {
+        const latLngObj = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
 
-      // Check for duplicate location
-      const isDuplicateLocation = allLocations.value.some(location =>
-        location.latitude === latLngObj.lat && location.longitude === latLngObj.lng
-      );
+        // Check for duplicate location
+        const isDuplicateLocation = allLocations.value.some(location =>
+          location.latitude === latLngObj.lat && location.longitude === latLngObj.lng
+        );
 
-      if (isDuplicateLocation) {
-        toast.error('A location already exists at these coordinates', { duration: 3000 });
+        if (isDuplicateLocation) {
+          toast.error('A location already exists at these coordinates', { duration: 3000 });
+          isGettingLocation.value = false;
+          return;
+        }
+
+        // Update coordinates
+        newLocation.value.latitude = latLngObj.lat;
+        newLocation.value.longitude = latLngObj.lng;
+
+        // Update map if it exists
+        if (modalMapInstance.value) {
+          // First, clear any existing markers
+          const markers = modalMapInstance.value.getLayers().filter(layer => layer instanceof L.Marker);
+          markers.forEach(marker => modalMapInstance.value.removeLayer(marker));
+
+          // Add new marker at the current location
+          const marker = L.marker([latLngObj.lat, latLngObj.lng]).addTo(modalMapInstance.value);
+
+          // Center the map on the new location with animation
+          modalMapInstance.value.setView([latLngObj.lat, latLngObj.lng], 16, {
+            animate: true,
+            duration: 1
+          });
+
+          // Add a popup to show the exact coordinates
+          marker.bindPopup(`
+            <div class="text-sm">
+              <strong>Current Location</strong><br>
+              Lat: ${latLngObj.lat.toFixed(6)}<br>
+              Long: ${latLngObj.lng.toFixed(6)}
+            </div>
+          `).openPopup();
+
+          // Add a circle to show accuracy (if available)
+          if (position.coords.accuracy) {
+            L.circle([latLngObj.lat, latLngObj.lng], {
+              radius: position.coords.accuracy,
+              color: '#4F46E5',
+              fillColor: '#4F46E5',
+              fillOpacity: 0.15,
+              weight: 1
+            }).addTo(modalMapInstance.value);
+          }
+        }
+
+        toast.success('Location coordinates retrieved successfully', { duration: 3000 });
+      } catch (error) {
+        console.error('Error processing coordinates:', error);
+        toast.error('Error processing coordinates', { duration: 3000 });
+      } finally {
         isGettingLocation.value = false;
-        return;
       }
-
-      // Update coordinates
-      newLocation.value.latitude = latLngObj.lat;
-      newLocation.value.longitude = latLngObj.lng;
-
-      // Update map if it exists
-      if (modalMapInstance.value) {
-        modalMapInstance.value.setView([latLngObj.lat, latLngObj.lng], CommonConstant.MAP_ZOOM_LEVEL.SIXTEEN);
-
-        // Clear existing markers
-        const markers = modalMapInstance.value.getLayers().filter(layer => layer instanceof L.Marker);
-        markers.forEach(marker => modalMapInstance.value.removeLayer(marker));
-
-        // Add new marker
-        L.marker([latLngObj.lat, latLngObj.lng]).addTo(modalMapInstance.value);
-      }
-
-      isGettingLocation.value = false;
-      toast.success('Location coordinates retrieved successfully', { duration: 3000 });
     },
     (error) => {
-      isGettingLocation.value = false;
       console.error('Geolocation error:', error);
-
+      
       switch (error.code) {
         case error.PERMISSION_DENIED:
           locationError.value = "Location access was denied";
@@ -841,6 +870,7 @@ const getCurrentLocation = () => {
           locationError.value = "An unknown error occurred";
           toast.error("An error occurred while getting your location.", { duration: 5000 });
       }
+      isGettingLocation.value = false;
     },
     {
       enableHighAccuracy: true,
