@@ -568,14 +568,33 @@ const initializeModalMap = () => {
         modalMapInstance.value.removeLayer(tempMarker.value)
       }
 
-      // Add new marker at clicked location
-      tempMarker.value = L.marker(e.latlng).addTo(modalMapInstance.value)
+      // Add new marker at clicked location with bounce animation
+      tempMarker.value = L.marker(e.latlng, {
+        bounceOnAdd: true,
+        title: 'New Location'
+      }).addTo(modalMapInstance.value)
+
+      // Add popup with coordinates
+      tempMarker.value.bindPopup(`
+        <div class="text-sm p-2">
+          <strong class="block mb-1">Selected Location</strong>
+          <div class="grid grid-cols-2 gap-2">
+            <span class="text-gray-600">Latitude:</span>
+            <span class="font-medium">${e.latlng.lat.toFixed(6)}</span>
+            <span class="text-gray-600">Longitude:</span>
+            <span class="font-medium">${e.latlng.lng.toFixed(6)}</span>
+          </div>
+        </div>
+      `).openPopup()
 
       // Update coordinates
       newLocation.value.latitude = e.latlng.lat
       newLocation.value.longitude = e.latlng.lng
       newLocation.value.name = '' // Reset name for new location
       newLocation.value.quantity = null // Reset quantity
+
+      // Try to get location name using reverse geocoding
+      reverseGeocode(e.latlng.lat, e.latlng.lng)
     }
   })
 
@@ -583,35 +602,57 @@ const initializeModalMap = () => {
   if (allLocations.value && allLocations.value.length > 0) {
     allLocations.value.forEach(loc => {
       if (loc.latitude && loc.longitude) {
-        L.marker([loc.latitude, loc.longitude])
+        const marker = L.marker([loc.latitude, loc.longitude])
           .addTo(modalMapInstance.value)
           .bindTooltip(loc.name, {
             permanent: true,
             direction: 'top',
             className: 'bg-white px-2 py-1 rounded shadow-lg'
           })
-          .on('click', () => {
-            // Check if the location is already added for the forest product
-            const existingLocation = locations.value.find(l => l.id === loc.id);
-            if (existingLocation) {
-              toast.error('Location already added for this forest product', { duration: 2000 });
-              return;
-            }
+          
+        // Mark as existing location
+        marker._existingLocation = true
+        
+        marker.bindPopup(`
+          <div class="text-sm p-2">
+            <strong class="block mb-1">${loc.name}</strong>
+            <div class="grid grid-cols-2 gap-2">
+              <span class="text-gray-600">Latitude:</span>
+              <span class="font-medium">${loc.latitude.toFixed(6)}</span>
+              <span class="text-gray-600">Longitude:</span>
+              <span class="font-medium">${loc.longitude.toFixed(6)}</span>
+            </div>
+          </div>
+        `)
 
-            // Remove temporary marker if it exists
-            if (tempMarker.value) {
-              modalMapInstance.value.removeLayer(tempMarker.value)
-              tempMarker.value = null
-            }
+        marker.on('click', () => {
+          // Check if the location is already added for the forest product
+          const existingLocation = locations.value.find(l => l.id === loc.id)
+          if (existingLocation) {
+            toast.error('Location already added for this forest product', { 
+              duration: 2000,
+              description: 'Please select a different location or add a new one.'
+            })
+            return
+          }
 
-            // Populate the form with selected location data
-            newLocation.value = {
-              name: loc.name,
-              latitude: loc.latitude,
-              longitude: loc.longitude,
-              quantity: null
-            }
-          });
+          // Remove temporary marker if it exists
+          if (tempMarker.value) {
+            modalMapInstance.value.removeLayer(tempMarker.value)
+            tempMarker.value = null
+          }
+
+          // Populate the form with selected location data
+          newLocation.value = {
+            name: loc.name,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            quantity: null
+          }
+
+          marker.openPopup()
+          toast.success('Location selected! Please enter the quantity.', { duration: 3000 })
+        })
       }
     })
   }
@@ -784,20 +825,22 @@ const getCurrentLocation = () => {
   }
 
   navigator.geolocation.getCurrentPosition(
-    (position) => {
+    async (position) => {
       try {
         const latLngObj = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
 
-        // Check for duplicate location
+        // Check for duplicate location with some tolerance (e.g., 0.0001 degrees ≈ 11 meters)
+        const tolerance = 0.0001;
         const isDuplicateLocation = allLocations.value.some(location =>
-          location.latitude === latLngObj.lat && location.longitude === latLngObj.lng
+          Math.abs(location.latitude - latLngObj.lat) < tolerance &&
+          Math.abs(location.longitude - latLngObj.lng) < tolerance
         );
 
         if (isDuplicateLocation) {
-          toast.error('A location already exists at these coordinates', { duration: 3000 });
+          toast.error('A location already exists very close to these coordinates', { duration: 3000 });
           isGettingLocation.value = false;
           return;
         }
@@ -806,43 +849,69 @@ const getCurrentLocation = () => {
         newLocation.value.latitude = latLngObj.lat;
         newLocation.value.longitude = latLngObj.lng;
 
-        // Update map if it exists
-        if (modalMapInstance.value) {
-          // First, clear any existing markers
-          const markers = modalMapInstance.value.getLayers().filter(layer => layer instanceof L.Marker);
-          markers.forEach(marker => modalMapInstance.value.removeLayer(marker));
-
-          // Add new marker at the current location
-          const marker = L.marker([latLngObj.lat, latLngObj.lng]).addTo(modalMapInstance.value);
-
-          // Center the map on the new location with animation
-          modalMapInstance.value.setView([latLngObj.lat, latLngObj.lng], 16, {
-            animate: true,
-            duration: 1
-          });
-
-          // Add a popup to show the exact coordinates
-          marker.bindPopup(`
-            <div class="text-sm">
-              <strong>Current Location</strong><br>
-              Lat: ${latLngObj.lat.toFixed(6)}<br>
-              Long: ${latLngObj.lng.toFixed(6)}
-            </div>
-          `).openPopup();
-
-          // Add a circle to show accuracy (if available)
-          if (position.coords.accuracy) {
-            L.circle([latLngObj.lat, latLngObj.lng], {
-              radius: position.coords.accuracy,
-              color: '#4F46E5',
-              fillColor: '#4F46E5',
-              fillOpacity: 0.15,
-              weight: 1
-            }).addTo(modalMapInstance.value);
-          }
+        // If modal is not open, open it
+        if (!showLocationModal.value) {
+          await openAddLocationModal();
         }
 
-        toast.success('Location coordinates retrieved successfully', { duration: 3000 });
+        // Update map after ensuring modal is open and map is initialized
+        nextTick(() => {
+          if (modalMapInstance.value) {
+            // Clear existing markers except for existing locations
+            const markers = modalMapInstance.value.getLayers()
+              .filter(layer => layer instanceof L.Marker && !layer._existingLocation);
+            markers.forEach(marker => modalMapInstance.value.removeLayer(marker));
+
+            // Add new marker for current location
+            const marker = L.marker([latLngObj.lat, latLngObj.lng], {
+              bounceOnAdd: true,
+              title: 'Current Location'
+            }).addTo(modalMapInstance.value);
+
+            // Center the map on the new location with animation
+            modalMapInstance.value.setView([latLngObj.lat, latLngObj.lng], 18, {
+              animate: true,
+              duration: 1
+            });
+
+            // Add a popup to show the exact coordinates
+            marker.bindPopup(`
+              <div class="text-sm p-2">
+                <strong class="block mb-1">Current Location</strong>
+                <div class="grid grid-cols-2 gap-2">
+                  <span class="text-gray-600">Latitude:</span>
+                  <span class="font-medium">${latLngObj.lat.toFixed(6)}</span>
+                  <span class="text-gray-600">Longitude:</span>
+                  <span class="font-medium">${latLngObj.lng.toFixed(6)}</span>
+                </div>
+                ${position.coords.accuracy ? `
+                  <div class="mt-2 text-xs text-gray-500">
+                    Accuracy: ±${Math.round(position.coords.accuracy)} meters
+                  </div>
+                ` : ''}
+              </div>
+            `).openPopup();
+
+            // Add accuracy circle if available
+            if (position.coords.accuracy) {
+              L.circle([latLngObj.lat, latLngObj.lng], {
+                radius: position.coords.accuracy,
+                color: '#4F46E5',
+                fillColor: '#4F46E5',
+                fillOpacity: 0.15,
+                weight: 1
+              }).addTo(modalMapInstance.value);
+            }
+
+            // Suggest a name based on reverse geocoding
+            reverseGeocode(latLngObj.lat, latLngObj.lng);
+          }
+        });
+
+        toast.success('Location coordinates retrieved successfully! You can now add details for this location.', { 
+          duration: 4000,
+          description: 'The map has been centered on your current location.'
+        });
       } catch (error) {
         console.error('Error processing coordinates:', error);
         toast.error('Error processing coordinates', { duration: 3000 });
@@ -852,6 +921,7 @@ const getCurrentLocation = () => {
     },
     (error) => {
       console.error('Geolocation error:', error);
+      isGettingLocation.value = false;
       
       switch (error.code) {
         case error.PERMISSION_DENIED:
@@ -870,7 +940,6 @@ const getCurrentLocation = () => {
           locationError.value = "An unknown error occurred";
           toast.error("An error occurred while getting your location.", { duration: 5000 });
       }
-      isGettingLocation.value = false;
     },
     {
       enableHighAccuracy: true,
@@ -878,6 +947,36 @@ const getCurrentLocation = () => {
       maximumAge: 0
     }
   );
+};
+
+// Add this helper function for reverse geocoding
+const reverseGeocode = async (lat, lng) => {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+    const data = await response.json();
+    
+    if (data && data.display_name) {
+      // Extract a shorter, more relevant name from the address
+      const relevantParts = [];
+      if (data.address) {
+        const { road, suburb, village, town, city } = data.address;
+        if (road) relevantParts.push(road);
+        if (suburb) relevantParts.push(suburb);
+        if (village) relevantParts.push(village);
+        if (town) relevantParts.push(town);
+        if (city) relevantParts.push(city);
+      }
+      
+      const suggestedName = relevantParts.length > 0 
+        ? relevantParts.slice(0, 2).join(', ')
+        : data.display_name.split(',').slice(0, 2).join(',');
+
+      newLocation.value.name = suggestedName;
+    }
+  } catch (error) {
+    console.error('Error in reverse geocoding:', error);
+    // Don't show an error toast here as it's not critical
+  }
 };
 </script>
 
