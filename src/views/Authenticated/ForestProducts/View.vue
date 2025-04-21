@@ -832,7 +832,7 @@ const getCurrentLocation = () => {
           lng: position.coords.longitude,
         };
 
-        // Check for duplicate location with some tolerance (e.g., 0.0001 degrees ≈ 11 meters)
+        // Check for duplicate location with some tolerance
         const tolerance = 0.0001;
         const isDuplicateLocation = allLocations.value.some(location =>
           Math.abs(location.latitude - latLngObj.lat) < tolerance &&
@@ -854,28 +854,27 @@ const getCurrentLocation = () => {
           await openAddLocationModal();
         }
 
-        // Update map after ensuring modal is open and map is initialized
+        // Ensure map is initialized and centered on current location
         nextTick(() => {
           if (modalMapInstance.value) {
-            // Clear existing markers except for existing locations
-            const markers = modalMapInstance.value.getLayers()
-              .filter(layer => layer instanceof L.Marker && !layer._existingLocation);
-            markers.forEach(marker => modalMapInstance.value.removeLayer(marker));
+            // Clear existing temporary markers
+            if (tempMarker.value) {
+              modalMapInstance.value.removeLayer(tempMarker.value);
+            }
+
+            // Center map on current location with animation
+            modalMapInstance.value.flyTo([latLngObj.lat, latLngObj.lng], 18, {
+              duration: 1.5
+            });
 
             // Add new marker for current location
-            const marker = L.marker([latLngObj.lat, latLngObj.lng], {
+            tempMarker.value = L.marker([latLngObj.lat, latLngObj.lng], {
               bounceOnAdd: true,
               title: 'Current Location'
             }).addTo(modalMapInstance.value);
 
-            // Center the map on the new location with animation
-            modalMapInstance.value.setView([latLngObj.lat, latLngObj.lng], 18, {
-              animate: true,
-              duration: 1
-            });
-
-            // Add a popup to show the exact coordinates
-            marker.bindPopup(`
+            // Add popup with coordinates
+            tempMarker.value.bindPopup(`
               <div class="text-sm p-2">
                 <strong class="block mb-1">Current Location</strong>
                 <div class="grid grid-cols-2 gap-2">
@@ -908,8 +907,8 @@ const getCurrentLocation = () => {
           }
         });
 
-        toast.success('Location coordinates retrieved successfully! You can now add details for this location.', { 
-          duration: 4000,
+        toast.success('Location coordinates retrieved successfully!', { 
+          duration: 3000,
           description: 'The map has been centered on your current location.'
         });
       } catch (error) {
