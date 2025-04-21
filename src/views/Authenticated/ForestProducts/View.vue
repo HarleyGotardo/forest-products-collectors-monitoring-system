@@ -705,6 +705,52 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+// Add these functions in the script section after the existing functions
+const deleteProduct = async () => {
+  const currentDate = new Date()
+  const formattedDate = format(currentDate, 'yyyy-MM-dd HH:mm:ss')
+
+  const { error: updateError } = await supabase
+    .from('forest_products')
+    .update({ deleted_at: formattedDate })
+    .eq('id', productId)
+
+  if (updateError) {
+    toast.error(updateError.message, { duration: 3000 })
+  } else {
+    toast.success('Forest product deleted successfully', { duration: 3000 })
+    fetchForestProduct()
+  }
+}
+
+const restoreProduct = async () => {
+  const { error: updateError } = await supabase
+    .from('forest_products')
+    .update({ deleted_at: null })
+    .eq('id', productId)
+
+  if (updateError) {
+    toast.error(updateError.message, { duration: 3000 })
+  } else {
+    toast.success('Forest product restored successfully', { duration: 3000 })
+    fetchForestProduct()
+  }
+}
+
+const deletePermanently = async () => {
+  const { error: deleteError } = await supabase
+    .from('forest_products')
+    .delete()
+    .eq('id', productId)
+
+  if (deleteError) {
+    toast.error(deleteError.message, { duration: 3000 })
+  } else {
+    toast.success('Forest product deleted permanently', { duration: 3000 })
+    router.push('/authenticated/forest-products')
+  }
+}
 </script>
 
 <template>
@@ -768,6 +814,95 @@ onMounted(async () => {
       >
         Deleted at
         {{ format(new Date(forestProduct.deleted_at), 'MMMM dd, yyyy - hh:mm a') }}
+      </div>
+
+      <!-- Action Buttons -->
+      <div v-if="!loading" class="flex items-center space-x-2">
+        <!-- Edit and Delete buttons for non-deleted products -->
+        <template v-if="!isDeleted && (isForestRanger || isFPUAdmin)">
+          <Button
+            @click="router.push(`/authenticated/forest-products/${productId}/edit`)"
+            class="p-2"
+            title="Edit forest product"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button class="p-2" title="Delete forest product">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Forest Product?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This forest product will be transferred to the recycle bin.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deleteProduct">Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </template>
+
+        <!-- Restore and Delete Permanently buttons for deleted products -->
+        <template v-if="isDeleted && (isForestRanger || isFPUAdmin)">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button class="p-2" title="Restore forest product">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
+                </svg>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Restore Forest Product?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to restore this product?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="restoreProduct">Restore</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button class="p-2" title="Delete permanently">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Product Permanently?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deletePermanently">Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </template>
       </div>
       </div>
     </div>

@@ -181,7 +181,6 @@ const createCollectionRecord = () => {
   router.push('/authenticated/collection-records/create')
 }
 
-// Update the markAsPaid function to include quantity deduction
 const markAsPaid = async (recordId) => {
   try {
     // Get the current user's ID from the auth session
@@ -201,7 +200,17 @@ const markAsPaid = async (recordId) => {
         purchased_quantity,
         fp_and_location_id,
         deducted_quantity,
-        quantity_during_purchase
+        quantity_during_purchase,
+        price_per_unit_during_purchase,
+        fp_and_location:fp_and_locations (
+          id,
+          forest_product:forest_products (
+            name,
+            measurement_unit_id,
+            measurement_unit:measurement_units (unit_name)
+          ),
+          location:locations (name)
+        )
       `)
       .eq('collection_record_id', recordId);
 
@@ -227,7 +236,7 @@ const markAsPaid = async (recordId) => {
       return;
     }
 
-    // Deduct the quantities from fp_and_locations
+    // Update collection_record_items with initial and remaining quantities
     for (const item of recordItems) {
       // Get current quantity from fp_and_locations
       const { data: fpLocationData, error: fpLocationError } = await supabase
@@ -238,56 +247,40 @@ const markAsPaid = async (recordId) => {
 
       if (fpLocationError) {
         console.error('Error fetching fp_and_location:', fpLocationError);
-        continue; // Skip this item but continue with others
+        continue;
       }
 
-      // Calculate new quantity
-      const newQuantity = fpLocationData.quantity - item.deducted_quantity;
+      const currentQuantity = fpLocationData.quantity;
+      const remainingQuantity = currentQuantity - item.deducted_quantity;
 
-      // Update the fp_and_locations table
+      // Update the collection_record_items with initial and remaining quantities
+      const { error: updateItemError } = await supabase
+        .from('collection_record_items')
+        .update({
+          quantity_during_purchase: currentQuantity,
+          remaining_quantity_during_purchase: remainingQuantity,
+          price_per_unit_during_purchase: item.price_per_unit_during_purchase
+        })
+        .eq('id', item.id);
+
+      if (updateItemError) {
+        console.error('Error updating collection record item:', updateItemError);
+        continue;
+      }
+
+      // Update the fp_and_locations table with new quantity
       const { error: updateFpLocationError } = await supabase
         .from('fp_and_locations')
-        .update({ quantity: newQuantity })
+        .update({ quantity: remainingQuantity })
         .eq('id', item.fp_and_location_id);
 
       if (updateFpLocationError) {
         console.error('Error updating fp_and_location quantity:', updateFpLocationError);
-        // Continue with other items despite this error
       }
     }
 
-    // Rest of the function for generating permit remains the same
-    // Fetch the record details for the permit
-    const record = collectionRecords.value.find((r) => r.id === recordId);
-
-    if (!record) {
-      console.error('Record not found in collectionRecords:', recordId);
-      error.value = 'Record not found';
-      return;
-    }
-
-    // Fetch the collection record items
-    const { data: items, error: permitItemsError } = await supabase
-      .from('collection_record_items')
-      .select(`
-        id,
-        purchased_quantity,
-        total_cost,
-        fp_and_location:fp_and_locations (
-          location:locations (name),
-          forest_product:forest_products (name)
-        )
-      `)
-      .eq('collection_record_id', recordId);
-
-    if (permitItemsError) {
-      console.error('Error fetching collection record items:', permitItemsError);
-      error.value = 'Failed to fetch collection record items';
-      return;
-    }
-
-    // Format the list of forest products
-    const forestProductsList = items.map((item) => {
+    // Format the list of forest products for the permit
+    const forestProductsList = recordItems.map((item) => {
       const productName = item.fp_and_location.forest_product.name;
       const locationName = item.fp_and_location.location.name;
       const quantity = item.purchased_quantity;
@@ -296,7 +289,7 @@ const markAsPaid = async (recordId) => {
     }).join('; ');
 
     // Check if any product is firewood
-    const firewoodNote = items.some((item) =>
+    const firewoodNote = recordItems.some((item) =>
       item.fp_and_location.forest_product.name.toLowerCase() === 'firewood'
     )
       ? 'Firewood Permits are intended for family consumption but not for sale. It is limited to dead branches up to 10cm diameter, 1 meter length.'
@@ -304,16 +297,16 @@ const markAsPaid = async (recordId) => {
 
     // Prepare permit data
     const permitData = {
-      permitNo: record.id,
-      dateIssued: new Date(record.created_at).toLocaleDateString(),
-      name: record.user_name,
+      permitNo: recordId,
+      dateIssued: new Date().toLocaleDateString(),
+      name: recordItems[0]?.user_name || 'N/A',
       permission: `collect the forest products: ${forestProductsList}`,
-      purpose: record.purpose,
-      collectionRequestId: record.collection_request_id,
-      expiryDate: new Date(new Date(record.created_at).setFullYear(new Date(record.created_at).getFullYear() + 1)).toLocaleDateString(),
-      chargesPaid: record.total_cost,
-      issuedBy: record.created_by_name,
-      inspectedBy: record.created_by_name,
+      purpose: recordItems[0]?.purpose || 'N/A',
+      collectionRequestId: recordItems[0]?.collection_request_id || 'N/A',
+      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString(),
+      chargesPaid: recordItems.reduce((sum, item) => sum + item.total_cost, 0).toFixed(2),
+      issuedBy: `${user.user_metadata.first_name} ${user.user_metadata.last_name}`,
+      inspectedBy: `${user.user_metadata.first_name} ${user.user_metadata.last_name}`,
       note: firewoodNote,
     };
 

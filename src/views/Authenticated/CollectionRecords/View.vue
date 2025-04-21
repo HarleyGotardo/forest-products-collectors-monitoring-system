@@ -200,7 +200,6 @@ const downloadPermit = async () => {
   }
 };
 
-// Update the markAsPaid function in View.vue to include quantity deduction
 const markAsPaid = async () => {
   try {
     // Get the current user's ID from the auth session
@@ -228,7 +227,7 @@ const markAsPaid = async () => {
       return;
     }
 
-    // Deduct quantities from fp_and_locations
+    // Update collection_record_items with initial and remaining quantities
     for (const item of recordItems.value) {
       // Get current quantity from fp_and_locations
       const { data: fpLocationData, error: fpLocationError } = await supabase
@@ -239,21 +238,35 @@ const markAsPaid = async () => {
 
       if (fpLocationError) {
         console.error('Error fetching fp_and_location:', fpLocationError);
-        continue; // Skip this item but continue with others
+        continue;
       }
 
-      // Calculate new quantity
-      const newQuantity = fpLocationData.quantity - item.deducted_quantity;
+      const currentQuantity = fpLocationData.quantity;
+      const remainingQuantity = currentQuantity - item.deducted_quantity;
 
-      // Update the fp_and_locations table
+      // Update the collection_record_items with initial and remaining quantities
+      const { error: updateItemError } = await supabase
+        .from('collection_record_items')
+        .update({
+          quantity_during_purchase: currentQuantity,
+          remaining_quantity_during_purchase: remainingQuantity,
+          price_per_unit_during_purchase: item.price_per_unit_during_purchase
+        })
+        .eq('id', item.id);
+
+      if (updateItemError) {
+        console.error('Error updating collection record item:', updateItemError);
+        continue;
+      }
+
+      // Update the fp_and_locations table with new quantity
       const { error: updateFpLocationError } = await supabase
         .from('fp_and_locations')
-        .update({ quantity: newQuantity })
+        .update({ quantity: remainingQuantity })
         .eq('id', item.fp_and_location.id);
 
       if (updateFpLocationError) {
         console.error('Error updating fp_and_location quantity:', updateFpLocationError);
-        // Continue with other items despite this error
       }
     }
 
@@ -361,26 +374,26 @@ onMounted(() => {
           </svg>
           Download Permit
         </Button>
-        <div class="flex items-center space-x-2">
-          <Button
+            <div class="flex items-center space-x-2">
+              <Button
             v-if="(isFPUAdmin || isForestRanger) && record && !record?.is_paid && !record?.deleted_at"
-            class="p-2 flex items-center justify-center"
+                class="p-2 flex items-center justify-center"
             @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record?.id } })"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-          </Button>
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </Button>
           <AlertDialog v-if="record && !record.is_paid && !record?.deleted_at">
             <AlertDialogTrigger>
               <Button
@@ -401,22 +414,22 @@ onMounted(() => {
                   />
                 </svg>
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This collection record will be transferred to the recycle bin.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="deleteCollectionRecord(record.id)">
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This collection record will be transferred to the recycle bin.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="deleteCollectionRecord(record.id)">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
           <!-- Restore and Delete Permanently buttons for deleted records -->
           <template v-if="record?.deleted_at">
@@ -648,14 +661,14 @@ onMounted(() => {
                     >
                     <div class="mt-1 text-xs text-gray-500 space-y-0.5">
                       <p>
-                        Initial Qty: {{ item.quantity_during_purchase }}
+                      Collected: {{ item.deducted_quantity }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                       </p>
-                      <p>
-                        Collected: {{ item.deducted_quantity }}
+                      <p v-if="item.quantity_during_purchase !== null">
+                      Initial Qty: {{ item.quantity_during_purchase }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                       </p>
-                      <p>
+                      <p v-if="item.remaining_quantity_during_purchase !== null">
                         Remaining:
                         {{ item.remaining_quantity_during_purchase }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
@@ -851,7 +864,7 @@ onMounted(() => {
             <div>
               <div class="h-6 bg-gray-200 rounded w-48"></div>
               <div class="h-4 bg-gray-200 rounded w-64 mt-2"></div>
-            </div>
+      </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
               <div>
                 <div class="h-4 bg-gray-200 rounded w-20"></div>

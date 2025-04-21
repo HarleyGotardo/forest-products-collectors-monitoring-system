@@ -211,7 +211,7 @@ const fetchRequestDetails = async (requestId) => {
     return;
   }
 
-  // Reset and populate selected forest products
+  // Reset and populate selected products
   selectedForestProducts.value = [];
   
   // Map the request items to the forest products
@@ -303,15 +303,12 @@ const handleSubmit = () => {
   
   receiptDetails.value = validProducts.map(product => {
     const totalCost = product.price * product.purchased_quantity;
-    const remainingQuantity = product.quantity - product.purchased_quantity;
 
     return {
       fp_and_location_id: product.id,
       forestProductName: product.forest_product_name,
       locationName: product.location_name,
-      currentQuantity: product.quantity,
       purchasedQuantity: product.purchased_quantity,
-      remainingQuantity: remainingQuantity,
       price: product.price,
       unitName: product.unit_name,
       totalCost: totalCost,
@@ -342,11 +339,11 @@ const confirmSubmit = async () => {
         {
           user_id: selectedCollector.value,
           created_by: user.id,
-          collection_request_id: selectedRequest.value, // Save the selected request number
-          purpose: finalPurpose, // Save the selected or custom purpose
-          is_paid: isPaid, // Automatically mark as paid if total cost is 0
-          approved_by: isPaid ? user.id : null, // Save the authenticated user as the approver if isPaid
-          approved_at: isPaid ? new Date().toISOString() : null, // Save the current timestamp as approved_at if isPaid
+          collection_request_id: selectedRequest.value,
+          purpose: finalPurpose,
+          is_paid: isPaid,
+          approved_by: isPaid ? user.id : null,
+          approved_at: isPaid ? new Date().toISOString() : null,
         }
       ])
       .select('id');
@@ -370,9 +367,7 @@ const confirmSubmit = async () => {
             purchased_quantity: item.purchasedQuantity,
             total_cost: item.totalCost,
             deducted_quantity: item.purchasedQuantity,
-            quantity_during_purchase: item.currentQuantity,
-            price_per_unit_during_purchase: item.price,
-            remaining_quantity_during_purchase: item.remainingQuantity,
+            price_per_unit_during_purchase: item.price
           }
         ]);
 
@@ -381,8 +376,6 @@ const confirmSubmit = async () => {
         toast.error('Error creating collection record item - ' + itemError.message);
         return;
       }
-
-      // REMOVED: The quantity deduction code that was here
     }
 
     // Update the collection_requests table to set 'is_recorded' to true
