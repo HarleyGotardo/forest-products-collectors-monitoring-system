@@ -16,6 +16,17 @@ import {
   PaginationPrev,
   PaginationEllipsis,
 } from '@/components/ui/pagination'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const router = useRouter()
 const salesData = ref([])
@@ -584,13 +595,32 @@ onMounted(() => {
         <h1 class="text-2xl sm:text-3xl font-bold text-green-800">Sales Report</h1>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
-        <button @click="downloadReport"
-        class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-          </svg>
-          Download Report
-        </button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              Download Report
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Download Sales Report</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will download the current sales report data as a CSV file with the applied filters. Do you want to proceed?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="downloadReport">
+                Download
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <button @click="fetchSalesReportData"
         class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto">
           <span class="mr-2">          <svg
@@ -775,8 +805,21 @@ onMounted(() => {
       <!-- Top Collectors Chart -->
       <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6">
         <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Top Collectors by Sales</h3>
-        <div class="w-full h-60 sm:h-80 md:h-80">
+        <div class="w-full h-60 sm:h-80 md:h-80 relative">
           <canvas id="collectorSalesChart"></canvas>
+          <!-- No data message -->
+          <div 
+            v-if="!collectorSalesData.length"
+            class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 rounded-lg"
+          >
+            <img
+              src="@/assets/chill.png"
+              alt="No Data"
+              class="w-24 h-24 mb-4 opacity-50"
+            />
+            <p class="text-gray-500 text-lg font-medium">No collector sales data available</p>
+            <p class="text-gray-400 text-sm mt-2">Sales data will appear here once collectors make transactions</p>
+          </div>
         </div>
       </div>
 

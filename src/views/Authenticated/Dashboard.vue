@@ -6,6 +6,18 @@ import { toast } from 'vue-sonner'
 import Chart from 'chart.js/auto'
 import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
 import { nextTick } from 'vue'
+import * as XLSX from 'xlsx'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const router = useRouter()
 const totalCollectors = ref(0)
@@ -467,6 +479,69 @@ const renderCharts = async (labels, quantities, units) => {
   }
 };
 
+const isExporting = ref(false)
+
+const exportToExcel = async () => {
+  try {
+    isExporting.value = true
+
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new()
+
+    // Function to fetch and format data for a table
+    const fetchTableData = async (tableName, query = '') => {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select(query)
+      
+      if (error) throw error
+      return data
+    }
+
+    // List of tables and their queries
+    const tables = [
+      { name: 'collection_record_items', query: '*' },
+      { name: 'collection_records', query: '*' },
+      { name: 'collection_request_items', query: '*' },
+      { name: 'collection_requests', query: '*' },
+      { name: 'forest_product_images', query: '*' },
+      { name: 'forest_products', query: '*' },
+      { name: 'fp_and_locations', query: '*' },
+      { name: 'locations', query: '*' },
+      { name: 'measurement_units', query: '*' },
+      { name: 'profiles', query: '*' },
+      { name: 'roles', query: '*' }
+    ]
+
+    // Fetch and add each table to the workbook
+    for (const table of tables) {
+      const data = await fetchTableData(table.name, table.query)
+      const worksheet = XLSX.utils.json_to_sheet(data)
+      XLSX.utils.book_append_sheet(workbook, worksheet, table.name)
+    }
+
+    // Get current date for filename
+    const date = new Date().toISOString().split('T')[0]
+    const fileName = `nature_cart_backup_${date}.xlsx`
+
+    // Write the workbook and trigger download
+    XLSX.writeFile(workbook, fileName)
+
+    toast.success('Backup completed successfully!', {
+      description: `File saved as ${fileName}`,
+      duration: 5000
+    })
+  } catch (error) {
+    console.error('Export error:', error)
+    toast.error('Failed to create backup', {
+      description: error.message,
+      duration: 5000
+    })
+  } finally {
+    isExporting.value = false
+  }
+}
+
 onMounted(() => {
   fetchDashboardData()
 })
@@ -486,6 +561,66 @@ onMounted(() => {
         <h1 class="text-2xl sm:text-3xl font-bold text-green-800">Dashboard</h1>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <AlertDialog v-if="isVSUAdmin || isFPUAdmin">
+          <AlertDialogTrigger asChild>
+            <button
+              :disabled="isExporting"
+              class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg
+                v-if="!isExporting"
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2M12 15V3m0 12l-4-4m4 4l4-4"
+                />
+              </svg>
+              <svg
+                v-else
+                class="animate-spin h-5 w-5 mr-2"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              {{ isExporting ? 'Exporting...' : 'Backup Data' }}
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Backup Database</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will download all data from the database as an Excel file with multiple sheets. Each table will be in its own sheet. Do you want to proceed?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="exportToExcel">
+                Start Backup
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <button
           v-if="isForestRanger || isFPUAdmin"
           @click="createCollectionRoute"
@@ -880,8 +1015,21 @@ onMounted(() => {
               Most Collected Forest Products
             </h3>
           </div>
-          <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px]">
+          <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px] relative">
             <canvas id="mostCollectedChart"></canvas>
+            <!-- No data message -->
+            <div 
+              v-if="!mostCollectedProduct || mostCollectedProduct === 'N/A'"
+              class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 rounded-lg"
+            >
+              <img
+                src="@/assets/chill.png"
+                alt="No Data"
+                class="w-24 h-24 mb-4 opacity-50"
+              />
+              <p class="text-gray-500 text-lg font-medium">No collection data available</p>
+              <p class="text-gray-400 text-sm mt-2">Start collecting forest products to see statistics</p>
+            </div>
           </div>
         </div>
 
