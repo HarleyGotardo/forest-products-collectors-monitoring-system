@@ -162,8 +162,8 @@ watch(currentPage, () => {
       <div class="flex items-center space-x-2">
         <img src="@/assets/trash-bin.png" alt="Trash Bin" class="w-12 h-12 group-hover:scale-110 transition-transform" />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Trashed Collection Requests</h2>
-          <p class="mt-1 text-sm">View and manage your deleted collection requests</p>
+          <h2 class="text-xl sm:text-2xl font-bold text-green-900">Trashed Collection Requests</h2>
+          <p class="mt-1 text-sm text-green-900">View and manage your deleted collection requests</p>
         </div>
       </div>
       <div class="flex space-x-4">
