@@ -1893,7 +1893,7 @@ const reverseGeocode = async (lat, lng) => {
                         :value="item.value"
                         :class="[
                   'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                  item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                  item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                 ]"
                       >
                         {{ item.value }}
@@ -2561,7 +2561,16 @@ const reverseGeocode = async (lat, lng) => {
         </div>
       </div>
     </div>
-    <Toaster />
+    <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
   </div>
 </template>
 

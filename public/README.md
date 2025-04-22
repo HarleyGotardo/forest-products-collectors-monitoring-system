@@ -116,7 +116,7 @@ pnpm build:dev
 </template>
 
 <script lang="ts" setup>
-  import { Toaster, toast } from 'vue-sonner'
+  import { Toaster, toast } from "vue-sonner";
 </script>
 ```
 
@@ -144,7 +144,7 @@ Use `Toaster` component and `$toast` function anywhere in the Vue SFC
 </template>
 
 <script setup lang="ts">
-  const { $toast } = useNuxtApp()
+  const { $toast } = useNuxtApp();
 </script>
 ```
 
@@ -169,15 +169,15 @@ https://www.unpkg.com/vue-sonner@0.3.1/lib/vue-sonner.umd.cjs
 Most basic toast. You can customize it (and any other type) by passing an options object as the second argument.
 
 ```ts
-toast('Event has been created')
+toast("Event has been created");
 ```
 
 With custom description:
 
 ```ts
-toast('Event has been created', {
-  description: 'Monday, January 3rd at 6:00pm'
-})
+toast("Event has been created", {
+  description: "Monday, January 3rd at 6:00pm",
+});
 ```
 
 ### Success
@@ -185,7 +185,7 @@ toast('Event has been created', {
 Renders a checkmark icon in front of the message.
 
 ```ts
-toast.success('Event has been created')
+toast.success("Event has been created");
 ```
 
 ### Error
@@ -193,7 +193,7 @@ toast.success('Event has been created')
 Renders an error icon in front of the message.
 
 ```ts
-toast.error('Event has not been created')
+toast.error("Event has not been created");
 ```
 
 ### Action
@@ -201,12 +201,12 @@ toast.error('Event has not been created')
 Renders a button.
 
 ```ts
-toast('Event has been created', {
+toast("Event has been created", {
   action: {
-    label: 'Undo',
-    onClick: () => console.log('Undo')
-  }
-})
+    label: "Undo",
+    onClick: () => console.log("Undo"),
+  },
+});
 ```
 
 ### Promise
@@ -217,10 +217,10 @@ You can pass a function to the success/error messages to incorporate the result/
 
 ```ts
 toast.promise(() => new Promise((resolve) => setTimeout(resolve, 2000)), {
-  loading: 'Loading',
-  success: (data: any) => 'Success',
-  error: (data: any) => 'Error'
-})
+  loading: "Loading",
+  success: (data: any) => "Success",
+  error: (data: any) => "Error",
+});
 ```
 
 ### Custom Component
@@ -229,18 +229,18 @@ You can pass a Vue Component as the first argument instead of a string to render
 
 ```html
 <script lang="ts" setup>
-  import { defineComponent, h, markRaw } from 'vue'
+  import { defineComponent, h, markRaw } from "vue";
 
   const CustomDiv = defineComponent({
     setup() {
       return () =>
-        h('div', {
-          innerHTML: 'A custom toast with unstyling'
-        })
-    }
-  })
+        h("div", {
+          innerHTML: "A custom toast with unstyling",
+        });
+    },
+  });
 
-  toast(markRaw(CustomDiv))
+  toast(markRaw(CustomDiv));
 </script>
 ```
 
@@ -252,11 +252,11 @@ You can use `toast.custom` to render an unstyled toast with custom jsx while mai
 
 ```vue
 <script lang="ts" setup>
-import { markRaw } from 'vue'
+import { markRaw } from "vue";
 
-import HeadlessToast from './HeadlessToast.vue'
+import HeadlessToast from "./HeadlessToast.vue";
 
-toast.custom(markRaw(HeadlessToast), { duration: 999999 })
+toast.custom(markRaw(HeadlessToast), { duration: 999999 });
 </script>
 ```
 
@@ -265,12 +265,29 @@ toast.custom(markRaw(HeadlessToast), { duration: 999999 })
 You can change the theme using the `theme` prop. Default theme is light.
 
 ```html
-<Toaster theme="dark" />
+<Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
 ```
 
 ### Position
 
-You can change the position through the `position` prop on the `<Toaster />` component. Default is `top-right`.
+You can change the position through the `position` prop on the `<Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+` component. Default is `top-right`.
 
 ```html
 <!-- Available positions -->
@@ -304,13 +321,13 @@ You can style your toasts globally with the `toastOptions` prop in the `Toaster`
 ### Styling for individual toast
 
 ```ts
-toast('Event has been created', {
+toast("Event has been created", {
   style: {
-    background: 'red'
+    background: "red",
   },
-  class: 'my-toast',
-  descriptionClass: 'my-toast-description'
-})
+  class: "my-toast",
+  descriptionClass: "my-toast-description",
+});
 ```
 
 ### Tailwind CSS
@@ -327,8 +344,8 @@ The preferred way to style the toasts with tailwind is by using the `unstyled` p
       description: 'text-red-400',
       actionButton: 'bg-zinc-400',
       cancelButton: 'bg-orange-400',
-      closeButton: 'bg-lime-400'
-    }
+      closeButton: 'bg-lime-400',
+    },
   }"
 />
 ```
@@ -336,17 +353,17 @@ The preferred way to style the toasts with tailwind is by using the `unstyled` p
 You can do the same when calling `toast()`.
 
 ```ts
-toast('Hello World', {
+toast("Hello World", {
   unstyled: true,
   classes: {
-    toast: 'bg-blue-400',
-    title: 'text-red-400 text-2xl',
-    description: 'text-red-400',
-    actionButton: 'bg-zinc-400',
-    cancelButton: 'bg-orange-400',
-    closeButton: 'bg-lime-400'
-  }
-})
+    toast: "bg-blue-400",
+    title: "text-red-400 text-2xl",
+    description: "text-red-400",
+    actionButton: "bg-zinc-400",
+    cancelButton: "bg-orange-400",
+    closeButton: "bg-lime-400",
+  },
+});
 ```
 
 Styling per toast type is also possible.
@@ -359,8 +376,8 @@ Styling per toast type is also possible.
       error: 'bg-red-400',
       success: 'text-green-400',
       warning: 'text-yellow-400',
-      info: 'bg-blue-400'
-    }
+      info: 'bg-blue-400',
+    },
   }"
 />
 ```
@@ -418,11 +435,11 @@ Offset from the edges of the screen.
 You can pass `onDismiss` and `onAutoClose` callbacks. `onDismiss` gets fired when either the close button gets clicked or the toast is swiped. `onAutoClose` fires when the toast disappears automatically after it's timeout (`duration` prop).
 
 ```ts
-toast('Event has been created', {
+toast("Event has been created", {
   onDismiss: (t) => console.log(`Toast with id ${t.id} has been dismissed`),
   onAutoClose: (t) =>
-    console.log(`Toast with id ${t.id} has been closed automatically`)
-})
+    console.log(`Toast with id ${t.id} has been closed automatically`),
+});
 ```
 
 ### Persisting toasts
@@ -451,15 +468,15 @@ toast('Event has been created', {
 To remove a toast programmatically use `toast.dismiss(id)`.
 
 ```ts
-const toastId = toast('Event has been created')
+const toastId = toast("Event has been created");
 
-toast.dismiss(toastId)
+toast.dismiss(toastId);
 ```
 
 You can also dismiss all toasts at once by calling `toast.dismiss()` without an id.
 
 ```ts
-toast.dismiss()
+toast.dismiss();
 ```
 
 ### Keyboard focus

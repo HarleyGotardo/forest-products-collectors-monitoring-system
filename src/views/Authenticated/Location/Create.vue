@@ -440,7 +440,7 @@ const getCurrentLocation = () => {
         </svg>
       </div>
       <div>
-        <h2 class="text-2xl font-bold text-gray-800">Create Location</h2>
+        <h2 class="text-2xl font-bold text-green-800">Create Location</h2>
         <p class="text-sm text-gray-500 mt-1">Add a new location</p>
       </div>
     </div>
@@ -813,5 +813,14 @@ const getCurrentLocation = () => {
     </div>
   </div>
 
-  <Toaster />
+  <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
 </template>

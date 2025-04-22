@@ -298,10 +298,10 @@ onMounted(async () => {
           class="w-12 h-12 group-hover:scale-110 transition-transform"
         />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">
+          <h2 class="text-xl sm:text-2xl font-bold text-green-900">
             Forest Products Map
           </h2>
-          <p class="mt-1 text-sm">View the locations of forest products</p>
+          <p class="mt-1 text-sm text-green-900">View the locations of forest products</p>
         </div>
       </div>
       <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
@@ -351,9 +351,10 @@ onMounted(async () => {
   </div>
   <div class="flex space-x-2 w-full sm:w-auto">
     <Button
+    
       @click="searchLocation"
       :disabled="isSearching"
-      class="flex-1 sm:flex-none transition-all duration-200"
+      class="flex-1 sm:flex-none transition-all duration-200 bg-green-900 text-white hover:bg-green-600"
     >
       <span v-if="isSearching" class="flex items-center">
         <svg
@@ -379,8 +380,8 @@ onMounted(async () => {
         Searching...
       </span>
       <span v-else>Search</span>
-    </Button>
-    <Button @click="createLocation" class="flex-1 sm:flex-none"> + Create Location </Button>
+    </Button class="bg-green-900 text-white hover:bg-green-600">
+    <Button  @click="createLocation" class="flex-1 sm:flex-none bg-green-900 text-white hover:bg-green-600"> + Create Location </Button>
   </div>
 </div>
     </div>

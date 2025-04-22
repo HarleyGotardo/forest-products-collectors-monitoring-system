@@ -170,10 +170,10 @@ onMounted(() => {
           class="w-12 h-12 group-hover:scale-110 transition-transform"
         />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">
+          <h2 class="text-xl sm:text-2xl font-bold text-green-900">
             All Collection Requests
           </h2>
-          <p class="mt-1 text-sm">View and manage all collection requests</p>
+          <p class="mt-1 text-sm text-green-900">View and manage all collection requests</p>
         </div>
       </div>
       <div
@@ -327,7 +327,7 @@ onMounted(() => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -436,7 +436,7 @@ onMounted(() => {
         <!-- Desktop view (table) - hidden on small screens -->
   <div class="hidden sm:block overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-700">
+      <thead class="bg-green-900">
         <tr>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
             ID
@@ -457,7 +457,7 @@ onMounted(() => {
             Recording
           </th>
           <th v-if="isFPUAdmin || isForestRanger || isVSUAdmin" scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
-            Actions
+            Action
           </th>
         </tr>
       </thead>
@@ -503,7 +503,9 @@ onMounted(() => {
               <template v-else>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button v-if="isFPUAdmin || isForestRanger" class="text-sm px-3 py-2" @click="confirmApproveRequest(request.id)">
+                    <Button 
+                    class="bg-green-900 text-white hover:bg-green-700 text-sm px-3 py-2"
+                    v-if="isFPUAdmin || isForestRanger" @click="confirmApproveRequest(request.id)">
                       <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
@@ -519,7 +521,7 @@ onMounted(() => {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
-                      <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
+                      <AlertDialogAction class="bg-green-900 hover:bg-green-700" @click="approveRequest">Approve</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -663,7 +665,7 @@ onMounted(() => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}
@@ -684,6 +686,15 @@ onMounted(() => {
       </div>
     </div>
 
-    <Toaster />
+    <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
   </div>
 </template>

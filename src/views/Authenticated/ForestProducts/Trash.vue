@@ -168,8 +168,8 @@ watch(selectedType, () => {
       <div class="flex items-center space-x-4">
         <img src="@/assets/trash-bin.png" alt="Forest Map" class="w-12 h-12 group-hover:scale-110 transition-transform" />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Trashed Forest Products</h2>
-          <p class="mt-1 text-sm text-gray-500">Manage and restore trashed forest products</p>
+          <h2 class="text-xl sm:text-2xl font-bold text-green-900">Trashed Forest Products</h2>
+          <p class="mt-1 text-sm text-green-900">Manage and restore trashed forest products</p>
         </div>
       </div>
       <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
@@ -205,7 +205,7 @@ watch(selectedType, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -319,13 +319,13 @@ watch(selectedType, () => {
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full border-collapse sm:border-separate sm:border-spacing-0 cursor-pointer">
-          <thead class="bg-gray-700 hidden sm:table-header-group">
+          <thead class="bg-green-900 hidden sm:table-header-group">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">ID</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Name</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Type</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Locations</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Actions</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Action</th>
             </tr>
           </thead>
 
@@ -360,7 +360,9 @@ watch(selectedType, () => {
                   <div class="flex-shrink-0 flex items-center space-x-1" @click.stop>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button @click.stop>
+                        <Button
+                        class="bg-green-900 text-white hover:bg-green-600"
+                        @click.stop>
                           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
@@ -382,7 +384,9 @@ watch(selectedType, () => {
                     </AlertDialog>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button @click.stop>
+                        <Button 
+                        class="bg-red-900 text-white hover:bg-red-700"
+                        @click.stop>
                           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -398,7 +402,7 @@ watch(selectedType, () => {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction @click="deletePermanently(product.id)">Delete</AlertDialogAction>
+                          <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deletePermanently(product.id)">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -459,7 +463,8 @@ watch(selectedType, () => {
                 <div class="flex items-center justify-end space-x-2">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button @click.stop>
+                      <Button 
+                      class="bg-green-900 text-white hover:bg-green-600" @click.stop>
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                             d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
@@ -481,7 +486,9 @@ watch(selectedType, () => {
                   </AlertDialog>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button @click.stop>
+                      <Button 
+                      class="bg-red-900 text-white hover:bg-red-700"
+                      @click.stop>
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -497,7 +504,7 @@ watch(selectedType, () => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="deletePermanently(product.id)">Delete</AlertDialogAction>
+                        <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deletePermanently(product.id)">Delete Permanently</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -549,7 +556,7 @@ watch(selectedType, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}
@@ -569,6 +576,15 @@ watch(selectedType, () => {
         </div>
       </div>
     </div>
-    <Toaster />
+    <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
   </div>
 </template>

@@ -166,8 +166,8 @@ watch(currentPage, () => {
       <div class="flex items-center space-x-2">
         <img src="@/assets/request.png" alt="Request Icon" class="w-12 h-12 group-hover:scale-110 transition-transform" />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Collection Requests</h2>
-          <p class="mt-1 text-sm">View and manage all your collection requests</p>
+          <h2 class="text-xl sm:text-2xl font-bold text-green-900">Collection Requests</h2>
+          <p class="mt-1 text-sm text-green-900">View and manage all your collection requests</p>
         </div>
       </div>
       <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
@@ -290,7 +290,7 @@ watch(currentPage, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -389,14 +389,14 @@ watch(currentPage, () => {
       <!-- Desktop view (table) - hidden on small screens -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-700">
+          <thead class="bg-green-900">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Requested At</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider hidden md:table-cell">Collection Date</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Recording</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -436,7 +436,9 @@ watch(currentPage, () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
                 <div class="flex items-center justify-end space-x-3">
-                  <Button @click="editRequest(request.id, $event)" :disabled="request.approved_at">
+                  <Button 
+                  class="bg-green-900 text-white hover:bg-green-600"
+                  @click="editRequest(request.id, $event)" :disabled="request.approved_at">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -444,7 +446,9 @@ watch(currentPage, () => {
                   </Button>
                   <AlertDialog v-if="!request.approved_at">
                     <AlertDialogTrigger>
-                      <Button @click="confirmDeleteRequest(request.id)">
+                      <Button 
+                      class="bg-red-900 text-white hover:bg-red-700"
+                      @click="confirmDeleteRequest(request.id)">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -460,7 +464,7 @@ watch(currentPage, () => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="deleteRequest">Delete</AlertDialogAction>
+                        <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deleteRequest">Delete</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -532,7 +536,9 @@ watch(currentPage, () => {
           
           <!-- Card actions -->
           <div v-if="!request.approved_at" class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between" @click.stop>
-            <Button class="text-sm" @click="editRequest(request.id, $event)">
+            <Button 
+            class="bg-green-900 text-white hover:bg-green-600 text-sm"
+            @click="editRequest(request.id, $event)">
               <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -542,7 +548,7 @@ watch(currentPage, () => {
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button class="text-sm" @click="confirmDeleteRequest(request.id)">
+                <Button class="bg-red-900 text-white hover:bg-red-700 text-sm" @click="confirmDeleteRequest(request.id)">
                   <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -608,7 +614,7 @@ watch(currentPage, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

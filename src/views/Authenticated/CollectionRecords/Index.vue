@@ -392,10 +392,10 @@ watch(paymentFilter, () => {
           class="w-10 h-10 sm:w-12 sm:h-12 group-hover:scale-110 transition-transform"
         />
         <div>
-          <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+          <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-green-900">
             Forest Products Collection Records
           </h2>
-          <p class="mt-1 text-xs sm:text-sm">
+          <p class="mt-1 text-xs sm:text-sm text-green-900">
             View and manage all collection records
           </p>
         </div>
@@ -429,7 +429,7 @@ watch(paymentFilter, () => {
         <Button
           v-if="isFPUAdmin || isForestRanger"
           @click="createCollectionRecord"
-          class="min-w-10"
+          class="min-w-10 bg-green-900 text-white hover:bg-green-700"
         >
           +
         </Button>
@@ -534,7 +534,7 @@ watch(paymentFilter, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -650,7 +650,7 @@ watch(paymentFilter, () => {
 <!-- Desktop view (table) - hidden on small screens -->
 <div class="hidden sm:block overflow-x-auto">
   <table class="min-w-full divide-y divide-gray-200">
-    <thead class="bg-gray-700">
+    <thead class="bg-green-900">
       <tr>
         <th
           scope="col"
@@ -692,7 +692,7 @@ watch(paymentFilter, () => {
           scope="col"
           class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white"
         >
-          Actions
+          Action
         </th>
       </tr>
     </thead>
@@ -761,7 +761,9 @@ watch(paymentFilter, () => {
             <span v-if="!record.is_paid" class="inline-block">
               <AlertDialog>
                 <AlertDialogTrigger>
-                  <Button v-if="isVSUAdmin" class="p-2">
+                  <Button
+                  class="bg-green-900 text-white hover:bg-green-600 p-2"
+                  v-if="isVSUAdmin">
                     <svg
                       class="w-5 h-5"
                       fill="none"
@@ -798,8 +800,8 @@ watch(paymentFilter, () => {
 
             <!-- Edit Button -->
             <Button
+            class="bg-green-900 text-white hover:bg-green-600 p-2"
               v-if="(isFPUAdmin || isForestRanger) && !record.is_paid"
-              class="p-2"
               @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
             >
               <svg
@@ -820,7 +822,7 @@ watch(paymentFilter, () => {
             <!-- Delete Button -->
             <AlertDialog v-if="!record.is_paid">
               <AlertDialogTrigger>
-                <Button v-if="isFPUAdmin || isForestRanger" class="p-2">
+                <Button v-if="isFPUAdmin || isForestRanger" class="p-2 bg-red-900 text-white hover:bg-red-600">
                   <svg
                     class="w-5 h-5"
                     fill="none"
@@ -846,7 +848,7 @@ watch(paymentFilter, () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="deleteCollectionRecord(record.id)"
+                  <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deleteCollectionRecord(record.id)"
                     >Delete</AlertDialogAction
                   >
                 </AlertDialogFooter>
@@ -1015,7 +1017,7 @@ watch(paymentFilter, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

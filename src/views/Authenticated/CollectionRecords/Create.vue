@@ -634,7 +634,7 @@ onMounted(() => {
             <div>
             <button
               type="button"
-              class="w-full bg-gray-800 hover:bg-gray-700 text-white rounded-lg py-2.5 font-medium transition-colors flex items-center justify-center space-x-2"
+              class="w-full bg-green-900 hover:bg-green-700 text-white rounded-lg py-2.5 font-medium transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
               @click="isModalOpen = true"
               :disabled="!selectedRequest"
               :class="{ 'opacity-50 cursor-not-allowed': !selectedRequest }"
@@ -648,7 +648,7 @@ onMounted(() => {
           <button
             type="submit"
             :disabled="!isFormComplete"
-            class="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all text-white rounded-lg py-3 font-medium"
+            class="w-full bg-green-900 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all text-white rounded-lg py-3 font-medium"
           >
             Create Collection Record
           </button>
@@ -831,7 +831,7 @@ onMounted(() => {
             Cancel
           </button>
           <button
-            class="bg-gray-900 hover:bg-gray-700 text-white rounded-lg px-6 py-2 font-medium"
+            class="bg-green-900 hover:bg-green-700 text-white rounded-lg px-6 py-2 font-medium"
             @click="confirmSubmit"
             :disabled="isSubmitting"
           >

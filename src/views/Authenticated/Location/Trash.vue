@@ -144,8 +144,8 @@ watch(currentPage, () => {
           class="w-12 h-12 group-hover:scale-110 transition-transform"
         />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Deleted Locations</h2>
-          <p class="mt-1 text-sm">View and manage all deleted locations</p>
+          <h2 class="text-xl sm:text-2xl font-bold text-green-900">Deleted Locations</h2>
+          <p class="mt-1 text-sm text-green-900">View and manage all deleted locations</p>
         </div>
       </div>
       <div class="flex w-full sm:w-auto space-x-4">
@@ -205,7 +205,7 @@ watch(currentPage, () => {
       <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -299,7 +299,7 @@ watch(currentPage, () => {
       <!-- Desktop Table View - Hidden on mobile -->
       <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-700">
+          <thead class="bg-green-900">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 ID
@@ -311,7 +311,7 @@ watch(currentPage, () => {
                 Coordinates
               </th>
               <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
-                Actions
+                Action
               </th>
             </tr>
           </thead>
@@ -360,7 +360,8 @@ watch(currentPage, () => {
                 <div class="flex items-center justify-end space-x-3">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button>
+                      <Button
+                      class="bg-green-900 text-white hover:bg-green-600">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                 d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
@@ -382,7 +383,8 @@ watch(currentPage, () => {
                   </AlertDialog>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button>
+                      <Button
+                      class="bg-red-900 text-white hover:bg-red-700">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -393,12 +395,12 @@ watch(currentPage, () => {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Location Permanently?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone.
+                          This location will be permanently deleted and cannot be restored.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="deletePermanently(location.id)">Delete</AlertDialogAction>
+                        <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deletePermanently(location.id)">Delete Permanently</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -456,7 +458,7 @@ watch(currentPage, () => {
               <div class="flex space-x-2" @click.stop>
                 <AlertDialog>
                   <AlertDialogTrigger>
-                    <Button class="p-1">
+                    <Button class="bg-green-900 text-white hover:bg-green-600 p-1">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
@@ -478,7 +480,7 @@ watch(currentPage, () => {
                 </AlertDialog>
                 <AlertDialog>
                   <AlertDialogTrigger>
-                    <Button class="p-1">
+                    <Button class="bg-red-900 text-white hover:bg-red-700 p-1">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -489,12 +491,12 @@ watch(currentPage, () => {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Location Permanently?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone.
+                        This location will be permanently deleted and cannot be restored.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction @click="deletePermanently(location.id)">Delete</AlertDialogAction>
+                      <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deletePermanently(location.id)">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -545,7 +547,7 @@ watch(currentPage, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}
@@ -565,6 +567,15 @@ watch(currentPage, () => {
         </div>
       </div>
     </div>
-    <Toaster />
+    <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
   </div>
 </template>

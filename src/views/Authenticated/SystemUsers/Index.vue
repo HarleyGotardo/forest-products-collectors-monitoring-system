@@ -275,10 +275,10 @@ onMounted(async () => {
           class="w-10 h-10 transition-transform group-hover:scale-105"
         />
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
+          <h1 class="text-xl sm:text-2xl font-bold text-green-900">
             System Users
           </h1>
-          <p class="text-sm text-gray-500">Manage and view all system users</p>
+          <p class="text-sm text-green-900">Manage and view all system users</p>
         </div>
       </div>
       <button
@@ -393,7 +393,7 @@ onMounted(async () => {
       <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-800">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="hidden sm:table-cell px-6 py-3 h-12"></th>
@@ -454,7 +454,7 @@ onMounted(async () => {
       <!-- Desktop Table View -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-800">
+          <thead class="bg-green-900">
             <tr>
               <th
                 scope="col"
@@ -770,7 +770,7 @@ onMounted(async () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}
@@ -834,7 +834,7 @@ onMounted(async () => {
               alt="Pending Users"
               class="w-8 h-8"
             />
-            <h2 class="text-2xl font-bold text-gray-900">
+            <h2 class="text-2xl font-bold text-green-900">
               Pending Users for Approval
             </h2>
           </div>
@@ -874,31 +874,31 @@ onMounted(async () => {
             <!-- Desktop Table View -->
             <div class="hidden sm:block overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-100">
+                <thead class="bg-green-900">
                   <tr>
                     <th
                       scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+                      class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
                     >
                       User
                     </th>
                     <th
                       scope="col"
-                      class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+                      class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
                     >
                       Email
                     </th>
                     <th
                       scope="col"
-                      class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+                      class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
                     >
                       Role
                     </th>
                     <th
                       scope="col"
-                      class="hidden sm:table-cell px-6 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider"
+                      class="hidden sm:table-cell px-6 py-3 text-right text-xs font-medium text-white  uppercase tracking-wider"
                     >
-                      Actions
+                      Action
                     </th>
                   </tr>
                 </thead>
@@ -1190,7 +1190,7 @@ onMounted(async () => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-700'
                           ]"
                         >
                           {{ item.value }}
@@ -1211,7 +1211,16 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-      <Toaster />
+      <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
     </div>
   </div>
 

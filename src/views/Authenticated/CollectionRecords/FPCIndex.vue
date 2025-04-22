@@ -209,8 +209,8 @@ watch(selectedStatus, () => {
       <div class="flex items-center space-x-2">
       <img src="@/assets/records2.png" alt="Collection Records" class="w-12 h-12 group-hover:scale-110 transition-transform" />
       <div>
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">My Collection Records</h2>
-        <p class="mt-1 text-sm">View and manage your forest product collection records</p>
+        <h2 class="text-xl sm:text-2xl font-bold text-green-900">My Collection Records</h2>
+        <p class="mt-1 text-sm text-green-900">View and manage your forest product collection records</p>
       </div>
       </div>
       <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
@@ -238,6 +238,7 @@ watch(selectedStatus, () => {
         <option value="Paid">Paid</option>
         </select>
         <Button 
+        class="bg-green-900 hover:bg-green-600 text-white"
         v-if="isFPCollector"
         @click="createCollectionRecord"
         >
@@ -320,7 +321,7 @@ watch(selectedStatus, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -434,7 +435,7 @@ watch(selectedStatus, () => {
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
   <table class="min-w-full border-collapse sm:border-separate sm:border-spacing-0 cursor-pointer">
-    <thead class="bg-gray-700 hidden sm:table-header-group">
+    <thead class="bg-green-900 hidden sm:table-header-group">
       <tr>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">ID</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Product</th>
@@ -592,7 +593,7 @@ watch(selectedStatus, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

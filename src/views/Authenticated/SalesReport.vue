@@ -581,7 +581,7 @@ onMounted(() => {
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div class="flex items-center gap-2">
         <img src="@/assets/sales-report-2.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Sales Report</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-green-800">Sales Report</h1>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
         <button @click="downloadReport"
@@ -968,7 +968,7 @@ onMounted(() => {
                         :value="item.value"
                         :class="[
                           'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                          item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                          item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                         ]"
                       >
                         {{ item.value }}
@@ -990,7 +990,16 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <Toaster />
+  <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
 </template>
 
 <style scoped>

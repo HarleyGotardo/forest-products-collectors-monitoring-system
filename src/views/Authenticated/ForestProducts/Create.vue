@@ -289,10 +289,10 @@ onMounted(() => {
         />
       </div>
       <div class="sm:ml-5 text-center sm:text-left">
-        <h2 class="text-2xl font-bold text-gray-800">
+        <h2 class="text-2xl font-bold text-green-800">
         Create Forest Product
         </h2>
-        <p class="mt-1 text-sm text-gray-600">
+        <p class="mt-1 text-sm text-green-600">
         Complete the form below to add a new forest product to the system
         </p>
       </div>
@@ -776,6 +776,15 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <Toaster />
+    <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
   </div>
 </template>

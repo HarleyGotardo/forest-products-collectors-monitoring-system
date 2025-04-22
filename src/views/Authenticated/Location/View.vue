@@ -672,7 +672,7 @@ onMounted(async () => {
                     Unit
                   </th>
                   <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    Action
                   </th>
                 </tr>
               </thead>
@@ -752,7 +752,7 @@ onMounted(async () => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                           ]"
                         >
                           {{ item.value }}
@@ -879,7 +879,16 @@ onMounted(async () => {
       </AlertDialogContent>
     </AlertDialog>
 
-    <Toaster />
+    <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
 
   </div>
 </template>

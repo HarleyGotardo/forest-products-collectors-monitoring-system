@@ -151,8 +151,8 @@ watch(currentPage, () => {
           class="w-12 h-12 group-hover:scale-110 transition-transform"
         />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Locations</h2>
-          <p class="mt-1 text-sm">View and manage all registered locations</p>
+          <h2 class="text-xl sm:text-2xl font-bold text-green-900">Locations</h2>
+          <p class="mt-1 text-sm text-green-900">View and manage all registered locations</p>
         </div>
       </div>
       <div class="flex space-x-4">
@@ -181,7 +181,7 @@ watch(currentPage, () => {
             </svg>
           </div>
         </div>
-        <Button v-if="isFPUAdmin || isForestRanger" @click="createLocation">
+        <Button class="bg-green-900 text-white hover:bg-green-600" v-if="isFPUAdmin || isForestRanger" @click="createLocation">
           +
         </Button>
       </div>
@@ -214,7 +214,7 @@ watch(currentPage, () => {
       <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -308,7 +308,7 @@ watch(currentPage, () => {
   <!-- Desktop Table View - Hidden on mobile -->
   <div class="hidden md:block overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-700">
+      <thead class="bg-green-900">
         <tr>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
             ID
@@ -320,7 +320,7 @@ watch(currentPage, () => {
             Coordinates
           </th>
           <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
-            Actions
+            Action
           </th>
         </tr>
       </thead>
@@ -343,8 +343,8 @@ watch(currentPage, () => {
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="flex items-center">
-              <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50">
-                <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-green-50">
+                <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -365,14 +365,18 @@ watch(currentPage, () => {
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
             <div class="flex items-center justify-end space-x-3">
-              <Button v-if="isFPUAdmin || isForestRanger" @click="editLocation(location.id, $event)">
+              <Button
+              class="bg-green-900 text-white hover:bg-green-600"
+              v-if="isFPUAdmin || isForestRanger" @click="editLocation(location.id, $event)">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger>
-                  <Button v-if="isFPUAdmin || isForestRanger" @click="confirmDeleteLocation(location.id)">
+                  <Button 
+                  class="bg-red-900 text-white hover:bg-red-700"
+                  v-if="isFPUAdmin || isForestRanger" @click="confirmDeleteLocation(location.id)">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -387,7 +391,7 @@ watch(currentPage, () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction @click="deleteLocation">Delete</AlertDialogAction>
+                    <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deleteLocation">Delete</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -438,14 +442,18 @@ watch(currentPage, () => {
             {{ location.latitude }}, {{ location.longitude }}
             </span>
           <div class="flex space-x-2" @click.stop>
-            <Button v-if="isFPUAdmin || isForestRanger" class="p-1" @click="editLocation(location.id, $event)">
+            <Button 
+            class="bg-green-900 text-white hover:bg-green-600 p-1"
+            v-if="isFPUAdmin || isForestRanger" @click="editLocation(location.id, $event)">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </Button>
             <AlertDialog>
               <AlertDialogTrigger>
-                <Button v-if="isFPUAdmin || isForestRanger" class="p-1" @click="confirmDeleteLocation(location.id)">
+                <Button 
+                class="bg-red-900 text-white hover:bg-red-700 p-1"
+                v-if="isFPUAdmin || isForestRanger" @click="confirmDeleteLocation(location.id)">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
@@ -460,7 +468,7 @@ watch(currentPage, () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="deleteLocation">Delete</AlertDialogAction>
+                  <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deleteLocation">Delete</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -511,7 +519,7 @@ watch(currentPage, () => {
                   :value="item.value"
                   :class="[
                     'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                    item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                    item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                   ]"
                 >
                   {{ item.value }}
@@ -531,6 +539,15 @@ watch(currentPage, () => {
     </div>
   </div>
 </div>
-    <Toaster />
+    <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
   </div>
 </template>

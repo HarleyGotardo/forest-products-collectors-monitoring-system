@@ -887,7 +887,7 @@ onMounted(() => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                           ]"
                         >
                           {{ item.value }}
@@ -1127,7 +1127,7 @@ onMounted(() => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                           ]"
                         >
                           {{ item.value }}
@@ -1365,7 +1365,7 @@ onMounted(() => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                           ]"
                         >
                           {{ item.value }}

@@ -201,7 +201,7 @@ watch(currentPage, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -297,13 +297,13 @@ watch(currentPage, () => {
       <!-- Desktop view (table) - hidden on small screens -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-700">
+          <thead class="bg-green-900">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Requested At</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Collection Date</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Deleted At</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -340,7 +340,8 @@ watch(currentPage, () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <div>
-                        <Button>
+                        <Button
+                        class="bg-green-900 hover:bg-green-600 text-white">
                           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path 
                               stroke-linecap="round" 
@@ -370,7 +371,8 @@ watch(currentPage, () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <div>
-                        <Button>
+                        <Button
+                        class="bg-red-900 hover:bg-red-700 text-white">
                           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -382,12 +384,12 @@ watch(currentPage, () => {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Permanently?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone. This request will be permanently removed from our servers.
+                          This action cannot be undone. This request will be permanently removed..
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="deletePermanently(request.id)" class="bg-red-600 hover:bg-red-700">Delete Permanently</AlertDialogAction>
+                        <AlertDialogAction @click="deletePermanently(request.id)" class="bg-red-900 hover:bg-red-700">Delete Permanently</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -449,7 +451,7 @@ watch(currentPage, () => {
             <!-- Restore Button -->
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button class="text-sm">
+                <Button class="bg-green-900 hover:bg-green-600 text-white text-sm">
                   <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path 
                       stroke-linecap="round" 
@@ -478,7 +480,7 @@ watch(currentPage, () => {
             <!-- Delete Permanently Button -->
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button class="text-sm bg-red-600 hover:bg-red-700">
+                <Button class="text-sm bg-red-900 hover:bg-red-700">
                   <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -490,12 +492,12 @@ watch(currentPage, () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Permanently?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This request will be permanently removed from our servers.
+                    This action cannot be undone. This request will be permanently removed.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="deletePermanently(request.id)" class="bg-red-600 hover:bg-red-700">Delete Permanently</AlertDialogAction>
+                  <AlertDialogAction @click="deletePermanently(request.id)" class="bg-red-900 hover:bg-red-700">Delete Permanently</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -544,7 +546,7 @@ watch(currentPage, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

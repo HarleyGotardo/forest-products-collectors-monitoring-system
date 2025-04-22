@@ -284,7 +284,7 @@ watch(currentPage, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-700">
+            <thead class="bg-green-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -416,7 +416,7 @@ watch(currentPage, () => {
       <!-- Desktop view (table) - hidden on small screens -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-700">
+          <thead class="bg-green-900">
             <tr>
               <th
                 scope="col"
@@ -464,7 +464,7 @@ watch(currentPage, () => {
                 scope="col"
                 class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider"
               >
-                Actions
+                Action
               </th>
             </tr>
           </thead>
@@ -522,7 +522,8 @@ watch(currentPage, () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <div @click.stop>
-                        <Button>
+                        <Button
+                        class="bg-green-900 text-white hover:bg-green-600">
                           <svg
                             class="w-5 h-5"
                             fill="none"
@@ -559,7 +560,8 @@ watch(currentPage, () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <div @click.stop>
-                        <Button>
+                        <Button
+                        class="bg-red-900 text-white hover:bg-red-700">
                           <svg
                             class="w-5 h-5"
                             fill="none"
@@ -585,7 +587,7 @@ watch(currentPage, () => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="deleteRecordPermanently(record.id)"
+                        <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deleteRecordPermanently(record.id)"
                           >Delete</AlertDialogAction
                         >
                       </AlertDialogFooter>
@@ -759,7 +761,7 @@ watch(currentPage, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

@@ -310,8 +310,8 @@ onMounted(() => {
       <div class="bg-gray-200 px-6 py-5 text-black flex items-center space-x-4">
         <img src="@/assets/request2.png" alt="Forest Map" class="w-6 h-6 group-hover:scale-110 transition-transform" />
         <div>
-          <h2 class="text-2xl font-bold">Forest Product Collection Request</h2>
-          <p class="text-black-100 mt-1">Request permission to harvest forest products</p>
+          <h2 class="text-2xl font-bold text-green-900">Forest Product Collection Request</h2>
+          <p class="text-black-100 mt-1 text-green-800">Request permission to harvest forest products</p>
         </div>
       </div>
 

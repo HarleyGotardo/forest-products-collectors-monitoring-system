@@ -997,7 +997,16 @@ const getUnitName = computed(() => {
       </div>
     </div>
   </div>
-  <Toaster />
+  <Toaster
+  theme="light"
+  :toastOptions="{
+    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+    style: {
+      padding: '1rem',
+    }
+  }"
+/>
+
 </template>
 
 <style scoped>
