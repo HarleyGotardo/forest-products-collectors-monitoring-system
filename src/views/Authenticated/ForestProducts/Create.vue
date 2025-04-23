@@ -64,6 +64,10 @@ const showMapModal = ref(false);
 const mapInstance = ref(null);
 const tempMarker = ref(null);
 const currentLocation = ref(null);
+const showMeasurementUnitModal = ref(false);
+const newMeasurementUnit = ref({
+  unit_name: ''
+});
 
 const fetchLocations = async () => {
   const { data, error } = await supabase
@@ -265,6 +269,41 @@ const hasZeroQuantityLocations = computed(() => {
   return selectedLocations.value.some(loc => !loc.quantity || loc.quantity <= 0);
 });
 
+const handleAddMeasurementUnit = async () => {
+  if (!newMeasurementUnit.value.unit_name) {
+    toast.error('Please enter a unit name');
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('measurement_units')
+      .insert([{
+        unit_name: newMeasurementUnit.value.unit_name
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Add the new unit to the local list
+    measurementUnits.value.push(data);
+    
+    // Reset the form
+    newMeasurementUnit.value = {
+      unit_name: ''
+    };
+    
+    // Close the modal
+    showMeasurementUnitModal.value = false;
+    
+    toast.success('Measurement unit added successfully');
+  } catch (error) {
+    console.error('Error adding measurement unit:', error);
+    toast.error(error.message || 'Failed to add measurement unit');
+  }
+};
+
 onMounted(() => {
   fetchLocations();
 });
@@ -387,9 +426,19 @@ onMounted(() => {
 
           <!-- Measurement Unit select -->
           <div class="space-y-2">
-            <Label for="measurementUnit" class="text-gray-700"
-              >Measurement Unit</Label
-            >
+            <div class="flex justify-between items-center">
+              <Label for="measurementUnit" class="text-gray-700">Measurement Unit</Label>
+              <button
+                type="button"
+                @click="showMeasurementUnitModal = true"
+                class="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Add New Unit
+              </button>
+            </div>
             <Select v-model="selectedMeasurementUnit" required>
               <SelectTrigger class="w-full">
                 <SelectValue placeholder="Select unit of measurement" />
@@ -776,6 +825,61 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Measurement Unit Modal -->
+    <div v-if="showMeasurementUnitModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+      <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full">
+          <header class="px-6 py-4 border-b border-gray-100">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-medium text-gray-800">Add New Measurement Unit</h3>
+              <button
+                @click="showMeasurementUnitModal = false"
+                class="text-gray-400 hover:text-gray-500"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </header>
+
+          <div class="p-6">
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <Label for="unitName" class="text-gray-700">Unit Name</Label>
+                <Input
+                  id="unitName"
+                  v-model="newMeasurementUnit.unit_name"
+                  type="text"
+                  placeholder="Enter unit name (e.g., kg, pieces, etc.)"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <footer class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+            <Button
+              type="button"
+              @click="showMeasurementUnitModal = false"
+              class="bg-gray-100 hover:bg-gray-200 text-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              @click="handleAddMeasurementUnit"
+              class="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Add Unit
+            </Button>
+          </footer>
+        </div>
+      </div>
+    </div>
+
     <Toaster
   theme="light"
   :toastOptions="{

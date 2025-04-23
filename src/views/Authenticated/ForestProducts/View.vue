@@ -384,12 +384,12 @@ const handleAdditionalImageUpload = async (event) => {
     return;
   }
 
-  if (count >= 8) {
-    toast.error('You can only upload up to 8 additional images');
+  if (count >= 4) {
+    toast.error('You can only upload up to 4 additional images');
     return;
   }
 
-  const remainingSlots = 8 - count;
+  const remainingSlots = 4 - count;
   const filesToUpload = filteredFiles.slice(0, remainingSlots);
 
   for (const file of filesToUpload) {
@@ -977,6 +977,48 @@ const reverseGeocode = async (lat, lng) => {
     // Don't show an error toast here as it's not critical
   }
 };
+
+const maxImages = 4 // Maximum number of images allowed
+
+// In the handleImageUpload function
+const handleImageUpload = async (event) => {
+  const files = Array.from(event.target.files)
+  
+  // Check if adding new files would exceed the limit
+  if (newLocation.value.images.length + files.length > maxImages) {
+    toast.error(`You can only upload up to ${maxImages} images`)
+    return
+  }
+  
+  // Check file types and sizes
+  const invalidFiles = files.filter(file => {
+    const isValidType = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type)
+    const isValidSize = file.size <= 5 * 1024 * 1024 // 5MB
+    return !isValidType || !isValidSize
+  })
+  
+  if (invalidFiles.length > 0) {
+    toast.error('Please upload only JPG, PNG, or GIF files under 5MB')
+    return
+  }
+  
+  // Process valid files
+  for (const file of files) {
+    try {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        newLocation.value.images.push({
+          file,
+          preview: e.target.result
+        })
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error reading file:', error)
+      toast.error('Error reading file')
+    }
+  }
+}
 </script>
 
 <template>
@@ -1510,7 +1552,7 @@ const reverseGeocode = async (lat, lng) => {
 
           <!-- Add Image Placeholder -->
           <label
-            v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 8 && forestProduct.deleted_at === null"
+            v-if="(isForestRanger || isFPUAdmin) && additionalImages.length < 4 && forestProduct.deleted_at === null"
             for="additional-image-upload"
             class="relative h-64 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6 transition-all hover:border-gray-400 bg-gray-50 hover:bg-gray-100 cursor-pointer"
           >
@@ -1532,7 +1574,7 @@ const reverseGeocode = async (lat, lng) => {
             </div>
             <span class="text-sm font-medium text-gray-700">Add Image</span>
             <span class="text-xs text-gray-500 mt-1"
-              >{{ 8 - additionalImages.length }} slots remaining</span
+              >{{ 4 - additionalImages.length }} slots remaining</span
             >
             <input
               id="additional-image-upload"
