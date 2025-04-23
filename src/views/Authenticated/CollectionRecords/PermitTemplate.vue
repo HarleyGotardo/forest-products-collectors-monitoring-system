@@ -70,18 +70,18 @@
         <div class="flex items-center">
         <input 
           type="checkbox" 
-          :checked="permitData.purpose !== 'Official' && permitData.purpose !== 'Personal'" 
+          :checked="permitData.purpose && permitData.purpose !== 'Official' && permitData.purpose !== 'Personal'" 
           disabled 
           class="mr-2 h-3 w-3" 
         />
         <span>Others, specify:</span>
         <span 
-          v-if="permitData.purpose !== 'Official' && permitData.purpose !== 'Personal'" 
+          v-if="permitData.purpose && permitData.purpose !== 'Official' && permitData.purpose !== 'Personal'" 
           class=" underline ml-2"
         >
           {{ permitData.purpose }}
         </span>
-        </div>
+      </div>
       </div>
       </div>
 
@@ -94,14 +94,14 @@
     <div class="mb-6">
       <div class="flex justify-between mb-6">
         <div class="w-5/12">
-          <p class="text-xs m-0">Issued by:</p>
+          <p class="text-xs m-0">Issued by (Created by):</p>
           <p class=" underline mt-4 mb-1 text-sm">{{ permitData.issuedBy }}</p>
           <p class="text-xs m-0">Forest Guard On-Duty</p>
         </div>
         <div class="w-5/12">
-          <p class="text-xs m-0">Inspected by:</p>
+          <p class="text-xs m-0">Inspected by (Approved by):</p>
           <p class=" underline mt-4 mb-1 text-sm">{{ permitData.inspectedBy }}</p>
-          <p class="text-xs m-0">Forest Guard On-Duty</p>
+          <p class="text-xs m-0">VSU-Administrator</p>
         </div>
       </div>
 
@@ -112,7 +112,7 @@
 
       <div class="text-center mt-3">
         <p class="text-xs m-0">Noted by:</p>
-        <p class=" underline mt-4 mb-1 text-sm">DENNIS P. PEQUE</p>
+        <p class=" underline mt-4 mb-1 text-sm">{{ permitData.forestConservationOfficer }}</p>
         <p class="text-xs m-0">Forest Conservation Officer</p>
       </div>
     </div>

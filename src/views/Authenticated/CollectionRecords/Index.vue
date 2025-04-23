@@ -30,6 +30,7 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination'
 import html2pdf from 'html2pdf.js';
+import { jsPDF } from 'jspdf';
 
 const collectionRecords = ref([])
 const currentPage = ref(1)
@@ -39,6 +40,9 @@ const searchQuery = ref('')
 const paymentFilter = ref('all') // 'all', 'paid', 'unpaid'
 const loading = ref(true);
 const showNotes = ref(true);
+const forestConservationOfficer = ref(null);
+const showEditSignatureDialog = ref(false);
+const newSignature = ref('');
 
 const fetchCollectionRecords = async () => {
   loading.value = true; // Start loading
@@ -77,6 +81,10 @@ const fetchCollectionRecords = async () => {
           id,
           total_cost,
           fp_and_location_id,
+          deducted_quantity,
+          quantity_during_purchase,
+          price_per_unit_during_purchase,
+          total_cost,
           fp_and_location:fp_and_locations (
             id,
             forest_product:forest_products (id, name)
@@ -181,6 +189,82 @@ const createCollectionRecord = () => {
   router.push('/authenticated/collection-records/create')
 }
 
+const fetchForestConservationOfficer = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('signatures')
+      .select('*')
+      .eq('title', 'forest_conservation_officer')
+      .single();
+
+    if (error) {
+      console.error('Error fetching forest conservation officer:', error);
+      return;
+    }
+
+    if (data) {
+      forestConservationOfficer.value = data;
+    }
+  } catch (err) {
+    console.error('Error in fetchForestConservationOfficer:', err);
+  }
+};
+
+const updateForestConservationOfficer = async () => {
+  try {
+    if (!newSignature.value.trim()) {
+      toast.error('Please enter a valid name');
+      return;
+    }
+
+    // First check if the record exists
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from('signatures')
+      .select('id')
+      .eq('title', 'forest_conservation_officer')
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is the error code for no rows returned
+      console.error('Error checking existing record:', fetchError);
+      toast.error('Failed to update forest conservation officer');
+      return;
+    }
+
+    let updateError;
+    if (existingRecord) {
+      // Update existing record
+      const { error } = await supabase
+        .from('signatures')
+        .update({ full_name: newSignature.value.trim() })
+        .eq('id', existingRecord.id);
+      updateError = error;
+    } else {
+      // Create new record if none exists
+      const { error } = await supabase
+        .from('signatures')
+        .insert({
+          title: 'forest_conservation_officer',
+          full_name: newSignature.value.trim()
+        });
+      updateError = error;
+    }
+
+    if (updateError) {
+      console.error('Error updating forest conservation officer:', updateError);
+      toast.error('Failed to update forest conservation officer');
+      return;
+    }
+
+    await fetchForestConservationOfficer();
+    showEditSignatureDialog.value = false;
+    newSignature.value = '';
+    toast.success('Forest Conservation Officer updated successfully');
+  } catch (err) {
+    console.error('Error in updateForestConservationOfficer:', err);
+    toast.error('Failed to update forest conservation officer');
+  }
+};
+
 const markAsPaid = async (recordId) => {
   try {
     // Get the current user's ID from the auth session
@@ -189,34 +273,6 @@ const markAsPaid = async (recordId) => {
     if (userError || !user) {
       console.error('User authentication error:', userError);
       error.value = 'Failed to authenticate user';
-      return;
-    }
-
-    // Fetch the collection record items to get quantities for deduction
-    const { data: recordItems, error: itemsError } = await supabase
-      .from('collection_record_items')
-      .select(`
-        id,
-        purchased_quantity,
-        fp_and_location_id,
-        deducted_quantity,
-        quantity_during_purchase,
-        price_per_unit_during_purchase,
-        fp_and_location:fp_and_locations (
-          id,
-          forest_product:forest_products (
-            name,
-            measurement_unit_id,
-            measurement_unit:measurement_units (unit_name)
-          ),
-          location:locations (name)
-        )
-      `)
-      .eq('collection_record_id', recordId);
-
-    if (itemsError) {
-      console.error('Error fetching record items:', itemsError);
-      error.value = 'Failed to fetch record items';
       return;
     }
 
@@ -236,8 +292,62 @@ const markAsPaid = async (recordId) => {
       return;
     }
 
+    // Fetch the updated record to get the approved_by information
+    const { data: updatedRecord, error: fetchError } = await supabase
+      .from('collection_records')
+      .select(`
+        id,
+        created_at,
+        purpose,
+        collection_request_id,
+        created_by:profiles!collection_records_created_by_fkey (first_name, last_name),
+        approved_by:profiles!collection_records_approved_by_fkey (first_name, last_name)
+      `)
+      .eq('id', recordId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching updated record:', fetchError);
+      error.value = 'Failed to fetch updated record';
+      return;
+    }
+
+    // Fetch the collection record items
+    const { data: recordItems, error: itemsError } = await supabase
+      .from('collection_record_items')
+      .select(`
+        id,
+        purchased_quantity,
+        fp_and_location_id,
+        deducted_quantity,
+        quantity_during_purchase,
+        price_per_unit_during_purchase,
+        total_cost,
+        fp_and_location:fp_and_locations (
+          id,
+          forest_product:forest_products (
+            name,
+            measurement_unit_id,
+            measurement_unit:measurement_units (unit_name)
+          ),
+          location:locations (name)
+        )
+      `)
+      .eq('collection_record_id', recordId);
+
+    if (itemsError) {
+      console.error('Error fetching record items:', itemsError);
+      error.value = 'Failed to fetch record items';
+      return;
+    }
+
     // Update collection_record_items with initial and remaining quantities
     for (const item of recordItems) {
+      if (!item || !item.fp_and_location_id) {
+        console.error('Invalid item data:', item);
+        continue;
+      }
+
       // Get current quantity from fp_and_locations
       const { data: fpLocationData, error: fpLocationError } = await supabase
         .from('fp_and_locations')
@@ -251,7 +361,7 @@ const markAsPaid = async (recordId) => {
       }
 
       const currentQuantity = fpLocationData.quantity;
-      const remainingQuantity = currentQuantity - item.deducted_quantity;
+      const remainingQuantity = currentQuantity - (item.deducted_quantity || 0);
 
       // Update the collection_record_items with initial and remaining quantities
       const { error: updateItemError } = await supabase
@@ -281,16 +391,17 @@ const markAsPaid = async (recordId) => {
 
     // Format the list of forest products for the permit
     const forestProductsList = recordItems.map((item) => {
-      const productName = item.fp_and_location.forest_product.name;
-      const locationName = item.fp_and_location.location.name;
-      const quantity = item.purchased_quantity;
-      const totalCost = item.total_cost.toFixed(2);
+      if (!item || !item.fp_and_location) return '';
+      const productName = item.fp_and_location.forest_product?.name || 'Unknown Product';
+      const locationName = item.fp_and_location.location?.name || 'Unknown Location';
+      const quantity = item.purchased_quantity || 0;
+      const totalCost = (item.total_cost || 0).toFixed(2);
       return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
-    }).join('; ');
+    }).filter(Boolean).join('; ');
 
     // Check if any product is firewood
     const firewoodNote = recordItems.some((item) =>
-      item.fp_and_location.forest_product.name.toLowerCase() === 'firewood'
+      item?.fp_and_location?.forest_product?.name?.toLowerCase() === 'firewood'
     )
       ? 'Firewood Permits are intended for family consumption but not for sale. It is limited to dead branches up to 10cm diameter, 1 meter length.'
       : '';
@@ -301,13 +412,14 @@ const markAsPaid = async (recordId) => {
       dateIssued: new Date().toLocaleDateString(),
       name: recordItems[0]?.user_name || 'N/A',
       permission: `collect the forest products: ${forestProductsList}`,
-      purpose: recordItems[0]?.purpose || 'N/A',
-      collectionRequestId: recordItems[0]?.collection_request_id || 'N/A',
+      purpose: updatedRecord.purpose || 'N/A',
+      collectionRequestId: updatedRecord.collection_request_id || 'N/A',
       expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString(),
-      chargesPaid: recordItems.reduce((sum, item) => sum + item.total_cost, 0).toFixed(2),
-      issuedBy: `${user.user_metadata.first_name} ${user.user_metadata.last_name}`,
-      inspectedBy: `${user.user_metadata.first_name} ${user.user_metadata.last_name}`,
+      chargesPaid: recordItems.reduce((sum, item) => sum + (item?.total_cost || 0), 0).toFixed(2),
+      issuedBy: `${updatedRecord.created_by.first_name} ${updatedRecord.created_by.last_name}`,
+      inspectedBy: `${updatedRecord.approved_by.first_name} ${updatedRecord.approved_by.last_name}`,
       note: firewoodNote,
+      forestConservationOfficer: forestConservationOfficer.value?.full_name || 'DENNIS P. PEQUE',
     };
 
     // Generate the PDF
@@ -359,8 +471,74 @@ const viewCollectionRecord = (recordId) => {
   router.push({ name: 'CollectionRecordsView', params: { id: recordId } })
 }
 
+const generatePDF = async (record) => {
+  try {
+    const { data: user } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not found')
+
+    // Fetch the collection record with created_by and approved_by information
+    const { data: collectionRecord, error: recordError } = await supabase
+      .from('collection_records')
+      .select(`
+        *,
+        created_by:created_by (
+          first_name,
+          last_name
+        ),
+        approved_by:approved_by (
+          first_name,
+          last_name
+        )
+      `)
+      .eq('id', record.id)
+      .single()
+
+    if (recordError) throw recordError
+
+    const doc = new jsPDF()
+    
+    // Add header
+    doc.setFontSize(20)
+    doc.text('Collection Record', 105, 20, { align: 'center' })
+    
+    // Add record details
+    doc.setFontSize(12)
+    doc.text(`Record ID: ${record.id}`, 20, 40)
+    doc.text(`Date: ${new Date(record.created_at).toLocaleDateString()}`, 20, 50)
+    doc.text(`Collector: ${record.profiles.first_name} ${record.profiles.last_name}`, 20, 60)
+    doc.text(`Status: ${record.is_paid ? 'Paid' : 'Unpaid'}`, 20, 70)
+    
+    // Add items
+    doc.text('Items:', 20, 90)
+    let y = 100
+    record.collection_record_items.forEach((item, index) => {
+      doc.text(`${index + 1}. ${item.fp_and_locations.forest_products.name}`, 30, y)
+      doc.text(`Quantity: ${item.purchased_quantity} ${item.fp_and_locations.forest_products.measurement_units.unit_name}`, 40, y + 10)
+      doc.text(`Price: ₱${item.total_cost}`, 40, y + 20)
+      y += 40
+    })
+    
+    // Add total
+    doc.text(`Total Amount: ₱${record.total_amount}`, 20, y + 10)
+    
+    // Add signatures
+    doc.text('Signatures:', 20, y + 30)
+    doc.text(`Issued By: ${collectionRecord.created_by ? `${collectionRecord.created_by.first_name} ${collectionRecord.created_by.last_name}` : 'N/A'}`, 20, y + 40)
+    doc.text(`Inspected By: ${collectionRecord.approved_by ? `${collectionRecord.approved_by.first_name} ${collectionRecord.approved_by.last_name}` : 'N/A'}`, 20, y + 50)
+    
+    // Save the PDF
+    doc.save(`collection_record_${record.id}.pdf`)
+    
+    toast.success('PDF generated successfully')
+  } catch (error) {
+    console.error('Error generating PDF:', error)
+    toast.error('Failed to generate PDF')
+  }
+}
+
 onMounted(() => {
   fetchCollectionRecords()
+  fetchForestConservationOfficer()
 })
 
 watch(searchQuery, () => {
@@ -432,6 +610,13 @@ watch(paymentFilter, () => {
           class="min-w-10 bg-green-900 text-white hover:bg-green-700"
         >
           +
+        </Button>
+        <Button
+          v-if="isVSUAdmin || isFPUAdmin"
+          @click="showEditSignatureDialog = true"
+          class="bg-green-900 text-white hover:bg-green-700"
+        >
+          Edit Forest Conservation Officer
         </Button>
       </div>
     </div>
@@ -1038,4 +1223,39 @@ watch(paymentFilter, () => {
       </div>
     </div>
   </div>
+
+  <!-- Add Edit Signature Dialog -->
+  <AlertDialog v-model:open="showEditSignatureDialog">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Edit Forest Conservation Officer</AlertDialogTitle>
+        <AlertDialogDescription>
+          Update the name of the Forest Conservation Officer who will be signing the permits.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      
+      <div class="py-4">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Current Officer</label>
+            <p class="text-sm text-gray-500">{{ forestConservationOfficer?.full_name || 'DENNIS P. PEQUE' }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">New Officer Name</label>
+            <input
+              v-model="newSignature"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Enter full name"
+            />
+          </div>
+        </div>
+      </div>
+
+      <AlertDialogFooter>
+        <AlertDialogCancel @click="showEditSignatureDialog = false">Cancel</AlertDialogCancel>
+        <AlertDialogAction @click="updateForestConservationOfficer">Save Changes</AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>

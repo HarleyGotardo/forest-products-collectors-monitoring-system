@@ -1,10 +1,20 @@
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from '@/lib/supabaseClient'
 import Button from "@/components/ui/button/Button.vue";
+import {
+  Pagination,
+  PaginationList,
+  PaginationListItem,
+  PaginationFirst,
+  PaginationLast,
+  PaginationNext,
+  PaginationPrev,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
 
 // Fix for the default icon issue
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -30,7 +40,9 @@ const router = useRouter()
 const route = useRoute()
 const isSearching = ref(false)
 const mapMarkers = ref([])
-let map
+const map = ref(null)
+const isMapLoading = ref(true)
+const searchTimeout = ref(null)
 
 const goToForestProduct = (forestProductId) => {
   router.push({
@@ -53,6 +65,7 @@ const fetchLocationsWithProducts = async () => {
         name,
         latitude,
         longitude,
+        deleted_at,
         fp_and_locations (
           forest_product_id,
           quantity,
@@ -69,6 +82,7 @@ const fetchLocationsWithProducts = async () => {
           )
         )
       `)
+      .is('deleted_at', null) // Only get locations that are not deleted
 
     if (error) {
       console.error('Error fetching locations:', error)
@@ -150,6 +164,110 @@ const updatePageInUrl = () => {
   })
 }
 
+const initializeMap = () => {
+  map.value = L.map("map", {
+    dragging: true,
+    zoomControl: true,
+    scrollWheelZoom: true,
+    doubleClickZoom: true,
+    touchZoom: true,
+    boxZoom: true,
+    keyboard: true,
+    zoomSnap: 0.5,
+    zoomDelta: 0.5,
+    wheelDebounceTime: 40,
+    wheelPxPerZoomLevel: 60,
+  }).setView([10.744340, 124.791995], 16);
+
+  // Add tile layer with better performance options
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    minZoom: 3,
+    attribution: '© OpenStreetMap contributors',
+    crossOrigin: true,
+    updateWhenIdle: true,
+    updateWhenZooming: false,
+    keepBuffer: 2
+  }).addTo(map.value);
+
+  // Add zoom control with better positioning
+  L.control.zoom({
+    position: 'bottomright'
+  }).addTo(map.value);
+
+  // Add scale control
+  L.control.scale({
+    imperial: false,
+    position: 'bottomleft'
+  }).addTo(map.value);
+
+  isMapLoading.value = false;
+}
+
+const renderAllMarkers = () => {
+  // Clear existing markers
+  mapMarkers.value.forEach(marker => marker.remove())
+  mapMarkers.value = []
+
+  // Add markers for all locations
+  locations.value.forEach(location => {
+    if (location.latitude && location.longitude) {
+      const marker = L.marker([location.latitude, location.longitude], {
+        riseOnHover: true,
+        riseOffset: 250
+      })
+        .addTo(map.value)
+        .bindTooltip(location.name, {
+          permanent: true,
+          direction: 'top',
+          offset: [0, -32],
+          className: 'bg-white px-2 py-1 rounded shadow-lg font-medium text-gray-800'
+        })
+        .on('click', () => showLocationDetails(location))
+
+      mapMarkers.value.push(marker)
+    }
+  })
+
+  // Fit bounds if there are markers
+  if (mapMarkers.value.length > 0) {
+    const bounds = L.latLngBounds(mapMarkers.value.map(marker => marker.getLatLng()))
+    map.value.fitBounds(bounds, { padding: [50, 50] })
+  }
+}
+
+const renderFilteredMarkers = () => {
+  // Clear existing markers
+  mapMarkers.value.forEach(marker => marker.remove())
+  mapMarkers.value = []
+
+  // Add markers only for filtered locations
+  filteredLocations.value.forEach(location => {
+    if (location.latitude && location.longitude) {
+      const marker = L.marker([location.latitude, location.longitude], {
+        riseOnHover: true,
+        riseOffset: 250
+      })
+        .addTo(map.value)
+        .bindTooltip(location.name, {
+          permanent: true,
+          direction: 'top',
+          offset: [0, -32],
+          className: 'bg-white px-2 py-1 rounded shadow-lg font-medium text-gray-800'
+        })
+        .on('click', () => showLocationDetails(location))
+
+      mapMarkers.value.push(marker)
+    }
+  })
+
+  // Fit bounds if there are filtered markers
+  if (mapMarkers.value.length > 0) {
+    const bounds = L.latLngBounds(mapMarkers.value.map(marker => marker.getLatLng()))
+    map.value.fitBounds(bounds, { padding: [50, 50] })
+  }
+}
+
 const searchLocation = () => {
   if (!searchQuery.value.trim()) {
     filteredLocations.value = locations.value
@@ -164,69 +282,11 @@ const searchLocation = () => {
 
   renderFilteredMarkers()
 
-  if (filteredLocations.value.length === 1) {
-    const location = filteredLocations.value[0]
-    if (location && location.latitude && location.longitude) {
-      map.setView([location.latitude, location.longitude], 16)
-    }
-  } else if (filteredLocations.value.length > 1) {
-    // Create bounds for all filtered locations
-    const bounds = L.latLngBounds(
-      filteredLocations.value
-        .filter(loc => loc.latitude && loc.longitude)
-        .map(loc => [loc.latitude, loc.longitude])
-    )
-
-    if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [50, 50] })
-    }
-  }
-}
-
-const renderAllMarkers = () => {
-  // Clear existing markers
-  mapMarkers.value.forEach(marker => marker.remove())
-  mapMarkers.value = []
-
-  // Add markers for all locations
-  locations.value.forEach(location => {
-    if (location.latitude && location.longitude) {
-      const marker = L.marker([location.latitude, location.longitude])
-        .addTo(map)
-        .bindTooltip(location.name, {
-          permanent: false,
-          direction: 'top',
-          offset: [0, -32],
-          className: 'bg-white px-2 py-1 rounded shadow-lg'
-        })
-        .on('click', () => showLocationDetails(location))
-
-      mapMarkers.value.push(marker)
-    }
-  })
-}
-
-const renderFilteredMarkers = () => {
-  // Clear existing markers
-  mapMarkers.value.forEach(marker => marker.remove())
-  mapMarkers.value = []
-
-  // Add markers only for filtered locations
-  filteredLocations.value.forEach(location => {
-    if (location.latitude && location.longitude) {
-      const marker = L.marker([location.latitude, location.longitude])
-        .addTo(map)
-        .bindTooltip(location.name, {
-          permanent: false,
-          direction: 'top',
-          offset: [0, -32],
-          className: 'bg-white px-2 py-1 rounded shadow-lg'
-        })
-        .on('click', () => showLocationDetails(location))
-
-      mapMarkers.value.push(marker)
-    }
-  })
+  // Show loading state
+  isSearching.value = true
+  setTimeout(() => {
+    isSearching.value = false
+  }, 500)
 }
 
 const handleKeyDown = (event) => {
@@ -241,48 +301,46 @@ const resetSearch = () => {
   renderAllMarkers()
 }
 
-// Watch for search query changes for real-time filtering (debounced)
-let debounceTimer
+// Update the watch function for search query
 watch(searchQuery, () => {
-  clearTimeout(debounceTimer)
+  clearTimeout(searchTimeout.value)
   if (searchQuery.value.trim() === '') {
     resetSearch()
     return
   }
 
-  debounceTimer = setTimeout(() => {
+  searchTimeout.value = setTimeout(() => {
     searchLocation()
   }, 300)
 })
 
 onMounted(async () => {
-  await fetchLocationsWithProducts()
+  try {
+    await fetchLocationsWithProducts()
+    initializeMap()
+    renderAllMarkers()
 
-  map = L.map("map", {
-    dragging: true,
-    zoomControl: true,
-    scrollWheelZoom: true,
-    doubleClickZoom: true,
-    touchZoom: true,
-    boxZoom: true,
-    keyboard: true,
-  }).setView([10.744340, 124.791995], 16);
-
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19
-  }).addTo(map);
-
-  renderAllMarkers()
-
-  // Restore state from query parameters
-  if (route.query.modal === 'true' && route.query.locationId) {
-    const location = locations.value.find(loc => loc.id === route.query.locationId)
-    if (location) {
-      showLocationDetails(location)
-      currentPage.value = parseInt(route.query.page) || 1
+    // Restore state from query parameters
+    if (route.query.modal === 'true' && route.query.locationId) {
+      const location = locations.value.find(loc => loc.id === route.query.locationId)
+      if (location) {
+        showLocationDetails(location)
+        currentPage.value = parseInt(route.query.page) || 1
+      }
     }
+  } catch (error) {
+    console.error('Error initializing map:', error)
+    toast.error('Failed to load map data')
   }
-});
+})
+
+// Add cleanup on component unmount
+onUnmounted(() => {
+  if (map.value) {
+    map.value.remove()
+  }
+  clearTimeout(searchTimeout.value)
+})
 </script>
 
 <template>
@@ -449,7 +507,19 @@ onMounted(async () => {
     </div>
 
     <!-- Map container -->
-    <div id="map" class="h-[500px] w-full rounded-lg shadow-md mb-6"></div>
+    <div class="relative">
+      <div id="map" class="h-[500px] w-full rounded-lg shadow-md mb-6"></div>
+      <!-- Add loading overlay -->
+      <div v-if="isMapLoading" class="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
+        <div class="flex flex-col items-center">
+          <svg class="animate-spin h-8 w-8 text-green-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm text-gray-600">Loading map...</span>
+        </div>
+      </div>
+    </div>
 
     <!-- Map Instructions -->
     <div class="flex items-center gap-2 text-sm text-gray-600 mt-2 mb-6">
@@ -649,83 +719,64 @@ onMounted(async () => {
           <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
             <div
               v-if="selectedLocationProducts.length > 0"
-              class="flex justify-between items-center mb-4"
+              class="flex flex-col gap-4"
             >
-              <button
-                @click="prevPage"
-                :disabled="currentPage === 1"
-                class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              <!-- Pagination -->
+              <Pagination
+                v-slot="{ page }"
+                :total="selectedLocationProducts.length"
+                :items-per-page="itemsPerPage"
+                :sibling-count="1"
+                show-edges
+                :default-page="currentPage"
+                @update:page="(newPage) => {
+                  currentPage = newPage;
+                  updatePageInUrl();
+                }"
               >
-                <span class="flex items-center gap-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  Previous
-                </span>
-              </button>
+                <div class="flex items-center justify-center gap-2">
+                  <PaginationFirst />
+                  <PaginationPrev />
+                  <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                    <template v-for="(item, index) in items">
+                      <PaginationListItem
+                        v-if="item.type === 'page'"
+                        :key="index"
+                        :value="item.value"
+                        :class="[
+                          'w-8 h-8 flex items-center justify-center rounded-lg transition-colors',
+                          item.value === page ? 'bg-green-600 text-white' : 'hover:bg-gray-100'
+                        ]"
+                      >
+                        {{ item.value }}
+                      </PaginationListItem>
+                      <PaginationEllipsis
+                        v-else
+                        :key="item.type"
+                        :index="index"
+                      />
+                    </template>
+                  </PaginationList>
+                  <PaginationNext />
+                  <PaginationLast />
+                </div>
+              </Pagination>
 
-              <div class="flex items-center gap-1 text-gray-600">
+              <!-- Action Buttons -->
+              <div class="flex gap-3">
                 <button
-                  v-for="page in totalPages"
-                  :key="page"
-                  @click="currentPage = page; updatePageInUrl()"
-                  :class="[
-                    'w-8 h-8 flex items-center justify-center rounded-full transition-colors',
-                    currentPage === page 
-                      ? 'bg-green-600 text-white font-medium' 
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  ]"
+                  @click="closeModal"
+                  class="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 focus:ring-offset-1 transition-all duration-200"
                 >
-                  {{ page }}
+                  Close
+                </button>
+                <button
+                  @click="router.push('/authenticated/forest-products')"
+                  class="flex-1 px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+                >
+                  View All Products
                 </button>
               </div>
-
-              <button
-                @click="nextPage"
-                :disabled="currentPage === totalPages"
-                class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-              >
-                <span class="flex items-center gap-1">
-                  Next
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </span>
-              </button>
-            </div>
-
-            <div class="flex gap-3">
-              <button
-                @click="closeModal"
-                class="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 focus:ring-offset-1 transition-all duration-200"
-              >
-                Close
-              </button>
-
-                <button
-                @click="router.push('/authenticated/forest-products')"
-                class="flex-1 px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
-                >
-                View All Products
-                </button>
             </div>
           </div>
         </div>

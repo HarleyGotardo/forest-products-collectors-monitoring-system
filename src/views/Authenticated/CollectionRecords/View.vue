@@ -26,6 +26,7 @@ const recordId = route.params.id
 const record = ref(null)
 const recordItems = ref([])
 const error = ref(null)
+const forestConservationOfficer = ref(null)
 
 const fetchCollectionRecord = async () => {
   // Fetch the main collection record
@@ -136,6 +137,27 @@ const deleteRecordPermanently = async (recordId) => {
   }
 }
 
+const fetchForestConservationOfficer = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('signatures')
+      .select('*')
+      .eq('title', 'forest_conservation_officer')
+      .single();
+
+    if (error) {
+      console.error('Error fetching forest conservation officer:', error);
+      return;
+    }
+
+    if (data) {
+      forestConservationOfficer.value = data;
+    }
+  } catch (err) {
+    console.error('Error in fetchForestConservationOfficer:', err);
+  }
+};
+
 const downloadPermit = async () => {
   try {
     if (!record.value.is_paid) {
@@ -161,17 +183,18 @@ const downloadPermit = async () => {
 
     // Prepare permit data
     const permitData = {
-      permitNo: record.value.id, // Permit Number is the record ID
-      dateIssued: new Date(record.value.created_at).toLocaleDateString(), // Date the record was created
+      permitNo: record.value.id,
+      dateIssued: new Date(record.value.created_at).toLocaleDateString(),
       name: `${record.value.user.first_name} ${record.value.user.last_name}`,
-      permission: `collect the forest products: ${forestProductsList}`, // Updated to "permission"
-      purpose: record.value.purpose, // Official, Personal, or Others
-      collectionRequestId: record.value.collection_request_id, // Collection Request ID
+      permission: `collect the forest products: ${forestProductsList}`,
+      purpose: record.value.purpose || 'N/A',
+      collectionRequestId: record.value.collection_request_id,
       expiryDate: new Date(new Date(record.value.created_at).setFullYear(new Date(record.value.created_at).getFullYear() + 1)).toLocaleDateString(),
       chargesPaid: calculateTotalCost().toFixed(2),
-      issuedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Name of the user who created the record
-      inspectedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`, // Same as "Issued by"
-      note: firewoodNote, // Add the firewood note if applicable
+      issuedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`,
+      inspectedBy: `${record.value.approved_by.first_name} ${record.value.approved_by.last_name}`,
+      note: firewoodNote,
+      forestConservationOfficer: forestConservationOfficer.value?.full_name || 'DENNIS P. PEQUE',
     };
 
     // Generate the PDF
@@ -289,6 +312,7 @@ const calculateTotalCost = () => {
 
 onMounted(() => {
   fetchCollectionRecord()
+  fetchForestConservationOfficer()
 })
 </script>
 <template>
