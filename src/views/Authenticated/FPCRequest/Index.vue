@@ -39,7 +39,7 @@ const loading = ref(true); // Add loading state
 const showNotes = ref(true); // Add showNotes state
 
 // Add filter states
-const statusFilter = ref('all'); // 'all', 'approved', 'pending'
+const statusFilter = ref('all'); // 'all', 'approved', 'pending', 'rejected'
 const recordedFilter = ref('all'); // 'all', 'recorded', 'unrecorded'
 
 const fetchAllRequests = async () => {
@@ -73,16 +73,19 @@ const filteredRequests = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(request =>
-      request.id.toString().includes(query)
+      request.id.toString().includes(query) ||
+      (request.remarks ? request.remarks.toLowerCase() : 'pending').includes(query)
     );
   }
   
   // Then filter by status
   if (statusFilter.value !== 'all') {
     if (statusFilter.value === 'approved') {
-      filtered = filtered.filter(request => request.approved_at !== null);
+      filtered = filtered.filter(request => request.remarks === 'Approved');
     } else if (statusFilter.value === 'pending') {
-      filtered = filtered.filter(request => request.approved_at === null);
+      filtered = filtered.filter(request => !request.remarks || request.remarks === 'Pending');
+    } else if (statusFilter.value === 'rejected') {
+      filtered = filtered.filter(request => request.remarks === 'Rejected');
     }
   }
   
@@ -200,6 +203,7 @@ watch(currentPage, () => {
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
         </select>
       </div>
       
@@ -425,8 +429,8 @@ watch(currentPage, () => {
                 {{ new Date(request.collection_date).toLocaleDateString() }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                  {{ request.approved_at ? 'Approved' : 'Pending' }}
+                <span :class="request.remarks === 'Approved' ? 'bg-green-100 text-green-800' : request.remarks === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                  {{ request.remarks === 'Approved' ? 'Approved' : request.remarks === 'Rejected' ? 'Rejected' : 'Pending' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -438,13 +442,13 @@ watch(currentPage, () => {
                 <div class="flex items-center justify-end space-x-3">
                   <Button 
                   class="bg-green-900 text-white hover:bg-green-600"
-                  @click="editRequest(request.id, $event)" :disabled="request.approved_at">
+                  @click="editRequest(request.id, $event)" :disabled="request.remarks !== 'Pending'">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </Button>
-                  <AlertDialog v-if="!request.approved_at">
+                  <AlertDialog v-if="request.remarks === 'Pending'">
                     <AlertDialogTrigger>
                       <Button 
                       class="bg-red-900 text-white hover:bg-red-700"
@@ -499,10 +503,10 @@ watch(currentPage, () => {
             </div>
             <div class="flex space-x-2">
               <span
-                :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                :class="request.remarks === 'Approved' ? 'bg-green-100 text-green-800' : request.remarks === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'"
                 class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
               >
-                {{ request.approved_at ? 'Approved' : 'Pending' }}
+                {{ request.remarks === 'Approved' ? 'Approved' : request.remarks === 'Rejected' ? 'Rejected' : 'Pending' }}
               </span>
               <span
                 :class="request.is_recorded ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'"
@@ -527,15 +531,20 @@ watch(currentPage, () => {
                 </div>
               </div>
               
-              <div v-if="request.approved_at">
+              <div v-if="request.remarks === 'Approved'">
                 <div class="text-xs text-gray-500">Approved At</div>
-                <div class="font-medium text-sm">{{ new Date(request.approved_at).toLocaleDateString() }}</div>
+                <div class="font-medium text-sm">{{ new Date(request.remarked_at).toLocaleDateString() }}</div>
+              </div>
+              <div v-if="request.remarks === 'Rejected'">
+                <div class="text-xs text-gray-500">Rejected At</div>
+                <div class="font-medium text-sm">{{ new Date(request.remarked_at).toLocaleDateString() }}</div>
+                <div class="text-xs text-red-500 mt-1">Reason: {{ request.rejection_reason }}</div>
               </div>
             </div>
           </div>
           
           <!-- Card actions -->
-          <div v-if="!request.approved_at" class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between" @click.stop>
+          <div v-if="request.remarks === 'Pending'" class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between" @click.stop>
             <Button 
             class="bg-green-900 text-white hover:bg-green-600 text-sm"
             @click="editRequest(request.id, $event)">

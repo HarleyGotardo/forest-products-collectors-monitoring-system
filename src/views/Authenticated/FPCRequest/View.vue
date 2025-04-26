@@ -1,10 +1,9 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'vue-sonner';
-import { useRouter } from 'vue-router';
-import { isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin, getUser } from '@/router/routeGuard';
+import { getUser, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin } from '@/router/routeGuard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
+
 const route = useRoute();
 const router = useRouter();
 const requestId = route.params.id;
@@ -27,6 +27,8 @@ const approver = ref({ first_name: '', last_name: '' });
 const error = ref(null);
 const isLoading = ref(true); // Added loading state
 const isApproving = ref(false); // New state for tracking approval process
+const showDialog = ref(false);
+const rejectionReason = ref('');
 
 // Add pagination states
 const currentPage = ref(1);
@@ -64,7 +66,7 @@ const isRequestOwner = computed(() => {
 const canEditRequest = computed(() => {
   if (!request.value) return false;
   if (request.value.deleted_at) return false;
-  if (request.value.approved_at) return false;
+  if (request.value.remarks === 'Approved' || request.value.remarks === 'Rejected') return false;
   return isRequestOwner.value && isFPCollector.value;
 });
 
@@ -72,7 +74,7 @@ const canEditRequest = computed(() => {
 const canDeleteRequest = computed(() => {
   if (!request.value) return false;
   if (request.value.deleted_at) return false;
-  if (request.value.approved_at) return false;
+  if (request.value.remarks === 'Approved' || request.value.remarks === 'Rejected') return false;
   return isRequestOwner.value && isFPCollector.value;
 });
 
@@ -97,7 +99,12 @@ const fetchRequestDetails = async () => {
     // 1. Fetch the main request details
     const { data: requestData, error: requestError } = await supabase
       .from('collection_requests')
-      .select('*, user_id, approved_by, approved_at, requested_at, updated_at, deleted_at, is_recorded') // Select all needed fields
+      .select(`
+        *,
+        remarks,
+        profiles!collection_requests_user_id_fkey (first_name, last_name),
+        remarked_by_profile:profiles!collection_requests_remarked_by_fkey (first_name, last_name)
+      `)
       .eq('id', requestId)
       .single();
 
@@ -198,106 +205,80 @@ const fetchRequestDetails = async () => {
   }
 };
 
-// Watcher for resetting approved_by (seems okay, keeping it)
-watch(request, async (newRequest) => {
-  if (newRequest && newRequest.approved_at === null && newRequest.approved_by !== null) {
-    try {
-      const { error: updateError } = await supabase
-        .from('collection_requests')
-        .update({ approved_by: null })
-        .eq('id', requestId);
-
-      if (updateError) {
-        throw updateError;
-      }
-      // Update local state if Supabase update is successful
-      if (request.value) { // Check if request still exists
-       request.value.approved_by = null;
-      }
-      approver.value = { first_name: '', last_name: '' }; // Clear approver name
-      toast.info('Approver reset as approval timestamp is missing.');
-
-    } catch (err) {
-      console.error("Error resetting approved_by:", err);
-      toast.error(`Failed to reset approver: ${err.message}`);
-      // Optionally revert local state or refetch if update fails critically
-    }
-  }
-});
-
-// New function to handle request approval
-const approveRequest = async () => {
-  if (!request.value || request.value.approved_at) return;
-  
+const confirmApproveRequest = () => {
   isApproving.value = true;
-  try {
-    // Get current user's ID for approved_by field
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    
-    if (!currentUser) {
-      throw new Error('User authentication required');
-    }
-    
-    const now = new Date().toISOString();
-    
-    // Update the request with approval information
-    const { error: updateError } = await supabase
-      .from('collection_requests')
-      .update({
-        approved_at: now,
-        approved_by: currentUser.id,
-        updated_at: now
-      })
-      .eq('id', requestId);
-      
-    if (updateError) {
-      throw updateError;
-    }
-    
-    // Update local request object to reflect changes
-    request.value.approved_at = now;
-    request.value.approved_by = currentUser.id;
-    request.value.updated_at = now;
-    
-    // Fetch approver details to display name
-    const { data: approverData, error: approverError } = await supabase
-      .from('profiles')
-      .select('first_name, last_name')
-      .eq('id', currentUser.id)
-      .maybeSingle();
-      
-    if (!approverError && approverData) {
-      approver.value = approverData;
-    } else {
-      approver.value = { first_name: 'Current', last_name: 'User' };
-    }
-    
-    toast.success('Collection request approved successfully');
-  } catch (err) {
-    console.error('Error approving request:', err);
-    toast.error(`Failed to approve request: ${err.message}`);
-  } finally {
-    isApproving.value = false;
+  showDialog.value = true;
+};
+
+const confirmRejectRequest = () => {
+  isApproving.value = false;
+  rejectionReason.value = '';
+  showDialog.value = true;
+};
+
+const approveRequest = async () => {
+  const user = getUser();
+  const { error: approveError } = await supabase
+    .from('collection_requests')
+    .update({
+      remarks: 'Approved',
+      remarked_at: new Date().toISOString(),
+      remarked_by: user.id
+    })
+    .eq('id', requestId);
+
+  if (approveError) {
+    error.value = approveError.message;
+  } else {
+    fetchRequestDetails();
+    toast.success('Request approved successfully', { duration: 2000 });
   }
+  showDialog.value = false;
+};
+
+const rejectRequest = async () => {
+  if (!rejectionReason.value.trim()) {
+    toast.error('Please provide a rejection reason', { duration: 2000 });
+    return;
+  }
+
+  const user = getUser();
+  const { error: rejectError } = await supabase
+    .from('collection_requests')
+    .update({
+      remarks: 'Rejected',
+      remarked_at: new Date().toISOString(),
+      remarked_by: user.id,
+      rejection_reason: rejectionReason.value
+    })
+    .eq('id', requestId);
+
+  if (rejectError) {
+    error.value = rejectError.message;
+  } else {
+    fetchRequestDetails();
+    toast.success('Request rejected successfully', { duration: 2000 });
+  }
+  showDialog.value = false;
 };
 
 // Add function to delete request (soft delete)
 const deleteRequest = async () => {
   if (!request.value) return;
-  
+
   isDeleting.value = true;
   try {
     const now = new Date().toISOString();
     const { error } = await supabase
       .from('collection_requests')
-      .update({ 
+      .update({
         deleted_at: now,
         updated_at: now
       })
       .eq('id', requestId);
-      
+
     if (error) throw error;
-    
+
     request.value.deleted_at = now;
     request.value.updated_at = now;
     toast.success('Request deleted successfully');
@@ -312,20 +293,20 @@ const deleteRequest = async () => {
 // Add function to restore request
 const restoreRequest = async () => {
   if (!request.value) return;
-  
+
   isRestoring.value = true;
   try {
     const now = new Date().toISOString();
     const { error } = await supabase
       .from('collection_requests')
-      .update({ 
+      .update({
         deleted_at: null,
         updated_at: now
       })
       .eq('id', requestId);
-      
+
     if (error) throw error;
-    
+
     request.value.deleted_at = null;
     request.value.updated_at = now;
     toast.success('Request restored successfully');
@@ -340,16 +321,16 @@ const restoreRequest = async () => {
 // Add function to permanently delete request
 const permanentlyDeleteRequest = async () => {
   if (!request.value) return;
-  
+
   isPermanentlyDeleting.value = true;
   try {
     const { error } = await supabase
       .from('collection_requests')
       .delete()
       .eq('id', requestId);
-      
+
     if (error) throw error;
-    
+
     toast.success('Request permanently deleted');
     router.push('/authenticated/collection-requests');
   } catch (err) {
@@ -395,11 +376,13 @@ const formatDateTime = (dateTimeString) => {
 <template>
   <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
     <!-- Header Section -->
-     
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+
+    <div
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"
+    >
       <div class="flex items-center gap-3">
         <div class="p-2 bg-gray-100 rounded-lg">
-          <img src="@/assets/request.png" alt="Request Icon" class="w-8 h-8">
+          <img src="@/assets/request.png" alt="Request Icon" class="w-8 h-8" />
         </div>
         <h1 class="text-2xl font-bold text-gray-800">Collection Request</h1>
       </div>
@@ -409,14 +392,41 @@ const formatDateTime = (dateTimeString) => {
           v-if="request && !request.deleted_at"
           class="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
           :class="{
-            'bg-emerald-50 text-emerald-700 border border-emerald-200': request.approved_at,
-            'bg-amber-50 text-amber-700 border border-amber-200': !request.approved_at
+            'bg-emerald-50 text-emerald-700 border border-emerald-200': request?.remarks === 'Approved',
+            'bg-amber-50 text-amber-700 border border-amber-200': !request?.remarks || request?.remarks === 'Pending',
+            'bg-red-50 text-red-700 border border-red-200': request?.remarks === 'Rejected'
           }"
         >
-          <span v-if="request.approved_at" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span
+            v-if="request?.remarks === 'Approved'"
+            class="w-2 h-2 rounded-full bg-emerald-500"
+          ></span>
+          <span
+            v-else-if="request?.remarks === 'Rejected'"
+            class="w-2 h-2 rounded-full bg-red-500"
+          ></span>
           <span v-else class="w-2 h-2 rounded-full bg-amber-500"></span>
-          {{ request.approved_at ? 'Approved' : 'Pending Approval' }}
+          {{ request?.remarks || 'Pending' }}
         </div>
+
+        <div
+          v-if="request && !request.deleted_at"
+          class="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+          :class="{
+            'bg-blue-50 text-blue-700 border border-blue-200': request?.is_recorded,
+            'bg-gray-50 text-gray-700 border border-gray-200': !request?.is_recorded
+          }"
+        >
+          <span
+            class="w-2 h-2 rounded-full"
+            :class="{
+              'bg-blue-500': request?.is_recorded,
+              'bg-gray-500': !request?.is_recorded
+            }"
+          ></span>
+          {{ request?.is_recorded ? 'Recorded' : 'Not Recorded' }}
+        </div>
+
         <div
           v-if="request && request.deleted_at"
           class="px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700 border border-red-200 flex items-center gap-2"
@@ -426,159 +436,63 @@ const formatDateTime = (dateTimeString) => {
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex items-center gap-2">
-          <!-- Edit Button -->
-          <button
-            v-if="canEditRequest"
-            @click="router.push(`/authenticated/collection-requests/${requestId}/edit`)"
-            class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Edit
-          </button>
-
-          <!-- Delete Button -->
-          <AlertDialog v-if="canDeleteRequest">
+        <div v-if="!isLoading && (isFPUAdmin || isForestRanger) && (!request?.remarks || request?.remarks === 'Pending')" class="flex gap-2">
+          <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button
-                :disabled="isDeleting"
-                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              <Button 
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                @click="confirmApproveRequest"
               >
-                <svg
-                  v-if="!isDeleting"
-                  class="mr-2 h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <svg
-                  v-else
-                  class="mr-2 h-4 w-4 animate-spin"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {{ isDeleting ? 'Deleting...' : 'Delete' }}
-              </button>
+                Approve
+              </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                <AlertDialogTitle>Approve Request</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete this request? This action can be undone by restoring the request.
+                  Are you sure you want to approve this request?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel class="border border-gray-200">Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  @click="deleteRequest"
-                  class="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  Delete
-                </AlertDialogAction>
+                <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
+                <AlertDialogAction class="bg-green-900 hover:bg-green-700" @click="approveRequest">Approve</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
 
-          <!-- Restore Button -->
-          <AlertDialog v-if="canRestoreRequest">
+          <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button
-                :disabled="isRestoring"
-                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              <Button 
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                @click="confirmRejectRequest"
               >
-                <svg
-                  v-if="!isRestoring"
-                  class="mr-2 h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                <svg
-                  v-else
-                  class="mr-2 h-4 w-4 animate-spin"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {{ isRestoring ? 'Restoring...' : 'Restore' }}
-              </button>
+                Reject
+              </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Restoration</AlertDialogTitle>
+                <AlertDialogTitle>Reject Request</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to restore this request? This will make the request active again.
+                  Please provide a reason for rejecting this request.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              <div class="mt-4">
+                <textarea
+                  v-model="rejectionReason"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows="3"
+                  placeholder="Enter rejection reason..."
+                ></textarea>
+              </div>
               <AlertDialogFooter>
-                <AlertDialogCancel class="border border-gray-200">Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  @click="restoreRequest"
-                  class="bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  Restore
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <!-- Permanently Delete Button -->
-          <AlertDialog v-if="canPermanentlyDeleteRequest">
-            <AlertDialogTrigger asChild>
-              <button
-                :disabled="isPermanentlyDeleting"
-                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg
-                  v-if="!isPermanentlyDeleting"
-                  class="mr-2 h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <svg
-                  v-else
-                  class="mr-2 h-4 w-4 animate-spin"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {{ isPermanentlyDeleting ? 'Deleting...' : 'Delete Permanently' }}
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Permanent Deletion</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to permanently delete this request? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel class="border border-gray-200">Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  @click="permanentlyDeleteRequest"
-                  class="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  Delete Permanently
-                </AlertDialogAction>
+                <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
+                <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Reject</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -610,14 +524,16 @@ const formatDateTime = (dateTimeString) => {
     <!-- Loading Skeleton -->
     <div v-if="isLoading" class="space-y-6 animate-pulse">
       <!-- Request Information Card Skeleton -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div
+        class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+      >
         <div class="border-b border-gray-200 p-5 bg-gray-50">
           <div class="flex items-center justify-between">
             <div class="h-6 bg-gray-200 rounded w-32"></div>
             <div class="h-4 bg-gray-200 rounded w-48"></div>
           </div>
         </div>
-        
+
         <div class="p-5">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Left Column -->
@@ -629,7 +545,7 @@ const formatDateTime = (dateTimeString) => {
                   <div class="h-5 bg-gray-200 rounded w-32"></div>
                 </div>
               </div>
-              
+
               <div class="flex items-start gap-3">
                 <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
                 <div class="space-y-2">
@@ -637,7 +553,7 @@ const formatDateTime = (dateTimeString) => {
                   <div class="h-5 bg-gray-200 rounded w-32"></div>
                 </div>
               </div>
-              
+
               <div class="flex items-start gap-3">
                 <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
                 <div class="space-y-2">
@@ -678,7 +594,9 @@ const formatDateTime = (dateTimeString) => {
       </div>
 
       <!-- Requested Products Card Skeleton -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div
+        class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+      >
         <div class="p-5 border-b border-gray-200 bg-gray-50">
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
@@ -717,7 +635,9 @@ const formatDateTime = (dateTimeString) => {
 
         <!-- Pagination Skeleton -->
         <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div
+            class="flex flex-col sm:flex-row items-center justify-between gap-4"
+          >
             <div class="h-4 bg-gray-200 rounded w-48"></div>
             <div class="flex items-center gap-2">
               <div class="h-10 w-10 bg-gray-200 rounded-lg"></div>
@@ -733,195 +653,153 @@ const formatDateTime = (dateTimeString) => {
       </div>
     </div>
 
-    <!-- Approve Request Button and Back Button Side by Side -->
-    <div v-if="!isLoading" class="mt-6 flex gap-4 justify-between mb-4">
-      <button
-
-      type="button"
-      @click="router.back()"
-      class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
-      >
-      <svg class="mr-2 h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
-      Back to Requests
-      </button>
-
-      <div v-if="request && !request.approved_at && !request.deleted_at">
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-        <button
-          :disabled="isApproving"
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <svg 
-          v-if="!isApproving" 
-          class="mr-2 h-4 w-4" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-          >
-          <path 
-            stroke-linecap="round" 
-            stroke-linejoin="round" 
-            stroke-width="2" 
-            d="M5 13l4 4L19 7"
-          ></path>
-          </svg>
-          <svg 
-          v-else 
-          class="mr-2 h-4 w-4 animate-spin" 
-          xmlns="http://www.w3.org/2000/svg" 
-          fill="none" 
-          viewBox="0 0 24 24"
-          >
-          <circle 
-            class="opacity-25" 
-            cx="12" 
-            cy="12" 
-            r="10" 
-            stroke="currentColor" 
-            stroke-width="4"
-          ></circle>
-          <path 
-            class="opacity-75" 
-            fill="currentColor" 
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-          </svg>
-          {{ isApproving ? 'Approving...' : 'Approve Request' }}
-        </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Confirm Approval</AlertDialogTitle>
-          <AlertDialogDescription>
-          Are you sure you want to approve this collection request? This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel class="border border-gray-200">Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-          @click="approveRequest"
-          class="bg-indigo-600 hover:bg-indigo-700 text-white"
-          >
-          Approve
-          </AlertDialogAction>
-        </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      </div>
-    </div>
-
     <!-- Request Details -->
     <div v-if="request && !isLoading" class="space-y-6">
       <!-- Request Information Card -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="border-b border-gray-200 p-5 bg-gray-50">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              Request #{{ request.id }}
-              <span class="text-xs text-gray-500 font-normal">
-                Created {{ formatDateTime(request.requested_at) }}
-              </span>
-            </h2>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Header Section -->
+        <div class="border-b border-gray-100 p-6 bg-gradient-to-r from-green-50 to-emerald-50">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-white rounded-lg shadow-sm">
+                <img src="@/assets/request.png" alt="Request Icon" class="w-8 h-8">
+              </div>
+              <div>
+                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                  Request #{{ request.id }}
+                  <span class="text-sm font-normal text-gray-500">
+                    Created {{ formatDateTime(request.requested_at) }}
+                  </span>
+                </h2>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div class="p-5">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-4">
-              <div class="flex items-start gap-3">
-                <div class="p-2 bg-indigo-50 rounded-md text-indigo-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+        <!-- Content Section -->
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Column -->
+            <div class="space-y-6">
+              <!-- Requested At -->
+              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-500 mb-1">Requested At</p>
+                  <p class="text-gray-900 font-semibold">{{ formatDateTime(request.requested_at) }}</p>
+                </div>
+              </div>
+
+              <!-- Collection Date -->
+              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">Collection Date</p>
-                  <p class="text-gray-800 font-semibold">{{ formatDate(request.collection_date) }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">Collection Date</p>
+                  <p class="text-gray-900 font-semibold">{{ formatDate(request.collection_date) }}</p>
                 </div>
               </div>
-              
-              <div class="flex items-start gap-3">
-                <div class="p-2 bg-indigo-50 rounded-md text-indigo-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Last Updated</p>
-                  <p class="text-gray-800 font-semibold">{{ formatDateTime(request.updated_at) }}</p>
-                </div>
-              </div>
-              
-              <div class="flex items-start gap-3">
-                <div class="p-2 bg-indigo-50 rounded-md text-indigo-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+              <!-- Status -->
+              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">Status</p>
-                  <p 
+                  <p class="text-sm font-medium text-gray-500 mb-1">Status</p>
+                  <p
                     class="font-semibold"
                     :class="{
-                      'text-emerald-600': request.approved_at,
-                      'text-amber-600': !request.approved_at && !request.deleted_at,
-                      'text-red-600': request.deleted_at
+                      'text-emerald-600': request.remarks === 'Approved',
+                      'text-amber-600': request.remarks === 'Pending' || !request.remarks,
+                      'text-red-600': request.remarks === 'Rejected'
                     }"
                   >
-                    {{ request.approved_at ? 'Approved' : (request.deleted_at ? 'Deleted' : 'Pending') }}
+                    {{ request.remarks || 'Pending' }}
+                    <span v-if="request.remarks && request.remarked_at" class="text-sm text-gray-500 ml-2">
+                      ({{ formatDateTime(request.remarked_at) }})
+                    </span>
                   </p>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-4">
-              <div class="flex items-start gap-3">
-                <div class="p-2 bg-indigo-50 rounded-md text-indigo-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Right Column -->
+            <div class="space-y-6">
+              <!-- Requested By -->
+              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">Requested By</p>
-                  <p class="text-gray-800 font-semibold">{{ user.first_name }} {{ user.last_name }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">Requested By</p>
+                  <p class="text-gray-900 font-semibold">{{ user.first_name }} {{ user.last_name }}</p>
                 </div>
               </div>
 
-              <div v-if="request.approved_at" class="flex items-start gap-3">
-                <div class="p-2 bg-emerald-50 rounded-md text-emerald-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              <!-- Recording Status -->
+              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                  <svg class="w-5 h-5" :class="request.is_recorded ? 'text-blue-600' : 'text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">Approved At</p>
-                  <p class="text-emerald-600 font-semibold">{{ formatDateTime(request.approved_at) }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">Recording Status</p>
+                  <p class="font-semibold" :class="request.is_recorded ? 'text-blue-600' : 'text-gray-600'">
+                    {{ request.is_recorded ? 'Recorded' : 'Not Recorded' }}
+                  </p>
                 </div>
               </div>
 
-              <div v-if="request.approved_by && request.approved_at" class="flex items-start gap-3">
-                <div class="p-2 bg-emerald-50 rounded-md text-emerald-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Approved By -->
+              <div v-if="request.remarks === 'Approved'" class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                  <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">Approved By</p>
-                  <p class="text-emerald-600 font-semibold">{{ approver.first_name }} {{ approver.last_name }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">Approved By</p>
+                  <p class="text-emerald-600 font-semibold">
+                    {{ request.remarked_by_profile?.first_name }} {{ request.remarked_by_profile?.last_name }}
+                  </p>
                 </div>
               </div>
 
-              <div v-if="request.deleted_at" class="flex items-start gap-3">
-                <div class="p-2 bg-red-50 rounded-md text-red-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Rejection Reason -->
+              <div v-if="request.remarks === 'Rejected'" class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-500 mb-1">Rejection Reason</p>
+                  <p class="text-red-600 font-semibold">{{ request.rejection_reason }}</p>
+                </div>
+              </div>
+
+              <!-- Deleted At -->
+              <div v-if="request.deleted_at" class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">Deleted At</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">Deleted At</p>
                   <p class="text-red-600 font-semibold">{{ formatDateTime(request.deleted_at) }}</p>
                 </div>
               </div>
@@ -931,15 +809,29 @@ const formatDateTime = (dateTimeString) => {
       </div>
 
       <!-- Requested Products Card -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div
+        class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+      >
         <div class="p-5 border-b border-gray-200 bg-gray-50">
           <div class="flex items-center gap-3">
             <div class="p-1.5 bg-indigo-100 rounded-md">
-              <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <svg
+                class="w-5 h-5 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-800">Requested Forest Products</h3>
+            <h3 class="text-lg font-semibold text-gray-800">
+              Requested Forest Products
+            </h3>
           </div>
         </div>
 
@@ -947,16 +839,28 @@ const formatDateTime = (dateTimeString) => {
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Forest Product
                 </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Location
                 </th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Quantity
                 </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Unit
                 </th>
               </tr>
@@ -988,11 +892,24 @@ const formatDateTime = (dateTimeString) => {
               </tr>
 
               <tr v-if="requestItems.length === 0">
-                <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">
+                <td
+                  colspan="4"
+                  class="px-6 py-8 text-center text-sm text-gray-500"
+                >
                   <div class="flex flex-col items-center justify-center">
                     <div class="p-3 bg-gray-100 rounded-full mb-3">
-                      <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                      <svg
+                        class="w-6 h-6 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                        />
                       </svg>
                     </div>
                     <p>No items found in this request.</p>
@@ -1004,10 +921,16 @@ const formatDateTime = (dateTimeString) => {
         </div>
 
         <!-- Pagination Controls -->
-        <div v-if="requestItems.length > 0" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div
+          v-if="requestItems.length > 0"
+          class="px-6 py-4 border-t border-gray-200 bg-gray-50"
+        >
+          <div
+            class="flex flex-col sm:flex-row items-center justify-between gap-4"
+          >
             <div class="text-sm text-gray-600">
-              Showing {{ (currentPage - 1) * itemsPerPage + 1 }} of {{ requestItems.length }} items
+              Showing {{ (currentPage - 1) * itemsPerPage + 1 }} of
+              {{ requestItems.length }} items
             </div>
             <div class="flex items-center gap-2 w-full sm:w-auto">
               <!-- Mobile Navigation -->
@@ -1019,8 +942,18 @@ const formatDateTime = (dateTimeString) => {
                   :class="currentPage === 1 ? 'border-gray-300 text-gray-400' : 'border-gray-300 text-gray-700'"
                 >
                   <span class="flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                      />
                     </svg>
                   </span>
                 </button>
@@ -1036,8 +969,18 @@ const formatDateTime = (dateTimeString) => {
                   :class="currentPage === totalPages ? 'border-gray-300 text-gray-400' : 'border-gray-300 text-gray-700'"
                 >
                   <span class="flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </span>
                 </button>
@@ -1088,12 +1031,12 @@ const formatDateTime = (dateTimeString) => {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .pagination-info {
     text-align: center;
     margin-bottom: 0.5rem;
   }
-  
+
   .pagination-buttons {
     justify-content: center;
   }

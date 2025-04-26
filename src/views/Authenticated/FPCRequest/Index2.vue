@@ -35,11 +35,13 @@ const itemsPerPage = 7;
 const searchQuery = ref('');
 const showDialog = ref(false);
 const requestToApprove = ref(null);
+const requestToReject = ref(null);
+const rejectionReason = ref('');
 const loading = ref(true); // Add loading state
 const showNotes = ref(true); // Add showNotes state
 
 // Add filter states
-const statusFilter = ref('all'); // 'all', 'approved', 'pending'
+const statusFilter = ref('all'); // 'all', 'approved', 'pending', 'rejected'
 const recordedFilter = ref('all'); // 'all', 'recorded', 'unrecorded'
 
 const fetchAllRequests = async () => {
@@ -66,6 +68,7 @@ const paginateRequests = () => {
   const end = start + itemsPerPage;
   paginatedRequests.value = filteredRequests.value.slice(start, end);
 };
+
 const filteredRequests = computed(() => {
   // First filter by search query
   let filtered = requests.value;
@@ -74,7 +77,7 @@ const filteredRequests = computed(() => {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(request =>
       request.id.toString().includes(query) ||
-      (request.approved_at ? 'approved' : 'pending').includes(query) ||
+      (request.remarks ? request.remarks.toLowerCase() : 'pending').includes(query) ||
       `${request.profiles.first_name} ${request.profiles.last_name}`.toLowerCase().includes(query)
     );
   }
@@ -82,9 +85,11 @@ const filteredRequests = computed(() => {
   // Then filter by status
   if (statusFilter.value !== 'all') {
     if (statusFilter.value === 'approved') {
-      filtered = filtered.filter(request => request.approved_at !== null);
+      filtered = filtered.filter(request => request.remarks === 'Approved');
     } else if (statusFilter.value === 'pending') {
-      filtered = filtered.filter(request => request.approved_at === null);
+      filtered = filtered.filter(request => request.remarks === 'Pending' || !request.remarks);
+    } else if (statusFilter.value === 'rejected') {
+      filtered = filtered.filter(request => request.remarks === 'Rejected');
     }
   }
 
@@ -123,13 +128,20 @@ const confirmApproveRequest = (requestId) => {
   showDialog.value = true;
 };
 
+const confirmRejectRequest = (requestId) => {
+  requestToReject.value = requestId;
+  rejectionReason.value = '';
+  showDialog.value = true;
+};
+
 const approveRequest = async () => {
   const user = getUser();
   const { error: approveError } = await supabase
     .from('collection_requests')
     .update({
-      approved_by: user.id,
-      approved_at: new Date().toISOString()
+      remarks: 'Approved',
+      remarked_at: new Date().toISOString(),
+      remarked_by: user.id
     })
     .eq('id', requestToApprove.value);
 
@@ -138,6 +150,32 @@ const approveRequest = async () => {
   } else {
     fetchAllRequests();
     toast.success('Request approved successfully', { duration: 2000 });
+  }
+  showDialog.value = false;
+};
+
+const rejectRequest = async () => {
+  if (!rejectionReason.value.trim()) {
+    toast.error('Please provide a rejection reason', { duration: 2000 });
+    return;
+  }
+
+  const user = getUser();
+  const { error: rejectError } = await supabase
+    .from('collection_requests')
+    .update({
+      remarks: 'Rejected',
+      remarked_at: new Date().toISOString(),
+      remarked_by: user.id,
+      rejection_reason: rejectionReason.value
+    })
+    .eq('id', requestToReject.value);
+
+  if (rejectError) {
+    error.value = rejectError.message;
+  } else {
+    fetchAllRequests();
+    toast.success('Request rejected successfully', { duration: 2000 });
   }
   showDialog.value = false;
 };
@@ -223,6 +261,7 @@ onMounted(() => {
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
         </select>
       </div>
 
@@ -486,8 +525,12 @@ onMounted(() => {
             {{ request.profiles.first_name }} {{ request.profiles.last_name }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <span :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-              {{ request.approved_at ? 'Approved' : 'Pending' }}
+            <span :class="{
+              'bg-green-100 text-green-800': request.remarks === 'Approved',
+              'bg-yellow-100 text-yellow-800': request.remarks === 'Pending',
+              'bg-red-100 text-red-800': request.remarks === 'Rejected'
+            }" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+              {{ request.remarks || 'Pending' }}
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
@@ -497,10 +540,11 @@ onMounted(() => {
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
             <div class="flex items-center justify-end space-x-3">
-              <template v-if="request.approved_at">
-                <span class="text-sm text-gray-500">Approved at {{ new Date(request.approved_at).toLocaleDateString() }}</span>
+              <template v-if="request.remarks && request.remarks !== 'Pending'">
+                <span class="text-sm text-gray-500">{{ request.remarks }} at {{ new Date(request.remarked_at).toLocaleDateString() }}</span>
+                <span v-if="request.remarks === 'Rejected'" class="text-sm text-red-500"></span>
               </template>
-              <template v-else>
+              <template v-if="request.remarks === 'Pending' || !request.remarks">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
@@ -522,6 +566,39 @@ onMounted(() => {
                     <AlertDialogFooter>
                       <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
                       <AlertDialogAction class="bg-green-900 hover:bg-green-700" @click="approveRequest">Approve</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                    class="bg-red-600 text-white hover:bg-red-700 text-sm px-3 py-2"
+                    v-if="isFPUAdmin || isForestRanger" @click="confirmRejectRequest(request.id)">
+                      <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span>Reject</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Reject Request</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Please provide a reason for rejecting this request.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div class="mt-4">
+                      <textarea
+                        v-model="rejectionReason"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        rows="3"
+                        placeholder="Enter rejection reason..."
+                      ></textarea>
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
+                      <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Reject</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -557,10 +634,14 @@ onMounted(() => {
         </div>
         <div class="flex space-x-2">
           <span
-            :class="request.approved_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+            :class="{
+              'bg-green-100 text-green-800': request.remarks === 'Approved',
+              'bg-yellow-100 text-yellow-800': request.remarks === 'Pending',
+              'bg-red-100 text-red-800': request.remarks === 'Rejected'
+            }"
             class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
           >
-            {{ request.approved_at ? 'Approved' : 'Pending' }}
+            {{ request.remarks || 'Pending' }}
           </span>
           <span
             :class="request.is_recorded ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'"
@@ -590,37 +671,38 @@ onMounted(() => {
             <div class="font-medium text-sm">{{ request.profiles.first_name }} {{ request.profiles.last_name }}</div>
           </div>
           
-          <div v-if="request.approved_at">
-            <div class="text-xs text-gray-500">Approved At</div>
-            <div class="font-medium text-sm">{{ new Date(request.approved_at).toLocaleDateString() }}</div>
+          <div v-if="request.remarks && request.remarks !== 'Pending'">
+            <div class="text-xs text-gray-500">Remarked At</div>
+            <div class="font-medium text-sm">{{ new Date(request.remarked_at).toLocaleDateString() }}</div>
+            <div v-if="request.remarks === 'Rejected'" class="text-sm text-red-500">Reason: {{ request.rejection_reason }}</div>
           </div>
         </div>
       </div>
       
-      <div v-if="!request.approved_at && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
-  <AlertDialog>
-    <AlertDialogTrigger asChild>
-      <Button class="w-full justify-center text-sm" @click="confirmApproveRequest(request.id)">
-        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        Approve Request
-      </Button>
-    </AlertDialogTrigger>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>Approve Request</AlertDialogTitle>
-        <AlertDialogDescription>
-          Are you sure you want to approve this request?
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel>Cancel</AlertDialogCancel>
-        <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
-</div>
+      <div v-if="(request.remarks === 'Pending' || !request.remarks) && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button class="w-full justify-center text-sm" @click="confirmApproveRequest(request.id)">
+              <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Approve Request
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Approve Request</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to approve this request?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   </div>
 

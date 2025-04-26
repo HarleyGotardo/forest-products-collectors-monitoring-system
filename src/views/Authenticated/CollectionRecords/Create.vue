@@ -79,7 +79,7 @@ const fetchForestProducts = async () => {
       .select(`
         id,
         is_recorded,
-        approved_at,
+        remarks,
         collection_request_items (
           id,
           requested_quantity,
@@ -91,7 +91,7 @@ const fetchForestProducts = async () => {
         )
       `)
       .is('deleted_at', null)
-      .not('approved_at', 'is', null)
+      .eq('remarks', 'Approved')
       
     if (approvedRequestsError) {
       console.error('Error fetching approved requests:', approvedRequestsError);
@@ -156,11 +156,11 @@ const fetchCollectionRequests = async () => {
       id,
       user_id,
       collection_date,
-      approved_at,
-      profiles!collection_requests_approved_by_fkey(id, first_name, last_name)
+      remarks,
+      profiles!collection_requests_remarked_by_fkey(id, first_name, last_name)
     `)
     .eq('is_recorded', false)
-    .not('approved_at', 'is', null);
+    .eq('remarks', 'Approved');
 
   if (error) {
     console.error('Error fetching collection requests:', error);
@@ -180,8 +180,8 @@ const fetchRequestDetails = async (requestId) => {
       id,
       user_id,
       collection_date,
-      approved_at,
-      profiles!collection_requests_approved_by_fkey(id, first_name, last_name)
+      remarks,
+      profiles!collection_requests_remarked_by_fkey(id, first_name, last_name)
     `)
     .eq('id', requestId)
     .single();

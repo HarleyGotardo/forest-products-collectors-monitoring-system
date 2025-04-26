@@ -60,7 +60,7 @@ const fetchForestProducts = async () => {
       .select(`
         id,
         is_recorded,
-        approved_at,
+        remarks,
         collection_request_items (
           id,
           requested_quantity,
@@ -72,7 +72,7 @@ const fetchForestProducts = async () => {
         )
       `)
       .is('deleted_at', null)
-      .not('approved_at', 'is', null)
+      .eq('remarks', 'Approved')
       
     if (approvedRequestsError) {
       console.error('Error fetching approved requests:', approvedRequestsError);

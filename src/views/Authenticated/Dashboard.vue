@@ -202,7 +202,7 @@ const fetchDashboardData = async () => {
       .select(`
         id,
         is_recorded,
-        approved_at,
+        remarks,
         collection_request_items (
           id,
           requested_quantity,
@@ -214,7 +214,7 @@ const fetchDashboardData = async () => {
         )
       `)
       .is('deleted_at', null)
-      .not('approved_at', 'is', null)
+      .eq('remarks', 'Approved')
 
     if (approvedRequestsError) {
       console.error('Error fetching approved requests:', approvedRequestsError);
@@ -305,14 +305,14 @@ const fetchDashboardData = async () => {
       .gte('collection_date', today.toISOString())
       .lt('collection_date', tomorrow.toISOString())
       .is('deleted_at', null)
-      .not('approved_at', 'is', null)
+      .eq('remarks', 'Approved')
       .eq('is_recorded', false);
 
     if (todayRequestsError) throw todayRequestsError;
 
     todayCollectionRequests.value = todayRequests.map(request => ({
       id: request.id,
-      user_id: request.user_id, // Add this line
+      user_id: request.user_id,
       collectionDate: new Date(request.collection_date).toLocaleDateString(),
       collectorName: `${request.profiles?.first_name || 'Unknown'} ${request.profiles?.last_name || 'Collector'}`,
       items: request.collection_request_items.map(item => ({
