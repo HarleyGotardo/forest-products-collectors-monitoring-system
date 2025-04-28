@@ -23,6 +23,7 @@ import { Pagination, PaginationFirst, PaginationLast, PaginationList, Pagination
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import { isForestRanger, isFPUAdmin } from '@/router/routeGuard'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -609,7 +610,9 @@ onMounted(async () => {
               Forest Products in {{ location.name }}
             </h3>
             </div>
-          <Button @click="openAddDialog" class="ml-4">
+          <Button 
+          v-if="isFPUAdmin || isForestRanger"
+          @click="openAddDialog" class="ml-4">
             Add Forest Product
           </Button>
         </div>
@@ -657,7 +660,7 @@ onMounted(async () => {
 
             <!-- Desktop Table View -->
             <table class="hidden sm:table min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+              <thead class="">
                 <tr>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     ID
@@ -671,7 +674,9 @@ onMounted(async () => {
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Unit
                   </th>
-                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th 
+                  v-if="isForestRanger || isFPUAdmin"
+                  scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -698,12 +703,12 @@ onMounted(async () => {
                     {{ product.unit_name }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex justify-end space-x-2">
+                    <div class="flex justify-end space-x-2" v-if="isForestRanger || isFPUAdmin">
                       <Button variant="outline" size="sm" @click.stop="openEditDialog(product)">
-                        Edit Quantity
+                      Edit Quantity
                       </Button>
                       <Button variant="destructive" size="sm" @click.stop="confirmDelete(product)">
-                        Remove
+                      Remove
                       </Button>
                     </div>
                   </td>

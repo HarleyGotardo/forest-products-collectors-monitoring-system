@@ -29,7 +29,7 @@ import LocationsView from "@/views/Authenticated/Location/View.vue";
 import LocationsEdit from "@/views/Authenticated/Location/Edit.vue";
 import ForestProductsView from "@/views/Authenticated/ForestProducts/View.vue";
 import ForestProductsEdit from "@/views/Authenticated/ForestProducts/Edit.vue";
-import SignUp from "@/views/Authenticated/SignUp.vue";
+import SignUp from "@/views/SignUp.vue";
 import SystemUsersView from "@/views/Authenticated/SystemUsers/View.vue";
 import FPCRequestCreate from "@/views/Authenticated/FPCRequest/Create.vue";
 import FPCRequestIndex from "@/views/Authenticated/FPCRequest/Index.vue";
@@ -39,6 +39,7 @@ import FPCRequestIndex2 from "@/views/Authenticated/FPCRequest/Index2.vue";
 import FPCRequestTrash from "@/views/Authenticated/FPCRequest/Trash.vue";
 import SalesReport from "@/views/Authenticated/SalesReport.vue";
 import FPCCollectionRecordsIndex from "@/views/Authenticated/CollectionRecords/FPCIndex.vue";
+import ResetPassword from "@/views/ResetPassword.vue";
 
 // 4 = FPU Admin, 1 = Forest Ranger, 2 = FP Collector, 3 = VSU Admin
 const routes = [
@@ -46,13 +47,19 @@ const routes = [
     path: "/",
     name: "Index",
     component: Index,
-    meta: { title: "Log In - Nature Cart", requiresRole: [4, 2, 3, 1] },
+    meta: { title: "Log In - Nature Cart",},
   },
   {
     path: "/sign-up",
     name: "SignUp",
     component: SignUp,
-    meta: { title: "Sign Up - Nature Cart", requiresRole: [4, 2, 3, 1] },
+    meta: { title: "Sign Up - Nature Cart", },
+  },
+  {
+    path: "/reset-password",
+    name: "ResetPassword",
+    component: ResetPassword,
+    meta: { title: "Reset Password - Nature Cart",},
   },
   {
     path: "/authenticated",
@@ -204,14 +211,18 @@ const routes = [
         path: "collection-requests/trash",
         name: "RequestTrash",
         component: FPCRequestTrash,
-        meta: { title: "Collection Requests Trash - Nature Cart", requiresRole: [2] },
+        meta: {
+          title: "Collection Requests Trash - Nature Cart",
+          requiresRole: [2],
+        },
       },
       {
         path: "collection-request/create",
         name: "RequestCreate",
         component: FPCRequestCreate,
         meta: {
-          title: "Create a Collection Request - Nature Cart", requiresRole: [2],
+          title: "Create a Collection Request - Nature Cart",
+          requiresRole: [2],
         },
       },
       {
@@ -219,7 +230,8 @@ const routes = [
         name: "RequestView",
         component: FPCRequestView,
         meta: {
-          title: "View Collection Request - Nature Cart", requiresRole: [2, 4, 1, 3],
+          title: "View Collection Request - Nature Cart",
+          requiresRole: [2, 4, 1, 3],
         },
       },
       {
@@ -227,7 +239,8 @@ const routes = [
         name: "RequestEdit",
         component: FPCRequestEdit,
         meta: {
-          title: "Edit Collection Request - Nature Cart", requiresRole: [2],
+          title: "Edit Collection Request - Nature Cart",
+          requiresRole: [2],
         },
       },
       {
@@ -235,7 +248,8 @@ const routes = [
         name: "RequestIndex2",
         component: FPCRequestIndex2,
         meta: {
-          title: "All Collection Requests - Nature Cart", requiresRole: [4, 1, 3],
+          title: "All Collection Requests - Nature Cart",
+          requiresRole: [4, 1, 3],
         },
       },
       {

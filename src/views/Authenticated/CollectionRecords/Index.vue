@@ -612,7 +612,7 @@ watch(paymentFilter, () => {
           +
         </Button>
         <Button
-          v-if="isVSUAdmin || isFPUAdmin"
+          v-if="isFPUAdmin"
           @click="showEditSignatureDialog = true"
           class="bg-green-900 text-white hover:bg-green-700"
         >

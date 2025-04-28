@@ -237,13 +237,6 @@ watch(selectedStatus, () => {
         <option value="Unpaid">Unpaid</option>
         <option value="Paid">Paid</option>
         </select>
-        <Button 
-        class="bg-green-900 hover:bg-green-600 text-white"
-        v-if="isFPCollector"
-        @click="createCollectionRecord"
-        >
-        +
-        </Button>
       </div>
       </div>
     </div>

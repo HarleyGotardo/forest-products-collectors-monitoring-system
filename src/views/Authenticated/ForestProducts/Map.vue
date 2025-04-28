@@ -20,6 +20,7 @@ import {
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import { isForestRanger, isFPUAdmin } from "@/router/routeGuard";
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -439,7 +440,9 @@ onUnmounted(() => {
       </span>
       <span v-else>Search</span>
     </Button class="bg-green-900 text-white hover:bg-green-600">
-    <Button  @click="createLocation" class="flex-1 sm:flex-none bg-green-900 text-white hover:bg-green-600"> + Create Location </Button>
+    <Button  
+    v-if="isFPUAdmin || isForestRanger"
+    @click="createLocation" class="flex-1 sm:flex-none bg-green-900 text-white hover:bg-green-600"> + Create Location </Button>
   </div>
 </div>
     </div>

@@ -377,7 +377,7 @@ onMounted(() => {
           Unpaid
         </div>
         <Button
-          v-if="record?.is_paid"
+          v-if="record?.is_paid && (isFPUAdmin || isForestRanger || isVSUAdmin)"
           @click="downloadPermit"
           size="sm"
           class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white"
