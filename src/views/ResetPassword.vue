@@ -1,14 +1,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
 
 const router = useRouter()
+const route = useRoute()
 const newPassword = ref('')
 const confirmPassword = ref('')
 const isLoading = ref(false)
+const isValidSession = ref(false)
 
 const handleResetPassword = async () => {
   if (!newPassword.value || !confirmPassword.value) {
@@ -46,9 +48,38 @@ const handleResetPassword = async () => {
 }
 
 onMounted(async () => {
-  const { data: { session }, error } = await supabase.auth.getSession()
-  if (!session) {
-    toast.error('Invalid or expired reset link')
+  try {
+    // Get the access token from the URL
+    const accessToken = route.hash.split('access_token=')[1]?.split('&')[0]
+    
+    if (!accessToken) {
+      toast.error('Invalid reset link')
+      setTimeout(() => {
+        router.push({ name: 'Index' })
+      }, 2000)
+      return
+    }
+
+    // Set the session with the access token
+    const { data: { session }, error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: ''
+    })
+
+    if (error) throw error
+
+    if (!session) {
+      toast.error('Invalid or expired reset link')
+      setTimeout(() => {
+        router.push({ name: 'Index' })
+      }, 2000)
+      return
+    }
+
+    isValidSession.value = true
+  } catch (error) {
+    console.error('Session check error:', error)
+    toast.error('Error processing reset link')
     setTimeout(() => {
       router.push({ name: 'Index' })
     }, 2000)
@@ -69,7 +100,7 @@ onMounted(async () => {
       </div>
 
       <!-- Reset Password Form -->
-      <div class="bg-white p-8 rounded-xl shadow-lg">
+      <div v-if="isValidSession" class="bg-white p-8 rounded-xl shadow-lg">
         <form @submit.prevent="handleResetPassword" class="space-y-6">
           <div>
             <label for="new-password" class="block text-sm font-medium text-gray-700">
@@ -125,6 +156,12 @@ onMounted(async () => {
             {{ isLoading ? 'Resetting...' : 'Reset Password' }}
           </button>
         </form>
+      </div>
+
+      <!-- Loading State -->
+      <div v-else class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+        <p class="mt-4 text-gray-600">Verifying reset link...</p>
       </div>
     </div>
 
