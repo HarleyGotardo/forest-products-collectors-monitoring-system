@@ -663,9 +663,16 @@ onMounted(() => {
           <!-- Modal Header -->
           <header class="px-6 py-4 border-b border-gray-100">
             <div class="flex items-center justify-between">
-              <h3 class="text-xl font-medium text-gray-800">
-                Select Locations
-              </h3>
+                <div class="flex items-center gap-2">
+                <img
+                  src="@/assets/location-peek.png"
+                  alt="Location Icon"
+                  class="w-6 h-6"
+                />
+                <h3 class="text-xl font-medium text-gray-800">
+                  Select Locations
+                </h3>
+                </div>
               <button
                 @click="showLocationModal = false"
                 class="text-gray-400 hover:text-gray-500"
@@ -691,7 +698,15 @@ onMounted(() => {
           <!-- Location List -->
           <div class="p-6">
             <div class="max-h-96 overflow-y-auto">
+              <div v-if="locations.length === 0" class="flex flex-col items-center justify-center py-8 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-lg font-medium">No Locations Available</p>
+                <p class="text-sm mt-1">There are no locations to select from.</p>
+              </div>
               <div
+                v-else
                 v-for="location in locations"
                 :key="location.id"
                 class="flex items-center justify-between p-4 mb-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"

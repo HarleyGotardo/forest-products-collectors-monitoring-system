@@ -2565,7 +2565,7 @@ const handleImageUpload = async (event) => {
                 class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg"
               >
                 <div class="space-y-1 text-center">
-                  <div class="flex text-sm text-gray-600">
+                  <div v-if="!newImage" class="flex text-sm text-gray-600">
                     <label
                       class="relative cursor-pointer rounded-md font-medium text-gray-900 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2"
                     >
@@ -2578,7 +2578,22 @@ const handleImageUpload = async (event) => {
                     </label>
                     <p class="pl-1">(image files only)</p>
                   </div>
-                  <!-- <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p> -->
+                  <div v-else class="flex flex-col items-center">
+                    <div class="flex items-center gap-2 text-emerald-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      </svg>
+                      <span class="font-medium">File uploaded successfully</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">{{ newImage.name }}</p>
+                    <button
+                      type="button"
+                      @click="newImage = null"
+                      class="mt-2 text-sm text-red-600 hover:text-red-700"
+                    >
+                      Remove file
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

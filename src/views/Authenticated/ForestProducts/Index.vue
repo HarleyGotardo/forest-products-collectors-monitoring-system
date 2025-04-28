@@ -366,11 +366,7 @@ watch(selectedType, () => {
       <tr v-if="filteredForestProducts.length === 0" class="block sm:table-row">
         <td colspan="6" class="px-6 py-12 text-center block sm:table-cell">
           <div class="flex flex-col items-center">
-            <img
-              src="@/assets/page-not-found.png"
-              alt="No Records Found"
-              class="w-24 h-24 mb-4"
-            />
+            <img src="@/assets/forest-product.png" alt="" class="w-12 h-12 mb-4" />
             <p class="text-gray-900 text-sm">No forest products found matching your criteria</p>
           </div>
         </td>

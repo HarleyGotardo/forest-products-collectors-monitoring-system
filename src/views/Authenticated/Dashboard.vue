@@ -1020,7 +1020,7 @@ onMounted(() => {
             <!-- No data message -->
             <div 
               v-if="!mostCollectedProduct || mostCollectedProduct === 'N/A'"
-              class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 rounded-lg"
+              class="absolute inset-0 flex flex-col items-center justify-center rounded-lg"
             >
               <img
                 src="@/assets/chill.png"
@@ -1028,7 +1028,7 @@ onMounted(() => {
                 class="w-24 h-24 mb-4 opacity-50"
               />
               <p class="text-gray-500 text-lg font-medium">No collection data available</p>
-              <p class="text-gray-400 text-sm mt-2">Start collecting forest products to see statistics</p>
+              <p v-if="isFPCollector" class="text-gray-400 text-sm mt-2">Start collecting forest products to see statistics</p>
             </div>
           </div>
         </div>
@@ -1077,11 +1077,14 @@ onMounted(() => {
               class="py-6 text-center text-gray-500 flex flex-col items-center"
             >
               <img
-                src="@/assets/chill.png"
+                src="@/assets/forest-product.png"
                 alt="No Records Found"
                 class="w-24 h-24 mb-4"
               />
-              No products available
+                No forest products available at the moment.
+                <p v-if="isFPUAdmin || isForestRanger" class="text-gray-500 mt-2">
+                Start by adding new forest products to the inventory.
+                </p>
             </div>
           </div>
         </div>

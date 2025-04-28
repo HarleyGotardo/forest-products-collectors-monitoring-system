@@ -203,7 +203,7 @@ onMounted(() => {
     >
       <div class="flex items-center space-x-2">
         <img
-          src="@/assets/request.png"
+          src="@/assets/request2.png"
           alt="Request Icon"
           class="w-12 h-12 group-hover:scale-110 transition-transform"
         />
@@ -504,9 +504,7 @@ onMounted(() => {
         <tr v-if="filteredRequests.length === 0">
           <td colspan="7" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center">
-              <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+              <img src="@/assets/request2.png" alt="" class="w-12 h-12 mb-4" />
               <p class="text-gray-500 text-sm">No requests found matching your criteria</p>
             </div>
           </td>
