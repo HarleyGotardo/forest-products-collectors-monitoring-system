@@ -39,7 +39,6 @@ import FPCRequestIndex2 from "@/views/Authenticated/FPCRequest/Index2.vue";
 import FPCRequestTrash from "@/views/Authenticated/FPCRequest/Trash.vue";
 import SalesReport from "@/views/Authenticated/SalesReport.vue";
 import FPCCollectionRecordsIndex from "@/views/Authenticated/CollectionRecords/FPCIndex.vue";
-import ResetPassword from "@/views/ResetPassword.vue";
 
 // 4 = FPU Admin, 1 = Forest Ranger, 2 = FP Collector, 3 = VSU Admin
 const routes = [
@@ -54,12 +53,6 @@ const routes = [
     name: "SignUp",
     component: SignUp,
     meta: { title: "Sign Up - Nature Cart", },
-  },
-  {
-    path: "/reset-password",
-    name: "ResetPassword",
-    component: ResetPassword,
-    meta: { title: "Reset Password - Nature Cart",},
   },
   {
     path: "/authenticated",

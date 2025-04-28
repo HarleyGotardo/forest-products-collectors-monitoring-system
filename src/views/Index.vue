@@ -10,14 +10,6 @@ const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 
-// Forgot password states
-const showForgotPasswordModal = ref(false)
-const forgotPasswordEmail = ref('')
-const verificationCode = ref('')
-const isVerifyingCode = ref(false)
-const isSendingReset = ref(false)
-const showVerificationInput = ref(false)
-
 const handleLogin = async () => {
   if (!email.value || !password.value) {
     toast.error('Please fill in all fields', {
@@ -69,29 +61,6 @@ const handleLogin = async () => {
 
 const goToSignUpPage = () => {
   router.push({ name: 'SignUp' })
-}
-
-const handleForgotPassword = async () => {
-  if (!forgotPasswordEmail.value) {
-    toast.error('Please enter your email address')
-    return
-  }
-
-  isSendingReset.value = true
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail.value, {
-      redirectTo: `${window.location.origin}/reset-password#access_token=`
-    })
-    if (error) throw error
-    
-    toast.success('Password reset link sent to your email')
-    showForgotPasswordModal.value = false
-    forgotPasswordEmail.value = ''
-  } catch (error) {
-    toast.error(`Error: ${error.message}`)
-  } finally {
-    isSendingReset.value = false
-  }
 }
 </script>
 
@@ -168,18 +137,9 @@ const handleForgotPassword = async () => {
           </div>
 
           <div>
-            <div class="flex items-center justify-between">
-              <label for="password" class="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <button
-                type="button"
-                @click="showForgotPasswordModal = true"
-                class="text-sm font-medium text-green-600 hover:text-green-500"
-              >
-                Forgot password?
-              </button>
-            </div>
+            <label for="password" class="block text-sm font-medium text-gray-700">
+              Password
+            </label>
             <div class="mt-1 relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -318,63 +278,14 @@ const handleForgotPassword = async () => {
       </div>
     </div>
     
-    <!-- Forgot Password Modal -->
-    <div v-if="showForgotPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg p-6 max-w-md w-full">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold text-gray-900">Reset Password</h3>
-          <button
-            @click="showForgotPasswordModal = false"
-            class="text-gray-400 hover:text-gray-500"
-          >
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <label for="forgot-email" class="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <input
-              id="forgot-email"
-              type="email"
-              v-model="forgotPasswordEmail"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-              placeholder="Enter your email"
-            />
-          </div>
-
-          <div class="flex justify-end space-x-3">
-            <button
-              @click="showForgotPasswordModal = false"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              @click="handleForgotPassword"
-              :disabled="isSendingReset"
-              class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md disabled:opacity-50"
-            >
-              {{ isSendingReset ? 'Sending...' : 'Send Reset Link' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
     <Toaster
-  theme="light"
-  :toastOptions="{
-    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
-    style: {
-      padding: '1rem',
-    }
-  }"
-/>
-
+      theme="light"
+      :toastOptions="{
+        class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+        style: {
+          padding: '1rem',
+        }
+      }"
+    />
   </div>
 </template>
