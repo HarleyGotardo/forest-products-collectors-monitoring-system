@@ -80,7 +80,7 @@ const handleForgotPassword = async () => {
   isSendingReset.value = true
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail.value, {
-      redirectTo: 'https://fpms-three.vercel.app/reset-password'
+      redirectTo: `${window.location.origin}/reset-password#access_token=`
     })
     if (error) throw error
     
