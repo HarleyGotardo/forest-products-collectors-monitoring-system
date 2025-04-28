@@ -316,7 +316,7 @@ onMounted(async () => {
 
           <!-- Forest Management Section -->
           <div class="space-y-1 mb-5">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Forest Management</p>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Forest Products & Locations</p>
             
             <ForestProducts
               :isDropdownOpen="isForestProductsDropdownOpen"
