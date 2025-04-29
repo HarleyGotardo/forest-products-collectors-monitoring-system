@@ -122,7 +122,7 @@ const fetchForestProducts = async () => {
       .select(`
         id,
         is_recorded,
-        approved_at,
+        remarks,
         collection_request_items (
           id,
           requested_quantity,
@@ -134,7 +134,7 @@ const fetchForestProducts = async () => {
         )
       `)
       .is('deleted_at', null)
-      .not('approved_at', 'is', null)
+      .eq('remarks', 'Approved')
       .eq('is_recorded', false);
       
     if (approvedRequestsError) {
@@ -197,8 +197,9 @@ const fetchCollectionRequests = async () => {
   const { data, error } = await supabase
     .from('collection_requests')
     .select('id')
-    .not('approved_at', 'is', null)
-    .eq('is_recorded', false); // Include only requests where is_recorded is false
+    .is('deleted_at', null)
+    .eq('remarks', 'Approved')
+    .eq('is_recorded', false);
 
   if (error) {
     console.error('Error fetching collection requests:', error);
