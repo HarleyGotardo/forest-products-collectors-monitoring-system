@@ -49,10 +49,17 @@ const fetchAllForestProducts = async () => {
     .select(`
       *,
       fp_and_locations (
+        id,
         locations (
           id,
           name,
           deleted_at
+        ),
+        collection_request_items (
+          id
+        ),
+        collection_record_items (
+          id
         )
       ),
       measurement_units:measurement_unit_id (
@@ -71,7 +78,11 @@ const fetchAllForestProducts = async () => {
         .map(fp => fp.locations)
         .filter(location => location.deleted_at === null), // Exclude locations with non-null deleted_at
       unit_name: product.measurement_units ? product.measurement_units.unit_name : 'N/A',
-      image_url: JSON.parse(product.image_url).data.publicUrl // Extract the actual URL from the JSON string
+      image_url: JSON.parse(product.image_url).data.publicUrl, // Extract the actual URL from the JSON string
+      hasReferences: product.fp_and_locations.some(fp => 
+        (fp.collection_request_items && fp.collection_request_items.length > 0) ||
+        (fp.collection_record_items && fp.collection_record_items.length > 0)
+      )
     }))
     paginateForestProducts()
   }
@@ -142,6 +153,11 @@ const deleteProduct = async (productId) => {
     toast.success('Forest product deleted successfully', { duration: 3000 })
     fetchAllForestProducts() 
   }
+}
+
+// Add a function to check if a product can be deleted
+const canDeleteProduct = (product) => {
+  return !product.hasReferences;
 }
 
 onMounted(() => {
@@ -400,8 +416,10 @@ watch(selectedType, () => {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                      <Button
-                     class="bg-red-900 text-white hover:bg-red-600"
+                     class="bg-red-900 text-white hover:bg-red-700"
                        v-if="isForestRanger || isFPUAdmin"
+                       :disabled="!canDeleteProduct(product)"
+                       :class="{ 'opacity-50 cursor-not-allowed': !canDeleteProduct(product) }"
                        aria-label="Delete product"
                      >
                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -501,6 +519,8 @@ watch(selectedType, () => {
                   <Button
                   class="bg-red-900 text-white hover:bg-red-700"
                     v-if="isForestRanger || isFPUAdmin"
+                    :disabled="!canDeleteProduct(product)"
+                    :class="{ 'opacity-50 cursor-not-allowed': !canDeleteProduct(product) }"
                     aria-label="Delete product"
                   >
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>

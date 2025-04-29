@@ -36,19 +36,37 @@ const itemsPerPage = 7
 const searchQuery = ref('')
 const locationToDelete = ref(null)
 const loading = ref(true) // Add loading state
+const isAlertOpen = ref(false) // Add state to control alert dialog
 
 const fetchAllLocations = async () => {
   loading.value = true // Set loading to true when fetching data
 
   let { data, error: fetchError } = await supabase
     .from('locations')
-    .select('*')
+    .select(`
+      *,
+      fp_and_locations (
+        id,
+        collection_request_items (
+          id
+        ),
+        collection_record_items (
+          id
+        )
+      )
+    `)
     .is('deleted_at', null) // Fetch only locations with null deleted_at
 
   if (fetchError) {
     error.value = fetchError.message
   } else {
-    locations.value = data
+    locations.value = data.map(location => ({
+      ...location,
+      hasReferences: location.fp_and_locations.some(fp => 
+        (fp.collection_request_items && fp.collection_request_items.length > 0) ||
+        (fp.collection_record_items && fp.collection_record_items.length > 0)
+      )
+    }))
     paginateLocations()
   }
 
@@ -102,25 +120,38 @@ const createLocation = () => {
 
 const confirmDeleteLocation = (locationId) => {
   locationToDelete.value = locationId
+  isAlertOpen.value = true
 }
 
 const deleteLocation = async () => {
   if (locationToDelete.value !== null) {
     const locationId = locationToDelete.value
     const currentDate = new Date().toISOString()
-    const { error: deleteError } = await supabase
-      .from('locations')
-      .update({ deleted_at: currentDate })
-      .eq('id', locationId)
 
-    if (deleteError) {
-      error.value = deleteError.message
-    } else {
-      fetchAllLocations()
-      toast.success('Location deleted successfully', { duration: 2000 })
+    try {
+      const { error: deleteError } = await supabase
+        .from('locations')
+        .update({ deleted_at: currentDate })
+        .eq('id', locationId)
+
+      if (deleteError) {
+        toast.error(deleteError.message)
+      } else {
+        await fetchAllLocations()
+        toast.success('Location deleted successfully', { duration: 2000 })
+      }
+    } catch (error) {
+      toast.error('Failed to delete location: ' + error.message)
+    } finally {
+      locationToDelete.value = null
+      isAlertOpen.value = false
     }
-    locationToDelete.value = null
   }
+}
+
+// Add a function to check if a location can be deleted
+const canDeleteLocation = (location) => {
+  return !location.hasReferences
 }
 
 onMounted(() => {
@@ -364,35 +395,27 @@ watch(currentPage, () => {
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
             <div class="flex items-center justify-end space-x-3">
               <Button
-              class="bg-green-900 text-white hover:bg-green-600"
-              v-if="isFPUAdmin || isForestRanger" @click="editLocation(location.id, $event)">
+                class="bg-green-900 text-white hover:bg-green-600"
+                v-if="isFPUAdmin || isForestRanger" 
+                @click="editLocation(location.id, $event)"
+              >
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </Button>
-              <AlertDialog>
-                <AlertDialogTrigger>
-                  <Button 
-                  class="bg-red-900 text-white hover:bg-red-700"
-                  v-if="isFPUAdmin || isForestRanger" @click="confirmDeleteLocation(location.id)">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Location?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This location will be transferred to the recycle bin.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deleteLocation">Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              
+              <!-- Delete Button -->
+              <Button 
+                class="bg-red-900 text-white hover:bg-red-700"
+                v-if="isFPUAdmin || isForestRanger" 
+                :disabled="!canDeleteLocation(location)"
+                :class="{ 'opacity-50 cursor-not-allowed': !canDeleteLocation(location) }"
+                @click="confirmDeleteLocation(location.id)"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </Button>
             </div>
           </td>
         </tr>
@@ -441,35 +464,30 @@ watch(currentPage, () => {
             </span>
           <div class="flex space-x-2" @click.stop>
             <Button 
-            class="bg-green-900 text-white hover:bg-green-600 p-1"
-            v-if="isFPUAdmin || isForestRanger" @click="editLocation(location.id, $event)">
+              class="bg-green-900 text-white hover:bg-green-600 p-1"
+              v-if="isFPUAdmin || isForestRanger" 
+              @click="editLocation(location.id, $event)"
+            >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger>
-                <Button 
-                class="bg-red-900 text-white hover:bg-red-700 p-1"
-                v-if="isFPUAdmin || isForestRanger" @click="confirmDeleteLocation(location.id)">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Location?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This location will be transferred to the recycle bin.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deleteLocation">Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            
+            <!-- Mobile Delete Button -->
+            <Button 
+              class="bg-red-900 text-white hover:bg-red-700 p-1"
+              v-if="isFPUAdmin || isForestRanger" 
+              :disabled="!canDeleteLocation(location)"
+              :class="{ 'opacity-50 cursor-not-allowed': !canDeleteLocation(location) }"
+              @click="confirmDeleteLocation(location.id)"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </Button>
+            <div v-if="!canDeleteLocation(location)" class="text-xs text-red-500 mt-1">
+              Cannot delete: Location has associated collection records or requests
+            </div>
           </div>
         </div>
       </div>
@@ -537,7 +555,24 @@ watch(currentPage, () => {
     </div>
   </div>
 </div>
-    <Toaster
+
+<!-- Delete Confirmation Dialog -->
+<AlertDialog v-model:open="isAlertOpen">
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete Location?</AlertDialogTitle>
+      <AlertDialogDescription>
+        This location will be transferred to the recycle bin.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel @click="isAlertOpen = false">Cancel</AlertDialogCancel>
+      <AlertDialogAction class="bg-red-900 hover:bg-red-700" @click="deleteLocation">Delete</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+<Toaster
   theme="light"
   :toastOptions="{
     class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',

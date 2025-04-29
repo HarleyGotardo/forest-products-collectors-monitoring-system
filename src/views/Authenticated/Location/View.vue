@@ -602,24 +602,25 @@ onMounted(async () => {
       </div>
 
       <!-- Forest Products Section -->
-      <div v-if="forestProducts.length" class="mt-6 sm:mt-12">
+      <div class="mt-6 sm:mt-12">
         <div class="flex items-center justify-between space-x-2 mb-4 sm:mb-6">
-            <div class="flex items-center space-x-2">
+          <div class="flex items-center space-x-2">
             <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
             <h3 class="text-base sm:text-xl font-bold text-gray-800">
               Forest Products in {{ location.name }}
             </h3>
-            </div>
+          </div>
           <Button 
-          v-if="isFPUAdmin || isForestRanger"
-          @click="openAddDialog" class="ml-4">
+            v-if="isFPUAdmin || isForestRanger"
+            @click="openAddDialog" 
+            class="ml-4 bg-green-800 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-md shadow-sm px-4 py-2 text-sm font-medium"
+          >
             Add Forest Product
           </Button>
         </div>
-        
 
         <!-- Forest Products Table -->
-        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div v-if="forestProducts.length" class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
           <!-- Table Header -->
           <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
@@ -775,6 +776,17 @@ onMounted(async () => {
                 </div>
               </Pagination>
             </div>
+          </div>
+        </div>
+
+        <!-- No Forest Products Message -->
+        <div v-else class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden p-6 text-center">
+          <div class="flex flex-col items-center justify-center space-y-4">
+            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-lg font-medium text-gray-700">No Forest Products Available</p>
+            <p class="text-sm text-gray-500">Add forest products to this location to get started.</p>
           </div>
         </div>
       </div>

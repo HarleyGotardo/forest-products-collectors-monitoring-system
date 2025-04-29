@@ -215,6 +215,7 @@ const fetchDashboardData = async () => {
       `)
       .is('deleted_at', null)
       .eq('remarks', 'Approved')
+      .eq('is_recorded', false); // Only fetch unrecorded requests
 
     if (approvedRequestsError) {
       console.error('Error fetching approved requests:', approvedRequestsError);
@@ -541,6 +542,7 @@ const exportToExcel = async () => {
     isExporting.value = false
   }
 }
+
 
 onMounted(() => {
   fetchDashboardData()
@@ -967,20 +969,15 @@ onMounted(() => {
                 @click="viewFP_Details(product.fp_id)"
               >
                 <div>
-                  <span
-                    class="text-sm font-medium text-gray-900"
-                    >{{ product.productName }}</span
-                  >
-                  <span class="text-xs text-gray-500 ml-1"
-                    >({{ product.locationName }})</span
-                  >
+                  <span class="text-sm font-medium text-gray-900">{{ product.productName }}</span>
+                  <span class="text-xs text-gray-500 ml-1">({{ product.locationName }})</span>
                 </div>
                 <div class="flex items-center">
                   <span
                     class="text-sm font-medium"
-                    :class="{'text-red-600': product.adjustedQuantity <= 5, 'text-yellow-600': product.adjustedQuantity > 5}"
+                    :class="{'text-red-600': product.quantity <= 5, 'text-yellow-600': product.quantity > 5}"
                   >
-                    {{ product.adjustedQuantity }} {{ product.measurementUnit }}
+                    {{ product.quantity }} {{ product.measurementUnit }}
                   </span>
                 </div>
               </li>
@@ -1067,7 +1064,7 @@ onMounted(() => {
                     v-if="item.hasPendingRequests" 
                     class="text-xs text-amber-600 font-medium"
                   >
-                    {{ item.adjustedQuantity }} {{ item.measurementUnit }}(s) unrequested
+                    {{ item.adjustedQuantity }} {{ item.measurementUnit }}(s) available for request
                   </span>
                 </div>
               </li>

@@ -39,15 +39,22 @@ const fetchForestProducts = async () => {
         forest_product_id,
         location_id,
         quantity,
-        forest_products (
+        forest_products!inner (
           id,
           name,
           price_based_on_measurement_unit,
           measurement_unit_id,
-          measurement_units (unit_name)
+          measurement_units (unit_name),
+          deleted_at
         ),
-        locations (name)
-      `);
+        locations!inner (
+          id,
+          name,
+          deleted_at
+        )
+      `)
+      .is('forest_products.deleted_at', null)  // Only get non-deleted forest products
+      .is('locations.deleted_at', null);       // Only get non-deleted locations
       
     if (error) {
       console.error('Error fetching forest products:', error);
@@ -73,6 +80,7 @@ const fetchForestProducts = async () => {
       `)
       .is('deleted_at', null)
       .eq('remarks', 'Approved')
+      .eq('is_recorded', false);
       
     if (approvedRequestsError) {
       console.error('Error fetching approved requests:', approvedRequestsError);
@@ -86,10 +94,10 @@ const fetchForestProducts = async () => {
     approvedRequests.forEach(request => {
       // Check if there's a related collection record that is paid
       const hasPaidRecord = request.collection_records && 
-                            request.collection_records.some(record => record.is_paid === true);
+                          request.collection_records.some(record => record.is_paid === true);
       
       // Only consider this request as pending if it's not recorded AND doesn't have a paid record
-      if (!hasPaidRecord) {
+      if (!request.is_recorded && !hasPaidRecord) {
         request.collection_request_items.forEach(item => {
           const fpLocationId = item.fp_and_location_id;
           if (!pendingQuantities[fpLocationId]) {

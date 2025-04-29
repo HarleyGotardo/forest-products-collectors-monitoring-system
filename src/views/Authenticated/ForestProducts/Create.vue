@@ -73,6 +73,7 @@ const fetchLocations = async () => {
   const { data, error } = await supabase
     .from('locations')
     .select('id, name, latitude, longitude')
+    .is('deleted_at', null)
     .order('name');
 
   if (error) {

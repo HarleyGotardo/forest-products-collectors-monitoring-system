@@ -87,11 +87,12 @@ const fetchForestProduct = async () => {
         fp_and_locations (
           id,
           quantity,
-          locations (
+          locations!inner (
             id,
             name,
             latitude,
-            longitude
+            longitude,
+            deleted_at
           )
         )
       `)
@@ -115,7 +116,7 @@ const fetchForestProduct = async () => {
     // Map locations from fp_and_locations if they exist
     if (data.fp_and_locations && data.fp_and_locations.length > 0) {
       const validLocations = data.fp_and_locations
-        .filter(fpLoc => fpLoc.locations) // Filter out any null location entries
+        .filter(fpLoc => fpLoc.locations && !fpLoc.locations.deleted_at) // Filter out any null location entries and deleted locations
         .map(fpLoc => ({
           id: fpLoc.locations.id,
           name: fpLoc.locations.name,
@@ -142,7 +143,7 @@ const fetchForestProduct = async () => {
     // Only add locations to original data if they exist and are valid
     if (data.fp_and_locations && data.fp_and_locations.length > 0) {
       originalData.value.locations = data.fp_and_locations
-        .filter(fpLoc => fpLoc.locations) // Filter out any null location entries
+        .filter(fpLoc => fpLoc.locations && !fpLoc.locations.deleted_at) // Filter out any null location entries and deleted locations
         .map(fpLoc => ({
           id: fpLoc.locations.id,
           name: fpLoc.locations.name,
@@ -164,6 +165,7 @@ const fetchLocations = async () => {
   const { data, error } = await supabase
     .from('locations')
     .select('id, name, latitude, longitude')
+    .is('deleted_at', null)
     .order('name')
 
   if (error) {

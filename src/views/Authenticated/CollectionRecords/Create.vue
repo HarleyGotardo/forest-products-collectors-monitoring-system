@@ -54,19 +54,26 @@ const fetchForestProducts = async () => {
     const { data, error } = await supabase
       .from('fp_and_locations')
       .select(`
+      id,
+      forest_product_id,
+      location_id,
+      quantity,
+      forest_products!inner (
         id,
-        forest_product_id,
-        location_id,
-        quantity,
-        forest_products (
-          id,
-          name,
-          price_based_on_measurement_unit,
-          measurement_unit_id,
-          measurement_units (unit_name)
-        ),
-        locations (name)
-      `);
+        name,
+        price_based_on_measurement_unit,
+        measurement_unit_id,
+        measurement_units (unit_name),
+        deleted_at
+      ),
+      locations!inner (
+        id,
+        name,
+        deleted_at
+      )
+      `)
+      .is('forest_products.deleted_at', null) // Ensure forest products are not deleted
+      .is('locations.deleted_at', null); // Ensure locations are not deleted
       
     if (error) {
       console.error('Error fetching forest products:', error);
@@ -121,6 +128,11 @@ const fetchForestProducts = async () => {
     
     // Map the products with adjusted quantities
     forestProducts.value = data.map(item => {
+      // Skip items where forest_products or locations is null
+      if (!item.forest_products || !item.locations) {
+        return null;
+      }
+
       const pendingAmount = pendingQuantities[item.id] || 0;
       const adjustedQuantity = Math.max(0, item.quantity - pendingAmount);
       
@@ -139,7 +151,7 @@ const fetchForestProducts = async () => {
         purchased_quantity: 0,
         quantityError: false
       };
-    });
+    }).filter(Boolean); // Remove any null items
     
     filteredForestProducts.value = forestProducts.value;
     

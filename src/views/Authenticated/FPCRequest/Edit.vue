@@ -36,15 +36,23 @@ const fetchForestProducts = async () => {
       forest_product_id,
       location_id,
       quantity,
-      forest_products (
+      forest_products!inner (
         id,
         name,
         price_based_on_measurement_unit,
         measurement_unit_id,
-        measurement_units (unit_name)
+        measurement_units (unit_name),
+        deleted_at
       ),
-      locations (name)
-    `);
+      locations!inner (
+        id,
+        name,
+        deleted_at
+      )
+    `)
+    .is('forest_products.deleted_at', null)  // Only get non-deleted forest products
+    .is('locations.deleted_at', null);       // Only get non-deleted locations
+
   if (error) {
     console.error('Error fetching forest products:', error);
     toast.error('Failed to load forest products');

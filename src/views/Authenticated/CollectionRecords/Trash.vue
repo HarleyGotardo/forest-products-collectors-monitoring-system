@@ -472,11 +472,7 @@ watch(currentPage, () => {
             <tr v-if="paginatedRecords.length === 0">
               <td colspan="8" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
-                  <img
-                    src="@/assets/page-not-found.png"
-                    alt="No Records Found"
-                    class="w-24 h-24 mb-4"
-                  />
+                  <img src="@/assets/records2.png" alt="" class="w-12 h-12 mb-4" />
                   <p class="text-gray-500 text-sm">
                     No collection records found in the recycle bin
                   </p>
