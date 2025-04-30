@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
@@ -25,6 +25,80 @@ const isConfirmPasswordVisible = ref(false)
 const hasRecoveryToken = ref(false)
 const accessToken = ref(null)
 const isValidatingToken = ref(true)
+
+// Password strength validation
+const passwordStrength = computed(() => {
+  if (!password.value) return { score: 0, feedback: '' }
+  
+  let score = 0
+  let feedback = []
+  
+  // Check length
+  if (password.value.length < 6) {
+    feedback.push('At least 6 characters')
+  } else if (password.value.length >= 12) {
+    score += 2
+  } else if (password.value.length >= 8) {
+    score += 1
+  }
+  
+  // Check for numbers
+  if (/\d/.test(password.value)) {
+    score += 1
+  } else {
+    feedback.push('Add numbers')
+  }
+  
+  // Check for uppercase
+  if (/[A-Z]/.test(password.value)) {
+    score += 1
+  } else {
+    feedback.push('Add uppercase letters')
+  }
+  
+  // Check for lowercase
+  if (/[a-z]/.test(password.value)) {
+    score += 1
+  } else {
+    feedback.push('Add lowercase letters')
+  }
+  
+  // Check for special characters
+  if (/[^A-Za-z0-9]/.test(password.value)) {
+    score += 1
+  } else {
+    feedback.push('Add special characters')
+  }
+  
+  return {
+    score,
+    feedback: feedback.join(', ')
+  }
+})
+
+// Password strength labels and colors
+const strengthLabel = computed(() => {
+  const score = passwordStrength.value.score
+  if (score === 0) return 'Very weak'
+  if (score <= 2) return 'Weak'
+  if (score <= 3) return 'Medium'
+  if (score <= 4) return 'Strong'
+  return 'Very strong'
+})
+
+const strengthColor = computed(() => {
+  const score = passwordStrength.value.score
+  if (score === 0) return 'bg-gray-200'
+  if (score <= 2) return 'bg-red-500'
+  if (score <= 3) return 'bg-yellow-500'
+  if (score <= 4) return 'bg-green-400'
+  return 'bg-green-600'
+})
+
+const passwordsMatch = computed(() => {
+  if (!confirmPassword.value || !password.value) return null
+  return password.value === confirmPassword.value
+})
 
 const validateAndRedirect = async () => {
   isValidatingToken.value = true
@@ -112,6 +186,14 @@ const handlePasswordReset = async () => {
     return
   }
 
+  // Additional password strength check
+  if (passwordStrength.value.score < 3) {
+    toast.error('Please use a stronger password', {
+      duration: 3000,
+    })
+    return
+  }
+
   isLoading.value = true
 
   try {
@@ -141,6 +223,14 @@ const handlePasswordReset = async () => {
     isLoading.value = false
   }
 }
+
+// Add form submit handler
+const handleFormSubmit = (e) => {
+  e.preventDefault()
+  if (!isLoading) {
+    handlePasswordReset()
+  }
+}
 </script>
 
 <template>
@@ -163,18 +253,24 @@ const handlePasswordReset = async () => {
       </div>
 
       <!-- Form -->
-      <form class="mt-8 space-y-6" @submit.prevent>
+      <form class="mt-8 space-y-6" @submit="handleFormSubmit">
         <!-- New Password -->
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700">
             New Password
           </label>
           <div class="mt-1 relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
             <input
+              id="password"
               :type="isPasswordVisible ? 'text' : 'password'"
               v-model="password"
               required
-              class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              class="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="Enter new password"
             />
             <button
@@ -182,19 +278,35 @@ const handlePasswordReset = async () => {
               @click="togglePasswordVisibility('password')"
               class="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
-              <svg
-                class="h-5 w-5 text-gray-400"
-                :class="{ 'text-green-500': isPasswordVisible }"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path v-if="!isPasswordVisible" d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                <path v-if="!isPasswordVisible" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                <path v-if="isPasswordVisible" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 12C18.268 7.943 14.478 5 10 5a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" />
-                <path v-if="isPasswordVisible" d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 12c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path v-if="!isPasswordVisible" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path v-if="!isPasswordVisible" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path v-if="isPasswordVisible" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
               </svg>
             </button>
+          </div>
+          
+          <!-- Password Strength Indicator -->
+          <div v-if="password" class="mt-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-medium" :class="{
+                'text-red-600': passwordStrength.score <= 2,
+                'text-yellow-600': passwordStrength.score === 3,
+                'text-green-600': passwordStrength.score > 3
+              }">
+                Password strength: {{ strengthLabel }}
+              </span>
+            </div>
+            <div class="h-1.5 rounded-full bg-gray-200 w-full flex overflow-hidden">
+              <div 
+                class="h-full transition-all duration-300"
+                :class="strengthColor"
+                :style="`width: ${Math.min(passwordStrength.score * 20, 100)}%`"
+              ></div>
+            </div>
+            <p v-if="passwordStrength.feedback" class="text-xs text-gray-500 mt-1">
+              {{ passwordStrength.feedback }}
+            </p>
           </div>
         </div>
 
@@ -204,11 +316,17 @@ const handlePasswordReset = async () => {
             Confirm Password
           </label>
           <div class="mt-1 relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
             <input
+              id="confirm-password"
               :type="isConfirmPasswordVisible ? 'text' : 'password'"
               v-model="confirmPassword"
               required
-              class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              class="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="Confirm new password"
             />
             <button
@@ -216,19 +334,28 @@ const handlePasswordReset = async () => {
               @click="togglePasswordVisibility('confirm')"
               class="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
-              <svg
-                class="h-5 w-5 text-gray-400"
-                :class="{ 'text-green-500': isConfirmPasswordVisible }"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path v-if="!isConfirmPasswordVisible" d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                <path v-if="!isConfirmPasswordVisible" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                <path v-if="isConfirmPasswordVisible" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 12C18.268 7.943 14.478 5 10 5a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" />
-                <path v-if="isConfirmPasswordVisible" d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 12c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path v-if="!isConfirmPasswordVisible" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path v-if="!isConfirmPasswordVisible" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path v-if="isConfirmPasswordVisible" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
               </svg>
             </button>
+          </div>
+          
+          <!-- Password Match Indicator -->
+          <div v-if="confirmPassword && passwordsMatch !== null" class="mt-1">
+            <p v-if="passwordsMatch" class="text-xs text-green-600 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Passwords match
+            </p>
+            <p v-else class="text-xs text-red-600 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Passwords do not match
+            </p>
           </div>
         </div>
 
@@ -236,9 +363,10 @@ const handlePasswordReset = async () => {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              type="button"
-              :disabled="isLoading"
-              class="w-full bg-green-600 text-white hover:bg-green-700"
+              type="submit"
+              :disabled="isLoading || (password && passwordStrength.score < 3)"
+              class="w-full text-white"
+              :class="password && passwordStrength.score >= 3 ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'"
             >
               <svg
                 v-if="isLoading"
