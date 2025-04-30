@@ -733,7 +733,7 @@ onMounted(() => {
       </div>
 
       <!-- Filters -->
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6">
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <h3 class="text-lg font-semibold text-gray-800">Filters</h3>
           <button @click="resetFilters" class="text-sm text-blue-600 hover:text-blue-800">Reset All</button>
@@ -803,7 +803,7 @@ onMounted(() => {
       <!-- Charts -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <!-- Monthly Sales Chart -->
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+        <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6">
           <div class="flex items-center justify-center mb-6">
             <div class="p-2 bg-green-100 rounded-lg">
               <img
@@ -824,7 +824,7 @@ onMounted(() => {
         </div>
         
         <!-- Top Products Chart -->
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+        <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6">
           <div class="flex items-center justify-center mb-6">
             <div class="p-2 bg-green-100 rounded-full">
               <img
@@ -846,7 +846,7 @@ onMounted(() => {
       </div>
       
       <!-- Top Collectors Chart -->
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6">
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6 mb-6">
         <div class="flex items-center justify-center mb-6">
             <div class="p-2 bg-green-100 rounded-full">
               <img
@@ -880,7 +880,7 @@ onMounted(() => {
       </div>
 
       <!-- Sales Data Table -->
-      <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6">
         <div class="flex items-center justify-center mb-6">
             <div class="p-2 bg-green-100 rounded-full">
               <img
