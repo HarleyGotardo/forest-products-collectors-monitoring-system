@@ -675,10 +675,12 @@ onMounted(async () => {
           </div>
         </div>
         <div v-else class="divide-y divide-gray-200">
-          <div
+          <router-link
             v-for="user in paginatedUsers"
             :key="user.id"
-            class="bg-white rounded-lg shadow-sm p-4 mb-3"
+            :to="{ name: 'SystemUsersView', params: { id: user.id } }"
+            class="block bg-white rounded-lg shadow-sm p-4 mb-3 hover:bg-gray-50 transition-colors"
+            :class="{ 'bg-green-50': user.id === getUser().id }"
           >
             <!-- User Header -->
             <div class="flex items-start space-x-4">
@@ -743,29 +745,7 @@ onMounted(async () => {
                 </div>
               </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="mt-4 grid grid-cols-2 gap-3">
-              <button
-                @click="approveUser(user.id)"
-                class="flex items-center justify-center px-4 py-2.5 bg-white border-2 border-green-600 text-green-600 rounded-lg font-medium hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Approve
-              </button>
-              <button
-                @click="rejectUser(user.id)"
-                class="flex items-center justify-center px-4 py-2.5 bg-white border-2 border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Reject
-              </button>
-            </div>
-          </div>
+          </router-link>
         </div>
       </div>
 
@@ -1182,7 +1162,7 @@ onMounted(async () => {
                   <div class="mt-4 grid grid-cols-2 gap-3">
                     <button
                       @click="approveUser(user.id)"
-                      class="flex items-center justify-center px-4 py-2.5 bg-white border-2 border-green-600 text-green-600 rounded-lg font-medium hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all"
+                      class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -1191,7 +1171,7 @@ onMounted(async () => {
                     </button>
                     <button
                       @click="rejectUser(user.id)"
-                      class="flex items-center justify-center px-4 py-2.5 bg-white border-2 border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all"
+                      class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
