@@ -650,86 +650,92 @@ onMounted(async () => {
           <div
             v-for="user in paginatedUsers"
             :key="user.id"
-            class="block p-4 hover:bg-gray-50 transition-colors"
-            :class="{ 'bg-green-50': user.id === getUser().id }"
+            class="bg-white rounded-lg shadow-sm p-4 mb-3"
           >
-            <router-link
-              :to="{ name: 'SystemUsersView', params: { id: user.id } }"
-              class="flex items-center space-x-4"
-            >
+            <!-- User Header -->
+            <div class="flex items-start space-x-4">
               <!-- Profile Picture -->
               <div class="flex-shrink-0">
-          <div class="h-12 w-12">
-            <img
-              v-if="getProfilePictureUrl(user.profile_picture)"
-              :src="getProfilePictureUrl(user.profile_picture)"
-              alt=""
-              class="h-12 w-12 rounded-full object-cover"
-            />
-            <div
-              v-else
-              class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center"
-            >
-              <span class="text-gray-600 font-medium">
-                {{ user.first_name[0] }}{{ user.last_name[0] }}
-              </span>
-            </div>
-          </div>
+                <div class="h-14 w-14">
+                  <img
+                    v-if="getProfilePictureUrl(user.profile_picture)"
+                    :src="getProfilePictureUrl(user.profile_picture)"
+                    alt=""
+                    class="h-14 w-14 rounded-full object-cover border-2 border-gray-200"
+                  />
+                  <div
+                    v-else
+                    class="h-14 w-14 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center"
+                  >
+                    <span class="text-gray-600 font-semibold text-lg">
+                      {{ user.first_name[0] }}{{ user.last_name[0] }}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <!-- User Info -->
               <div class="flex-1">
-          <div class="flex flex-col space-y-1">
-            <h3 class="text-sm font-medium text-gray-900">
-              {{ user.first_name }} {{ user.last_name }}
-            </h3>
-            <p class="text-sm text-gray-600">
-              {{ user.email_address }}
-            </p>
-            <div class="flex items-center space-x-2">
-              <!-- Role Badge -->
-              <span
-                class="px-2 py-1 text-xs font-medium rounded-full"
-                :class="{
-            'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
-            'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
-            'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
-            'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
-                }"
-              >
-                {{ user.role.name }}
-              </span>
-              <!-- User Type -->
-              <span
-                class="px-2 py-1 text-xs font-medium rounded-full"
-                :class="{
-            'bg-pink-100 text-pink-800': user.user_type === 'Individual',
-            'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
-            'bg-lime-100 text-lime-800': user.user_type === 'Organization',
-            'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
-                }"
-              >
-                {{ user.user_type }}
-              </span>
-            </div>
-          </div>
-              </div>
-            </router-link>
+                <div class="flex flex-col">
+                  <h3 class="text-base font-semibold text-gray-900">
+                    {{ user.first_name }} {{ user.last_name }}
+                  </h3>
+                  <p class="text-sm text-gray-600 mt-0.5">
+                    {{ user.email_address }}
+                  </p>
+                  
+                  <!-- Badges Container -->
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    <!-- Role Badge -->
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                      :class="{
+                        'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
+                        'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
+                        'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
+                        'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
+                      }"
+                    >
+                      {{ user.role.name }}
+                    </span>
 
-            <!-- Role Change (for FPU Admin) -->
-            <div v-if="isFPUAdmin && user.id !== getUser().id" class="mt-3">
-              <label for="role-select" class="sr-only">Change Role</label>
-              <select
-          id="role-select"
-          :value="user.role.id"
-          @change="changeRole(user, $event)"
-          class="block w-full px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition appearance-none"
+                    <!-- User Type Badge -->
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                      :class="{
+                        'bg-pink-100 text-pink-800': user.user_type === 'Individual',
+                        'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
+                        'bg-lime-100 text-lime-800': user.user_type === 'Organization',
+                        'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
+                      }"
+                    >
+                      {{ user.user_type }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <button
+                @click="approveUser(user.id)"
+                class="flex items-center justify-center px-4 py-2.5 bg-white border-2 border-green-600 text-green-600 rounded-lg font-medium hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all"
               >
-          <option value="1">Forest Ranger</option>
-          <option value="2">Forest Product Collector</option>
-          <option value="3">VSU Administrator</option>
-          <option value="4">FPU Administrator</option>
-              </select>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Approve
+              </button>
+              <button
+                @click="rejectUser(user.id)"
+                class="flex items-center justify-center px-4 py-2.5 bg-white border-2 border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Reject
+              </button>
             </div>
           </div>
         </div>
@@ -775,7 +781,7 @@ onMounted(async () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-700'
                       ]"
                     >
                       {{ item.value }}
@@ -1063,88 +1069,92 @@ onMounted(async () => {
                 <div
                   v-for="user in paginatedUnapprovedUsers"
                   :key="user.id"
-                  class="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200"
+                  class="bg-white rounded-lg shadow-sm p-4 mb-3"
                 >
-                  <div class="flex items-center space-x-4">
-                  <!-- Profile Picture -->
-                  <div class="flex-shrink-0">
-                    <div class="h-12 w-12">
-                    <img
-                      v-if="getProfilePictureUrl(user.profile_picture)"
-                      :src="getProfilePictureUrl(user.profile_picture)"
-                      alt=""
-                      class="h-12 w-12 rounded-full object-cover"
-                    />
-                    <div
-                      v-else
-                      class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center"
-                    >
-                      <span class="text-gray-600 font-medium">
-                      {{ user.first_name[0] }}{{ user.last_name[0] }}
-                      </span>
+                  <!-- User Header -->
+                  <div class="flex items-start space-x-4">
+                    <!-- Profile Picture -->
+                    <div class="flex-shrink-0">
+                      <div class="h-14 w-14">
+                        <img
+                          v-if="getProfilePictureUrl(user.profile_picture)"
+                          :src="getProfilePictureUrl(user.profile_picture)"
+                          alt=""
+                          class="h-14 w-14 rounded-full object-cover border-2 border-gray-200"
+                        />
+                        <div
+                          v-else
+                          class="h-14 w-14 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center"
+                        >
+                          <span class="text-gray-600 font-semibold text-lg">
+                            {{ user.first_name[0] }}{{ user.last_name[0] }}
+                          </span>
+                        </div>
+                      </div>
                     </div>
+
+                    <!-- User Info -->
+                    <div class="flex-1">
+                      <div class="flex flex-col">
+                        <h3 class="text-base font-semibold text-gray-900">
+                          {{ user.first_name }} {{ user.last_name }}
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-0.5">
+                          {{ user.email_address }}
+                        </p>
+                        
+                        <!-- Badges Container -->
+                        <div class="flex flex-wrap gap-2 mt-2">
+                          <!-- Role Badge -->
+                          <span
+                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                            :class="{
+                              'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
+                              'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
+                              'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
+                              'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
+                            }"
+                          >
+                            {{ user.role.name }}
+                          </span>
+
+                          <!-- User Type Badge -->
+                          <span
+                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                            :class="{
+                              'bg-pink-100 text-pink-800': user.user_type === 'Individual',
+                              'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
+                              'bg-lime-100 text-lime-800': user.user_type === 'Organization',
+                              'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
+                            }"
+                          >
+                            {{ user.user_type }}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- User Info -->
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-medium text-gray-900 truncate">
-                      {{ user.first_name }} {{ user.last_name }}
-                    </h3>
-                    <span
-                      class="px-2 py-1 text-xs font-medium rounded-full"
-                      :class="{
-                      'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
-                      'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
-                      'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
-                      'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
-                      }"
-                    >
-                      {{ user.role.name }}
-                    </span>
-                    </div>
-
-                    <!-- Email -->
-                    <p class="mt-1 text-sm text-gray-600 truncate">
-                    {{ user.email_address }}
-                    </p>
-
-                    <!-- User Type -->
-                    <div class="mt-2">
-                    <span
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      :class="{
-                      'bg-pink-100 text-pink-800': user.user_type === 'Individual',
-                      'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
-                      'bg-lime-100 text-lime-800': user.user_type === 'Organization',
-                      'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
-                      }"
-                    >
-                      {{ user.user_type }}
-                    </span>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="mt-3 flex justify-between space-x-2">
+                  <!-- Action Buttons -->
+                  <div class="mt-4 grid grid-cols-2 gap-3">
                     <button
                       @click="approveUser(user.id)"
-                      class="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
-                      aria-label="Approve user"
+                      class="flex items-center justify-center px-4 py-2.5 bg-white border-2 border-green-600 text-green-600 rounded-lg font-medium hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all"
                     >
-                      <span>Approve</span>
-                      <img src="@/assets/approve.png" alt="" class="w-4 h-4 ml-2" />
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Approve
                     </button>
                     <button
                       @click="rejectUser(user.id)"
-                      class="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition"
-                      aria-label="Reject user"
+                      class="flex items-center justify-center px-4 py-2.5 bg-white border-2 border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all"
                     >
-                      <span>Reject</span>
-                      <img src="@/assets/reject.png" alt="" class="w-4 h-4 ml-2" />
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Reject
                     </button>
-                    </div>
-                  </div>
                   </div>
                 </div>
               </div>
