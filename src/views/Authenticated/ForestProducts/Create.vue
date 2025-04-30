@@ -94,10 +94,8 @@ const fetchAllMeasurementUnits = async () => {
 
   if (error) {
     console.error('Error fetching measurement units:', error);
-
   } else {
     measurementUnits.value = data;
-    console.log(measurementUnits.value);
   }
 };
 
@@ -307,6 +305,13 @@ const handleAddMeasurementUnit = async () => {
     toast.error(error.message || 'Failed to add measurement unit');
   }
 };
+
+// Add this computed property after other computed properties
+const getUnitName = computed(() => {
+  if (!selectedMeasurementUnit.value || !measurementUnits.value?.length) return '';
+  const unit = measurementUnits.value.find(u => u.id === selectedMeasurementUnit.value);
+  return unit ? unit.unit_name : '';
+});
 
 onMounted(() => {
   fetchLocations();
@@ -741,16 +746,17 @@ onMounted(() => {
                 <!-- Quantity Input -->
                 <div class="ml-4 flex items-center">
                   <label class="mr-2 text-sm text-gray-600"
-                    >Quantity ({{ selectedMeasurementUnit ? measurementUnits.find(unit => unit.id === selectedMeasurementUnit)?.unit_name : ''
-
-                    }}):</label
+                    >Quantity ({{ getUnitName }}):</label
                   >
                   <input
                     type="number"
                     v-model="location.quantity"
                     :disabled="!selectedLocations.includes(location)"
                     placeholder="0"
+                    min="0"
+                    step="any"
                     class="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    :class="{'border-red-500 focus:ring-red-500 focus:border-red-500': selectedLocations.includes(location) && location.quantity === 0}"
                   />
                 </div>
 

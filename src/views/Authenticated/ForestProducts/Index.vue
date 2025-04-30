@@ -27,6 +27,7 @@ import {
   PaginationPrev,
   PaginationEllipsis,
 } from '@/components/ui/pagination'
+import defaultForestProductImage from '@/assets/forest-product.png'
 
 const loading = ref(true);
 const router = useRouter()
@@ -41,6 +42,15 @@ const selectedType = ref('') // New ref for selected type
 const createForestProduct = () => {
   router.push('/authenticated/forest-products/create')
 }
+
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) return defaultForestProductImage;
+  try {
+    return JSON.parse(imageUrl).data.publicUrl;
+  } catch (e) {
+    return defaultForestProductImage;
+  }
+};
 
 const fetchAllForestProducts = async () => {
   loading.value = true; // Start loading
@@ -78,7 +88,7 @@ const fetchAllForestProducts = async () => {
         .map(fp => fp.locations)
         .filter(location => location.deleted_at === null), // Exclude locations with non-null deleted_at
       unit_name: product.measurement_units ? product.measurement_units.unit_name : 'N/A',
-      image_url: JSON.parse(product.image_url).data.publicUrl, // Extract the actual URL from the JSON string
+      image_url: product.image_url, // Keep the raw image_url
       hasReferences: product.fp_and_locations.some(fp => 
         (fp.collection_request_items && fp.collection_request_items.length > 0) ||
         (fp.collection_record_items && fp.collection_record_items.length > 0)
@@ -398,7 +408,11 @@ watch(selectedType, () => {
         <td class="block p-4 sm:hidden" colspan="6">
           <div class="flex items-start space-x-4 mb-3">
              <div class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-lg bg-blue-50">
-               <img :src="product.image_url" alt="Product Image" class="h-12 w-12 rounded-lg object-cover" />
+               <img 
+                 :src="getImageUrl(product.image_url)" 
+                 alt="Product Image" 
+                 class="h-12 w-12 rounded-lg object-cover" 
+               />
              </div>
              <div class="flex-grow min-w-0"> <h3 class="text-base font-semibold text-gray-900 mb-0.5 truncate">{{ product.name }}</h3> <p class="text-xs text-gray-500">ID: #{{ product.id }}</p>
              </div>
@@ -479,7 +493,11 @@ watch(selectedType, () => {
         <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap border-b border-gray-200">
           <div class="flex items-center">
             <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50">
-              <img :src="product.image_url" alt="Forest Product Image" class="h-10 w-10 rounded-lg object-cover" />
+              <img 
+                :src="getImageUrl(product.image_url)" 
+                alt="Forest Product Image" 
+                class="h-10 w-10 rounded-lg object-cover" 
+              />
             </div>
             <div class="ml-4 min-w-0"> <div class="text-sm font-medium text-gray-900 truncate">{{ product.name }}</div> </div>
           </div>

@@ -35,6 +35,8 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination'
 import ForestProductImageViewer from './ForestProductImageViewer.vue'
+// Add this import at the top with other imports
+import defaultForestProductImage from '@/assets/forest-product.png'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -215,7 +217,10 @@ const fetchForestProduct = async () => {
         data.image_url = imageUrlData.data.publicUrl
       } catch (e) {
         console.error('Error parsing image_url:', e)
+        data.image_url = defaultForestProductImage
       }
+    } else {
+      data.image_url = defaultForestProductImage
     }
     data.created_at = format(new Date(data.created_at), 'MMMM dd, yyyy')
     data.updated_at = format(new Date(data.updated_at), 'MMMM dd, yyyy')
@@ -1327,9 +1332,9 @@ const handleImageUpload = async (event) => {
           </div>
 
           <!-- Image Section -->
-          <div v-if="forestProduct.image_url" class="relative mb-6">
+          <div class="relative mb-6">
             <img
-              :src="forestProduct.image_url"
+              :src="forestProduct.image_url || defaultForestProductImage"
               alt="Forest Product Image"
               class="w-full h-auto rounded-lg shadow-sm object-cover"
             />
