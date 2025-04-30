@@ -28,6 +28,11 @@ const forestProductsData = ref([])
 const currentPage = ref(1)
 const itemsPerPage = 8
 const loading = ref(true)
+const isApprovalChecked = ref(false)
+
+// Cache key for localStorage
+const APPROVAL_CACHE_KEY = 'user_approval_status'
+const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
 
 // New refs for the additional features
 const todayCollectionRequests = ref([])
@@ -546,8 +551,36 @@ const exportToExcel = async () => {
 const checkUserApproval = async () => {
   try {
     const user = getUser()
-    if (!user) return
+    if (!user) {
+      window.location.href = 'https://email-confirmed-zeta.vercel.app/'
+      return
+    }
 
+    // Check cache first
+    const cachedApproval = localStorage.getItem(APPROVAL_CACHE_KEY)
+    if (cachedApproval) {
+      const { approval_flag, timestamp, userId } = JSON.parse(cachedApproval)
+      
+      // Check if cache is still valid and for the same user
+      if (userId === user.id && Date.now() - timestamp < CACHE_DURATION) {
+        if (!approval_flag) {
+          toast.error('Your account needs to be approved by an administrator.', {
+            duration: 2000,
+          })
+          
+          setTimeout(async () => {
+            await supabase.auth.signOut()
+            window.location.href = 'https://email-confirmed-zeta.vercel.app/'
+          }, 2000)
+          return
+        }
+        
+        isApprovalChecked.value = true
+        return
+      }
+    }
+
+    // If no valid cache, fetch from database
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('approval_flag')
@@ -556,21 +589,44 @@ const checkUserApproval = async () => {
 
     if (error) throw error
 
+    // Cache the result
+    localStorage.setItem(APPROVAL_CACHE_KEY, JSON.stringify({
+      approval_flag: profile.approval_flag,
+      timestamp: Date.now(),
+      userId: user.id
+    }))
+
     if (!profile.approval_flag) {
       toast.error('Your account needs to be approved by an administrator.', {
-        duration: 3000,
+        duration: 2000,
       })
       
-      // Sign out the user after showing the message
       setTimeout(async () => {
         await supabase.auth.signOut()
-        router.push('/')
-      }, 3000)
+        window.location.href = 'https://email-confirmed-zeta.vercel.app/'
+      }, 2000)
+      return
     }
+
+    isApprovalChecked.value = true
   } catch (error) {
     console.error('Error checking user approval:', error)
+    toast.error('Error checking account approval status')
+    window.location.href = 'https://email-confirmed-zeta.vercel.app/'
   }
 }
+
+// Add a function to clear the cache when needed (e.g., on logout)
+const clearApprovalCache = () => {
+  localStorage.removeItem(APPROVAL_CACHE_KEY)
+}
+
+// Listen for auth state changes to clear cache on logout
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT') {
+    clearApprovalCache()
+  }
+})
 
 onMounted(() => {
   checkUserApproval()
@@ -580,8 +636,10 @@ onMounted(() => {
 
 <template>
   <div class="relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
+    <!-- Header Section - Always visible -->
     <div
       class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
+      v-if="loading || !isApprovalChecked"
     >
       <div class="flex items-center gap-3">
         <img
@@ -716,8 +774,8 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Loading Skeleton -->
-    <div v-if="loading" class="animate-pulse">
+    <!-- Loading Skeleton - Only for data cards -->
+    <div v-if="loading || !isApprovalChecked" class="animate-pulse">
       <!-- First row of cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
         <div class="h-28 bg-gray-200 rounded-xl"></div>
@@ -761,7 +819,143 @@ onMounted(() => {
     </div>
 
     <!-- Dashboard Content -->
-    <div v-show="!loading">
+    <div v-show="!loading && isApprovalChecked">
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
+      >
+        <div class="flex items-center gap-3">
+          <img
+            src="@/assets/dashboard.png"
+            alt="Dashboard"
+            class="w-8 h-8 group-hover:scale-110 transition-transform"
+          />
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-green-800 tracking-tight">Dashboard</h1>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <AlertDialog v-if="isVSUAdmin || isFPUAdmin">
+            <AlertDialogTrigger asChild>
+              <button
+                :disabled="isExporting"
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg
+                  v-if="!isExporting"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5 mr-2 text-gray-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2M12 15V3m0 12l-4-4m4 4l4-4"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  class="animate-spin h-5 w-5 mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                {{ isExporting ? 'Exporting...' : 'Backup Data' }}
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Backup Database</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will download all data from the database as an Excel file with multiple sheets. Each table will be in its own sheet. Do you want to proceed?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="exportToExcel">
+                  Start Backup
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <button
+            v-if="isForestRanger || isFPUAdmin"
+            @click="createCollectionRoute"
+            class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Collection Record
+          </button>
+          <button
+            v-if="isForestRanger || isFPUAdmin"
+            @click="createNewProduct"
+            class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Forest Product
+          </button>
+          <button
+            @click="refreshData"
+            class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
+          >
+            <svg
+              class="w-5 h-5 mr-2 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
       <!-- First row of cards -->
       <div
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6"
@@ -1137,15 +1331,14 @@ onMounted(() => {
     </div>
   </div>
   <Toaster
-  theme="light"
-  :toastOptions="{
-    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
-    style: {
-      padding: '1rem',
-    }
-  }"
-/>
-
+    theme="light"
+    :toastOptions="{
+      class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+      style: {
+        padding: '1rem',
+      }
+    }"
+  />
 </template>
 
 <style scoped>
