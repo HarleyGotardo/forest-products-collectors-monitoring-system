@@ -56,7 +56,7 @@ const fetchDashboardData = async () => {
     totalCollectors.value = profiles.length
 
     // First, get all collection_record_items with their purchased_quantity and fp_and_location_id
-    console.log("Fetching collection record items...");
+    // console.log("Fetching collection record items...");
     const { data: collectionItems, error: collectionItemsError } = await supabase
       .from('collection_record_items')
       .select('id, fp_and_location_id, purchased_quantity');
@@ -66,10 +66,10 @@ const fetchDashboardData = async () => {
       throw collectionItemsError;
     }
 
-    console.log(`Found ${collectionItems.length} collection items`);
+    // console.log(`Found ${collectionItems.length} collection items`);
 
     // Get all forest product locations
-    console.log("Fetching fp_and_locations...");
+    // console.log("Fetching fp_and_locations...");
     const { data: fpLocations, error: fpLocationsError } = await supabase
       .from('fp_and_locations')
       .select('id, forest_product_id');
@@ -79,7 +79,7 @@ const fetchDashboardData = async () => {
       throw fpLocationsError;
     }
 
-    console.log(`Found ${fpLocations.length} fp locations`);
+    // console.log(`Found ${fpLocations.length} fp locations`);
 
     // Create a map of fp_and_location_id to forest_product_id
     const fpLocationMap = {};
@@ -88,7 +88,7 @@ const fetchDashboardData = async () => {
     });
 
     // Get all forest products with their measurement units
-    console.log("Fetching forest products with measurement units...");
+    // console.log("Fetching forest products with measurement units...");
     const { data: forestProducts, error: forestProductsError } = await supabase
       .from('forest_products')
       .select(`
@@ -106,7 +106,7 @@ const fetchDashboardData = async () => {
       throw forestProductsError;
     }
 
-    console.log(`Found ${forestProducts.length} forest products`);
+    // console.log(`Found ${forestProducts.length} forest products`);
 
     // Create maps for product name and measurement unit
     const productNameMap = {};
@@ -143,7 +143,7 @@ const fetchDashboardData = async () => {
       }))
       .sort((a, b) => b.quantity - a.quantity);
 
-    console.log("Sorted products:", sortedProducts);
+    // console.log("Sorted products:", sortedProducts);
 
     // Prepare chart data
     const labels = sortedProducts.map(p => p.name);
@@ -154,7 +154,7 @@ const fetchDashboardData = async () => {
     mostCollectedProduct.value = sortedProducts.length > 0
       ? `${sortedProducts[0].name} `
       : 'N/A';
-    console.log("Most collected product:", mostCollectedProduct.value);
+    // console.log("Most collected product:", mostCollectedProduct.value);
 
     // Fetch total collection routes
     const { data: routes, error: routesError } = await supabase
@@ -201,7 +201,7 @@ const fetchDashboardData = async () => {
     if (fpAndLocationError) throw fpAndLocationError
 
     // NEW CODE: Fetch approved but unrecorded collection requests
-    console.log("Fetching approved but unrecorded collection requests...");
+    // console.log("Fetching approved but unrecorded collection requests...");
     const { data: approvedRequests, error: approvedRequestsError } = await supabase
       .from('collection_requests')
       .select(`
@@ -227,7 +227,7 @@ const fetchDashboardData = async () => {
       throw approvedRequestsError;
     }
 
-    console.log(`Found ${approvedRequests.length} approved but unrecorded requests`);
+    // console.log(`Found ${approvedRequests.length} approved but unrecorded requests`);
 
     // Create a map to track pending quantities by fp_and_location_id
     const pendingQuantities = {};
@@ -250,7 +250,7 @@ const fetchDashboardData = async () => {
       }
     });
 
-    console.log("Pending quantities by location:", pendingQuantities);
+    // console.log("Pending quantities by location:", pendingQuantities);
 
     // Create forestProductsData with adjusted quantities
     forestProductsData.value = fpAndLocation
@@ -576,6 +576,8 @@ const checkUserApproval = async () => {
         }
         
         isApprovalChecked.value = true
+        // Fetch dashboard data after approval check
+        fetchDashboardData()
         return
       }
     }
@@ -609,6 +611,8 @@ const checkUserApproval = async () => {
     }
 
     isApprovalChecked.value = true
+    // Fetch dashboard data after approval check
+    fetchDashboardData()
   } catch (error) {
     console.error('Error checking user approval:', error)
     toast.error('Error checking account approval status')
@@ -630,7 +634,6 @@ supabase.auth.onAuthStateChange((event) => {
 
 onMounted(() => {
   checkUserApproval()
-  fetchDashboardData()
 })
 </script>
 
@@ -639,7 +642,6 @@ onMounted(() => {
     <!-- Header Section - Always visible -->
     <div
       class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
-      v-if="loading || !isApprovalChecked"
     >
       <div class="flex items-center gap-3">
         <img
@@ -653,7 +655,7 @@ onMounted(() => {
         <AlertDialog v-if="isVSUAdmin || isFPUAdmin">
           <AlertDialogTrigger asChild>
             <button
-              :disabled="isExporting"
+              :disabled="isExporting || loading || !isApprovalChecked"
               class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg
@@ -713,7 +715,8 @@ onMounted(() => {
         <button
           v-if="isForestRanger || isFPUAdmin"
           @click="createCollectionRoute"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto"
+          :disabled="loading || !isApprovalChecked"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -734,7 +737,8 @@ onMounted(() => {
         <button
           v-if="isForestRanger || isFPUAdmin"
           @click="createNewProduct"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto"
+          :disabled="loading || !isApprovalChecked"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -754,7 +758,8 @@ onMounted(() => {
         </button>
         <button
           @click="refreshData"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
+          :disabled="loading || !isApprovalChecked"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             class="w-5 h-5 mr-2 text-gray-600"
@@ -820,146 +825,8 @@ onMounted(() => {
 
     <!-- Dashboard Content -->
     <div v-show="!loading && isApprovalChecked">
-      <div
-        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
-      >
-        <div class="flex items-center gap-3">
-          <img
-            src="@/assets/dashboard.png"
-            alt="Dashboard"
-            class="w-8 h-8 group-hover:scale-110 transition-transform"
-          />
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-green-800 tracking-tight">Dashboard</h1>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <AlertDialog v-if="isVSUAdmin || isFPUAdmin">
-            <AlertDialogTrigger asChild>
-              <button
-                :disabled="isExporting"
-                class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg
-                  v-if="!isExporting"
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-5 h-5 mr-2 text-gray-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2M12 15V3m0 12l-4-4m4 4l4-4"
-                  />
-                </svg>
-                <svg
-                  v-else
-                  class="animate-spin h-5 w-5 mr-2"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  ></circle>
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                {{ isExporting ? 'Exporting...' : 'Backup Data' }}
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Backup Database</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will download all data from the database as an Excel file with multiple sheets. Each table will be in its own sheet. Do you want to proceed?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="exportToExcel">
-                  Start Backup
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <button
-            v-if="isForestRanger || isFPUAdmin"
-            @click="createCollectionRoute"
-            class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Collection Record
-          </button>
-          <button
-            v-if="isForestRanger || isFPUAdmin"
-            @click="createNewProduct"
-            class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Forest Product
-          </button>
-          <button
-            @click="refreshData"
-            class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
-          >
-            <svg
-              class="w-5 h-5 mr-2 text-gray-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            Refresh
-          </button>
-        </div>
-      </div>
-
       <!-- First row of cards -->
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6"
-      >
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
         <!-- Total Collectors Card -->
         <div
           class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"

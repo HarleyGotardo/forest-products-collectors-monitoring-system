@@ -167,7 +167,7 @@ watch(currentPage, () => {
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2">
       <div class="flex items-center space-x-2">
-        <img src="@/assets/request.png" alt="Request Icon" class="w-12 h-12 group-hover:scale-110 transition-transform" />
+        <img src="@/assets/request2.png" alt="Request Icon" class="w-12 h-12 group-hover:scale-110 transition-transform" />
         <div>
           <h2 class="text-xl sm:text-2xl font-bold text-green-900">Collection Requests</h2>
           <p class="mt-1 text-sm text-green-900">View and manage all your collection requests</p>
