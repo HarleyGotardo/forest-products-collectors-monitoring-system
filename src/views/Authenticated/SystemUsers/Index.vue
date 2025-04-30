@@ -44,6 +44,34 @@ const showChangeRoleDialog = ref(false)
 const userToChangeRole = ref(null)
 const newRoleId = ref('')
 
+// Add computed property for formatting user names
+const formatUserName = (user) => {
+  if (!user) return ''
+  
+  // For non-individual users, return only the first_name (entity name)
+  if (user.user_type !== 'Individual') {
+    return user.first_name || ''
+  }
+  
+  // For individual users, combine first and last name
+  return `${user.first_name || ''} ${user.last_name || ''}`.trim()
+}
+
+// Add computed property for user initials
+const getUserInitials = (user) => {
+  if (!user) return ''
+  
+  if (user.user_type !== 'Individual') {
+    // For non-individual, take first two characters of entity name
+    return (user.first_name || '').substring(0, 2).toUpperCase()
+  }
+  
+  // For individual users, take initials from first and last name
+  const firstInitial = (user.first_name || '')[0] || ''
+  const lastInitial = (user.last_name || '')[0] || ''
+  return (firstInitial + lastInitial).toUpperCase()
+}
+
 // Replace your existing changeRole method with this
 const changeRole = (user, event) => {
   if (!isFPUAdmin) return
@@ -536,14 +564,14 @@ onMounted(async () => {
                         v-else
                         class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center"
                       >
-                        <span class="text-gray-600 font-medium">
-                          {{ user.first_name[0] }}{{ user.last_name ? user.last_name[0] : '' }}
+                        <span class="text-gray-600 font-semibold text-lg">
+                          {{ getUserInitials(user) }}
                         </span>
                       </div>
                     </div>
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-900">
-                        {{ user.first_name[0] }}{{ user.last_name ? user.last_name[0] : '' }}
+                        {{ formatUserName(user) }}
                       </div>
                       <div class="block sm:hidden text-sm text-gray-600">
                         {{ user.email_address }}
@@ -668,7 +696,7 @@ onMounted(async () => {
                     class="h-14 w-14 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center"
                   >
                     <span class="text-gray-600 font-semibold text-lg">
-                      {{ user.first_name[0] }}{{ user.last_name[0] }}
+                      {{ getUserInitials(user) }}
                     </span>
                   </div>
                 </div>
@@ -678,7 +706,7 @@ onMounted(async () => {
               <div class="flex-1">
                 <div class="flex flex-col">
                   <h3 class="text-base font-semibold text-gray-900">
-                    {{ user.first_name }} {{ user.last_name }}
+                    {{ formatUserName(user) }}
                   </h3>
                   <p class="text-sm text-gray-600 mt-0.5">
                     {{ user.email_address }}
@@ -903,11 +931,17 @@ onMounted(async () => {
                       scope="col"
                       class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
                     >
+                      Type
+                    </th>
+                    <th
+                      scope="col"
+                      class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+                    >
                       Role
                     </th>
                     <th
                       scope="col"
-                      class="hidden sm:table-cell px-6 py-3 text-right text-xs font-medium text-white  uppercase tracking-wider"
+                      class="hidden sm:table-cell px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider"
                     >
                       Action
                     </th>
@@ -915,7 +949,7 @@ onMounted(async () => {
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                   <tr v-if="paginatedUnapprovedUsers.length === 0">
-                    <td colspan="4" class="px-6 py-10 text-center">
+                    <td colspan="5" class="px-6 py-10 text-center">
                       <div class="flex flex-col items-center">
                         <svg
                           class="w-12 h-12 text-gray-300 mb-3"
@@ -953,13 +987,13 @@ onMounted(async () => {
                             class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center"
                           >
                             <span class="text-gray-600 font-medium">
-                              {{ user.first_name[0] }}{{ user.last_name[0] }}
+                              {{ getUserInitials(user) }}
                             </span>
                           </div>
                         </div>
                         <div class="ml-4 text-left">
                           <div class="text-sm font-medium text-gray-900">
-                            {{ user.first_name }} {{ user.last_name }}
+                            {{ formatUserName(user) }}
                           </div>
                           <div class="block sm:hidden text-sm text-gray-600">
                             {{ user.email_address }}
@@ -1006,6 +1040,15 @@ onMounted(async () => {
                       <div class="text-sm text-gray-600">
                         {{ user.email_address }}
                       </div>
+                    </td>
+                    <td
+                      class="hidden sm:table-cell px-6 py-4 whitespace-nowrap"
+                    >
+                      <span
+                        class="px-2 py-1 inline-flex text-xs font-medium rounded-full bg-pink-100 text-pink-800"
+                      >
+                        {{ user.user_type }}
+                      </span>
                     </td>
                     <td
                       class="hidden sm:table-cell px-6 py-4 whitespace-nowrap"
@@ -1087,7 +1130,7 @@ onMounted(async () => {
                           class="h-14 w-14 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center"
                         >
                           <span class="text-gray-600 font-semibold text-lg">
-                            {{ user.first_name[0] }}{{ user.last_name[0] }}
+                            {{ getUserInitials(user) }}
                           </span>
                         </div>
                       </div>
@@ -1097,7 +1140,7 @@ onMounted(async () => {
                     <div class="flex-1">
                       <div class="flex flex-col">
                         <h3 class="text-base font-semibold text-gray-900">
-                          {{ user.first_name }} {{ user.last_name }}
+                          {{ formatUserName(user) }}
                         </h3>
                         <p class="text-sm text-gray-600 mt-0.5">
                           {{ user.email_address }}
