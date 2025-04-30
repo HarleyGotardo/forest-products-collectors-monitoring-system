@@ -4,11 +4,23 @@ import { useRouter } from 'vue-router'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import Button from "@/components/ui/button/Button.vue"
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
+const showForgotPasswordModal = ref(false)
+const resetEmail = ref('')
+const isResetting = ref(false)
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
@@ -61,6 +73,37 @@ const handleLogin = async () => {
 
 const goToSignUpPage = () => {
   router.push({ name: 'SignUp' })
+}
+
+const handleForgotPassword = async () => {
+  if (!resetEmail.value) {
+    toast.error('Please enter your email address', {
+      duration: 3000,
+    })
+    return
+  }
+
+  isResetting.value = true
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.value, {
+      redirectTo: "https://fpms-three.vercel.app/forgot-password",
+    })
+
+    if (error) throw error
+
+    toast.success('Password reset instructions sent to your email', {
+      duration: 3000,
+    })
+    showForgotPasswordModal.value = false
+    resetEmail.value = ''
+  } catch (error) {
+    toast.error(`Failed to send reset instructions: ${error.message}`, {
+      duration: 3000,
+    })
+  } finally {
+    isResetting.value = false
+  }
 }
 </script>
 
@@ -156,6 +199,15 @@ const goToSignUpPage = () => {
                 placeholder="••••••••"
               />
             </div>
+          </div>
+
+          <div class="flex items-center justify-end mb-2">
+            <button
+              @click="showForgotPasswordModal = true"
+              class="text-sm text-green-600 hover:text-green-500 font-medium"
+            >
+              Forgot password?
+            </button>
           </div>
 
           <button
@@ -277,6 +329,81 @@ const goToSignUpPage = () => {
         </div>
       </div>
     </div>
+    
+    <!-- Add the Forgot Password Modal -->
+    <Dialog :open="showForgotPasswordModal" @update:open="showForgotPasswordModal = false">
+      <DialogContent class="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Reset Password</DialogTitle>
+          <DialogDescription>
+            Enter your email address and we'll send you instructions to reset your password.
+          </DialogDescription>
+        </DialogHeader>
+        <div class="mt-6">
+          <div class="space-y-4">
+            <div>
+              <label for="reset-email" class="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div class="mt-1 relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                  </svg>
+                </div>
+                <input
+                  id="reset-email"
+                  type="email"
+                  v-model="resetEmail"
+                  required
+                  class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  placeholder="your@email.com"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <DialogFooter class="mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            @click="showForgotPasswordModal = false"
+            class="mr-3"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            @click="handleForgotPassword"
+            :disabled="isResetting"
+            class="bg-green-600 text-white hover:bg-green-700"
+          >
+            <svg
+              v-if="isResetting"
+              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            {{ isResetting ? 'Sending...' : 'Send Reset Instructions' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     
     <Toaster
       theme="light"

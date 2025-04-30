@@ -1,0 +1,210 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '@/lib/supabaseClient'
+import { toast, Toaster } from 'vue-sonner'
+import Button from "@/components/ui/button/Button.vue"
+
+const router = useRouter()
+const password = ref('')
+const confirmPassword = ref('')
+const isLoading = ref(false)
+const isPasswordVisible = ref(false)
+const isConfirmPasswordVisible = ref(false)
+
+onMounted(() => {
+  // Listen for password recovery event
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // The user has clicked the recovery link
+      console.log('Password recovery event detected')
+    }
+  })
+})
+
+const togglePasswordVisibility = (field) => {
+  if (field === 'password') {
+    isPasswordVisible.value = !isPasswordVisible.value
+  } else {
+    isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value
+  }
+}
+
+const handlePasswordReset = async () => {
+  if (password.value !== confirmPassword.value) {
+    toast.error('Passwords do not match', {
+      duration: 3000,
+    })
+    return
+  }
+
+  if (password.value.length < 6) {
+    toast.error('Password must be at least 6 characters long', {
+      duration: 3000,
+    })
+    return
+  }
+
+  isLoading.value = true
+
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: password.value
+    })
+
+    if (error) throw error
+
+    toast.success('Password updated successfully', {
+      duration: 3000,
+    })
+
+    // Redirect to login page after successful password reset
+    setTimeout(() => {
+      router.push('/')
+    }, 2000)
+  } catch (error) {
+    toast.error(`Error updating password: ${error.message}`, {
+      duration: 3000,
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+</script>
+
+<template>
+  <div class="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg">
+      <!-- Header -->
+      <div class="text-center">
+        <img src="@/assets/nature-cart.png" alt="Nature Cart Logo" class="mx-auto h-16 w-16" />
+        <h2 class="mt-6 text-3xl font-bold text-gray-900">Reset Password</h2>
+        <p class="mt-2 text-sm text-gray-600">
+          Enter your new password below
+        </p>
+      </div>
+
+      <!-- Form -->
+      <form class="mt-8 space-y-6" @submit.prevent="handlePasswordReset">
+        <!-- New Password -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">
+            New Password
+          </label>
+          <div class="mt-1 relative">
+            <input
+              :type="isPasswordVisible ? 'text' : 'password'"
+              v-model="password"
+              required
+              class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Enter new password"
+            />
+            <button
+              type="button"
+              @click="togglePasswordVisibility('password')"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400"
+                :class="{ 'text-green-500': isPasswordVisible }"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path v-if="!isPasswordVisible" d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path v-if="!isPasswordVisible" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path v-if="isPasswordVisible" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 12C18.268 7.943 14.478 5 10 5a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" />
+                <path v-if="isPasswordVisible" d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 12c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div>
+          <label for="confirm-password" class="block text-sm font-medium text-gray-700">
+            Confirm Password
+          </label>
+          <div class="mt-1 relative">
+            <input
+              :type="isConfirmPasswordVisible ? 'text' : 'password'"
+              v-model="confirmPassword"
+              required
+              class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Confirm new password"
+            />
+            <button
+              type="button"
+              @click="togglePasswordVisibility('confirm')"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400"
+                :class="{ 'text-green-500': isConfirmPasswordVisible }"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path v-if="!isConfirmPasswordVisible" d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path v-if="!isConfirmPasswordVisible" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path v-if="isConfirmPasswordVisible" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 12C18.268 7.943 14.478 5 10 5a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" />
+                <path v-if="isConfirmPasswordVisible" d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 12c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <Button
+          type="submit"
+          :disabled="isLoading"
+          class="w-full bg-green-600 text-white hover:bg-green-700"
+        >
+          <svg
+            v-if="isLoading"
+            class="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          {{ isLoading ? 'Updating Password...' : 'Update Password' }}
+        </Button>
+
+        <!-- Back to Login -->
+        <div class="text-center">
+          <button
+            type="button"
+            @click="router.push('/')"
+            class="text-sm text-green-600 hover:text-green-500 font-medium"
+          >
+            Back to Login
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <Toaster
+      theme="light"
+      :toastOptions="{
+        class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+        style: {
+          padding: '1rem',
+        }
+      }"
+    />
+  </div>
+</template>

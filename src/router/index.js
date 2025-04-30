@@ -39,6 +39,7 @@ import FPCRequestIndex2 from "@/views/Authenticated/FPCRequest/Index2.vue";
 import FPCRequestTrash from "@/views/Authenticated/FPCRequest/Trash.vue";
 import SalesReport from "@/views/Authenticated/SalesReport.vue";
 import FPCCollectionRecordsIndex from "@/views/Authenticated/CollectionRecords/FPCIndex.vue";
+import ForgotPassword from "@/views/Forgot-Password.vue";
 
 // 4 = FPU Admin, 1 = Forest Ranger, 2 = FP Collector, 3 = VSU Admin
 const routes = [
@@ -46,13 +47,19 @@ const routes = [
     path: "/",
     name: "Index",
     component: Index,
-    meta: { title: "Log In - Nature Cart",},
+    meta: { title: "Log In - Nature Cart" },
   },
   {
     path: "/sign-up",
     name: "SignUp",
     component: SignUp,
-    meta: { title: "Sign Up - Nature Cart", },
+    meta: { title: "Sign Up - Nature Cart" },
+  },
+  {
+    path: "/forgot-password",
+    name: "ForgotPassword",
+    component: ForgotPassword,
+    meta: { title: "Forgot Password - Nature Cart" },
   },
   {
     path: "/authenticated",
