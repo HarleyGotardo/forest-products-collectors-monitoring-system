@@ -550,29 +550,29 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative min-h-screen bg-gray-50 p-3 sm:p-6">
+  <div class="relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
     <div
-      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
     >
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-3">
         <img
           src="@/assets/dashboard.png"
           alt="Dashboard"
-          class="w-6 h-6 group-hover:scale-110 transition-transform"
+          class="w-8 h-8 group-hover:scale-110 transition-transform"
         />
-        <h1 class="text-2xl sm:text-3xl font-bold text-green-800">Dashboard</h1>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-green-800 tracking-tight">Dashboard</h1>
       </div>
-      <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <AlertDialog v-if="isVSUAdmin || isFPUAdmin">
           <AlertDialogTrigger asChild>
             <button
               :disabled="isExporting"
-              class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg
                 v-if="!isExporting"
                 xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 mr-2"
+                class="w-5 h-5 mr-2 text-gray-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -626,7 +626,7 @@ onMounted(() => {
         <button
           v-if="isForestRanger || isFPUAdmin"
           @click="createCollectionRoute"
-          class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -647,7 +647,7 @@ onMounted(() => {
         <button
           v-if="isForestRanger || isFPUAdmin"
           @click="createNewProduct"
-          class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -667,10 +667,10 @@ onMounted(() => {
         </button>
         <button
           @click="refreshData"
-          class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
         >
           <svg
-            class="w-5 h-5"
+            class="w-5 h-5 mr-2 text-gray-600"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -679,7 +679,7 @@ onMounted(() => {
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
           </svg>
           Refresh
@@ -691,41 +691,41 @@ onMounted(() => {
     <div v-if="loading" class="animate-pulse">
       <!-- First row of cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
+        <div class="h-28 bg-gray-200 rounded-xl"></div>
+        <div class="h-28 bg-gray-200 rounded-xl"></div>
+        <div class="h-28 bg-gray-200 rounded-xl"></div>
+        <div class="h-28 bg-gray-200 rounded-xl"></div>
       </div>
 
       <!-- Second row of cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
-        <div class="h-48 bg-gray-200 rounded-lg"></div>
-        <div class="h-48 bg-gray-200 rounded-lg"></div>
+        <div class="h-56 bg-gray-200 rounded-xl"></div>
+        <div class="h-56 bg-gray-200 rounded-xl"></div>
       </div>
 
       <!-- Third row: Charts and product distribution -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <!-- Pie Chart Skeleton -->
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+        <div class="bg-gray-200 rounded-xl p-4 sm:p-6">
           <div class="flex items-center justify-center mb-4">
-            <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
-            <div class="ml-2 w-32 h-6 bg-gray-200 rounded"></div>
+            <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <div class="ml-2 w-32 h-6 bg-gray-300 rounded"></div>
           </div>
-          <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px] bg-gray-200 rounded-lg"></div>
+          <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px] bg-gray-300 rounded-lg"></div>
         </div>
 
         <!-- Product Distribution Skeleton -->
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+        <div class="bg-gray-200 rounded-xl p-4 sm:p-6">
           <div class="flex items-center justify-center mb-4">
-            <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
-            <div class="ml-2 w-48 h-6 bg-gray-200 rounded"></div>
+            <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <div class="ml-2 w-48 h-6 bg-gray-300 rounded"></div>
           </div>
           <div class="space-y-3">
-            <div class="h-12 bg-gray-200 rounded-lg"></div>
-            <div class="h-12 bg-gray-200 rounded-lg"></div>
-            <div class="h-12 bg-gray-200 rounded-lg"></div>
-            <div class="h-12 bg-gray-200 rounded-lg"></div>
-            <div class="h-12 bg-gray-200 rounded-lg"></div>
+            <div class="h-12 bg-gray-300 rounded-lg"></div>
+            <div class="h-12 bg-gray-300 rounded-lg"></div>
+            <div class="h-12 bg-gray-300 rounded-lg"></div>
+            <div class="h-12 bg-gray-300 rounded-lg"></div>
+            <div class="h-12 bg-gray-300 rounded-lg"></div>
           </div>
         </div>
       </div>
@@ -737,19 +737,21 @@ onMounted(() => {
       <div
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6"
       >
+        <!-- Total Collectors Card -->
         <div
-          class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200"
+          class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
         >
+          <div class="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">Total Collectors</p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+              <p class="text-sm font-medium text-gray-500 mb-1">Total Collectors</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900">
                 {{ totalCollectors }}
               </p>
             </div>
-            <div class="p-2 sm:p-3 bg-blue-100 rounded-lg">
+            <div class="p-3 bg-blue-100 rounded-lg">
               <svg
-                class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
+                class="w-6 h-6 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -764,50 +766,42 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        
+        <!-- Most Collected Product Card -->
         <div
-          class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200"
+          class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
         >
-          <div class="flex items-center justify-between">
-            <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">
-                Most Collected Product
-              </p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
-                {{ mostCollectedProduct }}
-              </p>
+          <div class="absolute top-0 left-0 w-2 h-full bg-green-500"></div>
+            <div class="flex items-center justify-between overflow-x-auto space-x-4">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-500 mb-1">Most Collected Product</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{{ mostCollectedProduct }}</p>
             </div>
-            <div class="p-2 sm:p-3 bg-green-100 rounded-lg">
-              <svg
-                class="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
+            <div class="p-3 bg-green-100 rounded-lg flex-shrink-0">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-          </div>
+            </div>
         </div>
+        
+        <!-- Total Records Card -->
         <div
-          class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200"
+          class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
         >
+          <div class="absolute top-0 left-0 w-2 h-full bg-purple-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">
+              <p class="text-sm font-medium text-gray-500 mb-1">
                 Total Records
               </p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900">
                 {{ totalRoutes }}
               </p>
             </div>
-            <div class="p-2 sm:p-3 bg-purple-100 rounded-lg">
+            <div class="p-3 bg-purple-100 rounded-lg">
               <svg
-                class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600"
+                class="w-6 h-6 text-purple-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -822,21 +816,24 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        
+        <!-- Total Forest Products Card -->
         <div
-          class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200"
+          class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
         >
+          <div class="absolute top-0 left-0 w-2 h-full bg-yellow-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">
+              <p class="text-sm font-medium text-gray-500 mb-1">
                 Total Forest Products
               </p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900">
                 {{ totalProducts }}
               </p>
             </div>
-            <div class="p-2 sm:p-3 bg-yellow-100 rounded-lg">
+            <div class="p-3 bg-yellow-100 rounded-lg">
               <svg
-                class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
+                class="w-6 h-6 text-yellow-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -853,43 +850,47 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Second row of cards (New) -->
+      <!-- Second row of cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <!-- Today's Collection Requests Card -->
         <div
-          class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200"
+          class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden"
         >
           <div class="flex items-center justify-between mb-4">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">
-                {{ isFPCollector ? "Your Collection Requests Today" : "Today's Collection Requests" }}
-              </p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
-                {{ isFPCollector ? filteredTodayCollectionCount : todayCollectionCount }}
-              </p>
-            </div>
-            <div class="p-2 sm:p-3 bg-indigo-100 rounded-lg">
-              <svg
-                class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+              <div class="flex items-center">
+                <div class="p-2 bg-indigo-100 rounded-lg mr-3">
+                  <svg
+                    class="w-5 h-5 text-indigo-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-500">
+                    {{ isFPCollector ? "Your Collection Requests Today" : "Today's Collection Requests" }}
+                  </p>
+                  <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+                    {{ isFPCollector ? filteredTodayCollectionCount : todayCollectionCount }}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="overflow-auto max-h-48">
-            <ul class="divide-y divide-gray-200">
+          <div class="overflow-auto max-h-56 rounded-lg border border-gray-100">
+            <ul class="divide-y divide-gray-100">
               <li
                 v-for="request in isFPCollector ? filteredTodayCollectionRequests : todayCollectionRequests"
                 :key="request.id"
-                class="py-2 flex flex-col cursor-pointer hover:bg-indigo-50 transition-colors rounded-lg px-3"
+                class="py-3 flex flex-col cursor-pointer hover:bg-indigo-50 transition-colors px-4"
                 @click="viewCollectionRequest(request.id)"
               >
                 <div class="flex justify-between items-center">
@@ -898,74 +899,78 @@ onMounted(() => {
                     >{{ request.collectorName }}</span
                   >
                   <span
-                    class="text-xs text-gray-500"
+                    class="text-xs font-medium px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full"
                     >{{ request.collectionDate }}</span
                   >
                 </div>
-                <div class="mt-1 text-xs text-gray-600">
+                <div class="mt-2 text-xs text-gray-600 flex flex-wrap gap-2">
                   <span
                     v-for="(item, index) in request.items.slice(0, 2)"
                     :key="index"
-                    class="inline-block mr-2"
+                    class="inline-flex items-center px-2 py-1 bg-gray-100 rounded-full"
                   >
                     {{ item.productName }}: {{ item.quantity }}
                     {{ item.unitName }}
                   </span>
-                  <span v-if="request.items.length > 2" class="text-gray-400">
-                    +{{ request.items.length - 2 }} more items
+                  <span v-if="request.items.length > 2" class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                    +{{ request.items.length - 2 }} more
                   </span>
                 </div>
               </li>
             </ul>
             <div
               v-if="(isFPCollector ? filteredTodayCollectionRequests.length : todayCollectionRequests.length) === 0"
-              class="py-6 text-center text-gray-500 flex flex-col items-center"
+              class="py-8 text-center text-gray-500 flex flex-col items-center"
             >
               <img
                 src="@/assets/chill.png"
                 alt="No Records Found"
                 class="w-24 h-24 mb-4"
               />
-              No approved collection requests scheduled for today
+              <p class="text-gray-600 font-medium">No approved collection requests scheduled for today</p>
             </div>
           </div>
         </div>
 
         <!-- Low Stock Products Card -->
         <div
-          class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200"
+          class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden"
         >
           <div class="flex items-center justify-between mb-4">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">
-                Low Stock Products
-              </p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
-                {{ lowStockCount }}
-              </p>
-            </div>
-            <div class="p-2 sm:p-3 bg-red-100 rounded-lg">
-              <svg
-                class="w-5 h-5 sm:w-6 sm:h-6 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
+              <div class="flex items-center">
+                <div class="p-2 bg-red-100 rounded-lg mr-3">
+                  <svg
+                    class="w-5 h-5 text-red-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-500">
+                    Low Stock Products
+                  </p>
+                  <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+                    {{ lowStockCount }}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="overflow-auto max-h-48">
-            <ul class="divide-y divide-gray-200">
+          <div class="overflow-auto max-h-56 rounded-lg border border-gray-100">
+            <ul class="divide-y divide-gray-100">
               <li
                 v-for="product in paginatedLowStockProducts"
                 :key="product.id"
-                class="py-2 flex justify-between items-center cursor-pointer hover:bg-red-50 transition-colors rounded-lg px-3"
+                class="py-3 flex justify-between items-center cursor-pointer hover:bg-red-50 transition-colors px-4"
                 @click="viewFP_Details(product.fp_id)"
               >
                 <div>
@@ -974,8 +979,11 @@ onMounted(() => {
                 </div>
                 <div class="flex items-center">
                   <span
-                    class="text-sm font-medium"
-                    :class="{'text-red-600': product.quantity <= 5, 'text-yellow-600': product.quantity > 5}"
+                    class="px-2 py-1 rounded-full text-xs font-medium"
+                    :class="{
+                      'bg-red-100 text-red-700': product.quantity <= 5,
+                      'bg-yellow-100 text-yellow-700': product.quantity > 5
+                    }"
                   >
                     {{ product.quantity }} {{ product.measurementUnit }}
                   </span>
@@ -984,14 +992,14 @@ onMounted(() => {
             </ul>
             <div
               v-if="lowStockProducts.length === 0"
-              class="py-6 text-center text-gray-500 flex flex-col items-center"
+              class="py-8 text-center text-gray-500 flex flex-col items-center"
             >
               <img
                 src="@/assets/full-stock.png"
                 alt="No Records Found"
                 class="w-24 h-24 mb-4"
               />
-              No products are currently low in stock
+              <p class="text-gray-600 font-medium">No products are currently low in stock</p>
             </div>
           </div>
         </div>
@@ -999,15 +1007,18 @@ onMounted(() => {
 
       <!-- Third row: Charts and product distribution -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 w-full">
-          <div class="flex items-center justify-center mb-4">
-            <img
-              src="@/assets/graph.png"
-              alt="Forest Logo"
-              class="w-8 h-8 mr-2"
-            />
+        <!-- Charts Card -->
+        <div class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100">
+          <div class="flex items-center justify-center mb-6">
+            <div class="p-2 bg-green-100 rounded-full">
+              <img
+                src="@/assets/graph.png"
+                alt="Forest Logo"
+                class="w-6 h-6"
+              />
+            </div>
             <h3
-              class="text-base sm:text-lg font-semibold text-gray-800 text-center"
+              class="ml-3 text-lg font-semibold text-gray-800 text-center"
             >
               Most Collected Forest Products
             </h3>
@@ -1017,69 +1028,77 @@ onMounted(() => {
             <!-- No data message -->
             <div 
               v-if="!mostCollectedProduct || mostCollectedProduct === 'N/A'"
-              class="absolute inset-0 flex flex-col items-center justify-center rounded-lg"
+              class="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-gray-50 bg-opacity-80"
             >
               <img
                 src="@/assets/chill.png"
                 alt="No Data"
-                class="w-24 h-24 mb-4 opacity-50"
+                class="w-28 h-28 mb-4 opacity-70"
               />
-              <p class="text-gray-500 text-lg font-medium">No collection data available</p>
-              <p v-if="isFPCollector" class="text-gray-400 text-sm mt-2">Start collecting forest products to see statistics</p>
+              <p class="text-gray-600 text-lg font-medium">No collection data available</p>
+              <p v-if="isFPCollector" class="text-gray-500 text-sm mt-2 text-center px-4">Start collecting forest products to see statistics</p>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-            <div class="flex items-center justify-center mb-4">
-            <img
-              src="@/assets/stocks.png"
-              alt="Forest Logo"
-              class="w-8 h-8 mr-2"
-            />
+        <!-- Forest Products Available Card -->
+        <div class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100">
+          <div class="flex items-center justify-center mb-6">
+            <div class="p-2 bg-green-100 rounded-full">
+              <img
+                src="@/assets/stocks.png"
+                alt="Forest Logo"
+                class="w-6 h-6"
+              />
+            </div>
             <h3
-              class="text-base sm:text-lg font-semibold text-gray-800 text-center"
+              class="ml-3 text-lg font-semibold text-gray-800 text-center"
             >
               Forest Products Available (Available | Snapshot)
             </h3>
-            </div>
-          <!-- Changed the div to be scrollable just like the low stock products -->
-          <div class="overflow-auto max-h-96">
-            <ul class="divide-y divide-gray-200">
+          </div>
+          <div class="overflow-auto max-h-96 rounded-lg border border-gray-100">
+            <ul class="divide-y divide-gray-100">
               <li
                 v-for="item in forestProductsData"
                 :key="item.id"
-                class="py-2 sm:py-3 flex items-center justify-between cursor-pointer hover:bg-green-100 transition-colors rounded-lg px-3 sm:px-4"
+                class="py-3 flex items-center justify-between cursor-pointer hover:bg-green-50 transition-colors px-4"
                 @click="viewFP_Details(item.fp_id)"
               >
-                <span class="text-xs sm:text-sm text-gray-600">
+                <span class="text-sm text-gray-800 font-medium">
                   {{ item.productName }}
-                  <span class="text-gray-400">({{ item.locationName }})</span>
+                  <span class="text-gray-500 text-xs ml-1">({{ item.locationName }})</span>
                 </span>
                 <div class="flex flex-col items-end">
-                  <span class="text-xs sm:text-sm font-medium text-gray-900">
-                    {{ item.quantity }} {{ item.measurementUnit }}(s) in stock
+                  <span class="text-sm font-medium text-gray-900 flex items-center">
+                    <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+                    {{ item.quantity }} {{ item.measurementUnit }}(s)
                   </span>
                   <span 
                     v-if="item.hasPendingRequests" 
-                    class="text-xs text-amber-600 font-medium"
+                    class="text-xs font-medium flex items-center mt-1"
+                    :class="item.adjustedQuantity < 5 ? 'text-red-600' : 'text-amber-600'"
                   >
-                    {{ item.adjustedQuantity }} {{ item.measurementUnit }}(s) available for request
+                    <span 
+                      class="w-2 h-2 rounded-full mr-1"
+                      :class="item.adjustedQuantity < 5 ? 'bg-red-500' : 'bg-amber-500'"
+                    ></span>
+                    {{ item.adjustedQuantity }} available
                   </span>
                 </div>
               </li>
             </ul>
             <div
               v-if="forestProductsData.length === 0"
-              class="py-6 text-center text-gray-500 flex flex-col items-center"
+              class="py-8 text-center text-gray-500 flex flex-col items-center"
             >
               <img
                 src="@/assets/forest-product.png"
                 alt="No Records Found"
-                class="w-24 h-24 mb-4"
+                class="w-28 h-28 mb-4"
               />
-                No forest products available at the moment.
-                <p v-if="isFPUAdmin || isForestRanger" class="text-gray-500 mt-2">
+                <p class="text-gray-600 font-medium">No forest products available at the moment.</p>
+                <p v-if="isFPUAdmin || isForestRanger" class="text-gray-500 mt-2 text-center px-4">
                 Start by adding new forest products to the inventory.
                 </p>
             </div>

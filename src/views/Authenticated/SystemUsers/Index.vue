@@ -165,6 +165,12 @@ const fetchUsers = async () => {
   if (error) {
     console.error('Error fetching users:', error)
   } else {
+    // Ensure last_name is an empty string if null or undefined
+    data.forEach(user => {
+      if (!user.last_name) {
+        user.last_name = ''
+      }
+    })
     users.value = data.filter(user => user.approval_flag !== null)
     unapprovedUsers.value = data.filter(user => user.approval_flag === null)
   }
@@ -484,7 +490,7 @@ onMounted(async () => {
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="paginatedUsers.length === 0">
-              <td colspan="3" class="px-6 py-10 text-center">
+              <td colspan="4" class="px-6 py-10 text-center">
                 <div class="flex flex-col items-center">
                   <svg
                     class="w-12 h-12 text-gray-300 mb-3"
@@ -531,13 +537,13 @@ onMounted(async () => {
                         class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center"
                       >
                         <span class="text-gray-600 font-medium">
-                          {{ user.first_name[0] }}{{ user.last_name[0] }}
+                          {{ user.first_name[0] }}{{ user.last_name ? user.last_name[0] : '' }}
                         </span>
                       </div>
                     </div>
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-900">
-                        {{ user.first_name }} {{ user.last_name }}
+                        {{ user.first_name[0] }}{{ user.last_name ? user.last_name[0] : '' }}
                       </div>
                       <div class="block sm:hidden text-sm text-gray-600">
                         {{ user.email_address }}
@@ -649,7 +655,7 @@ onMounted(async () => {
           >
             <router-link
               :to="{ name: 'SystemUsersView', params: { id: user.id } }"
-              class="flex items-start space-x-4"
+              class="flex items-center space-x-4"
             >
               <!-- Profile Picture -->
               <div class="flex-shrink-0">
@@ -672,50 +678,49 @@ onMounted(async () => {
               </div>
 
               <!-- User Info -->
-              <div class="flex-1 min-w-0">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-medium text-gray-900">
+              <div class="flex-1">
+          <div class="flex flex-col space-y-1">
+            <h3 class="text-sm font-medium text-gray-900">
               {{ user.first_name }} {{ user.last_name }}
             </h3>
-            <!-- Role Badge -->
-            <span
-              class="px-2 py-1 text-xs font-medium rounded-full"
-              :class="{
-                'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
-                'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
-                'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
-                'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
-              }"
-            >
-              {{ user.role.name }}
-            </span>
-          </div>
-
-          <!-- Email -->
-          <p class="mt-1 text-sm text-gray-600">
-            {{ user.email_address }}
-          </p>
-
-          <!-- User Type -->
-          <div class="mt-2">
-            <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-              :class="{
-                'bg-pink-100 text-pink-800': user.user_type === 'Individual',
-                'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
-                'bg-lime-100 text-lime-800': user.user_type === 'Organization',
-                'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
-              }"
-            >
-              {{ user.user_type }}
-            </span>
+            <p class="text-sm text-gray-600">
+              {{ user.email_address }}
+            </p>
+            <div class="flex items-center space-x-2">
+              <!-- Role Badge -->
+              <span
+                class="px-2 py-1 text-xs font-medium rounded-full"
+                :class="{
+            'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
+            'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
+            'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
+            'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
+                }"
+              >
+                {{ user.role.name }}
+              </span>
+              <!-- User Type -->
+              <span
+                class="px-2 py-1 text-xs font-medium rounded-full"
+                :class="{
+            'bg-pink-100 text-pink-800': user.user_type === 'Individual',
+            'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
+            'bg-lime-100 text-lime-800': user.user_type === 'Organization',
+            'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
+                }"
+              >
+                {{ user.user_type }}
+              </span>
+            </div>
           </div>
               </div>
             </router-link>
 
             <!-- Role Change (for FPU Admin) -->
             <div v-if="isFPUAdmin && user.id !== getUser().id" class="mt-3">
+              <label for="role-select" class="sr-only">Change Role</label>
               <select
+          id="role-select"
           :value="user.role.id"
           @change="changeRole(user, $event)"
           class="block w-full px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition appearance-none"
@@ -1058,9 +1063,9 @@ onMounted(async () => {
                 <div
                   v-for="user in paginatedUnapprovedUsers"
                   :key="user.id"
-                  class="p-4 hover:bg-gray-50 transition-colors"
+                  class="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200"
                 >
-                  <div class="flex items-start space-x-4">
+                  <div class="flex items-center space-x-4">
                   <!-- Profile Picture -->
                   <div class="flex-shrink-0">
                     <div class="h-12 w-12">
@@ -1084,7 +1089,7 @@ onMounted(async () => {
                   <!-- User Info -->
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between">
-                    <h3 class="text-base font-medium text-gray-900">
+                    <h3 class="text-sm font-medium text-gray-900 truncate">
                       {{ user.first_name }} {{ user.last_name }}
                     </h3>
                     <span
@@ -1101,7 +1106,7 @@ onMounted(async () => {
                     </div>
 
                     <!-- Email -->
-                    <p class="mt-1 text-sm text-gray-600">
+                    <p class="mt-1 text-sm text-gray-600 truncate">
                     {{ user.email_address }}
                     </p>
 
@@ -1121,26 +1126,22 @@ onMounted(async () => {
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="mt-3 flex space-x-2">
+                    <div class="mt-3 flex justify-between space-x-2">
                     <button
                       @click="approveUser(user.id)"
-                      class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
+                      class="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
                       aria-label="Approve user"
                     >
-                      <div class="flex items-center justify-center space-x-1">
                       <span>Approve</span>
-                      <img src="@/assets/approve.png" alt="" class="w-4 h-4" />
-                      </div>
+                      <img src="@/assets/approve.png" alt="" class="w-4 h-4 ml-2" />
                     </button>
                     <button
                       @click="rejectUser(user.id)"
-                      class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
+                      class="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition"
                       aria-label="Reject user"
                     >
-                      <div class="flex items-center justify-center space-x-1">
                       <span>Reject</span>
-                      <img src="@/assets/reject.png" alt="" class="w-4 h-4" />
-                      </div>
+                      <img src="@/assets/reject.png" alt="" class="w-4 h-4 ml-2" />
                     </button>
                     </div>
                   </div>

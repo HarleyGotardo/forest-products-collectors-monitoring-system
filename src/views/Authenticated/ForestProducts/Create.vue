@@ -261,8 +261,11 @@ const isFormValid = computed(() => {
   const hasValidLocations = selectedLocations.value.length > 0 &&
     selectedLocations.value.some(loc => loc.quantity > 0);
 
+  // Check if an image is uploaded
+  const hasImage = !!image.value;
+
   // Return true only if all conditions are met
-  return hasBasicInfo && hasValidLocations;
+  return hasBasicInfo && hasValidLocations && hasImage;
 });
 
 // Add a computed property to check for zero-quantity locations

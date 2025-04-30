@@ -578,46 +578,48 @@ watch(paymentFilter, () => {
           </p>
         </div>
       </div>
-      <div class="flex space-x-4">
-        <div class="relative flex-1 sm:flex-none">
+      <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+        <div class="relative flex-1">
           <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search records..."
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search records..."
+        class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
           />
           <div
-            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
           >
-            <svg
-              class="h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+        <svg
+          class="h-5 w-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
           </div>
         </div>
-        <Button
-          v-if="isFPUAdmin || isForestRanger"
-          @click="createCollectionRecord"
-          class="min-w-10 bg-green-900 text-white hover:bg-green-700"
-        >
-          +
-        </Button>
-        <Button
-          v-if="isFPUAdmin"
-          @click="showEditSignatureDialog = true"
-          class="bg-green-900 text-white hover:bg-green-700"
-        >
-          Edit Forest Conservation Officer
-        </Button>
+        <div class="flex space-x-4">
+          <Button
+        v-if="isFPUAdmin || isForestRanger"
+        @click="createCollectionRecord"
+        class="min-w-10 bg-green-900 text-white hover:bg-green-700"
+          >
+        +
+          </Button>
+          <Button
+        v-if="isFPUAdmin"
+        @click="showEditSignatureDialog = true"
+        class="bg-green-900 text-white hover:bg-green-700"
+          >
+        Edit Forest Conservation Officer
+          </Button>
+        </div>
       </div>
     </div>
 

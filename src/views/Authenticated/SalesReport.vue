@@ -588,20 +588,26 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative min-h-screen bg-gray-50 p-3 sm:p-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <div class="flex items-center gap-2">
-        <img src="@/assets/sales-report-2.png" alt="Dashboard" class="w-6 h-6 group-hover:scale-110 transition-transform" />
-        <h1 class="text-2xl sm:text-3xl font-bold text-green-800">Sales Report</h1>
+  <div class="relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
+    >
+      <div class="flex items-center gap-3">
+        <img
+          src="@/assets/sales-report-2.png"
+          alt="Sales Report"
+          class="w-8 h-8 group-hover:scale-110 transition-transform"
+        />
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-green-800 tracking-tight">Sales Report</h1>
       </div>
-      <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
-              class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
+              class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
               v-if="isFPUAdmin"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
               </svg>
               Download Report
@@ -622,10 +628,12 @@ onMounted(() => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <button @click="fetchSalesReportData"
-        class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto">
-          <span class="mr-2">          <svg
-            class="w-5 h-5"
+        <button 
+          @click="fetchSalesReportData"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
+        >
+          <svg
+            class="w-5 h-5 mr-2 text-gray-600"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -634,9 +642,10 @@ onMounted(() => {
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
-          </svg></span> Refresh
+          </svg>
+          Refresh
         </button>
       </div>
     </div>
@@ -644,75 +653,83 @@ onMounted(() => {
     <!-- Loading Skeleton -->
     <div v-if="loading" class="animate-pulse">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
-        <div class="h-24 bg-gray-200 rounded-lg"></div>
+        <div class="h-28 bg-gray-200 rounded-xl"></div>
+        <div class="h-28 bg-gray-200 rounded-xl"></div>
+        <div class="h-28 bg-gray-200 rounded-xl"></div>
+        <div class="h-28 bg-gray-200 rounded-xl"></div>
       </div>
-      <div class="bg-gray-200 rounded-lg p-4 mb-6 h-20"></div>
+      <div class="bg-gray-200 rounded-xl p-4 mb-6 h-20"></div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-        <div class="h-80 bg-gray-200 rounded-lg"></div>
-        <div class="h-80 bg-gray-200 rounded-lg"></div>
+        <div class="h-80 bg-gray-200 rounded-xl"></div>
+        <div class="h-80 bg-gray-200 rounded-xl"></div>
       </div>
-      <div class="h-96 bg-gray-200 rounded-lg"></div>
+      <div class="h-96 bg-gray-200 rounded-xl"></div>
     </div>
 
     <!-- Dashboard Content -->
     <div v-show="!loading">
       <!-- Key Metrics -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+        <div class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative">
+          <div class="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">Total Sales</p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(totalSales) }}</p>
+              <p class="text-sm font-medium text-gray-500 mb-1">Total Sales</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900">
+                {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(totalSales) }}
+              </p>
             </div>
-            <div class="p-2 sm:p-3 bg-blue-100 rounded-lg">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 bg-blue-100 rounded-lg">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+        <div class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative">
+          <div class="absolute top-0 left-0 w-2 h-full bg-green-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">Total Collections</p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ totalCollections }}</p>
+              <p class="text-sm font-medium text-gray-500 mb-1">Total Collections</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900">{{ totalCollections }}</p>
             </div>
-            <div class="p-2 sm:p-3 bg-green-100 rounded-lg">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 bg-green-100 rounded-lg">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
             </div>
           </div>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+        <div class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative">
+          <div class="absolute top-0 left-0 w-2 h-full bg-purple-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">Average Sale</p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(averageSaleAmount) }}</p>
+              <p class="text-sm font-medium text-gray-500 mb-1">Average Sale</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900">
+                {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(averageSaleAmount) }}
+              </p>
             </div>
-            <div class="p-2 sm:p-3 bg-purple-100 rounded-lg">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 bg-purple-100 rounded-lg">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
               </svg>
             </div>
           </div>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
-          <div class="flex items-center justify-between">
-            <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500">Top Selling Product</p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">{{ topSellingProduct }}</p>
+        <div class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative">
+          <div class="absolute top-0 left-0 w-2 h-full bg-yellow-500"></div>
+            <div class="flex items-center justify-between overflow-x-auto space-x-4">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-500 mb-1">Top Selling Product</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{{ topSellingProduct }}</p>
             </div>
-            <div class="p-2 sm:p-3 bg-yellow-100 rounded-lg">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            <div class="p-3 bg-yellow-100 rounded-lg flex-shrink-0">
+              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
             </div>
-          </div>
+            </div>
         </div>
       </div>
 
@@ -788,7 +805,20 @@ onMounted(() => {
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <!-- Monthly Sales Chart -->
         <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-          <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Monthly Sales Trend</h3>
+          <div class="flex items-center justify-center mb-6">
+            <div class="p-2 bg-green-100 rounded-lg">
+              <img
+                src="@/assets/trend3.png"
+                alt="Forest Logo"
+                class="w-6 h-6"
+              />
+            </div>
+            <h3
+              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+            >
+              Monthly Sales Trend
+            </h3>
+          </div>
           <div class="w-full h-60 sm:h-80 md:h-80">
             <canvas id="monthlySalesChart"></canvas>
           </div>
@@ -796,7 +826,20 @@ onMounted(() => {
         
         <!-- Top Products Chart -->
         <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-          <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Top Products by Sales</h3>
+          <div class="flex items-center justify-center mb-6">
+            <div class="p-2 bg-green-100 rounded-full">
+              <img
+                src="@/assets/trend2.png"
+                alt="Forest Logo"
+                class="w-6 h-6"
+              />
+            </div>
+            <h3
+              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+            >
+              Top Products by Sales
+            </h3>
+          </div>
           <div class="w-full h-60 sm:h-80 md:h-80">
             <canvas id="productSalesChart"></canvas>
           </div>
@@ -805,7 +848,20 @@ onMounted(() => {
       
       <!-- Top Collectors Chart -->
       <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Top Collectors by Sales</h3>
+        <div class="flex items-center justify-center mb-6">
+            <div class="p-2 bg-green-100 rounded-full">
+              <img
+                src="@/assets/profile.png"
+                alt="Forest Logo"
+                class="w-6 h-6"
+              />
+            </div>
+            <h3
+              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+            >
+              Top Collectors by Sales
+            </h3>
+          </div>
         <div class="w-full h-60 sm:h-80 md:h-80 relative">
           <canvas id="collectorSalesChart"></canvas>
           <!-- No data message -->
@@ -826,7 +882,20 @@ onMounted(() => {
 
       <!-- Sales Data Table -->
       <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Sales Transactions</h3>
+        <div class="flex items-center justify-center mb-6">
+            <div class="p-2 bg-green-100 rounded-full">
+              <img
+                src="@/assets/bill.png"
+                alt="Forest Logo"
+                class="w-6 h-6"
+              />
+            </div>
+            <h3
+              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+            >
+              Sales Transactions
+            </h3>
+          </div>
         
         <!-- Mobile Card View -->
         <div class="block sm:hidden space-y-4">

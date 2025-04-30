@@ -672,7 +672,9 @@ onMounted(() => {
           <div v-if="request.remarks && request.remarks !== 'Pending'">
             <div class="text-xs text-gray-500">Remarked At</div>
             <div class="font-medium text-sm">{{ new Date(request.remarked_at).toLocaleDateString() }}</div>
-            <div v-if="request.remarks === 'Rejected'" class="text-sm text-red-500">Reason: {{ request.rejection_reason }}</div>
+            <div v-if="request.remarks === 'Rejected'" class="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-2 mt-2">
+              Reason: {{ request.rejection_reason }}
+            </div>
           </div>
         </div>
       </div>
@@ -680,24 +682,55 @@ onMounted(() => {
       <div v-if="(request.remarks === 'Pending' || !request.remarks) && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button class="w-full justify-center text-sm" @click="confirmApproveRequest(request.id)">
-              <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              Approve Request
-            </Button>
+        <Button class="w-full justify-center text-sm mb-2" @click="confirmApproveRequest(request.id)">
+          <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Approve Request
+        </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Approve Request</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to approve this request?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
-            </AlertDialogFooter>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Approve Request</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to approve this request?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
+        </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+        <Button class="w-full justify-center text-sm bg-red-600 text-white hover:bg-red-700" @click="confirmRejectRequest(request.id)">
+          <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Reject Request
+        </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reject Request</AlertDialogTitle>
+          <AlertDialogDescription>
+            Please provide a reason for rejecting this request.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div class="mt-4">
+          <textarea
+            v-model="rejectionReason"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            rows="3"
+            placeholder="Enter rejection reason..."
+          ></textarea>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Reject</AlertDialogAction>
+        </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
