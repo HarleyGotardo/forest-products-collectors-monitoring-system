@@ -12,39 +12,48 @@ const isLoading = ref(false)
 const isPasswordVisible = ref(false)
 const isConfirmPasswordVisible = ref(false)
 const hasRecoveryToken = ref(false)
-const tokenHash = ref(null)
+const accessToken = ref(null)
 
 onMounted(async () => {
-  // Parse the URL hash for token and type
-  const hashParams = new URLSearchParams(window.location.hash.substring(1))
-  const type = hashParams.get('type')
-  tokenHash.value = hashParams.get('token_hash')
-
-  if (type === 'recovery' && tokenHash.value) {
-    hasRecoveryToken.value = true
-  } else {
-    // Check if we're in a recovery session
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user?.aal === 'aal1') {
-      hasRecoveryToken.value = true
-    }
-  }
-
   // Listen for password recovery event
   const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('Auth event:', event)
     if (event === 'PASSWORD_RECOVERY') {
       hasRecoveryToken.value = true
+      if (session) {
+        accessToken.value = session.access_token
+      }
     }
   })
 
-  // If no recovery token is found, redirect to login
-  if (!hasRecoveryToken.value) {
-    toast.error('Invalid password reset link', {
-      duration: 3000,
-    })
-    setTimeout(() => {
-      router.push('/')
-    }, 2000)
+  // Get the hash parameters
+  const hashParams = new URLSearchParams(window.location.hash.substring(1))
+  const type = hashParams.get('type')
+  const token_hash = hashParams.get('token_hash')
+
+  if (type === 'recovery' && token_hash) {
+    try {
+      // Verify the recovery token
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash,
+        type: 'recovery'
+      })
+
+      if (error) throw error
+
+      if (data.session) {
+        accessToken.value = data.session.access_token
+        hasRecoveryToken.value = true
+      }
+    } catch (error) {
+      console.error('Error verifying recovery token:', error)
+      toast.error('Invalid or expired recovery link', {
+        duration: 3000,
+      })
+      setTimeout(() => {
+        router.push('/')
+      }, 2000)
+    }
   }
 })
 
@@ -81,6 +90,7 @@ const handlePasswordReset = async () => {
   isLoading.value = true
 
   try {
+    // Update the user's password
     const { data, error } = await supabase.auth.updateUser({
       password: password.value
     })
@@ -91,7 +101,7 @@ const handlePasswordReset = async () => {
       duration: 3000,
     })
 
-    // Sign out the user and redirect to login
+    // Sign out the user
     await supabase.auth.signOut()
     
     setTimeout(() => {
