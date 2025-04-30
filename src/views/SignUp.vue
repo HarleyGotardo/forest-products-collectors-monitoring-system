@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
 import { toast, Toaster } from 'vue-sonner'
@@ -20,7 +20,93 @@ const formData = reactive({
   entityName: ''
 })
 
+const emailError = ref('')
+
+// Password strength checker
+const passwordStrength = ref({
+  score: 0,
+  message: '',
+  color: 'gray-300'
+})
+
+// Password requirements
+const hasMinLength = computed(() => formData.password.length >= 8)
+const hasUppercase = computed(() => /[A-Z]/.test(formData.password))
+const hasLowercase = computed(() => /[a-z]/.test(formData.password))
+const hasNumber = computed(() => /[0-9]/.test(formData.password))
+const hasSpecialChar = computed(() => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password))
+
+// Watch password for changes and update strength
+watch(() => formData.password, (newPassword) => {
+  if (!newPassword) {
+    passwordStrength.value = { score: 0, message: '', color: 'gray-300' }
+    return
+  }
+  
+  // Calculate strength score
+  let score = 0
+  if (hasMinLength.value) score += 1
+  if (hasUppercase.value) score += 1
+  if (hasLowercase.value) score += 1
+  if (hasNumber.value) score += 1
+  if (hasSpecialChar.value) score += 1
+  
+  // Set message and color based on score
+  if (score === 0) {
+    passwordStrength.value = { score, message: '', color: 'gray-300' }
+  } else if (score === 1) {
+    passwordStrength.value = { score, message: 'Very weak', color: 'red-500' }
+  } else if (score === 2) {
+    passwordStrength.value = { score, message: 'Weak', color: 'orange-500' }
+  } else if (score === 3) {
+    passwordStrength.value = { score, message: 'Medium', color: 'yellow-500' }
+  } else if (score === 4) {
+    passwordStrength.value = { score, message: 'Strong', color: 'green-400' }
+  } else {
+    passwordStrength.value = { score, message: 'Very strong', color: 'green-600' }
+  }
+})
+
+const validateEmail = () => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  emailError.value = emailRegex.test(formData.email) ? '' : 'Invalid email address'
+}
 const isLoading = ref(false)
+
+// Add computed property to check if user type is selected
+const isUserTypeSelected = computed(() => !!formData.userType)
+
+// Add form validation computed property
+const isFormComplete = computed(() => {
+  // Common required fields for all users
+  if (!formData.email || !formData.password || !formData.userType || !formData.phoneNumber || !formData.fullAddress) {
+    return false
+  }
+
+  // Check password strength
+  if (passwordStrength.value.score < 3) {
+    return false
+  }
+
+  // Check email format
+  if (emailError.value) {
+    return false
+  }
+
+  // Individual-specific validation
+  if (isIndividual.value) {
+    if (!formData.firstName || !formData.lastName || !formData.sex || !formData.birthdate || !formData.civilStatus) {
+      return false
+    }
+  } else {
+    // Non-individual validation
+    if (!formData.entityName) {
+      return false
+    }
+  }
+
+  return true
+})
 
 // Computed property to determine if individual-specific fields should be shown
 const isIndividual = computed(() => formData.userType === 'Individual')
@@ -190,8 +276,10 @@ const goToLoginPage = () => {
                 type="text"
                 v-model="formData.entityName"
                 class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                 placeholder="Enter organization name"
                 required
+                :disabled="!isUserTypeSelected"
               />
             </div>
           </div>
@@ -208,8 +296,10 @@ const goToLoginPage = () => {
                   type="text"
                   v-model="formData.firstName"
                   class="appearance-none block w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                   placeholder="First name"
                   required
+                  :disabled="!isUserTypeSelected"
                 />
               </div>
             </div>
@@ -224,8 +314,10 @@ const goToLoginPage = () => {
                   type="text"
                   v-model="formData.lastName"
                   class="appearance-none block w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                   placeholder="Last name"
                   required
+                  :disabled="!isUserTypeSelected"
                 />
               </div>
             </div>
@@ -247,10 +339,19 @@ const goToLoginPage = () => {
                 type="email"
                 v-model="formData.email"
                 class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected, 'border-red-500': emailError }"
                 placeholder="your@email.com"
                 required
+                @input="validateEmail"
+                :disabled="!isUserTypeSelected"
               />
             </div>
+            <p v-if="emailError" class="mt-1 text-sm text-red-500 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ emailError }}
+            </p>
           </div>
           
           <div>
@@ -268,9 +369,51 @@ const goToLoginPage = () => {
                 type="password"
                 v-model="formData.password"
                 class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                 placeholder="••••••••"
                 required
+                :disabled="!isUserTypeSelected"
               />
+            </div>
+            
+            <!-- Password strength indicator -->
+            <div class="mt-2">
+              <div class="flex items-center justify-between mb-1">
+                <div class="text-xs font-medium" :class="`text-${passwordStrength.color}`">
+                  {{ passwordStrength.message }}
+                </div>
+              </div>
+              <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  class="h-full rounded-full transition-all duration-300" 
+                  :class="`bg-${passwordStrength.color}`"
+                  :style="{ width: `${(passwordStrength.score / 5) * 100}%` }"
+                ></div>
+              </div>
+              
+              <!-- Password requirements -->
+              <div class="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
+                <div class="flex items-center text-xs">
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasMinLength ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <span :class="hasMinLength ? 'text-gray-700' : 'text-gray-500'">At least 8 characters</span>
+                </div>
+                <div class="flex items-center text-xs">
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasUppercase ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <span :class="hasUppercase ? 'text-gray-700' : 'text-gray-500'">Uppercase letter</span>
+                </div>
+                <div class="flex items-center text-xs">
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasLowercase ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <span :class="hasLowercase ? 'text-gray-700' : 'text-gray-500'">Lowercase letter</span>
+                </div>
+                <div class="flex items-center text-xs">
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasNumber ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <span :class="hasNumber ? 'text-gray-700' : 'text-gray-500'">Number</span>
+                </div>
+                <div class="flex items-center text-xs">
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasSpecialChar ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <span :class="hasSpecialChar ? 'text-gray-700' : 'text-gray-500'">Special character</span>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -289,8 +432,11 @@ const goToLoginPage = () => {
                 type="text"
                 v-model="formData.phoneNumber"
                 class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                 placeholder="Phone number"
                 required
+                @input="formData.phoneNumber = formData.phoneNumber.replace(/[^0-9]/g, '')"
+                :disabled="!isUserTypeSelected"
               />
             </div>
           </div>
@@ -312,8 +458,10 @@ const goToLoginPage = () => {
                 v-model="formData.fullAddress"
                 rows="3"
                 class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                 placeholder="Enter your full address"
                 required
+                :disabled="!isUserTypeSelected"
               ></textarea>
             </div>
           </div>
@@ -335,7 +483,9 @@ const goToLoginPage = () => {
                     id="sex"
                     v-model="formData.sex"
                     class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                    :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                     required
+                    :disabled="!isUserTypeSelected"
                   >
                     <option value="" disabled>Select sex</option>
                     <option value="Male">Male</option>
@@ -358,7 +508,9 @@ const goToLoginPage = () => {
                     id="civilStatus"
                     v-model="formData.civilStatus"
                     class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                    :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                     required
+                    :disabled="!isUserTypeSelected"
                   >
                     <option value="" disabled>Select status</option>
                     <option value="Single">Single</option>
@@ -385,7 +537,9 @@ const goToLoginPage = () => {
                   type="date"
                   v-model="formData.birthdate"
                   class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                   required
+                  :disabled="!isUserTypeSelected"
                 />
               </div>
             </div>
@@ -393,7 +547,7 @@ const goToLoginPage = () => {
           
           <button
             type="submit"
-            :disabled="isLoading"
+            :disabled="isLoading || !isFormComplete"
             class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
