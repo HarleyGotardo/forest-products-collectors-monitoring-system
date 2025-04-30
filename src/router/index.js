@@ -59,7 +59,16 @@ const routes = [
     path: "/forgot-password",
     name: "ForgotPassword",
     component: ForgotPassword,
-    meta: { title: "Forgot Password - Nature Cart" },
+    meta: {
+      requiresAuth: false,
+      title: "Reset Password - Nature Cart",
+    },
+    props: (route) => ({
+      type: route.hash.includes("type=recovery") ? "recovery" : null,
+      token_hash: new URLSearchParams(route.hash.substring(1)).get(
+        "token_hash"
+      ),
+    }),
   },
   {
     path: "/authenticated",
