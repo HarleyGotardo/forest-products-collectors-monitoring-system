@@ -381,29 +381,50 @@ const formatDateTime = (dateTimeString) => {
       class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"
     >
       <div class="flex items-center gap-3">
+        <!-- Back Button -->
+        <button
+          @click="router.back()"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          <span class="hidden sm:inline">Back</span>
+        </button>
+
         <div class="p-2 bg-gray-100 rounded-lg">
           <img src="@/assets/request.png" alt="Request Icon" class="w-8 h-8" />
         </div>
         <h1 class="text-2xl font-bold text-gray-800">Collection Request</h1>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3 sm:flex-nowrap">
         <div
           v-if="request && !request.deleted_at"
           class="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
           :class="{
-            'bg-emerald-50 text-emerald-700 border border-emerald-200': request?.remarks === 'Approved',
-            'bg-amber-50 text-amber-700 border border-amber-200': !request?.remarks || request?.remarks === 'Pending',
-            'bg-red-50 text-red-700 border border-red-200': request?.remarks === 'Rejected'
+          'bg-emerald-50 text-emerald-700 border border-emerald-200': request?.remarks === 'Approved',
+          'bg-amber-50 text-amber-700 border border-amber-200': !request?.remarks || request?.remarks === 'Pending',
+          'bg-red-50 text-red-700 border border-red-200': request?.remarks === 'Rejected'
           }"
         >
           <span
-            v-if="request?.remarks === 'Approved'"
-            class="w-2 h-2 rounded-full bg-emerald-500"
+        v-if="request?.remarks === 'Approved'"
+        class="w-2 h-2 rounded-full bg-emerald-500"
           ></span>
           <span
-            v-else-if="request?.remarks === 'Rejected'"
-            class="w-2 h-2 rounded-full bg-red-500"
+        v-else-if="request?.remarks === 'Rejected'"
+        class="w-2 h-2 rounded-full bg-red-500"
           ></span>
           <span v-else class="w-2 h-2 rounded-full bg-amber-500"></span>
           {{ request?.remarks || 'Pending' }}
@@ -413,16 +434,16 @@ const formatDateTime = (dateTimeString) => {
           v-if="request && !request.deleted_at"
           class="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
           :class="{
-            'bg-blue-50 text-blue-700 border border-blue-200': request?.is_recorded,
-            'bg-gray-50 text-gray-700 border border-gray-200': !request?.is_recorded
+          'bg-blue-50 text-blue-700 border border-blue-200': request?.is_recorded,
+          'bg-gray-50 text-gray-700 border border-gray-200': !request?.is_recorded
           }"
         >
           <span
-            class="w-2 h-2 rounded-full"
-            :class="{
-              'bg-blue-500': request?.is_recorded,
-              'bg-gray-500': !request?.is_recorded
-            }"
+        class="w-2 h-2 rounded-full"
+        :class="{
+        'bg-blue-500': request?.is_recorded,
+        'bg-gray-500': !request?.is_recorded
+          }"
           ></span>
           {{ request?.is_recorded ? 'Recorded' : 'Not Recorded' }}
         </div>
@@ -436,65 +457,100 @@ const formatDateTime = (dateTimeString) => {
         </div>
 
         <!-- Action Buttons -->
-        <div v-if="!isLoading && (isFPUAdmin || isForestRanger) && (!request?.remarks || request?.remarks === 'Pending')" class="flex gap-2">
+        <div
+          v-if="!isLoading && (isFPUAdmin || isForestRanger) && (!request?.remarks || request?.remarks === 'Pending')"
+          class="flex flex-wrap gap-2"
+        >
           <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                @click="confirmApproveRequest"
-              >
-                <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Approve
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Approve Request</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to approve this request?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
-                <AlertDialogAction class="bg-green-900 hover:bg-green-700" @click="approveRequest">Approve</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
+        <AlertDialogTrigger asChild>
+          <Button
+            title="Approve Request"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            @click="confirmApproveRequest"
+          >
+            <svg
+          class="w-5 h-5 mr-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+            >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+          />
+            </svg>
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Approve Request</AlertDialogTitle>
+            <AlertDialogDescription>
+          Are you sure you want to approve this request?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel @click="showDialog = false"
+          >Cancel</AlertDialogCancel
+            >
+            <AlertDialogAction
+          class="bg-green-900 hover:bg-green-700"
+          @click="approveRequest"
+          >Approve</AlertDialogAction
+            >
+          </AlertDialogFooter>
+        </AlertDialogContent>
           </AlertDialog>
 
           <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                @click="confirmRejectRequest"
-              >
-                <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Reject
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reject Request</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Please provide a reason for rejecting this request.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div class="mt-4">
-                <textarea
-                  v-model="rejectionReason"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  rows="3"
-                  placeholder="Enter rejection reason..."
-                ></textarea>
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
-                <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Reject</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
+        <AlertDialogTrigger asChild>
+          <Button
+            title="Reject Request"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            @click="confirmRejectRequest"
+          >
+            <svg
+          class="w-5 h-5 mr-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+            >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+            </svg>
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Request</AlertDialogTitle>
+            <AlertDialogDescription>
+          Please provide a reason for rejecting this request.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div class="mt-4">
+            <textarea
+          v-model="rejectionReason"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          rows="3"
+          placeholder="Enter rejection reason..."
+            ></textarea>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel @click="showDialog = false"
+          >Cancel</AlertDialogCancel
+            >
+            <AlertDialogAction
+          class="bg-red-600 hover:bg-red-700"
+          @click="rejectRequest"
+          >Reject</AlertDialogAction
+            >
+          </AlertDialogFooter>
+        </AlertDialogContent>
           </AlertDialog>
         </div>
       </div>
@@ -656,16 +712,28 @@ const formatDateTime = (dateTimeString) => {
     <!-- Request Details -->
     <div v-if="request && !isLoading" class="space-y-6">
       <!-- Request Information Card -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div
+        class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+      >
         <!-- Header Section -->
-        <div class="border-b border-gray-100 p-6 bg-gradient-to-r from-green-50 to-emerald-50">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div
+          class="border-b border-gray-100 p-6 bg-gradient-to-r from-green-50 to-emerald-50"
+        >
+          <div
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          >
             <div class="flex items-center gap-4">
               <div class="p-3 bg-white rounded-lg shadow-sm">
-                <img src="@/assets/request.png" alt="Request Icon" class="w-8 h-8">
+                <img
+                  src="@/assets/request.png"
+                  alt="Request Icon"
+                  class="w-8 h-8"
+                />
               </div>
               <div>
-                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                <h2
+                  class="text-xl font-bold text-gray-900 flex items-center gap-3"
+                >
                   Request #{{ request.id }}
                   <span class="text-sm font-normal text-gray-500">
                     Created {{ formatDateTime(request.requested_at) }}
@@ -682,36 +750,80 @@ const formatDateTime = (dateTimeString) => {
             <!-- Left Column -->
             <div class="space-y-6">
               <!-- Requested At -->
-              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+              <div
+                class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
                 <div class="p-2.5 bg-white rounded-lg shadow-sm">
-                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-5 h-5 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500 mb-1">Requested At</p>
-                  <p class="text-gray-900 font-semibold">{{ formatDateTime(request.requested_at) }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">
+                    Requested At
+                  </p>
+                  <p class="text-gray-900 font-semibold">
+                    {{ formatDateTime(request.requested_at) }}
+                  </p>
                 </div>
               </div>
 
               <!-- Collection Date -->
-              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+              <div
+                class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
                 <div class="p-2.5 bg-white rounded-lg shadow-sm">
-                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    class="w-5 h-5 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500 mb-1">Collection Date</p>
-                  <p class="text-gray-900 font-semibold">{{ formatDate(request.collection_date) }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">
+                    Collection Date
+                  </p>
+                  <p class="text-gray-900 font-semibold">
+                    {{ formatDate(request.collection_date) }}
+                  </p>
                 </div>
               </div>
 
               <!-- Status -->
-              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+              <div
+                class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
                 <div class="p-2.5 bg-white rounded-lg shadow-sm">
-                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    class="w-5 h-5 text-indigo-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
@@ -725,7 +837,10 @@ const formatDateTime = (dateTimeString) => {
                     }"
                   >
                     {{ request.remarks || 'Pending' }}
-                    <span v-if="request.remarks && request.remarked_at" class="text-sm text-gray-500 ml-2">
+                    <span
+                      v-if="request.remarks && request.remarked_at"
+                      class="text-sm text-gray-500 ml-2"
+                    >
                       ({{ formatDateTime(request.remarked_at) }})
                     </span>
                   </p>
@@ -736,71 +851,155 @@ const formatDateTime = (dateTimeString) => {
             <!-- Right Column -->
             <div class="space-y-6">
               <!-- Requested By -->
-              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+              <div
+                class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
                 <div class="p-2.5 bg-white rounded-lg shadow-sm">
-                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    class="w-5 h-5 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500 mb-1">Requested By</p>
-                  <p class="text-gray-900 font-semibold">{{ user.first_name }} {{ user.last_name }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">
+                    Requested By
+                  </p>
+                  <p class="text-gray-900 font-semibold">
+                    {{ user.first_name }} {{ user.last_name }}
+                  </p>
                 </div>
               </div>
 
               <!-- Recording Status -->
-              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+              <div
+                class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
                 <div class="p-2.5 bg-white rounded-lg shadow-sm">
-                  <svg class="w-5 h-5" :class="request.is_recorded ? 'text-blue-600' : 'text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    class="w-5 h-5"
+                    :class="request.is_recorded ? 'text-blue-600' : 'text-gray-600'"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500 mb-1">Recording Status</p>
-                  <p class="font-semibold" :class="request.is_recorded ? 'text-blue-600' : 'text-gray-600'">
+                  <p class="text-sm font-medium text-gray-500 mb-1">
+                    Recording Status
+                  </p>
+                  <p
+                    class="font-semibold"
+                    :class="request.is_recorded ? 'text-blue-600' : 'text-gray-600'"
+                  >
                     {{ request.is_recorded ? 'Recorded' : 'Not Recorded' }}
                   </p>
                 </div>
               </div>
 
               <!-- Approved By -->
-              <div v-if="request.remarks === 'Approved'" class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+              <div
+                v-if="request.remarks === 'Approved'"
+                class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
                 <div class="p-2.5 bg-white rounded-lg shadow-sm">
-                  <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    class="w-5 h-5 text-emerald-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500 mb-1">Approved By</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">
+                    Approved By
+                  </p>
                   <p class="text-emerald-600 font-semibold">
-                    {{ request.remarked_by_profile?.first_name }} {{ request.remarked_by_profile?.last_name }}
+                    {{ request.remarked_by_profile?.first_name }}
+                    {{ request.remarked_by_profile?.last_name }}
                   </p>
                 </div>
               </div>
 
               <!-- Rejection Reason -->
-              <div v-if="request.remarks === 'Rejected'" class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+              <div
+                v-if="request.remarks === 'Rejected'"
+                class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
                 <div class="p-2.5 bg-white rounded-lg shadow-sm">
-                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <svg
+                    class="w-5 h-5 text-red-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500 mb-1">Rejection Reason</p>
-                  <p class="text-red-600 font-semibold">{{ request.rejection_reason }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">
+                    Rejection Reason
+                  </p>
+                  <p class="text-red-600 font-semibold">
+                    {{ request.rejection_reason }}
+                  </p>
                 </div>
               </div>
 
               <!-- Deleted At -->
-              <div v-if="request.deleted_at" class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+              <div
+                v-if="request.deleted_at"
+                class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
                 <div class="p-2.5 bg-white rounded-lg shadow-sm">
-                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg
+                    class="w-5 h-5 text-red-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500 mb-1">Deleted At</p>
-                  <p class="text-red-600 font-semibold">{{ formatDateTime(request.deleted_at) }}</p>
+                  <p class="text-sm font-medium text-gray-500 mb-1">
+                    Deleted At
+                  </p>
+                  <p class="text-red-600 font-semibold">
+                    {{ formatDateTime(request.deleted_at) }}
+                  </p>
                 </div>
               </div>
             </div>

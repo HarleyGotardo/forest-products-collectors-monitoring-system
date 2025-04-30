@@ -430,7 +430,7 @@ onMounted(async () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="handleLogout" class="bg-emerald-600 hover:bg-emerald-700">
+                  <AlertDialogAction @click="handleLogout" class="bg-red-600 hover:bg-red-700">
                     Log Out
                   </AlertDialogAction>
                 </AlertDialogFooter>
