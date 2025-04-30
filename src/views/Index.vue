@@ -86,18 +86,19 @@ const handleForgotPassword = async () => {
   isResetting.value = true
 
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.value, {
-      redirectTo: "https://fpms-three.vercel.app/forgot-password",
+    const { data, error } = await supabase.auth.resetPasswordForEmail(resetEmail.value, {
+      redirectTo: 'https://fpms-three.vercel.app/forgot-password',
     })
 
     if (error) throw error
 
-    toast.success('Password reset instructions sent to your email', {
-      duration: 3000,
+    toast.success('Password reset instructions sent to your email. Please check your inbox.', {
+      duration: 5000,
     })
     showForgotPasswordModal.value = false
     resetEmail.value = ''
   } catch (error) {
+    console.error('Password reset error:', error)
     toast.error(`Failed to send reset instructions: ${error.message}`, {
       duration: 3000,
     })

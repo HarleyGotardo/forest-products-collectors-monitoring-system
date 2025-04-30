@@ -11,15 +11,27 @@ const confirmPassword = ref('')
 const isLoading = ref(false)
 const isPasswordVisible = ref(false)
 const isConfirmPasswordVisible = ref(false)
+const hasRecoveryToken = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
+  // Check if we have a recovery token in the URL
+  const hash = window.location.hash
+  if (hash && hash.includes('type=recovery')) {
+    hasRecoveryToken.value = true
+  }
+
   // Listen for password recovery event
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'PASSWORD_RECOVERY') {
-      // The user has clicked the recovery link
-      console.log('Password recovery event detected')
+      hasRecoveryToken.value = true
     }
   })
+
+  // Get the current session
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user?.aal === 'aal1') {
+    hasRecoveryToken.value = true
+  }
 })
 
 const togglePasswordVisibility = (field) => {
@@ -31,6 +43,13 @@ const togglePasswordVisibility = (field) => {
 }
 
 const handlePasswordReset = async () => {
+  if (!hasRecoveryToken.value) {
+    toast.error('Invalid password recovery session', {
+      duration: 3000,
+    })
+    return
+  }
+
   if (password.value !== confirmPassword.value) {
     toast.error('Passwords do not match', {
       duration: 3000,
@@ -48,7 +67,7 @@ const handlePasswordReset = async () => {
   isLoading.value = true
 
   try {
-    const { error } = await supabase.auth.updateUser({
+    const { data, error } = await supabase.auth.updateUser({
       password: password.value
     })
 
@@ -58,11 +77,14 @@ const handlePasswordReset = async () => {
       duration: 3000,
     })
 
-    // Redirect to login page after successful password reset
+    // Sign out the user and redirect to login
+    await supabase.auth.signOut()
+    
     setTimeout(() => {
       router.push('/')
     }, 2000)
   } catch (error) {
+    console.error('Password update error:', error)
     toast.error(`Error updating password: ${error.message}`, {
       duration: 3000,
     })
