@@ -12,12 +12,22 @@ const isLoading = ref(false)
 const isPasswordVisible = ref(false)
 const isConfirmPasswordVisible = ref(false)
 const hasRecoveryToken = ref(false)
+const tokenHash = ref(null)
 
 onMounted(async () => {
-  // Check if we have a recovery token in the URL
-  const hash = window.location.hash
-  if (hash && hash.includes('type=recovery')) {
+  // Parse the URL hash for token and type
+  const hashParams = new URLSearchParams(window.location.hash.substring(1))
+  const type = hashParams.get('type')
+  tokenHash.value = hashParams.get('token_hash')
+
+  if (type === 'recovery' && tokenHash.value) {
     hasRecoveryToken.value = true
+  } else {
+    // Check if we're in a recovery session
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user?.aal === 'aal1') {
+      hasRecoveryToken.value = true
+    }
   }
 
   // Listen for password recovery event
@@ -27,10 +37,14 @@ onMounted(async () => {
     }
   })
 
-  // Get the current session
-  const { data: { session } } = await supabase.auth.getSession()
-  if (session?.user?.aal === 'aal1') {
-    hasRecoveryToken.value = true
+  // If no recovery token is found, redirect to login
+  if (!hasRecoveryToken.value) {
+    toast.error('Invalid password reset link', {
+      duration: 3000,
+    })
+    setTimeout(() => {
+      router.push('/')
+    }, 2000)
   }
 })
 
@@ -73,7 +87,7 @@ const handlePasswordReset = async () => {
 
     if (error) throw error
 
-    toast.success('Password updated successfully', {
+    toast.success('Password updated successfully! Redirecting to login...', {
       duration: 3000,
     })
 
