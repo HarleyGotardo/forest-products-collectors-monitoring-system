@@ -543,8 +543,37 @@ const exportToExcel = async () => {
   }
 }
 
+const checkUserApproval = async () => {
+  try {
+    const user = getUser()
+    if (!user) return
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('approval_flag')
+      .eq('id', user.id)
+      .single()
+
+    if (error) throw error
+
+    if (!profile.approval_flag) {
+      toast.error('Your account needs to be approved by an administrator.', {
+        duration: 3000,
+      })
+      
+      // Sign out the user after showing the message
+      setTimeout(async () => {
+        await supabase.auth.signOut()
+        router.push('/')
+      }, 3000)
+    }
+  } catch (error) {
+    console.error('Error checking user approval:', error)
+  }
+}
 
 onMounted(() => {
+  checkUserApproval()
   fetchDashboardData()
 })
 </script>
