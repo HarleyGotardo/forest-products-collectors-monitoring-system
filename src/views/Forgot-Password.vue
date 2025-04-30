@@ -24,8 +24,52 @@ const isPasswordVisible = ref(false)
 const isConfirmPasswordVisible = ref(false)
 const hasRecoveryToken = ref(false)
 const accessToken = ref(null)
+const isValidatingToken = ref(true)
+
+const validateAndRedirect = async () => {
+  isValidatingToken.value = true
+  
+  try {
+    // Get the hash parameters
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const type = hashParams.get('type')
+    const token_hash = hashParams.get('token_hash')
+
+    // If no token hash or not a recovery type, redirect
+    if (!token_hash || type !== 'recovery') {
+      throw new Error('Invalid or missing recovery token')
+    }
+
+    // Verify the recovery token
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: 'recovery'
+    })
+
+    if (error) throw error
+
+    if (data.session) {
+      accessToken.value = data.session.access_token
+      hasRecoveryToken.value = true
+    } else {
+      throw new Error('No valid session found')
+    }
+  } catch (error) {
+    console.error('Token validation error:', error)
+    toast.error('Invalid password reset link. Redirecting to login...', {
+      duration: 3000,
+    })
+    setTimeout(() => {
+      router.push('/')
+    }, 1500)
+  } finally {
+    isValidatingToken.value = false
+  }
+}
 
 onMounted(async () => {
+  await validateAndRedirect()
+
   // Listen for password recovery event
   const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth event:', event)
@@ -36,36 +80,6 @@ onMounted(async () => {
       }
     }
   })
-
-  // Get the hash parameters
-  const hashParams = new URLSearchParams(window.location.hash.substring(1))
-  const type = hashParams.get('type')
-  const token_hash = hashParams.get('token_hash')
-
-  if (type === 'recovery' && token_hash) {
-    try {
-      // Verify the recovery token
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: 'recovery'
-      })
-
-      if (error) throw error
-
-      if (data.session) {
-        accessToken.value = data.session.access_token
-        hasRecoveryToken.value = true
-      }
-    } catch (error) {
-      console.error('Error verifying recovery token:', error)
-      toast.error('Invalid or expired recovery link', {
-        duration: 3000,
-      })
-      setTimeout(() => {
-        router.push('/')
-      }, 2000)
-    }
-  }
 })
 
 const togglePasswordVisibility = (field) => {
@@ -131,7 +145,14 @@ const handlePasswordReset = async () => {
 
 <template>
   <div class="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4">
-    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg">
+    <!-- Loading State -->
+    <div v-if="isValidatingToken" class="text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
+      <p class="text-gray-600">Validating reset link...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div v-else-if="hasRecoveryToken" class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg">
       <!-- Header -->
       <div class="text-center">
         <img src="@/assets/nature-cart.png" alt="Nature Cart Logo" class="mx-auto h-16 w-16" />

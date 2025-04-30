@@ -183,9 +183,18 @@ const handleForgotPassword = async () => {
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">
-              Password
-            </label>
+            <div class="flex items-center justify-between mb-2">
+              <label for="password" class="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <button
+                type="button"
+                @click.prevent="showForgotPasswordModal = true"
+                class="text-sm text-green-600 hover:text-green-500 font-medium"
+              >
+                Forgot password?
+              </button>
+            </div>
             <div class="mt-1 relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -202,15 +211,6 @@ const handleForgotPassword = async () => {
                 placeholder="••••••••"
               />
             </div>
-          </div>
-
-          <div class="flex items-center justify-end mb-2">
-            <button
-              @click="showForgotPasswordModal = true"
-              class="text-sm text-green-600 hover:text-green-500 font-medium"
-            >
-              Forgot password?
-            </button>
           </div>
 
           <button
