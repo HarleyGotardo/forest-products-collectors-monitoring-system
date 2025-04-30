@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
 import { supabase } from '@/lib/supabaseClient'
@@ -21,6 +21,11 @@ const isLoading = ref(false)
 const showForgotPasswordModal = ref(false)
 const resetEmail = ref('')
 const isResetting = ref(false)
+
+// Add computed property to check if form is complete
+const isFormComplete = computed(() => {
+  return email.value && password.value
+})
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
@@ -94,7 +99,7 @@ const handleForgotPassword = async () => {
 
     if (error) throw error
 
-    toast.success('Password reset instructions sent to your email. Please check your inbox and spam folder.', {
+    toast.success('Password reset link sent to your email. Please check your inbox or spam folder.', {
       duration: 5000,
     })
     showForgotPasswordModal.value = false
@@ -215,7 +220,7 @@ const handleForgotPassword = async () => {
 
           <button
             type="submit"
-            :disabled="isLoading"
+            :disabled="isLoading || !isFormComplete"
             class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -339,14 +344,14 @@ const handleForgotPassword = async () => {
         <DialogHeader>
           <DialogTitle>Reset Password</DialogTitle>
           <DialogDescription>
-            Enter your email address and we'll send you instructions to reset your password.
+            Enter the email address associated in your account and we'll send you the link to reset your password.
           </DialogDescription>
         </DialogHeader>
         <div class="mt-6">
           <div class="space-y-4">
             <div>
               <label for="reset-email" class="block text-sm font-medium text-gray-700">
-                Email address
+                Email address 
               </label>
               <div class="mt-1 relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
