@@ -18,8 +18,80 @@ const error = ref(null)
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
+
+// Add these new computed properties for password strength checking
+const passwordStrength = computed(() => {
+  if (!newPassword.value) return { score: 0, feedback: [] }
+  
+  let score = 0
+  let feedback = []
+  
+  // Check length
+  if (newPassword.value.length < 8) {
+    feedback.push('At least 8 characters')
+  } else if (newPassword.value.length >= 12) {
+    score += 2
+  } else if (newPassword.value.length >= 8) {
+    score += 1
+  }
+  
+  // Check for numbers
+  if (/\d/.test(newPassword.value)) {
+    score += 1
+  } else {
+    feedback.push('Add numbers')
+  }
+  
+  // Check for uppercase
+  if (/[A-Z]/.test(newPassword.value)) {
+    score += 1
+  } else {
+    feedback.push('Add uppercase letters')
+  }
+  
+  // Check for lowercase
+  if (/[a-z]/.test(newPassword.value)) {
+    score += 1
+  } else {
+    feedback.push('Add lowercase letters')
+  }
+  
+  // Check for special characters
+  if (/[^A-Za-z0-9]/.test(newPassword.value)) {
+    score += 1
+  } else {
+    feedback.push('Add special characters')
+  }
+  
+  return {
+    score,
+    feedback
+  }
+})
+
+const strengthLabel = computed(() => {
+  const score = passwordStrength.value.score
+  if (score === 0) return 'Very weak'
+  if (score <= 2) return 'Weak'
+  if (score <= 3) return 'Medium'
+  if (score <= 4) return 'Strong'
+  return 'Very strong'
+})
+
+const strengthColor = computed(() => {
+  const score = passwordStrength.value.score
+  if (score === 0) return 'bg-gray-200'
+  if (score <= 2) return 'bg-red-500'
+  if (score <= 3) return 'bg-yellow-500'
+  if (score <= 4) return 'bg-green-400'
+  return 'bg-green-600'
+})
+
+// Update the passwordsMatch computed property
 const passwordsMatch = computed(() => {
-  return newPassword.value === confirmPassword.value && newPassword.value.length >= 6
+  return newPassword.value === confirmPassword.value && 
+         newPassword.value.length >= 8 && 
+         passwordStrength.value.score >= 5
 })
 
 // Add this new method in your script setup
@@ -778,9 +850,38 @@ onMounted(async () => {
                 required
                 minlength="8"
               />
-              <p class="mt-1 text-xs text-gray-500">
-                Must be at least 8 characters long.
-              </p>
+              <!-- Password Strength Indicator -->
+              <div v-if="newPassword" class="mt-2">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-xs font-medium" :class="{
+                    'text-red-600': passwordStrength.score <= 2,
+                    'text-yellow-600': passwordStrength.score === 3,
+                    'text-green-600': passwordStrength.score > 3
+                  }">
+                    Password strength: {{ strengthLabel }}
+                  </span>
+                </div>
+                <div class="h-1.5 rounded-full bg-gray-200 w-full flex overflow-hidden">
+                  <div 
+                    class="h-full transition-all duration-300"
+                    :class="strengthColor"
+                    :style="`width: ${Math.min(passwordStrength.score * 20, 100)}%`"
+                  ></div>
+                </div>
+                <ul v-if="passwordStrength.feedback.length > 0" class="mt-1 text-xs text-gray-500 space-y-1">
+                  <li v-for="(feedback, index) in passwordStrength.feedback" :key="index" class="flex items-center">
+                    <svg class="h-3 w-3 mr-1" :class="{
+                      'text-red-500': passwordStrength.score <= 2,
+                      'text-yellow-500': passwordStrength.score === 3,
+                      'text-green-500': passwordStrength.score > 3
+                    }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path v-if="passwordStrength.score <= 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {{ feedback }}
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <div>
@@ -802,6 +903,32 @@ onMounted(async () => {
               >
                 Passwords do not match.
               </p>
+              <p
+                v-else-if="newPassword && confirmPassword && newPassword === confirmPassword"
+                class="mt-1 text-xs text-green-600"
+              >
+                Passwords match.
+              </p>
+              <!-- Add this new indicator for insufficient password strength -->
+              <div v-if="newPassword && confirmPassword && newPassword === confirmPassword && passwordStrength.score < 5" 
+                   class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                <div class="flex items-start">
+                  <svg class="h-4 w-4 text-yellow-500 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div>
+                    <p class="text-xs font-medium text-yellow-800">Password strength requirements not met</p>
+                    <p class="text-xs text-yellow-700 mt-1">Your password must be marked as "Very strong" to update. Please ensure it has:</p>
+                    <ul class="text-xs text-yellow-700 mt-1 list-disc list-inside">
+                      <li v-if="newPassword.length < 12">At least 12 characters</li>
+                      <li v-if="!/\d/.test(newPassword)">Numbers</li>
+                      <li v-if="!/[A-Z]/.test(newPassword)">Uppercase letters</li>
+                      <li v-if="!/[a-z]/.test(newPassword)">Lowercase letters</li>
+                      <li v-if="!/[^A-Za-z0-9]/.test(newPassword)">Special characters</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="pt-4 flex justify-end gap-3">
@@ -814,7 +941,7 @@ onMounted(async () => {
               </button>
               <button
                 type="submit"
-                :disabled="!passwordsMatch || !currentPassword || !newPassword || newPassword.length < 8"
+                :disabled="!passwordsMatch || !currentPassword || passwordStrength.score < 5"
                 class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Update Password
