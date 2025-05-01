@@ -428,13 +428,35 @@ const handleBackToLogin = async () => {
 
         <!-- Back to Login -->
         <div class="text-center">
-          <button
-            type="button"
-            @click="handleBackToLogin"
-            class="text-sm text-green-600 hover:text-green-500 font-medium"
-          >
-            Back to Login
-          </button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                class="text-sm text-green-600 hover:text-green-500 font-medium"
+              >
+                Back to Login
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel Password Reset</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to go back to login? This will cancel the password reset process and the reset link will expire.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel class="bg-gray-100 hover:bg-gray-200 text-gray-800">
+                  Stay Here
+                </AlertDialogCancel>
+                <AlertDialogAction 
+                  @click="handleBackToLogin"
+                  class="bg-green-600 hover:bg-green-700"
+                >
+                  Go Back to Login
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </form>
     </div>
