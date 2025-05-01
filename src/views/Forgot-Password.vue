@@ -233,6 +233,17 @@ const handleFormSubmit = (e) => {
     handlePasswordReset()
   }
 }
+
+// Add this new method
+const handleBackToLogin = async () => {
+  try {
+    await supabase.auth.signOut()
+    router.push('/')
+  } catch (error) {
+    console.error('Error signing out:', error)
+    router.push('/')
+  }
+}
 </script>
 
 <template>
@@ -419,7 +430,7 @@ const handleFormSubmit = (e) => {
         <div class="text-center">
           <button
             type="button"
-            @click="router.push('/')"
+            @click="handleBackToLogin"
             class="text-sm text-green-600 hover:text-green-500 font-medium"
           >
             Back to Login
