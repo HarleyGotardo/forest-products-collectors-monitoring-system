@@ -130,6 +130,8 @@ const validateAndRedirect = async () => {
     }
   } catch (error) {
     console.error('Token validation error:', error)
+    // Force sign out the user in case they got signed in
+    await supabase.auth.signOut()
     toast.error('Invalid password reset link. Redirecting to login...', {
       duration: 3000,
     })
