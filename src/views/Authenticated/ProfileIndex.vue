@@ -184,8 +184,8 @@ const handlePasswordUpdate = async () => {
     return
   }
 
-  if (newPassword.value.length < 6) {
-    toast.error('Password must be at least 6 characters', { duration: 3000 })
+  if (newPassword.value.length < 8) {
+    toast.error('Password must be at least 8 characters', { duration: 3000 })
     return
   }
 
@@ -212,13 +212,18 @@ const handlePasswordUpdate = async () => {
       throw new Error(updateError.message)
     }
 
-    toast.success('Password updated successfully', { duration: 3000 })
+    toast.success('Password updated successfully. You’ve been logged out and will be redirected to the login page upon clicking any button.', { duration: 4000 })
     showPasswordModal.value = false
 
     // Clear the form
     currentPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
+
+    // Log out the user after a short delay
+    setTimeout(async () => {
+      await supabase.auth.signOut()
+    }, 2000)
   } catch (err) {
     error.value = err.message
     toast.error(err.message, { duration: 3000 })
