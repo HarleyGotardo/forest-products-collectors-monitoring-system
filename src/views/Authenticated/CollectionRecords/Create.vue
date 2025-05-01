@@ -193,7 +193,7 @@ const fetchRequestDetails = async (requestId) => {
       user_id,
       collection_date,
       remarks,
-      profiles!collection_requests_remarked_by_fkey(id, first_name, last_name)
+      profiles!collection_requests_user_id_fkey(id, first_name, last_name)
     `)
     .eq('id', requestId)
     .single();
