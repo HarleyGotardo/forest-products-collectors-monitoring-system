@@ -395,7 +395,7 @@ const renderCharts = async (labels, quantities, units) => {
         mostCollectedChartInstance = null;
       }
 
-      const displayLimit = 10;
+      const displayLimit = 8; // Limit the number of displayed items in the pie chart
       const displayLabels = Array.isArray(labels) ? labels.slice(0, displayLimit) : [];
       const displayQuantities = Array.isArray(quantities) ? quantities.slice(0, displayLimit) : [];
       const displayUnits = Array.isArray(units) ? units.slice(0, displayLimit) : [];
