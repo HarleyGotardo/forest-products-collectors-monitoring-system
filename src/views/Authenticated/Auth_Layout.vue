@@ -29,6 +29,7 @@ const router = useRouter()
 const activeDropdown = ref(null) // Track active dropdown
 const isSidebarOpen = ref(false)
 const isLoading = ref(true) // Track loading state
+const isLoggingOut = ref(false) // Track logout state
 
 // Computed properties for dropdown states
 const isRecordsDropdownOpen = computed(() => activeDropdown.value === 'records')
@@ -76,9 +77,11 @@ const toggleSystemUsersDropdown = () => {
 }
 
 const handleLogout = async () => {
+  isLoggingOut.value = true // Set logging out state
   const { error } = await supabase.auth.signOut()
   if (error) {
     console.error('Error logging out:', error)
+    isLoggingOut.value = false // Reset state if error
   } else {
     setTimeout(() => {
       router.push({ name: 'Index' })
@@ -97,7 +100,15 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div class="min-h-screen bg-gray-50 relative">
+  <div class="min-h-screen bg-gray-50 relative" :class="{ 'pointer-events-none': isLoggingOut }">
+    <!-- Add overlay when logging out -->
+    <div v-if="isLoggingOut" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-center justify-center">
+      <div class="bg-white p-4 rounded-lg shadow-lg flex items-center gap-3">
+        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
+        <span class="text-gray-700">Logging out...</span>
+      </div>
+    </div>
+
     <!-- Improved Mobile Header - Better spacing and organization while preserving original elements -->
     <div class="fixed top-0 left-0 w-full h-16 bg-emerald-700 z-40 md:hidden flex items-center justify-between px-4">
       <div class="flex items-center">
@@ -450,15 +461,14 @@ onMounted(async () => {
       <router-view />
     </main>
     <Toaster
-  theme="light"
-  :toastOptions="{
-    class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
-    style: {
-      padding: '1rem',
-    }
-  }"
-/>
-
+      theme="light"
+      :toastOptions="{
+        class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
+        style: {
+          padding: '1rem',
+        }
+      }"
+    />
   </div>
 </template>
 
@@ -498,5 +508,11 @@ nav::-webkit-scrollbar-thumb:hover {
 /* Prevent scrolling when sidebar is open on mobile */
 .overflow-hidden {
   overflow: hidden;
+}
+
+/* Add styles for disabled state */
+.pointer-events-none {
+  pointer-events: none;
+  user-select: none;
 }
 </style>
