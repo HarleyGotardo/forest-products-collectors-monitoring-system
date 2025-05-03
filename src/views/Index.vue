@@ -376,7 +376,7 @@ const handleForgotPassword = async () => {
             type="button"
             variant="outline"
             @click="showForgotPasswordModal = false"
-            class="mr-3"
+            class="mt-2"
           >
             Cancel
           </Button>
