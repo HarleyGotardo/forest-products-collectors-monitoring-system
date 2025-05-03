@@ -384,7 +384,7 @@ const handleForgotPassword = async () => {
             type="button"
             @click="handleForgotPassword"
             :disabled="isResetting"
-            class="bg-green-600 text-white hover:bg-green-700"
+            class="bg-green-600 text-white hover:bg-green-700 mt-2"
           >
             <svg
               v-if="isResetting"
