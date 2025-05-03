@@ -87,6 +87,7 @@ const fetchForestProducts = async () => {
         id,
         is_recorded,
         remarks,
+        user_id,
         collection_request_items (
           id,
           requested_quantity,
@@ -114,8 +115,10 @@ const fetchForestProducts = async () => {
       const hasPaidRecord = request.collection_records && 
                             request.collection_records.some(record => record.is_paid === true);
       
-      // Only consider this request as pending if it's not recorded AND doesn't have a paid record
-      if (!hasPaidRecord) {
+      // Only consider this request as pending if:
+      // 1. It's not recorded AND doesn't have a paid record
+      // 2. It's not the current user's own request (when selectedRequest is set)
+      if (!hasPaidRecord && (!selectedRequest.value || request.id !== selectedRequest.value)) {
         request.collection_request_items.forEach(item => {
           const fpLocationId = item.fp_and_location_id;
           if (!pendingQuantities[fpLocationId]) {
@@ -294,9 +297,18 @@ const totalCost = computed(() => {
 
 const handleSubmit = () => {
   // Validate purchased quantities
-  const invalidProducts = selectedForestProducts.value.filter(
-    product => product.purchased_quantity > product.adjustedQuantity || product.purchased_quantity <= 0
-  );
+  const invalidProducts = selectedForestProducts.value.filter(product => {
+    // If this is from a selected request, allow the exact requested quantity
+    if (isRequestSelected.value) {
+      const requestItem = requestDetails.value.items.find(item => item.fp_and_location_id === product.id);
+      if (requestItem && product.purchased_quantity === requestItem.requested_quantity) {
+        return false; // Not invalid if it matches the requested quantity
+      }
+    }
+    
+    // Otherwise, validate against adjusted quantity
+    return product.purchased_quantity > product.adjustedQuantity || product.purchased_quantity <= 0;
+  });
   
   if (invalidProducts.length > 0) {
     toast.error('Please enter valid quantities for all selected products');
