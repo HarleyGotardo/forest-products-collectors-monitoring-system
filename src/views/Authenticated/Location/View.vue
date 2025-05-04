@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick, computed } from 'vue'
+import { ref, onMounted, nextTick, computed, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import L from 'leaflet'
@@ -218,37 +218,119 @@ const fetchForestProducts = async () => {
 }
 
 const initializeMap = () => {
-  // Only initialize if we have location data and the map container exists
-  if (!location.value || mapInitialized.value) return;
+  // Only initialize if we have location data
+  if (!location.value) return;
 
-  const mapContainer = document.getElementById('locationMap');
-  if (!mapContainer) return;
+  // Wait for next tick to ensure DOM is updated
+  nextTick(() => {
+    const mapContainer = document.getElementById('locationMap');
+    if (!mapContainer) return;
 
-  const lat = location.value.latitude;
-  const lng = location.value.longitude;
+    // Clean up existing map instance if it exists
+    if (mapInstance.value) {
+      mapInstance.value.remove();
+      mapInstance.value = null;
+    }
 
-  // Clean up existing map instance if it exists
-  if (mapInstance.value) {
-    mapInstance.value.remove();
-  }
+    const lat = location.value.latitude;
+    const lng = location.value.longitude;
 
-  // Create new map
-  mapInstance.value = L.map('locationMap').setView([lat, lng], 15);
+    // Create new map with proper options
+    mapInstance.value = L.map('locationMap', {
+      center: [lat, lng],
+      zoom: 15,
+      zoomControl: true,
+      attributionControl: true
+    });
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
-  }).addTo(mapInstance.value);
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(mapInstance.value);
 
-  L.marker([lat, lng])
-    .addTo(mapInstance.value)
-    .bindTooltip(location.value.name, {
+    // Add marker with custom styling
+    const marker = L.marker([lat, lng], {
+      title: location.value.name
+    }).addTo(mapInstance.value);
+
+    // Add tooltip with custom styling
+    marker.bindTooltip(location.value.name, {
       permanent: true,
       direction: 'top',
       className: 'bg-white px-2 py-1 rounded shadow-lg'
     });
 
-  mapInitialized.value = true;
+    // Force a resize event to ensure proper rendering
+    setTimeout(() => {
+      mapInstance.value.invalidateSize();
+    }, 100);
+
+    mapInitialized.value = true;
+  });
 }
+
+// Update onMounted to handle map initialization
+onMounted(async () => {
+  loading.value = true;
+  
+  // Check if location exists
+  const { data: locationData, error } = await supabase
+    .from('locations')
+    .select('id')
+    .eq('id', route.params.id)
+    .single();
+
+  if (error || !locationData) {
+    // If location doesn't exist or there's an error, redirect to index
+    router.push('/authenticated/locations');
+    toast.error('Location not found');
+    return;
+  }
+
+  // If location exists, fetch the details
+  await fetchLocation();
+  loading.value = false;
+
+  // Initialize map after a short delay to ensure DOM is ready
+  setTimeout(() => {
+    if (location.value) {
+      initializeMap();
+    }
+  }, 300);
+});
+
+// Add watcher for location changes
+watch(() => location.value, (newLocation) => {
+  if (newLocation && !loading.value) {
+    setTimeout(() => {
+      initializeMap();
+    }, 300);
+  }
+}, { immediate: true });
+
+// Add cleanup on component unmount
+onUnmounted(() => {
+  if (mapInstance.value) {
+    mapInstance.value.remove();
+    mapInstance.value = null;
+  }
+});
+
+// Add resize handler
+const handleResize = () => {
+  if (mapInstance.value) {
+    mapInstance.value.invalidateSize();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
 
 const restoreLocation = async () => {
   const { error: restoreError } = await supabase
@@ -311,35 +393,6 @@ const prevPage = () => {
     currentPage.value--
   }
 }
-
-onMounted(async () => {
-  loading.value = true;
-  
-  // Check if location exists
-  const { data: location, error } = await supabase
-    .from('locations')
-    .select('id')
-    .eq('id', route.params.id)
-    .single();
-
-  if (error || !location) {
-    // If location doesn't exist or there's an error, redirect to index
-    router.push('/authenticated/locations');
-    toast.error('Location not found');
-    return;
-  }
-
-  // If location exists, fetch the details
-  await fetchLocation();
-  loading.value = false;
-
-  // Initialize map on the next tick after loading is complete
-  nextTick(() => {
-    if (location.value) {
-      initializeMap();
-    }
-  });
-});
 </script>
 
 <template>
@@ -389,29 +442,29 @@ onMounted(async () => {
     <div v-if="loading" class="animate-pulse">
       <!-- Location Info Card Skeleton -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-6">
-          <div class="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-8">
+        <div class="p-4 sm:p-6">
+          <div class="flex flex-col items-center md:flex-row md:items-center space-y-4 sm:space-y-6 md:space-y-0 md:space-x-8">
             <!-- Location Icon Skeleton -->
-            <div class="p-5 bg-gray-100 rounded-full flex items-center justify-center">
-              <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <div class="p-3 sm:p-5 bg-blue-100 rounded-full flex items-center justify-center shadow-md">
+              <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full"></div>
             </div>
 
             <!-- Location Details Skeleton -->
-            <div class="flex-1">
-              <div class="flex flex-col md:flex-row md:items-center justify-between">
+            <div class="flex-1 w-full">
+              <div class="flex flex-col items-center md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
                 <div class="h-8 w-48 bg-gray-200 rounded"></div>
-                <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                <div class="flex items-center space-x-3">
                   <div class="h-6 w-20 bg-gray-200 rounded-full"></div>
                   <div class="h-4 w-32 bg-gray-200 rounded"></div>
                 </div>
               </div>
 
-              <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div class="p-5 bg-gray-50 rounded-lg">
+              <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div class="p-4 sm:p-5 bg-gray-50 rounded-lg shadow-md">
                   <div class="h-4 w-16 bg-gray-200 rounded mb-2"></div>
                   <div class="h-6 w-24 bg-gray-200 rounded"></div>
                 </div>
-                <div class="p-5 bg-gray-50 rounded-lg">
+                <div class="p-4 sm:p-5 bg-gray-50 rounded-lg shadow-md">
                   <div class="h-4 w-20 bg-gray-200 rounded mb-2"></div>
                   <div class="h-6 w-24 bg-gray-200 rounded"></div>
                 </div>
@@ -422,24 +475,29 @@ onMounted(async () => {
       </div>
 
       <!-- Map Card Skeleton -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
-        <div class="p-6">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4 sm:mt-6">
+        <div class="p-4 sm:p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="h-6 w-48 bg-gray-200 rounded"></div>
-            <div class="px-3 py-1 bg-gray-100 rounded-full">
+            <div class="px-2 sm:px-3 py-1 bg-blue-50 rounded-full">
               <div class="h-4 w-20 bg-gray-200 rounded"></div>
             </div>
           </div>
-          <div class="h-[300px] sm:h-[500px] w-full rounded-lg bg-gray-100"></div>
-          <div class="mt-3 h-4 w-48 bg-gray-200 rounded"></div>
+          <div class="h-[300px] sm:h-[600px] lg:h-[700px] w-full rounded-lg bg-gray-100"></div>
+          <div class="mt-3 text-center sm:text-left">
+            <div class="h-4 w-48 bg-gray-200 rounded"></div>
+          </div>
         </div>
       </div>
 
       <!-- Forest Products Section Skeleton -->
-      <div class="mt-8 sm:mt-12">
-        <div class="flex items-center space-x-2 mb-4 sm:mb-6">
-          <div class="w-1.5 h-6 bg-gray-200 rounded-full"></div>
-          <div class="h-6 w-48 bg-gray-200 rounded"></div>
+      <div class="mt-6 sm:mt-12">
+        <div class="flex items-center justify-between space-x-2 mb-4 sm:mb-6">
+          <div class="flex items-center space-x-2">
+            <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+            <div class="h-6 w-48 bg-gray-200 rounded"></div>
+          </div>
+          <div class="h-10 w-32 bg-gray-200 rounded-md"></div>
         </div>
 
         <!-- Forest Products Table Skeleton -->
@@ -460,6 +518,10 @@ onMounted(async () => {
                 </div>
                 <div class="h-5 w-32 bg-gray-200 rounded mb-1"></div>
                 <div class="h-4 w-24 bg-gray-200 rounded"></div>
+                <div class="mt-2 flex space-x-2">
+                  <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                  <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                </div>
               </div>
             </div>
 
@@ -471,6 +533,7 @@ onMounted(async () => {
                   <th class="px-6 py-3"><div class="h-4 w-24 bg-gray-200 rounded"></div></th>
                   <th class="px-6 py-3"><div class="h-4 w-20 bg-gray-200 rounded"></div></th>
                   <th class="px-6 py-3"><div class="h-4 w-16 bg-gray-200 rounded"></div></th>
+                  <th class="px-6 py-3"><div class="h-4 w-24 bg-gray-200 rounded"></div></th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
@@ -479,6 +542,12 @@ onMounted(async () => {
                   <td class="px-6 py-4"><div class="h-4 w-32 bg-gray-200 rounded"></div></td>
                   <td class="px-6 py-4"><div class="h-4 w-16 bg-gray-200 rounded"></div></td>
                   <td class="px-6 py-4"><div class="h-4 w-16 bg-gray-200 rounded"></div></td>
+                  <td class="px-6 py-4">
+                    <div class="flex justify-end space-x-2">
+                      <div class="h-8 w-20 bg-gray-200 rounded"></div>
+                      <div class="h-8 w-20 bg-gray-200 rounded"></div>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -486,8 +555,13 @@ onMounted(async () => {
 
           <!-- Pagination Skeleton -->
           <div class="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="hidden sm:block">
+                <div class="h-4 w-48 bg-gray-200 rounded"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
+                <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
                 <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
                 <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
                 <div class="h-10 w-10 bg-gray-200 rounded-md"></div>
@@ -595,19 +669,20 @@ onMounted(async () => {
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4 sm:mt-6">
         <div class="p-4 sm:p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900">
-              Map View of {{ location.name }}
-            </h3>
-            <div class="px-2 sm:px-3 py-1 bg-blue-50 rounded-full">
-              <span class="text-xs sm:text-sm text-blue-700">Interactive Map</span>
-            </div>
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+          Map View of {{ location.name }}
+        </h3>
+        <div class="px-2 sm:px-3 py-1 bg-blue-50 rounded-full">
+          <span class="text-xs sm:text-sm text-blue-700">Interactive Map</span>
+        </div>
           </div>
           <div
-            id="locationMap"
-            class="h-[250px] sm:h-[500px] w-full rounded-lg overflow-hidden border border-gray-200 z-0"
+        id="locationMap"
+        class="h-[300px] sm:h-[600px] lg:h-[700px] w-full rounded-lg overflow-hidden border border-gray-200 z-0 relative"
+        style="min-height: 300px; background-color: #f3f4f6;"
           ></div>
-          <p class="mt-3 text-xs sm:text-sm text-gray-500">
-            Click and drag to pan, use scroll wheel to zoom
+          <p class="mt-3 text-xs sm:text-sm text-gray-500 text-center sm:text-left">
+        Click and drag to pan, use scroll wheel to zoom
           </p>
         </div>
       </div>
@@ -925,10 +1000,25 @@ onMounted(async () => {
 .leaflet-container {
   font-family: inherit;
   z-index: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f3f4f6;
 }
 
 .leaflet-tooltip {
   @apply bg-white px-3 py-1.5 rounded-lg shadow-lg border-none text-sm font-medium !important;
+}
+
+.leaflet-popup-content {
+  @apply text-sm !important;
+}
+
+.leaflet-popup-tip {
+  @apply bg-white !important;
+}
+
+.leaflet-control-attribution {
+  @apply text-xs !important;
 }
 
 .dialog-overlay {
