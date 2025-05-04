@@ -1,6 +1,6 @@
 <script setup>
 import Input from '@/components/ui/input/Input.vue'
-import { ref, onMounted, nextTick, computed } from 'vue'
+import { ref, onMounted, nextTick, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import L from 'leaflet'
@@ -229,23 +229,26 @@ const fetchForestProduct = async () => {
   }
 }
 const fetchLocations = async () => {
-  let { data, error: fetchError } = await supabase
-    .from('fp_and_locations')
-    .select(`
-      locations (
-        id,
-        name,
-        latitude,
-        longitude,
-        deleted_at
-      ),
-      quantity
-    `)
-    .eq('forest_product_id', productId)
+  try {
+    let { data, error: fetchError } = await supabase
+      .from('fp_and_locations')
+      .select(`
+        locations (
+          id,
+          name,
+          latitude,
+          longitude,
+          deleted_at
+        ),
+        quantity
+      `)
+      .eq('forest_product_id', productId)
 
-  if (fetchError) {
-    error.value = fetchError.message
-  } else {
+    if (fetchError) {
+      error.value = fetchError.message
+      return
+    }
+
     // Filter out locations that have been deleted
     locations.value = data
       .filter(fp => fp.locations && fp.locations.deleted_at === null)
@@ -254,14 +257,15 @@ const fetchLocations = async () => {
         quantity: fp.quantity
       }))
 
-    // Ensure map is properly initialized after locations are loaded
+    // Initialize map after locations are loaded
     nextTick(() => {
-      if (mapInstance.value) {
-        mapInstance.value.remove()
-        mapInstance.value = null
+      if (locations.value && locations.value.length > 0) {
+        initializeMap()
       }
-      initializeMap()
     })
+  } catch (err) {
+    error.value = err.message
+    console.error('Error fetching locations:', err)
   }
 }
 
@@ -279,42 +283,56 @@ const fetchAllLocations = async () => {
 }
 
 const initializeMap = () => {
-  if (!document.getElementById('locationMap')) {
-    console.error('Map container not found.')
-    return
-  }
+  // Wait for next tick to ensure DOM is updated
+  nextTick(() => {
+    const mapContainer = document.getElementById('locationMap')
+    if (!mapContainer) {
+      console.error('Map container not found')
+      return
+    }
 
-  // Ensure the map container is empty
-  const mapContainer = document.getElementById('locationMap')
-  mapContainer.innerHTML = ''
+    // Clean up existing map instance if it exists
+    if (mapInstance.value) {
+      mapInstance.value.remove()
+      mapInstance.value = null
+    }
 
-  // Create new map instance
-  mapInstance.value = L.map('locationMap')
+    // Create new map instance
+    mapInstance.value = L.map('locationMap')
 
-  // Add tile layer
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
-  }).addTo(mapInstance.value)
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(mapInstance.value)
 
-  // Add markers for locations
-  locations.value.forEach(location => {
-    L.marker([location.latitude, location.longitude])
-      .addTo(mapInstance.value)
-      .bindTooltip(location.name, {
-        permanent: true,
-        direction: 'top',
-        className: 'bg-white px-2 py-1 rounded shadow-lg'
+    // Add markers for locations
+    if (locations.value && locations.value.length > 0) {
+      const markers = locations.value.map(location => {
+        return L.marker([location.latitude, location.longitude])
+          .addTo(mapInstance.value)
+          .bindTooltip(location.name, {
+            permanent: true,
+            direction: 'top',
+            className: 'bg-white px-2 py-1 rounded shadow-lg'
+          })
       })
-  })
 
-  // Fit bounds to show all markers
-  if (locations.value.length > 0) {
-    const bounds = L.latLngBounds(locations.value.map(location => [location.latitude, location.longitude]))
-  mapInstance.value.fitBounds(bounds)
-        } else {
-    // Default view for Philippines if no locations
-    mapInstance.value.setView([10.744340, 124.791995], 16)
-  }
+      // Fit bounds to show all markers
+      const bounds = L.latLngBounds(locations.value.map(location => [location.latitude, location.longitude]))
+      mapInstance.value.fitBounds(bounds)
+    } else {
+      // Default view for Philippines if no locations
+      mapInstance.value.setView([10.744340, 124.791995], 16)
+    }
+
+    // Force a resize event to ensure proper rendering
+    setTimeout(() => {
+      if (mapInstance.value) {
+        mapInstance.value.invalidateSize()
+      }
+    }, 100)
+  })
 }
 
 const paginatedLocations = computed(() => {
@@ -751,28 +769,41 @@ const reloadMap = () => {
 onMounted(async () => {
   loading.value = true;
   
-  // Check if forest product exists
-  const { data: forestProduct, error } = await supabase
-    .from('forest_products')
-    .select('id')
-    .eq('id', route.params.id)
-    .single();
+  try {
+    // Check if forest product exists
+    const { data: forestProduct, error } = await supabase
+      .from('forest_products')
+      .select('id')
+      .eq('id', route.params.id)
+      .single();
 
-  if (error || !forestProduct) {
-    // If product doesn't exist or there's an error, redirect to index
-    router.push('/authenticated/forest-products');
-    toast.error('Forest product not found');
-    return;
+    if (error || !forestProduct) {
+      router.push('/authenticated/forest-products');
+      toast.error('Forest product not found');
+      return;
+    }
+
+    // If product exists, fetch all data in parallel
+    await Promise.all([
+      fetchForestProduct(),
+      fetchAdditionalImages(),
+      fetchAllLocations(),
+      fetchUserDetails(),
+    ]);
+
+    loading.value = false;
+
+    // Initialize map after data is loaded and component is mounted
+    nextTick(() => {
+      if (locations.value && locations.value.length > 0) {
+        initializeMap();
+      }
+    });
+  } catch (err) {
+    error.value = err.message;
+    toast.error('Failed to load forest product: ' + err.message);
+    loading.value = false;
   }
-
-  // If product exists, fetch the details
-  await fetchForestProduct();
-  await Promise.all([
-    fetchAdditionalImages(),
-    fetchAllLocations(),
-    fetchUserDetails()
-  ]);
-  loading.value = false;
 });
 
 // Add these functions in the script section after the existing functions
@@ -1035,6 +1066,15 @@ const handleImageUpload = async (event) => {
     }
   }
 }
+
+// Add a watcher for locations to reinitialize map when they change
+watch(() => locations.value, (newLocations) => {
+  if (newLocations && newLocations.length > 0 && !loading.value) {
+    nextTick(() => {
+      initializeMap()
+    })
+  }
+}, { deep: true })
 </script>
 
 <template>

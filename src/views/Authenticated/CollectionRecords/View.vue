@@ -899,155 +899,145 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div v-else class="flex flex-col justify-center items-center py-10">
-      <div class="max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
-        <!-- Header Skeleton -->
-        <div class="border-b border-gray-200 px-6 py-5">
-          <div class="flex flex-col gap-5">
-            <div>
-              <div class="h-6 bg-gray-200 rounded w-48"></div>
-              <div class="h-4 bg-gray-200 rounded w-64 mt-2"></div>
-      </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
-              <div>
-                <div class="h-4 bg-gray-200 rounded w-20"></div>
-                <div class="h-5 bg-gray-200 rounded w-16 mt-1"></div>
-              </div>
-              <div>
-                <div class="h-4 bg-gray-200 rounded w-24"></div>
-                <div class="h-5 bg-gray-200 rounded w-32 mt-1"></div>
-              </div>
-              <div>
-                <div class="h-4 bg-gray-200 rounded w-16"></div>
-                <div class="h-5 bg-gray-200 rounded w-24 mt-1"></div>
-              </div>
-              <div>
-                <div class="h-4 bg-gray-200 rounded w-20"></div>
-                <div class="h-5 bg-gray-200 rounded w-24 mt-1"></div>
-              </div>
-            </div>
+    <div v-else class="max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
+      <!-- Content Skeleton -->
+      <div class="px-6 py-6">
+        <!-- User Details Skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-8">
+          <div>
+            <h3 class="text-sm font-medium text-gray-300 bg-gray-200 w-24 h-5 rounded mb-1"></h3>
+            <div class="text-sm bg-gray-200 w-48 h-5 rounded"></div>
+          </div>
+          <div>
+            <h3 class="text-sm font-medium text-gray-300 bg-gray-200 w-32 h-5 rounded mb-1"></h3>
+            <div class="text-sm bg-gray-200 w-48 h-5 rounded"></div>
           </div>
         </div>
 
-        <!-- Content Skeleton -->
-        <div class="px-6 py-6">
-          <!-- User Details Skeleton -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-8">
-            <div>
-              <div class="h-4 bg-gray-200 rounded w-24 mb-1"></div>
-              <div class="h-5 bg-gray-200 rounded w-32"></div>
-            </div>
-            <div>
-              <div class="h-4 bg-gray-200 rounded w-32 mb-1"></div>
-              <div class="h-5 bg-gray-200 rounded w-40"></div>
-            </div>
-          </div>
-
-          <!-- Collection Details Skeleton -->
-          <div class="mb-8">
-            <div class="h-4 bg-gray-200 rounded w-32 mb-3"></div>
-            
-            <!-- Desktop Table Skeleton -->
-            <div class="hidden sm:block border border-gray-200 rounded-lg overflow-hidden">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-4 py-3 h-10"></th>
-                    <th class="px-4 py-3 h-10"></th>
-                    <th class="px-4 py-3 h-10"></th>
-                    <th class="px-4 py-3 h-10"></th>
-                    <th class="px-4 py-3 h-10"></th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="n in 3" :key="n">
-                    <td class="px-4 py-4">
-                      <div class="h-4 bg-gray-200 rounded w-32"></div>
-                      <div class="space-y-1 mt-2">
-                        <div class="h-3 bg-gray-200 rounded w-24"></div>
-                        <div class="h-3 bg-gray-200 rounded w-28"></div>
-                        <div class="h-3 bg-gray-200 rounded w-20"></div>
-                      </div>
-                    </td>
-                    <td class="px-4 py-4">
-                      <div class="h-4 bg-gray-200 rounded w-24"></div>
-                    </td>
-                    <td class="px-4 py-4">
-                      <div class="h-4 bg-gray-200 rounded w-16"></div>
-                    </td>
-                    <td class="px-4 py-4">
-                      <div class="h-4 bg-gray-200 rounded w-20"></div>
-                    </td>
-                    <td class="px-4 py-4">
-                      <div class="h-4 bg-gray-200 rounded w-24"></div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Mobile Cards Skeleton -->
-            <div class="sm:hidden space-y-4">
-              <div v-for="n in 3" :key="n" class="bg-white border border-gray-200 rounded-lg p-4">
-                <div class="mb-3 pb-3 border-b border-gray-200">
-                  <div class="h-5 bg-gray-200 rounded w-32"></div>
-                  <div class="h-4 bg-gray-200 rounded w-24 mt-1"></div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-x-2 gap-y-1 mb-3">
-                  <div>
-                    <div class="h-3 bg-gray-200 rounded w-16 mb-1"></div>
+        <!-- Collection Details Skeleton -->
+        <div class="mb-8">
+          <h3 class="text-sm font-medium text-gray-300 bg-gray-200 w-32 h-5 rounded mb-3"></h3>
+          
+          <!-- Desktop Table Skeleton -->
+          <div class="hidden sm:block border border-gray-200 rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-3">
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  </th>
+                  <th class="px-4 py-3">
                     <div class="h-4 bg-gray-200 rounded w-20"></div>
-                  </div>
-                  <div>
-                    <div class="h-3 bg-gray-200 rounded w-20 mb-1"></div>
-                    <div class="h-4 bg-gray-200 rounded w-24"></div>
-                  </div>
-                  <div>
-                    <div class="h-3 bg-gray-200 rounded w-24 mb-1"></div>
-                    <div class="h-4 bg-gray-200 rounded w-28"></div>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-                  <div>
-                    <div class="h-3 bg-gray-200 rounded w-20 mb-1"></div>
-                    <div class="h-4 bg-gray-200 rounded w-24"></div>
-                  </div>
-                  <div>
-                    <div class="h-3 bg-gray-200 rounded w-24 mb-1"></div>
-                    <div class="h-4 bg-gray-200 rounded w-28"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                  </th>
+                  <th class="px-4 py-3 text-right">
+                    <div class="h-4 bg-gray-200 rounded w-24 ml-auto"></div>
+                  </th>
+                  <th class="px-4 py-3 text-right">
+                    <div class="h-4 bg-gray-200 rounded w-20 ml-auto"></div>
+                  </th>
+                  <th class="px-4 py-3 text-right">
+                    <div class="h-4 bg-gray-200 rounded w-16 ml-auto"></div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="n in 3" :key="n">
+                  <td class="px-4 py-4">
+                    <div class="space-y-2">
+                      <div class="h-5 bg-gray-200 rounded w-32"></div>
+                      <div class="space-y-1">
+                        <div class="h-4 bg-gray-200 rounded w-24"></div>
+                        <div class="h-4 bg-gray-200 rounded w-28"></div>
+                        <div class="h-4 bg-gray-200 rounded w-20"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-4 align-top">
+                    <div class="h-5 bg-gray-200 rounded w-32"></div>
+                  </td>
+                  <td class="px-4 py-4 text-right align-top">
+                    <div class="h-5 bg-gray-200 rounded w-24 ml-auto"></div>
+                  </td>
+                  <td class="px-4 py-4 text-right align-top whitespace-nowrap">
+                    <div class="h-5 bg-gray-200 rounded w-20 ml-auto"></div>
+                  </td>
+                  <td class="px-4 py-4 text-right align-top whitespace-nowrap">
+                    <div class="h-5 bg-gray-200 rounded w-24 ml-auto"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <!-- Summary Skeleton -->
-          <div class="border-t border-gray-200 pt-6">
-            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-6">
-              <div class="w-full sm:w-auto sm:max-w-xs flex-grow">
-                <div class="space-y-3">
-                  <div class="flex justify-between items-center">
-                    <div class="h-4 bg-gray-200 rounded w-24"></div>
-                    <div class="h-5 bg-gray-200 rounded w-32"></div>
-                  </div>
-                  <div class="flex justify-between items-center border-t border-gray-200 pt-3">
-                    <div class="h-4 bg-gray-200 rounded w-28"></div>
-                    <div class="h-5 bg-gray-200 rounded-full w-20"></div>
-                  </div>
+          <!-- Mobile Cards Skeleton -->
+          <div class="sm:hidden space-y-4">
+            <div v-for="n in 3" :key="n" class="bg-white border border-gray-200 rounded-lg p-4">
+              <div class="mb-3 pb-3 border-b border-gray-200">
+                <div class="h-5 bg-gray-200 rounded w-40 mb-1"></div>
+                <div class="h-4 bg-gray-200 rounded w-32"></div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-x-2 gap-y-1 mb-3">
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-16 mb-1"></div>
+                  <div class="h-5 bg-gray-200 rounded w-20"></div>
+                </div>
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-20 mb-1"></div>
+                  <div class="h-5 bg-gray-200 rounded w-24"></div>
+                </div>
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-20 mb-1"></div>
+                  <div class="h-5 bg-gray-200 rounded w-24"></div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-20 mb-1"></div>
+                  <div class="h-5 bg-gray-200 rounded w-24"></div>
+                </div>
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                  <div class="h-5 bg-gray-200 rounded w-28"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Footer Skeleton -->
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-          <div class="text-center">
-            <div class="h-4 bg-gray-200 rounded w-48 mx-auto"></div>
-            <div class="h-4 bg-gray-200 rounded w-64 mx-auto mt-2"></div>
+        <!-- Summary Section Skeleton -->
+        <div class="border-t border-gray-200 pt-6">
+          <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-6">
+            <div class="w-full sm:w-auto sm:max-w-xs flex-grow">
+              <dl class="space-y-3 text-sm">
+                <div class="flex justify-between items-center">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-6 bg-gray-200 rounded w-32"></div>
+                </div>
+                <div class="flex justify-between items-center border-t border-gray-200 pt-3">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-5 bg-gray-200 rounded-full w-16"></div>
+                </div>
+                <div class="flex justify-between items-center border-t border-gray-200 pt-3">
+                  <div class="h-4 bg-gray-200 rounded w-28"></div>
+                  <div class="h-5 bg-gray-200 rounded w-40"></div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  <div class="h-5 bg-gray-200 rounded w-48"></div>
+                </div>
+              </dl>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Footer Skeleton -->
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="text-center space-y-1">
+          <div class="h-4 bg-gray-200 rounded w-48 mx-auto"></div>
+          <div class="h-4 bg-gray-200 rounded w-64 mx-auto"></div>
         </div>
       </div>
     </div>

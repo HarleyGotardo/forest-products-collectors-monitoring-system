@@ -756,7 +756,7 @@ const prevPage = () => {
             @click="openAddDialog" 
             class="ml-4 bg-green-800 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-md shadow-sm px-4 py-2 text-sm font-medium"
           >
-            Add Forest Product
+            + Add Forest Product
           </Button>
         </div>
 
