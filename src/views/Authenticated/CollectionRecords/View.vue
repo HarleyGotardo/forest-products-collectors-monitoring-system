@@ -369,7 +369,7 @@ onMounted(async () => {
             class="w-6 h-6 sm:w-7 sm:h-7"
           />
         </div>
-        <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">
+        <h1 class="text-xl sm:text-2xl font-semibold text-green-800">
           Collection Record
         </h1>
       </div>
@@ -588,8 +588,8 @@ onMounted(async () => {
       <div class="border-b border-gray-200 px-6 py-5">
         <div class="flex flex-col gap-5">
           <div>
-            <h2 class="text-lg font-semibold text-gray-900">
-              Collection Record Invoice
+            <h2 class="text-lg font-semibold text-emerald-900">
+              {{ record?.is_paid ? 'Collection Record Receipt' : 'Collection Record Invoice' }}
             </h2>
             <p class="text-sm text-gray-500 mt-0.5">
               Forest Products Collection Record Details
@@ -734,7 +734,7 @@ onMounted(async () => {
                     class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap"
                   >
                     {{ item.deducted_quantity }}
-                    {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
+                    {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}(s)
                   </td>
                     <td
                     class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap"
