@@ -429,7 +429,7 @@ onMounted(async () => {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button class="p-2 transition-all rounded-lg bg-gray-100 hover:bg-emerald-50 active:scale-95">
-                  <img src="@/assets/logout.png" alt="Logout" class="w-6 h-6" />
+                  <img src="@/assets/logout.png" alt="Logout" class="w-4 h-4" />
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
