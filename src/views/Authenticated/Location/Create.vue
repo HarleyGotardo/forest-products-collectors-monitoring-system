@@ -714,78 +714,78 @@ const getCurrentLocation = () => {
         @click="closeModal"
       ></div>
 
-      <!-- Modal panel with improved styling -->
+      <!-- Modal panel with improved styling and mobile responsiveness -->
       <div
         class="inline-block transform overflow-hidden rounded-xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle"
       >
         <div class="bg-white px-6 pt-5 pb-4">
           <div class="sm:flex sm:items-start">
-            <div
-              class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10"
-            >
-              <svg
-                class="h-6 w-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-              </svg>
-            </div>
-            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-              <h3
-                class="text-lg font-medium leading-6 text-gray-900"
-                id="modal-title"
-              >
-                {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
-              </h3>
-              <p class="mt-1 text-sm text-gray-500">
-                {{ modalField === 'coordinates' ? 'Click on the map to select precise coordinates for this location.' : '' }}
-              </p>
-            </div>
+        <div
+          class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10"
+        >
+          <svg
+            class="h-6 w-6 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+          </svg>
+        </div>
+        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+          <h3
+            class="text-lg font-medium leading-6 text-gray-900"
+            id="modal-title"
+          >
+            {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
+          </h3>
+          <p class="mt-1 text-sm text-gray-500">
+            {{ modalField === 'coordinates' ? 'Click on the map to select precise coordinates for this location.' : '' }}
+          </p>
+        </div>
           </div>
 
           <!-- Modal Content with improved map container -->
           <div class="mt-6">
-            <!-- Map View -->
-            <div v-if="modalField === 'coordinates'" class="mt-4">
-              <div
-                id="map"
-                class="h-[450px] w-full rounded-lg border border-gray-200 shadow-inner"
-              ></div>
+        <!-- Map View -->
+        <div v-if="modalField === 'coordinates'" class="mt-4">
+          <div
+            id="map"
+            class="h-[300px] sm:h-[450px] w-full rounded-lg border border-gray-200 shadow-inner"
+          ></div>
 
-              <div
-                v-if="tempCoordinates"
-                class="mt-3 p-3 bg-green-50 border border-green-100 rounded-md text-sm text-green-800 flex justify-between items-center"
-              >
-                <span>Selected coordinates: {{ tempCoordinates }}</span>
-                <button
-                  type="button"
-                  @click="clearTempCoordinates"
-                  class="text-red-600 hover:text-red-800 focus:outline-none"
-                  title="Remove coordinates"
-                >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
+          <div
+            v-if="tempCoordinates"
+            class="mt-3 p-3 bg-green-50 border border-green-100 rounded-md text-sm text-green-800 flex justify-between items-center"
+          >
+            <span>Selected coordinates: {{ tempCoordinates }}</span>
+            <button
+          type="button"
+          @click="clearTempCoordinates"
+          class="text-red-600 hover:text-red-800 focus:outline-none"
+          title="Remove coordinates"
+            >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+            </button>
+          </div>
+        </div>
           </div>
         </div>
 
@@ -794,19 +794,19 @@ const getCurrentLocation = () => {
           class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100"
         >
           <button
-            v-if="tempCoordinatesObj"
-            type="button"
-            @click="saveModalValue"
-            class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-5 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+        v-if="tempCoordinatesObj"
+        type="button"
+        @click="saveModalValue"
+        class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-5 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
           >
-            Save Coordinates
+        Save Coordinates
           </button>
           <button
-            type="button"
-            @click="closeModal"
-            class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-5 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+        type="button"
+        @click="closeModal"
+        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-5 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
           >
-            Cancel
+        Cancel
           </button>
         </div>
       </div>

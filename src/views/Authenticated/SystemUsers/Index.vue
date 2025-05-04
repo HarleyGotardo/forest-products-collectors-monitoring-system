@@ -825,7 +825,7 @@ onMounted(async () => {
           aria-hidden="true"
         ></div>
         <div
-          class="relative bg-white rounded-lg p-6 max-w-4xl w-full shadow-xl"
+          class="relative bg-white rounded-lg p-6 max-w-5xl w-full shadow-xl"
         >
           <button
             type="button"
@@ -847,7 +847,7 @@ onMounted(async () => {
               />
             </svg>
           </button>
-          <div class="flex items-center space-x-3 mb-4">
+            <div class="flex items-center space-x-3 mb-4 text-left">
             <img
               src="@/assets/pending.png"
               alt="Pending Users"
@@ -856,7 +856,7 @@ onMounted(async () => {
             <h2 class="text-2xl font-bold text-green-900">
               Pending Users for Approval
             </h2>
-          </div>
+            </div>
 
           <!-- Search Input for Unapproved Users -->
           <div class="mb-4">
