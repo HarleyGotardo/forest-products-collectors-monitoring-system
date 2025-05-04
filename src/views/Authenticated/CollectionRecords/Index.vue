@@ -108,8 +108,12 @@ const fetchCollectionRecords = async () => {
         user_name: `${record.user.first_name} ${record.user.last_name}`,
         location_id: record.location_id,
         location_name: record.location ? record.location.name : 'Unknown Location',
-        items: items,
-        total_cost: totalCost.toFixed(2),
+        items: items.map(item => ({
+          ...item,
+          total_cost: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost || 0),
+          price_per_unit_during_purchase: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.price_per_unit_during_purchase || 0)
+        })),
+        total_cost: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(totalCost),
         created_by_name: record.creator ? `${record.creator.first_name} ${record.creator.last_name}` : 'Unknown',
         approved_by_name: record.approver ? `${record.approver.first_name} ${record.approver.last_name}` : null,
         approved_at: record.approved_at ? format(new Date(record.approved_at), 'MMMM dd, yyyy') : null,
@@ -395,8 +399,8 @@ const markAsPaid = async (recordId) => {
       const productName = item.fp_and_location.forest_product?.name || 'Unknown Product';
       const locationName = item.fp_and_location.location?.name || 'Unknown Location';
       const quantity = item.purchased_quantity || 0;
-      const totalCost = (item.total_cost || 0).toFixed(2);
-      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
+      const total = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost || 0);
+      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ${total})`;
     }).filter(Boolean).join('; ');
 
     // Check if any product is firewood
@@ -952,9 +956,9 @@ watch(paymentFilter, () => {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ record.user_name }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ₱{{ record.total_cost }}
-              </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ record.total_cost }}
+                </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ record.created_by_name }}
               </td>
@@ -1152,7 +1156,7 @@ watch(paymentFilter, () => {
                 <div>
                   <div class="text-xs text-gray-500">Total Cost</div>
                   <div class="font-medium text-sm">
-                    ₱{{ record.total_cost }}
+                    {{ record.total_cost }}
                   </div>
                 </div>
               </div>

@@ -171,8 +171,8 @@ const downloadPermit = async () => {
       const productName = item.fp_and_location.forest_product.name;
       const locationName = item.fp_and_location.location.name;
       const quantity = item.purchased_quantity;
-      const totalCost = item.total_cost.toFixed(2);
-      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ₱${totalCost})`;
+      const totalCost = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost);
+      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ${totalCost})`;
     }).join('; ');
 
     // Check if any product is firewood
@@ -191,7 +191,7 @@ const downloadPermit = async () => {
       purpose: record.value.purpose || 'N/A',
       collectionRequestId: record.value.collection_request_id,
       expiryDate: new Date(new Date(record.value.created_at).setFullYear(new Date(record.value.created_at).getFullYear() + 1)).toLocaleDateString(),
-      chargesPaid: calculateTotalCost().toFixed(2),
+      chargesPaid: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(calculateTotalCost()),
       issuedBy: `${record.value.created_by.first_name} ${record.value.created_by.last_name}`,
       inspectedBy: `${record.value.approved_by.first_name} ${record.value.approved_by.last_name}`,
       note: firewoodNote,
@@ -313,7 +313,7 @@ const calculateTotalCost = () => {
 
 onMounted(async () => {
   loading.value = true;
-  
+
   // Check if collection record exists
   const { data: record, error } = await supabase
     .from('collection_records')
@@ -379,7 +379,8 @@ onMounted(async () => {
           class="px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700 border border-red-200 flex items-center gap-2"
         >
           <span class="w-2 h-2 rounded-full bg-red-500"></span>
-          Deleted {{ new Date(record.deleted_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
+          Deleted
+          {{ new Date(record.deleted_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
         </div>
         <div
           v-if="record && record?.is_paid"
@@ -417,8 +418,8 @@ onMounted(async () => {
           </svg>
           Download Permit
         </Button>
-            <div class="flex items-center space-x-2">
-              <!-- <Button
+        <div class="flex items-center space-x-2">
+          <!-- <Button
             v-if="(isFPUAdmin || isForestRanger) && record && !record?.is_paid && !record?.deleted_at"
                 class="p-2 flex items-center justify-center"
             @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record?.id } })"
@@ -457,22 +458,22 @@ onMounted(async () => {
                   />
                 </svg>
               </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This collection record will be transferred to the recycle bin.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="deleteCollectionRecord(record.id)">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This collection record will be transferred to the recycle bin.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deleteCollectionRecord(record.id)">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <!-- Restore and Delete Permanently buttons for deleted records -->
           <template v-if="record?.deleted_at">
@@ -496,7 +497,9 @@ onMounted(async () => {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Restore Collection Record?</AlertDialogTitle>
+                  <AlertDialogTitle
+                    >Restore Collection Record?</AlertDialogTitle
+                  >
                   <AlertDialogDescription>
                     This collection record will be restored.
                   </AlertDialogDescription>
@@ -530,14 +533,18 @@ onMounted(async () => {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Collection Record Permanently?</AlertDialogTitle>
+                  <AlertDialogTitle
+                    >Delete Collection Record Permanently?</AlertDialogTitle
+                  >
                   <AlertDialogDescription>
                     This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="deleteRecordPermanently(record.id)">
+                  <AlertDialogAction
+                    @click="deleteRecordPermanently(record.id)"
+                  >
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -605,9 +612,9 @@ onMounted(async () => {
               >
                 Date Issued
               </p>
-                <p class="text-sm text-gray-900 mt-1">
+              <p class="text-sm text-gray-900 mt-1">
                 {{ new Date(record.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) }}
-                </p>
+              </p>
             </div>
             <div>
               <p
@@ -704,14 +711,16 @@ onMounted(async () => {
                     >
                     <div class="mt-1 text-xs text-gray-500 space-y-0.5">
                       <p>
-                      Collected: {{ item.deducted_quantity }}
+                        Collected: {{ item.deducted_quantity }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                       </p>
                       <p v-if="item.quantity_during_purchase !== null">
-                      Initial Qty: {{ item.quantity_during_purchase }}
+                        Initial Qty: {{ item.quantity_during_purchase }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                       </p>
-                      <p v-if="item.remaining_quantity_during_purchase !== null">
+                      <p
+                        v-if="item.remaining_quantity_during_purchase !== null"
+                      >
                         Remaining:
                         {{ item.remaining_quantity_during_purchase }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
@@ -727,15 +736,15 @@ onMounted(async () => {
                     {{ item.deducted_quantity }}
                     {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                   </td>
-                  <td
+                    <td
                     class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap"
-                  >
-                    ₱{{ Number(item.price_per_unit_during_purchase).toFixed(2) }}
-                  </td>
+                    >
+                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.price_per_unit_during_purchase) }}
+                    </td>
                   <td
                     class="px-4 py-4 text-sm text-gray-900 font-semibold text-right align-top whitespace-nowrap"
                   >
-                    ₱{{ Number(item.total_cost).toFixed(2) }}
+                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost) }}
                   </td>
                 </tr>
                 <tr v-if="recordItems.length === 0">
@@ -793,13 +802,13 @@ onMounted(async () => {
                 <div>
                   <p class="text-xs font-medium text-gray-500">Price/Unit</p>
                   <p class="text-gray-800">
-                    ₱{{ Number(item.price_per_unit_during_purchase).toFixed(2) }}
+                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.price_per_unit_during_purchase) }}
                   </p>
                 </div>
                 <div>
                   <p class="text-xs font-medium text-gray-500">Total Amount</p>
                   <p class="font-semibold text-gray-900">
-                    ₱{{ Number(item.total_cost).toFixed(2) }}
+                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost) }}
                   </p>
                 </div>
               </div>
@@ -821,7 +830,7 @@ onMounted(async () => {
                 <div class="flex justify-between items-center">
                   <dt class="text-gray-600">Total Amount</dt>
                   <dd class="text-lg font-semibold text-gray-900">
-                    ₱{{ calculateTotalCost().toFixed(2) }}
+                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(calculateTotalCost()) }}
                   </dd>
                 </div>
                 <div
@@ -899,27 +908,38 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div v-else class="max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
+    <div
+      v-else
+      class="max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden animate-pulse"
+    >
       <!-- Content Skeleton -->
       <div class="px-6 py-6">
         <!-- User Details Skeleton -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-8">
           <div>
-            <h3 class="text-sm font-medium text-gray-300 bg-gray-200 w-24 h-5 rounded mb-1"></h3>
+            <h3
+              class="text-sm font-medium text-gray-300 bg-gray-200 w-24 h-5 rounded mb-1"
+            ></h3>
             <div class="text-sm bg-gray-200 w-48 h-5 rounded"></div>
           </div>
           <div>
-            <h3 class="text-sm font-medium text-gray-300 bg-gray-200 w-32 h-5 rounded mb-1"></h3>
+            <h3
+              class="text-sm font-medium text-gray-300 bg-gray-200 w-32 h-5 rounded mb-1"
+            ></h3>
             <div class="text-sm bg-gray-200 w-48 h-5 rounded"></div>
           </div>
         </div>
 
         <!-- Collection Details Skeleton -->
         <div class="mb-8">
-          <h3 class="text-sm font-medium text-gray-300 bg-gray-200 w-32 h-5 rounded mb-3"></h3>
-          
+          <h3
+            class="text-sm font-medium text-gray-300 bg-gray-200 w-32 h-5 rounded mb-3"
+          ></h3>
+
           <!-- Desktop Table Skeleton -->
-          <div class="hidden sm:block border border-gray-200 rounded-lg overflow-hidden">
+          <div
+            class="hidden sm:block border border-gray-200 rounded-lg overflow-hidden"
+          >
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
@@ -971,7 +991,11 @@ onMounted(async () => {
 
           <!-- Mobile Cards Skeleton -->
           <div class="sm:hidden space-y-4">
-            <div v-for="n in 3" :key="n" class="bg-white border border-gray-200 rounded-lg p-4">
+            <div
+              v-for="n in 3"
+              :key="n"
+              class="bg-white border border-gray-200 rounded-lg p-4"
+            >
               <div class="mb-3 pb-3 border-b border-gray-200">
                 <div class="h-5 bg-gray-200 rounded w-40 mb-1"></div>
                 <div class="h-4 bg-gray-200 rounded w-32"></div>
@@ -1015,11 +1039,15 @@ onMounted(async () => {
                   <div class="h-4 bg-gray-200 rounded w-24"></div>
                   <div class="h-6 bg-gray-200 rounded w-32"></div>
                 </div>
-                <div class="flex justify-between items-center border-t border-gray-200 pt-3">
+                <div
+                  class="flex justify-between items-center border-t border-gray-200 pt-3"
+                >
                   <div class="h-4 bg-gray-200 rounded w-24"></div>
                   <div class="h-5 bg-gray-200 rounded-full w-16"></div>
                 </div>
-                <div class="flex justify-between items-center border-t border-gray-200 pt-3">
+                <div
+                  class="flex justify-between items-center border-t border-gray-200 pt-3"
+                >
                   <div class="h-4 bg-gray-200 rounded w-28"></div>
                   <div class="h-5 bg-gray-200 rounded w-40"></div>
                 </div>

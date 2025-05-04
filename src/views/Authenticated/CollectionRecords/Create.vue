@@ -570,7 +570,7 @@ onMounted(() => {
               {{ request.id }}
               </option>
             </select>
-            <p v-if="collectionRequests.length === 0" class="text-sm text-gray-500 mt-2">
+            <p v-if="collectionRequests.length === 0" class="text-sm text-orange-400 mt-2">
               You cannot record a forest product collection because a request number is required, and there are no approved and unrecorded collection requests available.
             </p>
             </div>

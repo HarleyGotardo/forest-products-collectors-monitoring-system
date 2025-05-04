@@ -538,9 +538,10 @@ watch(selectedType, () => {
           {{ product.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
         </td>
         <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200">
-           <span v-if="product.price_based_on_measurement_unit && product.price_based_on_measurement_unit > 0">
-             ₱{{ product.price_based_on_measurement_unit }} <span class="text-gray-500 text-xs">per {{ product.unit_name }}</span>
-           </span>
+             <span v-if="product.price_based_on_measurement_unit && product.price_based_on_measurement_unit > 0">
+             {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(product.price_based_on_measurement_unit) }} 
+             <span class="text-gray-500 text-xs">per {{ product.unit_name }}</span>
+             </span>
            <span v-else class="text-green-600 font-semibold">Free</span>
         </td>
 

@@ -22,7 +22,7 @@ import {
 const router = useRouter()
 const totalCollectors = ref(0)
 const mostCollectedProduct = ref('')
-const totalRoutes = ref(0)
+const totalLocations = ref(0)
 const totalProducts = ref(0)
 const forestProductsData = ref([])
 const currentPage = ref(1)
@@ -158,12 +158,12 @@ const fetchDashboardData = async () => {
 
     // Fetch total collection routes
     const { data: routes, error: routesError } = await supabase
-      .from('collection_records')
+      .from('locations')
       .select('id', { count: 'exact' })
       .is('deleted_at', null)
 
     if (routesError) throw routesError
-    totalRoutes.value = routes.length
+    totalLocations.value = routes.length
 
     // Fetch total forest products
     const { data: products, error: productsError } = await supabase
@@ -884,10 +884,10 @@ onMounted(() => {
           <div class="flex items-center justify-between">
             <div class="flex-1">
               <p class="text-sm font-medium text-gray-500 mb-1">
-                Total Records
+                Registered Locations
               </p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">
-                {{ totalRoutes }}
+                {{ totalLocations }}
               </p>
             </div>
             <div class="p-3 bg-purple-100 rounded-lg">

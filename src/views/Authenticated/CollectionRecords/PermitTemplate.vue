@@ -86,7 +86,7 @@
       </div>
 
       <div class="my-2 py-3 border-t border-b border-gray-300">
-      <p class="m-0">Forest Charges Paid: <span class="font-bold">₱{{ permitData.chargesPaid }}</span></p>
+      <p class="m-0">Forest Charges Paid: <span class="font-bold">{{ permitData.chargesPaid }}</span></p>
       </div>
     </div>
 

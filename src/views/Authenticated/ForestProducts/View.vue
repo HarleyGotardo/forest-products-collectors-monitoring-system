@@ -1490,27 +1490,27 @@ watch(() => locations.value, (newLocations) => {
                 </div>
                 <div>
                   <p
-                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                  class="text-xs font-medium text-gray-500 uppercase tracking-wide"
                   >
-                    Price
+                  Price
                   </p>
                   <p
-                    class="text-gray-900 font-semibold"
-                    :class="{
-                    'text-green-600': !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
+                  class="text-gray-900 font-semibold"
+                  :class="{
+                  'text-green-600': !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
                   }"
                   >
-                    {{
-                    !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
-                    ? 'Free'
-                    : `₱${forestProduct.price_based_on_measurement_unit.toLocaleString()}`
-                    }}
-                    <span
-                      v-if="forestProduct.price_based_on_measurement_unit && forestProduct.price_based_on_measurement_unit !== 0"
-                      class="text-sm font-normal text-gray-500"
-                    >
-                      per {{ forestProduct.measurement_units.unit_name }}
-                    </span>
+                  {{
+                  !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
+                  ? 'Free'
+                  : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(forestProduct.price_based_on_measurement_unit)
+                  }}
+                  <span
+                    v-if="forestProduct.price_based_on_measurement_unit && forestProduct.price_based_on_measurement_unit !== 0"
+                    class="text-sm font-normal text-gray-500"
+                  >
+                    per {{ forestProduct.measurement_units.unit_name }}
+                  </span>
                   </p>
                 </div>
               </div>

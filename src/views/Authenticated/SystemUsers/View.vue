@@ -748,7 +748,7 @@ onMounted(async () => {
                 </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-500">{{ record.formatted_created_at }}</span>
-                  <span class="font-medium text-gray-900">₱{{ record.total_cost.toFixed(2) }}</span>
+                  <span class="font-medium text-gray-900">{{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(record.total_cost) }}</span>
                 </div>
               </div>
             </div>
@@ -845,7 +845,7 @@ onMounted(async () => {
                   <td
                     class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
                   >
-                    ₱{{ record.total_cost.toFixed(2) }}
+                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(record.total_cost) }}
                   </td>
                   <td
                     class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
@@ -998,7 +998,7 @@ onMounted(async () => {
                 </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-500">{{ record.formatted_created_at }}</span>
-                  <span class="font-medium text-gray-900">₱{{ record.total_cost }}</span>
+                  <span class="font-medium text-gray-900">{{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(record.total_cost) }}</span>
                 </div>
               </div>
             </div>
@@ -1087,7 +1087,7 @@ onMounted(async () => {
                     {{ record.formatted_created_at }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ₱{{ record.total_cost.toFixed(2) }}
+                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(record.total_cost) }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {{ record.created_by_name }}
@@ -1236,7 +1236,7 @@ onMounted(async () => {
                 </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-500">{{ record.formatted_created_at }}</span>
-                  <span class="font-medium text-gray-900">₱{{ record.total_cost.toFixed(2) }}</span>
+                  <span class="font-medium text-gray-900">{{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(record.total_cost) }}</span>
                 </div>
               </div>
             </div>
@@ -1325,7 +1325,7 @@ onMounted(async () => {
                     {{ record.formatted_created_at }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ₱{{ record.total_cost.toFixed(2) }}
+                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(record.total_cost) }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {{ record.user }}
