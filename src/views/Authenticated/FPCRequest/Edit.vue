@@ -27,52 +27,141 @@ const showModal = ref(false);
 const showConfirmDialog = ref(false);
 const searchQuery = ref('');
 const error = ref(null);
+const selectAll = ref(false);
+const showNotes = ref(true);
 
 const fetchForestProducts = async () => {
-  const { data, error } = await supabase
-    .from('fp_and_locations')
-    .select(`
-      id,
-      forest_product_id,
-      location_id,
-      quantity,
-      forest_products!inner (
+  try {
+    const { data, error } = await supabase
+      .from('fp_and_locations')
+      .select(`
         id,
-        name,
-        price_based_on_measurement_unit,
-        measurement_unit_id,
-        measurement_units (unit_name),
-        deleted_at
-      ),
-      locations!inner (
-        id,
-        name,
-        deleted_at
-      )
-    `)
-    .is('forest_products.deleted_at', null)  // Only get non-deleted forest products
-    .is('locations.deleted_at', null);       // Only get non-deleted locations
+        forest_product_id,
+        location_id,
+        quantity,
+        forest_products!inner (
+          id,
+          name,
+          price_based_on_measurement_unit,
+          measurement_unit_id,
+          measurement_units (unit_name),
+          deleted_at
+        ),
+        locations!inner (
+          id,
+          name,
+          deleted_at
+        )
+      `)
+      .is('forest_products.deleted_at', null)
+      .is('locations.deleted_at', null);
 
-  if (error) {
-    console.error('Error fetching forest products:', error);
-    toast.error('Failed to load forest products');
-  } else {
-    forestProducts.value = data.map(item => ({
-      id: item.id,
-      forest_product_id: item.forest_product_id,
-      forest_product_name: item.forest_products.name,
-      location_id: item.location_id,
-      location_name: item.locations.name,
-      price: item.forest_products.price_based_on_measurement_unit,
-      unit_name: item.forest_products.measurement_units.unit_name,
-      quantity: item.quantity,
-      requested_quantity: 0,
-      quantityError: false
-    }));
+    if (error) {
+      console.error('Error fetching forest products:', error);
+      throw error;
+    }
+
+    const { data: approvedRequests, error: approvedRequestsError } = await supabase
+      .from('collection_requests')
+      .select(`
+        id,
+        is_recorded,
+        remarks,
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id
+        ),
+        collection_records (
+          id,
+          is_paid
+        )
+      `)
+      .is('deleted_at', null)
+      .eq('remarks', 'Approved')
+      .eq('is_recorded', false);
+
+    if (approvedRequestsError) {
+      console.error('Error fetching approved requests:', approvedRequestsError);
+      throw approvedRequestsError;
+    }
+
+    const { data: unapprovedRequests, error: unapprovedRequestsError } = await supabase
+      .from('collection_requests')
+      .select(`
+        id,
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id
+        )
+      `)
+      .is('deleted_at', null)
+      .eq('remarks', 'Pending');
+
+    if (unapprovedRequestsError) {
+      console.error('Error fetching unapproved requests:', unapprovedRequestsError);
+      throw unapprovedRequestsError;
+    }
+
+    const approvedQuantities = {};
+    const unapprovedQuantities = {};
+
+    approvedRequests.forEach(request => {
+      const hasPaidRecord = request.collection_records && 
+                          request.collection_records.some(record => record.is_paid === true);
+      
+      if (!request.is_recorded && !hasPaidRecord) {
+        request.collection_request_items.forEach(item => {
+          const fpLocationId = item.fp_and_location_id;
+          if (!approvedQuantities[fpLocationId]) {
+            approvedQuantities[fpLocationId] = 0;
+          }
+          approvedQuantities[fpLocationId] += item.requested_quantity;
+        });
+      }
+    });
+
+    unapprovedRequests.forEach(request => {
+      request.collection_request_items.forEach(item => {
+        const fpLocationId = item.fp_and_location_id;
+        if (!unapprovedQuantities[fpLocationId]) {
+          unapprovedQuantities[fpLocationId] = 0;
+        }
+        unapprovedQuantities[fpLocationId] += item.requested_quantity;
+      });
+    });
+
+    forestProducts.value = data.map(item => {
+      const approvedAmount = approvedQuantities[item.id] || 0;
+      const unapprovedAmount = unapprovedQuantities[item.id] || 0;
+      const totalReserved = approvedAmount + unapprovedAmount;
+      const adjustedQuantity = Math.max(0, item.quantity - totalReserved);
+      
+      return {
+        id: item.id,
+        forest_product_id: item.forest_product_id,
+        forest_product_name: item.forest_products.name,
+        location_id: item.location_id,
+        location_name: item.locations.name,
+        price: item.forest_products.price_based_on_measurement_unit,
+        unit_name: item.forest_products.measurement_units.unit_name,
+        quantity: item.quantity,
+        adjustedQuantity: adjustedQuantity,
+        approvedQuantity: approvedAmount,
+        unapprovedQuantity: unapprovedAmount,
+        hasRequests: totalReserved > 0,
+        requested_quantity: 0,
+        quantityError: false
+      };
+    });
+
     filteredForestProducts.value = forestProducts.value;
 
-    // Now fetch the request details after products are loaded
     fetchRequestDetails();
+  } catch (error) {
+    console.error('Error in fetchForestProducts:', error);
+    toast.error('Failed to load forest products');
   }
 };
 
@@ -88,10 +177,8 @@ const fetchRequestDetails = async () => {
       throw requestError;
     }
 
-    // Format the date to YYYY-MM-DD
     const formattedDate = new Date(requestData.collection_date).toISOString().split('T')[0];
 
-    // Validate that the date is not in the past before setting it
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -99,7 +186,6 @@ const fetchRequestDetails = async () => {
     requestDate.setHours(0, 0, 0, 0);
 
     if (requestDate < today) {
-      // If the existing date is in the past, set it to today
       collectionDate.value = new Date().toISOString().split('T')[0];
       initialCollectionDate.value = collectionDate.value;
       toast.warning('The original collection date was in the past and has been updated to today.');
@@ -117,7 +203,6 @@ const fetchRequestDetails = async () => {
       throw itemsError;
     }
 
-    // Map selected products based on the items from the request
     selectedForestProducts.value = itemsData.map(item => {
       const productMatch = forestProducts.value.find(p => p.id === item.fp_and_location_id);
 
@@ -137,7 +222,7 @@ const fetchRequestDetails = async () => {
     toast.error('Error loading request details: ' + err.message);
   }
 };
-// Add this watch effect at the top with your other watchers
+
 watch(collectionDate, (newDate) => {
   if (newDate && !isCollectionDateValid.value) {
     toast.error('Past dates are not allowed. Please select today or a future date.');
@@ -149,14 +234,21 @@ watch(searchQuery, (newQuery) => {
     product.forest_product_name.toLowerCase().includes(newQuery.toLowerCase()) ||
     product.location_name.toLowerCase().includes(newQuery.toLowerCase())
   );
+  
+  // Update select all state
+  const filteredIds = new Set(filteredForestProducts.value.map(p => p.id));
+  const selectedInFilter = selectedForestProducts.value.filter(p => filteredIds.has(p.id));
+  
+  selectAll.value = filteredForestProducts.value.length > 0 && 
+                   selectedInFilter.length === filteredForestProducts.value.length;
 });
-// Add a watch effect for the collectionDate
+
 watch(collectionDate, (newDate) => {
   if (newDate && !isCollectionDateValid.value) {
     toast.error('Past dates are not allowed. Please select today or a future date.');
   }
 });
-// Add validation function to check quantity
+
 const validateProductQuantity = (product) => {
   if (product.requested_quantity > product.quantity) {
     product.quantityError = true;
@@ -170,7 +262,6 @@ const validateProductQuantity = (product) => {
   }
 };
 
-// Watch changes to requested quantities and validate them
 watch(() => [...selectedForestProducts.value], (products) => {
   products.forEach(product => {
     validateProductQuantity(product);
@@ -197,7 +288,6 @@ const isFormComplete = computed(() => {
   );
 });
 
-// First, let's ensure isCollectionDateValid is working correctly
 const isCollectionDateValid = computed(() => {
   if (!collectionDate.value) return false;
 
@@ -210,10 +300,7 @@ const isCollectionDateValid = computed(() => {
   return selectedDate.getTime() >= today.getTime();
 });
 
-// Next, ensure the submit button properly respects this validation
-
 const hasChanges = computed(() => {
-  // Check if the collection date has changed
   const currentDate = collectionDate.value?.split('T')[0];
   const initialDate = initialCollectionDate.value?.split('T')[0];
 
@@ -221,12 +308,10 @@ const hasChanges = computed(() => {
     return true;
   }
 
-  // Check if the selected forest products have changed
   if (selectedForestProducts.value.length !== initialSelectedForestProducts.value.length) {
     return true;
   }
 
-  // Check if any selected product has changed quantity
   for (const product of selectedForestProducts.value) {
     const initialProduct = initialSelectedForestProducts.value.find(p => p.id === product.id);
     if (!initialProduct || product.requested_quantity !== initialProduct.requested_quantity) {
@@ -236,19 +321,19 @@ const hasChanges = computed(() => {
 
   return false;
 });
+
 watch(collectionDate, (newDate) => {
   if (newDate && !isCollectionDateValid.value) {
     toast.error('Past dates are not allowed. Please select today or a future date.');
   }
 });
+
 const handleSubmit = () => {
-  // Check for valid date first
   if (!isCollectionDateValid.value) {
     toast.error('Collection date cannot be in the past');
     return;
   }
 
-  // Validate all quantities
   selectedForestProducts.value.forEach(product => {
     validateProductQuantity(product);
   });
@@ -272,7 +357,6 @@ const handleSubmit = () => {
 };
 
 const confirmSubmit = async () => {
-  // Update the collection request
   const collectionRequest = {
     collection_date: collectionDate.value,
   };
@@ -288,7 +372,6 @@ const confirmSubmit = async () => {
     return;
   }
 
-  // Delete existing items
   const { error: deleteItemsError } = await supabase
     .from('collection_request_items')
     .delete()
@@ -300,7 +383,6 @@ const confirmSubmit = async () => {
     return;
   }
 
-  // Insert new items
   const { error: itemsError } = await supabase
     .from('collection_request_items')
     .insert(
@@ -321,12 +403,10 @@ const confirmSubmit = async () => {
   router.push('/authenticated/collection-requests');
 };
 
-// Helper function to check if a product is selected
 const isProductSelected = (productId) => {
   return selectedForestProducts.value.some(p => p.id === productId);
 };
 
-// Helper function to toggle product selection
 const toggleProductSelection = (product) => {
   const index = selectedForestProducts.value.findIndex(p => p.id === product.id);
   if (index === -1) {
@@ -348,12 +428,48 @@ const validateDate = () => {
     selectedDate.setHours(0, 0, 0, 0);
 
     if (selectedDate < today) {
-      // Reset to today's date if a past date was somehow selected
       collectionDate.value = new Date().toISOString().split('T')[0];
       toast.error('Past dates are not allowed. Date has been reset to today.');
     }
   }
 };
+
+const toggleSelectAll = () => {
+  const filteredIds = new Set(filteredForestProducts.value.map(p => p.id));
+  
+  if (selectAll.value) {
+    // Add all filtered products that aren't already selected
+    const newProducts = filteredForestProducts.value.filter(
+      product => !selectedForestProducts.value.some(p => p.id === product.id)
+    );
+    selectedForestProducts.value = [...selectedForestProducts.value, ...newProducts];
+  } else {
+    // Remove only filtered products from selection
+    selectedForestProducts.value = selectedForestProducts.value.filter(
+      product => !filteredIds.has(product.id)
+    );
+  }
+};
+
+watch(selectedForestProducts, (newValue) => {
+  const filteredIds = new Set(filteredForestProducts.value.map(p => p.id));
+  const selectedInFilter = newValue.filter(p => filteredIds.has(p.id));
+  
+  selectAll.value = filteredForestProducts.value.length > 0 && 
+                   selectedInFilter.length === filteredForestProducts.value.length;
+}, { deep: true });
+
+watch(filteredForestProducts, (newFiltered) => {
+  const filteredIds = new Set(newFiltered.map(p => p.id));
+  const selectedInFilter = selectedForestProducts.value.filter(p => filteredIds.has(p.id));
+  
+  selectAll.value = newFiltered.length > 0 && 
+                   selectedInFilter.length === newFiltered.length;
+}, { deep: true });
+
+const unapprovedRequests = computed(() => {
+  return forestProducts.value.filter(product => product.hasRequests);
+});
 
 onMounted(() => {
   fetchForestProducts();
@@ -363,7 +479,6 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
     <div class="max-w-lg w-full bg-white rounded-xl shadow-lg overflow-hidden">
-      <!-- Header -->
       <div class="bg-gray-200 px-6 py-5 text-black flex items-center space-x-4">
         <img
           src="@/assets/request2.png"
@@ -378,9 +493,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Form -->
       <form @submit.prevent="handleSubmit" class="p-6 space-y-6">
-        <!-- Forest Products Selection -->
         <div>
           <label
             for="forestProducts"
@@ -410,7 +523,6 @@ onMounted(() => {
           </button>
         </div>
 
-        <!-- Selected Products Summary -->
         <div v-if="selectedForestProducts.length > 0" class="space-y-2">
           <label class="block text-sm font-medium text-gray-700"
             >Selected Products ({{ selectedForestProducts.length }})</label
@@ -432,14 +544,12 @@ onMounted(() => {
                   {{ product.unit_name }}(s)</span
                 >
               </div>
-              <!-- Error message for quantity validation -->
               <div
                 v-if="product.quantityError"
                 class="text-red-500 text-xs mt-1"
               >
                 Requested quantity exceeds available amount
               </div>
-              <!-- Error message for 0 quantity validation -->
               <div
                 v-if="product.requested_quantity === 0"
                 class="text-red-500 text-xs mt-1"
@@ -448,14 +558,12 @@ onMounted(() => {
               </div>
             </div>
           </div>
-          <!-- Display warning if there are any quantity errors -->
           <div
             v-if="hasQuantityErrors"
             class="text-red-500 text-sm font-medium"
           >
             Please correct the requested quantities before submitting
           </div>
-          <!-- Display warning if no quantity is entered for selected products -->
           <div
             v-if="!selectedForestProducts.some(p => p.requested_quantity > 0)"
             class="text-yellow-500 text-sm font-medium"
@@ -464,7 +572,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Collection Date Input -->
         <div>
           <label
             for="collectionDate"
@@ -487,7 +594,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Submit Button -->
         <button
           type="submit"
           :disabled="!isFormComplete || !hasChanges || !isCollectionDateValid"
@@ -513,7 +619,6 @@ onMounted(() => {
       </form>
     </div>
 
-    <!-- Forest Product Modal -->
     <div
       v-if="showModal"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
@@ -570,65 +675,83 @@ onMounted(() => {
           </div>
         </div>
         <div class="p-4 overflow-y-auto flex-1">
-          <div
-            v-if="filteredForestProducts.length === 0"
-            class="text-center py-8 text-gray-500"
-          >
+          <div v-if="filteredForestProducts.length === 0" class="text-center py-8 text-gray-500">
             No forest products found matching your search
           </div>
           <div v-else class="space-y-3">
-            <div
-              v-for="product in filteredForestProducts"
-              :key="product.id"
-              class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100"
-            >
+            <!-- Requests Warning -->
+            <div v-if="unapprovedRequests.length > 0" class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-lg mb-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-amber-700">
+                    <span class="font-medium">Requests Status:</span> Some forest products have approved and pending requests. Please check the snapshot availability before requesting.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add Select All checkbox -->
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
               <input
                 type="checkbox"
-                :id="'product-' + product.id"
-                :checked="isProductSelected(product.id)"
-                @change="toggleProductSelection(product)"
+                v-model="selectAll"
+                @change="toggleSelectAll"
+                class="form-checkbox h-5 w-5 text-green-600 rounded"
+              />
+              <div class="font-medium text-gray-700">Select All Forest Products</div>
+            </div>
+            
+            <div v-for="product in filteredForestProducts" :key="product.id" 
+                 class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
+              <input
+                type="checkbox"
+                :value="product"
+                v-model="selectedForestProducts"
                 class="form-checkbox h-5 w-5 text-green-600 rounded"
               />
               <div class="flex-1">
                 <div class="font-medium">{{ product.forest_product_name }}</div>
                 <div class="text-sm text-gray-500">
-                  Location: {{ product.location_name }} | Price: ₱{{ product.price }}
-                  per {{ product.unit_name }} | Available:
-                  {{ product.quantity }} {{ product.unit_name }}(s)
+                  Location: {{ product.location_name }} | 
+                  Price: ₱{{ product.price }} per {{ product.unit_name }} | 
+                  <span class="text-blue-600">
+                    Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                  </span>
+                  <span v-if="product.hasRequests" class="text-amber-600">
+                    (Approved: {{ product.approvedQuantity }}, Pending: {{ product.unapprovedQuantity }})
+                  </span>
+                  <div class="mt-1 text-sm">
+                    <span class="font-medium text-green-600">
+                      Available for Request: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div v-if="isProductSelected(product.id)" class="flex flex-col">
+              <div v-if="selectedForestProducts.some(p => p.id === product.id)" class="flex flex-col">
                 <div class="flex items-center space-x-2">
                   <label class="text-sm text-gray-600">Quantity:</label>
                   <input
-                    type="number"
-                    v-model="selectedForestProducts.find(p => p.id === product.id).requested_quantity"
-                    min="0"
-                    :max="product.quantity"
-                    placeholder="Qty"
-                    @input="validateProductQuantity(selectedForestProducts.find(p => p.id === product.id))"
-                    :class="[
-                      'w-24 text-center border rounded p-1',
-                      selectedForestProducts.find(p => p.id === product.id).quantityError || 
-                      selectedForestProducts.find(p => p.id === product.id).requested_quantity === 0 
-                        ? 'border-red-500 bg-red-50' 
-                        : 'border-gray-300'
-                    ]"
+                  type="number"
+                  v-model="product.requested_quantity"
+                  min="0"
+                  :max="product.adjustedQuantity"
+                  placeholder="Qty"
+                  @input="validateProductQuantity(product)"
+                  :class="['w-24 text-center border rounded p-1', product.quantityError || product.requested_quantity === 0 ? 'border-red-500 bg-red-50' : 'border-gray-300']"
                   />
                 </div>
                 <!-- Warning for zero quantity -->
-                <div
-                  v-if="selectedForestProducts.find(p => p.id === product.id).requested_quantity === 0"
-                  class="text-red-500 text-xs mt-1 text-right"
-                >
+                <div v-if="product.requested_quantity === 0" class="text-red-500 text-xs mt-1 text-right">
                   Please enter a valid quantity.
                 </div>
                 <!-- Inline error message -->
-                <div
-                  v-if="selectedForestProducts.find(p => p.id === product.id).quantityError"
-                  class="text-red-500 text-xs mt-1 text-right"
-                >
-                  Max: {{ product.quantity }}
+                <div v-if="product.quantityError" class="text-red-500 text-xs mt-1 text-right">
+                  Max: {{ product.adjustedQuantity }}
                 </div>
               </div>
             </div>
@@ -645,45 +768,33 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Confirmation Dialog -->
     <AlertDialog :open="showConfirmDialog">
-      <AlertDialogContent class="rounded-lg shadow-lg border border-gray-200">
-        <AlertDialogHeader
-          class="bg-gray-900 text-white px-6 py-4 rounded-t-lg"
-        >
-          <AlertDialogTitle class="text-lg font-bold"
-            >Confirm Collection Request Update</AlertDialogTitle
-          >
+      <AlertDialogContent class="rounded-lg shadow-lg border border-gray-200 max-h-[80vh] flex flex-col">
+        <AlertDialogHeader class="bg-gray-900 text-white px-6 py-4 rounded-t-lg">
+          <AlertDialogTitle class="text-lg font-bold">Confirm Collection Request Update</AlertDialogTitle>
         </AlertDialogHeader>
-        <AlertDialogDescription class="px-6 py-4 bg-gray-50">
+        <AlertDialogDescription class="px-6 py-4 bg-gray-50 flex-1 overflow-y-auto">
           <p class="text-sm text-gray-700 mb-4">
-            Please review your changes to this collection request before
-            submitting:
+            Please review your changes to this collection request before submitting:
           </p>
-          <ul
-            class="text-sm text-gray-700 space-y-2 bg-white p-4 rounded-lg shadow-inner border border-gray-200"
-          >
-            <li
-              v-for="product in selectedForestProducts.filter(p => p.requested_quantity > 0)"
-              :key="product.id"
-              class="flex justify-between"
-            >
-              <span
-                ><strong>{{ product.forest_product_name }}</strong>
-                ({{ product.location_name }})</span
-              >
-              <span
-                >{{ product.requested_quantity }} {{ product.unit_name }}</span
-              >
-            </li>
-          </ul>
-          <p class="text-sm text-gray-700 mt-4">
-            <strong>Collection Date:</strong> {{ collectionDate }}
-          </p>
+          <div class="bg-white p-4 rounded-lg shadow-inner border border-gray-200 max-h-[40vh] overflow-y-auto">
+            <ul class="text-sm text-gray-700 space-y-2">
+              <li v-for="product in selectedForestProducts.filter(p => p.requested_quantity > 0)" :key="product.id" class="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                <span class="font-medium">{{ product.forest_product_name }}</span>
+                <div class="text-right">
+                  <div class="text-gray-500 text-xs">{{ product.location_name }}</div>
+                  <div>{{ product.requested_quantity }} {{ product.unit_name }}</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 bg-white p-4 rounded-lg border border-gray-200">
+            <p class="text-sm text-gray-700">
+              <span class="font-medium">Collection Date:</span> {{ collectionDate }}
+            </p>
+          </div>
         </AlertDialogDescription>
-        <AlertDialogFooter
-          class="bg-gray-100 px-6 py-4 flex justify-end space-x-3 rounded-b-lg"
-        >
+        <AlertDialogFooter class="bg-gray-100 px-6 py-4 flex justify-end space-x-3 rounded-b-lg border-t border-gray-200">
           <AlertDialogCancel
             @click="showConfirmDialog = false"
             class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -734,3 +845,4 @@ onMounted(() => {
   background-repeat: no-repeat;
 }
 </style>
+

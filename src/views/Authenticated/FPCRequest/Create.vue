@@ -53,15 +53,15 @@ const fetchForestProducts = async () => {
           deleted_at
         )
       `)
-      .is('forest_products.deleted_at', null)  // Only get non-deleted forest products
-      .is('locations.deleted_at', null);       // Only get non-deleted locations
+      .is('forest_products.deleted_at', null)
+      .is('locations.deleted_at', null);
       
     if (error) {
       console.error('Error fetching forest products:', error);
       throw error;
     }
     
-    // Then, get approved but unrecorded collection requests
+    // Get approved but unrecorded collection requests
     const { data: approvedRequests, error: approvedRequestsError } = await supabase
       .from('collection_requests')
       .select(`
@@ -86,32 +86,63 @@ const fetchForestProducts = async () => {
       console.error('Error fetching approved requests:', approvedRequestsError);
       throw approvedRequestsError;
     }
+
+    // Get unapproved collection requests
+    const { data: unapprovedRequests, error: unapprovedRequestsError } = await supabase
+      .from('collection_requests')
+      .select(`
+        id,
+        collection_request_items (
+          id,
+          requested_quantity,
+          fp_and_location_id
+        )
+      `)
+      .is('deleted_at', null)
+      .eq('remarks', 'Pending');
+      
+    if (unapprovedRequestsError) {
+      console.error('Error fetching unapproved requests:', unapprovedRequestsError);
+      throw unapprovedRequestsError;
+    }
     
-    // Calculate pending quantities for each forest product location
-    const pendingQuantities = {};
+    // Calculate approved and unapproved quantities for each forest product location
+    const approvedQuantities = {};
+    const unapprovedQuantities = {};
     
-    // Process each approved request
+    // Process approved requests
     approvedRequests.forEach(request => {
-      // Check if there's a related collection record that is paid
       const hasPaidRecord = request.collection_records && 
                           request.collection_records.some(record => record.is_paid === true);
       
-      // Only consider this request as pending if it's not recorded AND doesn't have a paid record
       if (!request.is_recorded && !hasPaidRecord) {
         request.collection_request_items.forEach(item => {
           const fpLocationId = item.fp_and_location_id;
-          if (!pendingQuantities[fpLocationId]) {
-            pendingQuantities[fpLocationId] = 0;
+          if (!approvedQuantities[fpLocationId]) {
+            approvedQuantities[fpLocationId] = 0;
           }
-          pendingQuantities[fpLocationId] += item.requested_quantity;
+          approvedQuantities[fpLocationId] += item.requested_quantity;
         });
       }
+    });
+
+    // Process unapproved requests
+    unapprovedRequests.forEach(request => {
+      request.collection_request_items.forEach(item => {
+        const fpLocationId = item.fp_and_location_id;
+        if (!unapprovedQuantities[fpLocationId]) {
+          unapprovedQuantities[fpLocationId] = 0;
+        }
+        unapprovedQuantities[fpLocationId] += item.requested_quantity;
+      });
     });
     
     // Map the products with adjusted quantities
     forestProducts.value = data.map(item => {
-      const pendingAmount = pendingQuantities[item.id] || 0;
-      const adjustedQuantity = Math.max(0, item.quantity - pendingAmount);
+      const approvedAmount = approvedQuantities[item.id] || 0;
+      const unapprovedAmount = unapprovedQuantities[item.id] || 0;
+      const totalReserved = approvedAmount + unapprovedAmount;
+      const adjustedQuantity = Math.max(0, item.quantity - totalReserved);
       
       return {
         id: item.id,
@@ -123,8 +154,9 @@ const fetchForestProducts = async () => {
         unit_name: item.forest_products.measurement_units.unit_name,
         quantity: item.quantity,
         adjustedQuantity: adjustedQuantity,
-        pendingQuantity: pendingAmount,
-        hasPendingRequests: pendingAmount > 0,
+        approvedQuantity: approvedAmount,
+        unapprovedQuantity: unapprovedAmount,
+        hasRequests: totalReserved > 0,
         requested_quantity: 0,
         quantityError: false
       };
@@ -153,36 +185,56 @@ const validateProductQuantity = (product) => {
   }
 };
 
-// Add this new function for select all functionality
+// Update the toggleSelectAll function
 const toggleSelectAll = () => {
+  const filteredIds = new Set(filteredForestProducts.value.map(p => p.id));
+  
   if (selectAll.value) {
-    // Select all filtered products
-    selectedForestProducts.value = [...filteredForestProducts.value];
+    // Add all filtered products that aren't already selected
+    const newProducts = filteredForestProducts.value.filter(
+      product => !selectedForestProducts.value.some(p => p.id === product.id)
+    );
+    selectedForestProducts.value = [...selectedForestProducts.value, ...newProducts];
   } else {
-    // Deselect all products
-    selectedForestProducts.value = [];
+    // Remove only filtered products from selection
+    selectedForestProducts.value = selectedForestProducts.value.filter(
+      product => !filteredIds.has(product.id)
+    );
   }
 };
 
-// Add this watch to handle select all state changes
-watch(selectAll, (newValue) => {
-  toggleSelectAll();
-});
-
-// Add this watch to update select all checkbox state
+// Update the watch for selectedForestProducts
 watch(selectedForestProducts, (newValue) => {
-  selectAll.value = newValue.length === filteredForestProducts.value.length && filteredForestProducts.value.length > 0;
+  const filteredIds = new Set(filteredForestProducts.value.map(p => p.id));
+  const selectedInFilter = newValue.filter(p => filteredIds.has(p.id));
+  
+  selectAll.value = filteredForestProducts.value.length > 0 && 
+                   selectedInFilter.length === filteredForestProducts.value.length;
 }, { deep: true });
 
-// Update the watch for searchQuery to handle select all state
+// Update the watch for searchQuery
 watch(searchQuery, (newQuery) => {
   filteredForestProducts.value = forestProducts.value.filter(product =>
     product.forest_product_name.toLowerCase().includes(newQuery.toLowerCase()) ||
     product.location_name.toLowerCase().includes(newQuery.toLowerCase())
   );
-  // Reset select all when search changes
-  selectAll.value = false;
+  
+  // Update select all state
+  const filteredIds = new Set(filteredForestProducts.value.map(p => p.id));
+  const selectedInFilter = selectedForestProducts.value.filter(p => filteredIds.has(p.id));
+  
+  selectAll.value = filteredForestProducts.value.length > 0 && 
+                   selectedInFilter.length === filteredForestProducts.value.length;
 });
+
+// Update the watch for filteredForestProducts
+watch(filteredForestProducts, (newFiltered) => {
+  const filteredIds = new Set(newFiltered.map(p => p.id));
+  const selectedInFilter = selectedForestProducts.value.filter(p => filteredIds.has(p.id));
+  
+  selectAll.value = newFiltered.length > 0 && 
+                   selectedInFilter.length === newFiltered.length;
+}, { deep: true });
 
 // Watch changes to requested quantities and validate them
 watch(() => [...selectedForestProducts.value], (products) => {
@@ -305,6 +357,11 @@ const confirmSubmit = async () => {
   toast.success('Collection request created successfully');
   router.push('/authenticated/collection-requests');
 };
+
+// Add a new computed property to show unapproved requests
+const unapprovedRequests = computed(() => {
+  return forestProducts.value.filter(product => product.hasRequests);
+});
 
 onMounted(() => {
   fetchForestProducts();
@@ -430,7 +487,7 @@ onMounted(() => {
             </span>
             <span class="text-gray-500 text-xs">
               Available: {{ product.adjustedQuantity }} / {{ product.quantity }} {{ product.unit_name }}(s)
-              <span v-if="product.hasPendingRequests" class="text-amber-600">({{ product.pendingQuantity }} pending)</span>
+              <span v-if="product.hasRequests" class="text-amber-600">({{ product.approvedQuantity }} approved, {{ product.unapprovedQuantity }} pending)</span>
             </span>
           </div>
           <!-- Error message for quantity validation -->
@@ -511,11 +568,28 @@ onMounted(() => {
             No forest products found matching your search
           </div>
           <div v-else class="space-y-3">
+            <!-- Requests Warning -->
+            <div v-if="unapprovedRequests.length > 0" class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-lg mb-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-amber-700">
+                    <span class="font-medium">Requests Status:</span> Some forest products have approved and pending requests. Please check the snapshot availability before requesting.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <!-- Add Select All checkbox -->
             <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
               <input
                 type="checkbox"
                 v-model="selectAll"
+                @change="toggleSelectAll"
                 class="form-checkbox h-5 w-5 text-green-600 rounded"
               />
               <div class="font-medium text-gray-700">Select All Forest Products</div>
@@ -534,15 +608,17 @@ onMounted(() => {
                 <div class="text-sm text-gray-500">
                   Location: {{ product.location_name }} | 
                   Price: ₱{{ product.price }} per {{ product.unit_name }} | 
-                  <span v-if="product.hasPendingRequests" class="text-green-600">
-                  Snapshot: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
+                  <span class="text-blue-600">
+                    Available: {{ product.quantity }} {{ product.unit_name }}(s)
                   </span>
-                  <span v-else class="text-blue-600">
-                  Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                  <span v-if="product.hasRequests" class="text-amber-600">
+                    (Approved: {{ product.approvedQuantity }}, Pending: {{ product.unapprovedQuantity }})
                   </span>
-                  <span v-if="product.hasPendingRequests" class="text-amber-600">
-                  ({{ product.pendingQuantity }} pending)
-                  </span>
+                  <div class="mt-1 text-sm">
+                    <span class="font-medium text-green-600">
+                      Available for Request: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
+                    </span>
+                  </div>
                 </div>
               </div>
               <div v-if="selectedForestProducts.includes(product)" class="flex flex-col">
