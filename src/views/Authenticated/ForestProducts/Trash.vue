@@ -324,7 +324,6 @@ watch(selectedType, () => {
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">ID</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Name</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Type</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Locations</th>
               <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Action</th>
             </tr>
           </thead>
@@ -443,18 +442,6 @@ watch(selectedType, () => {
               </td>
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200">
                 {{ product.type === 'Timber' ? 'Timber' : 'Non-Timber' }}
-              </td>
-              <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap border-b border-gray-200">
-                <div class="flex flex-wrap gap-1">
-                  <span
-                    v-for="location in product.locations"
-                    :key="location?.id"
-                    class="bg-gray-100 px-2 py-1 rounded-full text-sm"
-                  >
-                    {{ location?.name }}
-                  </span>
-                  <span v-if="!product.locations || product.locations.length === 0" class="text-sm text-gray-400 italic">N/A</span>
-                </div>
               </td>
               <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right text-sm font-medium border-b border-gray-200" @click.stop>
                 <div class="flex items-center justify-end space-x-2">

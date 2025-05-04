@@ -38,6 +38,7 @@ const currentPage = ref(1)
 const itemsPerPage = 8
 const searchQuery = ref('')
 const selectedType = ref('') // New ref for selected type
+const showNotes = ref(true) // New ref for toggling notes visibility
 
 const createForestProduct = () => {
   router.push('/authenticated/forest-products/create')
@@ -236,6 +237,37 @@ watch(selectedType, () => {
       </div>
     </div>
 
+    <!-- Info Notes -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+      <button
+        @click="showNotes = !showNotes"
+        class="flex items-center text-sm text-gray-500 hover:text-gray-700"
+      >
+        <span>{{ showNotes ? 'Hide Notes' : 'Show Notes' }}</span>
+        <svg
+        class="w-4 h-4 ml-1 transform transition-transform"
+        :class="{ 'rotate-180': showNotes }"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      </div>
+
+      <div v-if="showNotes" class="space-y-4">
+      <!-- Note about deletion restrictions -->
+      <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+        <p class="text-sm text-blue-700">
+        You can't delete forest products if the forest products have records and request references.
+        </p>
+      </div>
+      </div>
+    </div>
+
     <!-- Error Alert -->
     <div v-if="error" 
          class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-r-lg">
@@ -382,7 +414,7 @@ watch(selectedType, () => {
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Name</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Type</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Price</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Locations</th>
+
         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600" v-if="isForestRanger || isFPUAdmin">Action</th>
       </tr>
     </thead>
@@ -511,18 +543,7 @@ watch(selectedType, () => {
            </span>
            <span v-else class="text-green-600 font-semibold">Free</span>
         </td>
-        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap border-b border-gray-200">
-           <div class="flex flex-wrap gap-1">
-             <span
-               v-for="location in product.locations"
-               :key="location?.id"
-               class="bg-gray-100 px-2 py-1 rounded-full text-sm"
-             >
-               {{ location?.name }}
-             </span>
-             <span v-if="!product.locations || product.locations.length === 0" class="text-sm text-gray-400 italic">N/A</span>
-           </div>
-        </td>
+
         <td v-if="isFPUAdmin || isForestRanger" class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right text-sm font-medium border-b border-gray-200" @click.stop>
            <div class="flex items-center justify-end space-x-2"> <Button
                class="bg-green-900 text-white hover:bg-green-600"

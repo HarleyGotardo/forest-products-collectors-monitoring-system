@@ -37,6 +37,7 @@ const searchQuery = ref('')
 const locationToDelete = ref(null)
 const loading = ref(true) // Add loading state
 const isAlertOpen = ref(false) // Add state to control alert dialog
+const showNotes = ref(true) // Add state to control notes visibility
 
 const fetchAllLocations = async () => {
   loading.value = true // Set loading to true when fetching data
@@ -215,6 +216,37 @@ watch(currentPage, () => {
         <Button class="bg-green-900 text-white hover:bg-green-600" v-if="isFPUAdmin || isForestRanger" @click="createLocation">
           +
         </Button>
+      </div>
+    </div>
+
+    <!-- Info Notes -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+      <button
+        @click="showNotes = !showNotes"
+        class="flex items-center text-sm text-gray-500 hover:text-gray-700"
+      >
+        <span>{{ showNotes ? 'Hide Notes' : 'Show Notes' }}</span>
+        <svg
+        class="w-4 h-4 ml-1 transform transition-transform"
+        :class="{ 'rotate-180': showNotes }"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      </div>
+
+      <div v-if="showNotes" class="space-y-4">
+      <!-- Note about deletion restrictions -->
+      <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+        <p class="text-sm text-blue-700">
+        You can't delete locations if the locations have associated collection records or requests.
+        </p>
+      </div>
       </div>
     </div>
 

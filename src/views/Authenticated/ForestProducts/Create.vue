@@ -704,89 +704,144 @@ onMounted(() => {
             </div>
           </header>
 
-          <!-- Location List -->
-          <div class="p-6">
+            <!-- Location List -->
+            <div class="p-6">
             <div class="max-h-96 overflow-y-auto">
               <div v-if="locations.length === 0" class="flex flex-col items-center justify-center py-8 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p class="text-lg font-medium">No Locations Available</p>
-                <p class="text-sm mt-1">There are no locations to select from.</p>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-lg font-medium">No Locations Available</p>
+              <p class="text-sm mt-1">There are no locations to select from.</p>
               </div>
               <div
-                v-else
-                v-for="location in locations"
-                :key="location.id"
-                class="flex items-center justify-between p-4 mb-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              v-else
+              v-for="location in locations"
+              :key="location.id"
+              class="p-4 mb-4 bg-gray-50 rounded-lg shadow-md hover:bg-gray-100 transition-colors"
               >
-                <!-- Checkbox and Label -->
-                <div class="flex items-center flex-1">
+              <!-- Mobile View -->
+              <div class="block sm:hidden">
+                <div class="flex flex-col space-y-2">
+                <!-- Location Name -->
+                <div class="flex items-center">
                   <input
-                    type="checkbox"
-                    :id="`location-${location.id}`"
-                    :value="location"
-                    v-model="selectedLocations"
-                    class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                  type="checkbox"
+                  :id="`location-mobile-${location.id}`"
+                  :value="location"
+                  v-model="selectedLocations"
+                  class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
                   />
                   <label
-                    :for="`location-${location.id}`"
-                    class="ml-3 cursor-pointer"
+                  :for="`location-mobile-${location.id}`"
+                  class="ml-3 cursor-pointer"
                   >
-                    <span
-                      class="font-medium text-gray-800"
-                      >{{ location.name }}</span
-                    >
-                    <span class="text-gray-500 text-sm block">
-                      Coordinates: {{ location.latitude }},
-                      {{ location.longitude }}
-                    </span>
+                  <span class="font-medium text-gray-800">{{ location.name }}</span>
+                  <span class="text-gray-500 text-sm block">
+                    Coordinates: {{ location.latitude }}, {{ location.longitude }}
+                  </span>
                   </label>
                 </div>
                 <!-- Quantity Input -->
-                <div class="ml-4 flex items-center">
-                  <label class="mr-2 text-sm text-gray-600"
-                    >Quantity ({{ getUnitName }}):</label
-                  >
+                <div class="flex items-center">
+                  <label class="mr-2 text-sm text-gray-600">Quantity ({{ getUnitName }}):</label>
                   <input
-                    type="number"
-                    v-model="location.quantity"
-                    :disabled="!selectedLocations.includes(location)"
-                    placeholder="0"
-                    min="0"
-                    step="any"
-                    class="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    :class="{'border-red-500 focus:ring-red-500 focus:border-red-500': selectedLocations.includes(location) && location.quantity === 0}"
+                  type="number"
+                  v-model="location.quantity"
+                  :disabled="!selectedLocations.includes(location)"
+                  placeholder="0"
+                  min="0"
+                  step="any"
+                  class="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  :class="{'border-red-500 focus:ring-red-500 focus:border-red-500': selectedLocations.includes(location) && location.quantity === 0}"
                   />
                 </div>
-
                 <!-- Visualize Button -->
                 <button
                   type="button"
                   @click="visualizeLocation(location)"
-                  class="ml-4 flex items-center justify-center px-3 py-1 text-sm font-medium text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors"
+                  class="flex items-center justify-center px-3 py-1 text-sm font-medium text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors"
                 >
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5 mr-1"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
                   >
-                    <path
-                      fill-rule="evenodd"
-                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                      clip-rule="evenodd"
-                    />
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                    clip-rule="evenodd"
+                  />
                   </svg>
                   View Map
                 </button>
+                </div>
+              </div>
+
+              <!-- Desktop View -->
+              <div class="hidden sm:flex items-center justify-between">
+                <!-- Checkbox and Label -->
+                <div class="flex items-center flex-1">
+                <input
+                  type="checkbox"
+                  :id="`location-${location.id}`"
+                  :value="location"
+                  v-model="selectedLocations"
+                  class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                />
+                <label
+                  :for="`location-${location.id}`"
+                  class="ml-3 cursor-pointer"
+                >
+                  <span class="font-medium text-gray-800">{{ location.name }}</span>
+                  <span class="text-gray-500 text-sm block">
+                  Coordinates: {{ location.latitude }}, {{ location.longitude }}
+                  </span>
+                </label>
+                </div>
+                <!-- Quantity Input -->
+                <div class="ml-4 flex items-center">
+                <label class="mr-2 text-sm text-gray-600">Quantity ({{ getUnitName }}):</label>
+                <input
+                  type="number"
+                  v-model="location.quantity"
+                  :disabled="!selectedLocations.includes(location)"
+                  placeholder="0"
+                  min="0"
+                  step="any"
+                  class="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  :class="{'border-red-500 focus:ring-red-500 focus:border-red-500': selectedLocations.includes(location) && location.quantity === 0}"
+                />
+                </div>
+                <!-- Visualize Button -->
+                <button
+                type="button"
+                @click="visualizeLocation(location)"
+                class="ml-4 flex items-center justify-center px-3 py-1 text-sm font-medium text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors"
+                >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                  fill-rule="evenodd"
+                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                  clip-rule="evenodd"
+                  />
+                </svg>
+                View Map
+                </button>
+              </div>
               </div>
             </div>
-          </div>
+            </div>
 
           <!-- Modal Footer -->
           <footer
-            class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end"
+            class="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-lg flex justify-end"
           >
             <Button
               type="button"
@@ -885,7 +940,7 @@ onMounted(() => {
             </div>
           </div>
 
-          <footer class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+          <footer class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end rounded-lg gap-3">
             <Button
               type="button"
               @click="showMeasurementUnitModal = false"
