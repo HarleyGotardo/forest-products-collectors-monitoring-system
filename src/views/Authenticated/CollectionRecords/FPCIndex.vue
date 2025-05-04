@@ -507,7 +507,8 @@ watch(selectedStatus, () => {
         <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap border-b border-gray-200">
           <div class="flex items-center">
             <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50">
-              <img :src="record.image_url" alt="Product Image" class="h-10 w-10 rounded-lg object-cover" />
+                <img v-if="record.image_url != null" :src="record.image_url" alt="Product Image" class="h-10 w-10 rounded-lg object-cover" />
+                <img v-else src="@/assets/forest-product.png" alt="Default Image" class="h-10 w-10 rounded-lg object-cover" />
             </div>
             <div class="ml-4 min-w-0"> 
               <div class="text-sm font-medium text-gray-900 truncate">{{ record.product_name }}</div> 
