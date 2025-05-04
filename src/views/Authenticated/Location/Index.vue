@@ -350,7 +350,7 @@ watch(currentPage, () => {
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
             Coordinates
           </th>
-          <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+          <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider" v-if="isFPUAdmin || isForestRanger">
             Action
           </th>
         </tr>
@@ -392,7 +392,7 @@ watch(currentPage, () => {
               </span>
             </div>
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
+          <td v-if="isFPUAdmin || isForestRanger" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
             <div class="flex items-center justify-end space-x-3">
               <Button
                 class="bg-green-900 text-white hover:bg-green-600"

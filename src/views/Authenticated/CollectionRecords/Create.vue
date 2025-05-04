@@ -126,6 +126,7 @@ const fetchForestProducts = async () => {
           }
           pendingQuantities[fpLocationId] += item.requested_quantity;
         });
+
       }
     });
     
@@ -654,7 +655,7 @@ onMounted(() => {
             </p>
           </div>
 
-            <!-- Forest Product Modal Trigger -->
+            <!-- Forest Product Modal Trigger
             <div>
             <button
               type="button"
@@ -666,7 +667,7 @@ onMounted(() => {
               <span class="text-lg">+</span>
               <span>{{ isRequestSelected ? 'Edit Selected Products' : 'Select Forest Products' }}</span>
             </button>
-            </div>
+            </div> -->
 
           <!-- Submit Button -->
           <button
@@ -731,13 +732,13 @@ onMounted(() => {
                   Location: {{ product.location_name }} | 
                   Price: ₱{{ product.price }} per {{ product.unit_name }} | 
                   <span v-if="product.hasPendingRequests" class="text-green-600">
-                    Snapshot: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
+                    Adjusted Stock: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
                   </span>
                   <span v-else class="text-blue-600">
                     Available: {{ product.quantity }} {{ product.unit_name }}(s)
                   </span>
                   <span v-if="product.hasPendingRequests" class="text-amber-600">
-                    ({{ product.pendingQuantity }} pending)
+                    ({{ product.pendingQuantity }} {{ product.unit_name }}(s) approved for collection)
                   </span>
                 </div>
               </div>
@@ -814,8 +815,9 @@ onMounted(() => {
             
             <h3 class="font-medium text-gray-700">Receipt Details</h3>
             <div class="border rounded-lg overflow-hidden">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <div class="overflow-x-auto overflow-y-auto max-h-96">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
                   <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
@@ -823,27 +825,28 @@ onMounted(() => {
                     <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                     <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                   </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
                   <tr v-for="item in receiptDetails" :key="item.fp_and_location_id">
                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ item.forestProductName }}</td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ item.locationName }}</td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                      {{ item.purchasedQuantity }} {{ item.unitName }}(s)
+                    {{ item.purchasedQuantity }} {{ item.unitName }}(s)
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                      ₱{{ item.price }}
+                    ₱{{ item.price }}
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                      ₱{{ item.totalCost.toFixed(2) }}
+                    ₱{{ item.totalCost.toFixed(2) }}
                     </td>
                   </tr>
                   <tr class="bg-gray-50">
                     <td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">Total</td>
                     <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">₱{{ totalCost.toFixed(2) }}</td>
                   </tr>
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+                </div>
             </div>
           </div>
         </div>

@@ -383,7 +383,7 @@ watch(selectedType, () => {
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Type</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Price</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Locations</th>
-        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Action</th>
+        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600" v-if="isForestRanger || isFPUAdmin">Action</th>
       </tr>
     </thead>
 
@@ -523,7 +523,7 @@ watch(selectedType, () => {
              <span v-if="!product.locations || product.locations.length === 0" class="text-sm text-gray-400 italic">N/A</span>
            </div>
         </td>
-        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right text-sm font-medium border-b border-gray-200" @click.stop>
+        <td v-if="isFPUAdmin || isForestRanger" class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right text-sm font-medium border-b border-gray-200" @click.stop>
            <div class="flex items-center justify-end space-x-2"> <Button
                class="bg-green-900 text-white hover:bg-green-600"
                v-if="isForestRanger || isFPUAdmin"

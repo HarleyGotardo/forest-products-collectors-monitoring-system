@@ -399,7 +399,7 @@ onMounted(() => {
           Download Permit
         </Button>
             <div class="flex items-center space-x-2">
-              <Button
+              <!-- <Button
             v-if="(isFPUAdmin || isForestRanger) && record && !record?.is_paid && !record?.deleted_at"
                 class="p-2 flex items-center justify-center"
             @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record?.id } })"
@@ -417,7 +417,7 @@ onMounted(() => {
                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
                 </svg>
-              </Button>
+              </Button> -->
           <AlertDialog v-if="record && !record.is_paid && !record?.deleted_at">
             <AlertDialogTrigger>
               <Button

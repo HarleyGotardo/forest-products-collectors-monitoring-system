@@ -650,7 +650,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Forest Product Modal Trigger -->
+          <!-- Forest Product Modal Trigger
           <div>
             <button
               type="button"
@@ -660,7 +660,7 @@ onMounted(async () => {
               <span class="text-lg">+</span>
               <span>Edit Forest Products</span>
             </button>
-          </div>
+          </div> -->
 
           <!-- Submit Button -->
           <button

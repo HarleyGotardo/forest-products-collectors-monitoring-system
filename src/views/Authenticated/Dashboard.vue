@@ -860,6 +860,7 @@ onMounted(() => {
         <!-- Most Collected Product Card -->
         <div
           class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
+          :title="mostCollectedProduct"
         >
           <div class="absolute top-0 left-0 w-2 h-full bg-green-500"></div>
             <div class="flex items-center justify-between overflow-x-auto space-x-4">
