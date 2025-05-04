@@ -67,12 +67,12 @@ const fetchAvailableForestProducts = async () => {
     // Get IDs of already added products
     const existingIds = forestProducts.value.map(fp => fp.id)
     
-    // Fetch products not already linked and not deleted
+    // Fetch products not already linked, not deleted, and not soft-deleted
     const { data, error } = await supabase
       .from('forest_products')
       .select('id, name, measurement_unit_id')
       .is('deleted_at', null)
-      .not('id', 'in', `(${existingIds.join(',')})`)
+      .not('id', 'in', `(${existingIds.length > 0 ? existingIds.join(',') : '0'})`)
 
     if (error) throw error
     availableForestProducts.value = data
@@ -92,6 +92,18 @@ const addForestProduct = async () => {
       throw new Error('Please fill all fields')
     }
 
+    // First check if the product exists and is not deleted
+    const { data: product, error: productError } = await supabase
+      .from('forest_products')
+      .select('id')
+      .eq('id', selectedProduct.value)
+      .is('deleted_at', null)
+      .single()
+
+    if (productError || !product) {
+      throw new Error('Selected product is not available')
+    }
+
     const { error } = await supabase
       .from('fp_and_locations')
       .insert([{
@@ -106,7 +118,12 @@ const addForestProduct = async () => {
     showAddDialog.value = false
     selectedProduct.value = null
     quantityInput.value = ''
-    await fetchForestProducts()
+    
+    // Refresh both lists
+    await Promise.all([
+      fetchForestProducts(),
+      fetchAvailableForestProducts()
+    ])
   } catch (err) {
     toast.error('Failed to add product: ' + err.message)
   }
@@ -179,41 +196,70 @@ const fetchLocation = async () => {
 }
 
 const fetchForestProducts = async () => {
-  let { data, error: fetchError } = await supabase
-    .from('fp_and_locations')
-    .select(`
-      id,
-      forest_product:forest_products ( id, name, measurement_unit_id, deleted_at ),
-      quantity
-    `)
-    .eq('location_id', locationId)
+  try {
+    // First fetch the fp_and_locations entries for this location
+    let { data: fpLocations, error: fetchError } = await supabase
+      .from('fp_and_locations')
+      .select(`
+        id,
+        quantity,
+        forest_product:forest_products (
+          id,
+          name,
+          measurement_unit_id,
+          deleted_at
+        )
+      `)
+      .eq('location_id', locationId)
+      .is('forest_products.deleted_at', null)
 
-  if (fetchError) {
-    error.value = fetchError.message
-    return
-  }
+    if (fetchError) {
+      error.value = fetchError.message
+      return
+    }
 
-  // Process remaining data
-  const productIds = data
-    .filter(item => item.forest_product.deleted_at === null)
-    .map(item => item.forest_product.measurement_unit_id)
+    // Filter out entries where the forest product is null or deleted
+    const validEntries = fpLocations.filter(item => 
+      item.forest_product && 
+      item.forest_product.deleted_at === null
+    )
 
-  const { data: units, error: unitsError } = await supabase
-    .from('measurement_units')
-    .select('id, unit_name')
-    .in('id', productIds)
+    if (validEntries.length === 0) {
+      forestProducts.value = []
+      return
+    }
 
-  if (unitsError) {
-    error.value = unitsError.message
-  } else {
-    forestProducts.value = data
-      .filter(item => item.forest_product.deleted_at === null)
-      .map(item => ({
-        fp_and_locations_id: item.id, // Add this line
-        ...item.forest_product,
-        quantity: item.quantity,
-        unit_name: units.find(unit => unit.id === item.forest_product.measurement_unit_id)?.unit_name
-      }))
+    // Get all unique measurement unit IDs
+    const measurementUnitIds = validEntries
+      .map(item => item.forest_product.measurement_unit_id)
+      .filter((id, index, self) => self.indexOf(id) === index)
+
+    // Fetch measurement units
+    const { data: units, error: unitsError } = await supabase
+      .from('measurement_units')
+      .select('id, unit_name')
+      .in('id', measurementUnitIds)
+
+    if (unitsError) {
+      error.value = unitsError.message
+      return
+    }
+
+    // Create a map of measurement units for quick lookup
+    const unitsMap = new Map(units.map(unit => [unit.id, unit.unit_name]))
+
+    // Transform the data into the format we need
+    forestProducts.value = validEntries.map(item => ({
+      fp_and_locations_id: item.id,
+      id: item.forest_product.id,
+      name: item.forest_product.name,
+      quantity: item.quantity,
+      unit_name: unitsMap.get(item.forest_product.measurement_unit_id) || 'N/A'
+    }))
+
+  } catch (err) {
+    error.value = err.message
+    toast.error('Failed to fetch forest products: ' + err.message)
   }
 }
 
@@ -274,30 +320,39 @@ const initializeMap = () => {
 onMounted(async () => {
   loading.value = true;
   
-  // Check if location exists
-  const { data: locationData, error } = await supabase
-    .from('locations')
-    .select('id')
-    .eq('id', route.params.id)
-    .single();
+  try {
+    // Check if location exists
+    const { data: locationData, error } = await supabase
+      .from('locations')
+      .select('id')
+      .eq('id', route.params.id)
+      .single();
 
-  if (error || !locationData) {
-    // If location doesn't exist or there's an error, redirect to index
-    router.push('/authenticated/locations');
-    toast.error('Location not found');
-    return;
-  }
-
-  // If location exists, fetch the details
-  await fetchLocation();
-  loading.value = false;
-
-  // Initialize map after a short delay to ensure DOM is ready
-  setTimeout(() => {
-    if (location.value) {
-      initializeMap();
+    if (error || !locationData) {
+      router.push('/authenticated/locations');
+      toast.error('Location not found');
+      return;
     }
-  }, 300);
+
+    // If location exists, fetch the details
+    await fetchLocation();
+    
+    // Fetch forest products after location is loaded
+    await fetchForestProducts();
+    
+    loading.value = false;
+
+    // Initialize map after a short delay
+    setTimeout(() => {
+      if (location.value) {
+        initializeMap();
+      }
+    }, 300);
+  } catch (err) {
+    error.value = err.message;
+    toast.error('Failed to load location: ' + err.message);
+    loading.value = false;
+  }
 });
 
 // Add watcher for location changes
