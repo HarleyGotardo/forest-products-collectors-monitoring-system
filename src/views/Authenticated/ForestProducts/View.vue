@@ -2130,20 +2130,10 @@ watch(() => locations.value, (newLocations) => {
         <div v-if="locations.length > 0" class="px-4 sm:px-6 pt-6 pb-4">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center space-x-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 text-indigo-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0 6l6-3m-6 3l6 3m6-3l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13v-6m0 6l-6-3m6 3L9 17"
-                />
-              </svg>
+              <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
               <h3 class="text-lg font-medium text-gray-800">
                 {{ forestProduct.name }} Map Locations
               </h3>
