@@ -13,6 +13,7 @@ import {
   PaginationPrev,
   PaginationEllipsis,
 } from '@/components/ui/pagination'
+import { toast, Toaster } from 'vue-sonner'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,6 +27,7 @@ const itemsPerPage = 5
 const currentCreatedByPage = ref(1)
 const approvedByRecords = ref([])
 const currentApprovedByPage = ref(1)
+const loading = ref(false)
 
 const fetchUser = async () => {
   let { data, error: fetchError } = await supabase
@@ -349,9 +351,27 @@ const profilePictureUrl = computed(() => {
   return null
 })
 
-onMounted(() => {
-  fetchUser()
-})
+onMounted(async () => {
+  loading.value = true;
+  
+  // Check if user exists
+  const { data: user, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', route.params.id)
+    .single();
+
+  if (error || !user) {
+    // If user doesn't exist or there's an error, redirect to index
+    router.push('/authenticated/system-users');
+    toast.error('User not found');
+    return;
+  }
+
+  // If user exists, fetch the details
+  await fetchUser();
+  loading.value = false;
+});
 </script>
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 bg-gray-50">

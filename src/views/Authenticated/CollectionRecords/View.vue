@@ -27,6 +27,7 @@ const record = ref(null)
 const recordItems = ref([])
 const error = ref(null)
 const forestConservationOfficer = ref(null)
+const loading = ref(false)
 
 const fetchCollectionRecord = async () => {
   // Fetch the main collection record
@@ -310,8 +311,26 @@ const calculateTotalCost = () => {
   return recordItems.value.reduce((sum, item) => sum + item.total_cost, 0)
 }
 
-onMounted(() => {
-  fetchCollectionRecord()
+onMounted(async () => {
+  loading.value = true;
+  
+  // Check if collection record exists
+  const { data: record, error } = await supabase
+    .from('collection_records')
+    .select('id')
+    .eq('id', route.params.id)
+    .single();
+
+  if (error || !record) {
+    // If record doesn't exist or there's an error, redirect to index
+    router.push('/authenticated/collection-records');
+    toast.error('Collection record not found');
+    return;
+  }
+
+  // If record exists, fetch the details
+  await fetchCollectionRecord();
+  loading.value = false;
   fetchForestConservationOfficer()
 })
 </script>

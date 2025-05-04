@@ -750,18 +750,29 @@ const reloadMap = () => {
 
 onMounted(async () => {
   loading.value = true;
-  try {
-    await Promise.all([
-      fetchForestProduct(),
-      fetchAdditionalImages(),
-      fetchAllLocations(),
-      fetchUserDetails()
-    ]);
-  } catch (err) {
-    console.error('Error during initialization:', err);
-  } finally {
-    loading.value = false;
+  
+  // Check if forest product exists
+  const { data: forestProduct, error } = await supabase
+    .from('forest_products')
+    .select('id')
+    .eq('id', route.params.id)
+    .single();
+
+  if (error || !forestProduct) {
+    // If product doesn't exist or there's an error, redirect to index
+    router.push('/authenticated/forest-products');
+    toast.error('Forest product not found');
+    return;
   }
+
+  // If product exists, fetch the details
+  await fetchForestProduct();
+  await Promise.all([
+    fetchAdditionalImages(),
+    fetchAllLocations(),
+    fetchUserDetails()
+  ]);
+  loading.value = false;
 });
 
 // Add these functions in the script section after the existing functions

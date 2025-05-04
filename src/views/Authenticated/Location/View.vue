@@ -313,22 +313,33 @@ const prevPage = () => {
 }
 
 onMounted(async () => {
-  loading.value = true
-  try {
-    await fetchLocation()
-    await fetchForestProducts()
-  } catch (err) {
-    console.error(err)
-  } finally {
-    loading.value = false
-    // Initialize map on the next tick after loading is complete
-    nextTick(() => {
-      if (location.value) {
-        initializeMap()
-      }
-    })
+  loading.value = true;
+  
+  // Check if location exists
+  const { data: location, error } = await supabase
+    .from('locations')
+    .select('id')
+    .eq('id', route.params.id)
+    .single();
+
+  if (error || !location) {
+    // If location doesn't exist or there's an error, redirect to index
+    router.push('/authenticated/locations');
+    toast.error('Location not found');
+    return;
   }
-})
+
+  // If location exists, fetch the details
+  await fetchLocation();
+  loading.value = false;
+
+  // Initialize map on the next tick after loading is complete
+  nextTick(() => {
+    if (location.value) {
+      initializeMap();
+    }
+  });
+});
 </script>
 
 <template>

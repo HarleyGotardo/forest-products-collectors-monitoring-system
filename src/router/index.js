@@ -316,7 +316,17 @@ const routes = [
         component: ProfileIndex,
         meta: { title: "Profile - Nature Cart", requiresRole: [4, 2, 3, 1] },
       },
+      {
+        // Catch-all route for authenticated section
+        path: ":pathMatch(.*)*",
+        redirect: { name: "Dashboard" },
+      },
     ],
+  },
+  // Catch-all route for public section
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: { name: "Index" },
   },
 ];
 
@@ -329,6 +339,16 @@ router.beforeEach(async (to, from, next) => {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
+  // Check if the route exists
+  if (!to.matched.length) {
+    if (session) {
+      next({ name: "Dashboard" });
+      return;
+    }
+    next({ name: "Index" });
+    return;
+  }
 
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!session) {

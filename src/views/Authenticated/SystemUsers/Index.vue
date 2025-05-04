@@ -1070,118 +1070,119 @@ onMounted(async () => {
 
             <!-- Mobile Card View -->
             <div class="block sm:hidden">
-              <div v-if="paginatedUnapprovedUsers.length === 0" class="p-6 text-center">
-                <div class="flex flex-col items-center">
-                  <svg
-                    class="w-12 h-12 text-gray-300 mb-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                  <p class="text-gray-500">No pending users found</p>
-                </div>
-              </div>
-              <div v-else class="divide-y divide-gray-200">
-                <div
-                  v-for="user in paginatedUnapprovedUsers"
-                  :key="user.id"
-                  class="bg-white rounded-lg shadow-sm p-4 mb-3"
-                >
-                  <!-- User Header -->
-                  <div class="flex items-start space-x-4">
-                    <!-- Profile Picture -->
-                    <div class="flex-shrink-0">
-                      <div class="h-14 w-14">
-                        <img
-                          v-if="getProfilePictureUrl(user.profile_picture)"
-                          :src="getProfilePictureUrl(user.profile_picture)"
-                          alt=""
-                          class="h-14 w-14 rounded-full object-cover border-2 border-gray-200"
-                        />
-                        <div
-                          v-else
-                          class="h-14 w-14 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center"
-                        >
-                          <span class="text-gray-600 font-semibold text-lg">
-                            {{ getUserInitials(user) }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+  <!-- Empty State -->
+  <div v-if="paginatedUnapprovedUsers.length === 0" class="p-6 bg-white rounded-lg shadow-sm text-center">
+    <div class="flex flex-col items-center">
+      <svg
+        class="w-16 h-16 text-gray-300 mb-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+        />
+      </svg>
+      <p class="text-gray-600 font-medium">No pending users found</p>
+    </div>
+  </div>
 
-                    <!-- User Info -->
-                    <div class="flex-1">
-                      <div class="flex flex-col">
-                        <h3 class="text-base font-semibold text-gray-900">
-                          {{ formatUserName(user) }}
-                        </h3>
-                        <p class="text-sm text-gray-600 mt-0.5">
-                          {{ user.email_address }}
-                        </p>
-                        
-                        <!-- Badges Container -->
-                        <div class="flex flex-wrap gap-2 mt-2">
-                          <!-- Role Badge -->
-                          <span
-                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                            :class="{
-                              'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
-                              'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
-                              'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
-                              'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
-                            }"
-                          >
-                            {{ user.role.name }}
-                          </span>
-
-                          <!-- User Type Badge -->
-                          <span
-                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                            :class="{
-                              'bg-pink-100 text-pink-800': user.user_type === 'Individual',
-                              'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
-                              'bg-lime-100 text-lime-800': user.user_type === 'Organization',
-                              'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
-                            }"
-                          >
-                            {{ user.user_type }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Action Buttons -->
-                  <div class="mt-4 grid grid-cols-2 gap-3">
-                    <button
-                      @click="approveUser(user.id)"
-                      class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      Approve
-                    </button>
-                    <button
-                      @click="rejectUser(user.id)"
-                      class="inline-flex items-center justify-center px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-100 transition-colors w-full sm:w-auto"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              </div>
+  <!-- User Cards Container -->
+  <div v-else class="space-y-4">
+    <div
+      v-for="user in paginatedUnapprovedUsers"
+      :key="user.id"
+      class="bg-white rounded-lg shadow overflow-hidden border border-gray-100"
+    >
+      <!-- User Header -->
+      <div class="p-4">
+        <div class="flex items-center">
+          <!-- Profile Picture -->
+          <div class="flex-shrink-0">
+            <img
+              v-if="getProfilePictureUrl(user.profile_picture)"
+              :src="getProfilePictureUrl(user.profile_picture)"
+              alt=""
+              class="h-16 w-16 rounded-full object-cover border-2 border-gray-200"
+            />
+            <div
+              v-else
+              class="h-16 w-16 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center"
+            >
+              <span class="text-gray-600 font-semibold text-xl">
+                {{ getUserInitials(user) }}
+              </span>
             </div>
+          </div>
+
+          <!-- User Info -->
+          <div class="ml-4 flex-1">
+            <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+              {{ formatUserName(user) }}
+            </h3>
+            <p class="text-sm text-gray-600 mt-1">
+              {{ user.email_address }}
+            </p>
+          </div>
+        </div>
+        
+        <!-- Badges Container -->
+        <div class="flex flex-wrap gap-2 mt-3">
+          <!-- Role Badge -->
+          <span
+            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+            :class="{
+              'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
+              'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
+              'bg-gray-100 text-gray-800': user.role.name === 'VSU Administrator',
+              'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
+            }"
+          >
+            {{ user.role.name }}
+          </span>
+
+          <!-- User Type Badge -->
+          <span
+            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+            :class="{
+              'bg-pink-100 text-pink-800': user.user_type === 'Individual',
+              'bg-indigo-100 text-indigo-800': user.user_type === 'Association',
+              'bg-lime-100 text-lime-800': user.user_type === 'Organization',
+              'bg-cyan-100 text-cyan-800': user.user_type === 'Group of People'
+            }"
+          >
+            {{ user.user_type }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-2 border-t border-gray-100">
+        <button
+          @click="approveUser(user.id)"
+          class="flex items-center justify-center py-3 px-2 bg-white text-green-600 hover:bg-green-50 transition-colors font-medium"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Approve
+        </button>
+        <button
+          @click="rejectUser(user.id)"
+          class="flex items-center justify-center py-3 px-2 bg-white text-red-600 hover:bg-red-50 transition-colors font-medium border-l border-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Reject
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
           </div>
 
           <!-- Pagination Controls -->

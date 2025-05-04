@@ -16,17 +16,16 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-
-const route = useRoute();
 const router = useRouter();
+const route = useRoute();
 const requestId = route.params.id;
 const request = ref(null);
 const requestItems = ref([]);
 const user = ref({ first_name: '', last_name: '' });
 const approver = ref({ first_name: '', last_name: '' });
 const error = ref(null);
-const isLoading = ref(true); // Added loading state
-const isApproving = ref(false); // New state for tracking approval process
+const isLoading = ref(true);
+const isApproving = ref(false);
 const showDialog = ref(false);
 const rejectionReason = ref('');
 
@@ -341,8 +340,30 @@ const permanentlyDeleteRequest = async () => {
   }
 };
 
-onMounted(() => {
-  fetchRequestDetails();
+onMounted(async () => {
+  isLoading.value = true;
+  
+  // Check if collection request exists
+  const { data: request, error } = await supabase
+    .from('collection_requests')
+    .select('id')
+    .eq('id', route.params.id)
+    .single();
+
+  if (error || !request) {
+    // If request doesn't exist or there's an error, redirect to index
+    if (isFPUAdmin || isForestRanger || isVSUAdmin) {
+      router.push('/authenticated/collection-requests/all');
+    } else {
+      router.push('/authenticated/collection-requests');
+    }
+    toast.error('Collection request not found');
+    return;
+  }
+
+  // If request exists, fetch the details
+  await fetchRequestDetails();
+  isLoading.value = false;
 });
 
 // Helper function for formatting dates
