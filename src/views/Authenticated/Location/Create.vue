@@ -416,6 +416,19 @@ const getCurrentLocation = () => {
   <div
     class="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-xl shadow-md border border-gray-100 mt-8"
   >
+    <!-- Back Button -->
+    <div class="mb-6">
+      <button
+        @click="router.back()"
+        class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span class="hidden sm:inline">Back</span>
+      </button>
+    </div>
+
     <!-- Header with improved design -->
     <div class="flex items-center space-x-3 mb-8 pb-4 border-b border-gray-100">
       <div class="bg-green-100 p-2 rounded-full">

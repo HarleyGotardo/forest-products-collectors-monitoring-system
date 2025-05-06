@@ -489,382 +489,383 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-    <Card class="max-w-lg w-full shadow-lg">
-      <CardHeader class="bg-gray-50 rounded-t-lg">
-        <div class="flex items-center space-x-2">
-          <img src="@/assets/add.png" alt="Forest Map" class="w-8 h-8 group-hover:scale-110 transition-transform" />
-          <CardTitle class="text--800">Forest Product Collection</CardTitle>
-        </div>
-        <CardDescription class="text-gray-600">Create a new collection record for forest products</CardDescription>
-      </CardHeader>
-      <CardContent class="p-6">
-        <!-- Info Notes -->
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
-            <button
-              @click="showNotes = !showNotes"
-              class="flex items-center text-sm text-gray-500 hover:text-gray-700"
-            >
-              <span>{{ showNotes ? 'Hide Notes' : 'Show Notes' }}</span>
-              <svg
-                class="w-4 h-4 ml-1 transform transition-transform"
-                :class="{ 'rotate-180': showNotes }"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+    <div class="relative max-w-lg w-full mt-7">
+      <!-- Back Button -->
+      <div class="absolute -top-12 left-0">
+        <button
+          @click="router.back()"
+          class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          <span class="hidden sm:inline">Back</span>
+        </button>
+      </div>
+
+      <Card class="w-full shadow-lg">
+        <CardHeader class="bg-gray-50 rounded-t-lg">
+          <div class="flex items-center space-x-2">
+            <img src="@/assets/add.png" alt="Forest Map" class="w-8 h-8 group-hover:scale-110 transition-transform" />
+            <CardTitle class="text--800">Forest Product Collection</CardTitle>
+          </div>
+          <CardDescription class="text-gray-600">Create a new collection record for forest products</CardDescription>
+        </CardHeader>
+        <CardContent class="p-6">
+          <!-- Info Notes -->
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+              <button
+                @click="showNotes = !showNotes"
+                class="flex items-center text-sm text-gray-500 hover:text-gray-700"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <span>{{ showNotes ? 'Hide Notes' : 'Show Notes' }}</span>
+                <svg
+                  class="w-4 h-4 ml-1 transform transition-transform"
+                  :class="{ 'rotate-180': showNotes }"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            <div v-if="showNotes" class="space-y-4">
+              <!-- Collection Process Note -->
+              <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                      <span class="font-medium">Collection Process:</span> When creating a collection record, you must select an approved and unrecorded request. The system will automatically populate the collector and products from the selected request.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Process Note -->
+              <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-green-700">
+                      <span class="font-medium">Payment Process:</span> After successfully recording the collection, the Forest Product Collector can proceed to make the payment. Once payment is completed, a forest conservation permit will be generated and can be downloaded for collection.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form -->
+          <form @submit.prevent="handleSubmit" class="space-y-6">
+              <!-- Request Number Selection -->
+              <div class="space-y-2">
+              <Label for="requestNumber" class="text-sm font-medium text-gray-700">Request Number</Label>
+              <select
+                id="requestNumber"
+                v-model="selectedRequest"
+                class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                :disabled="collectionRequests.length === 0"
+              >
+                <option value="" disabled>Select a request number</option>
+                <option v-for="request in collectionRequests" :key="request.id" :value="request.id">
+                {{ request.id }}
+                </option>
+              </select>
+              <p v-if="collectionRequests.length === 0" class="text-sm text-orange-400 mt-2">
+                You cannot record a forest product collection because a request number is required, and there are no approved and unrecorded collection requests available.
+              </p>
+              </div>
+
+              <!-- Collector Selection -->
+              <div class="space-y-2">
+              <Label for="collector" class="text-sm font-medium text-gray-700">Forest Product Collector</Label>
+              <div v-if="isRequestSelected" class="p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+                {{ requestDetails?.profiles?.first_name }} {{ requestDetails?.profiles?.last_name }}
+              </div>
+              <select
+                v-else
+                id="collector"
+                v-model="selectedCollector"
+                class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                :disabled="!selectedRequest"
+              >
+                <option value="" disabled>Select a collector</option>
+                <option v-for="collector in collectors" :key="collector.id" :value="collector.id">
+                {{ collector.first_name }} {{ collector.last_name }}
+                </option>
+              </select>
+              </div>
+                <!-- Purpose Selection -->
+                <div class="space-y-2">
+                <Label for="purpose" class="text-sm font-medium text-gray-700">Purpose</Label>
+                <div class="space-y-2">
+                  <div>
+                  <input
+                    type="radio"
+                    id="official"
+                    value="Official"
+                    v-model="purpose"
+                    class="form-radio"
+                    :disabled="!selectedRequest"
+                  />
+                  <label for="official" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Official</label>
+                  </div>
+                  <div>
+                  <input
+                    type="radio"
+                    id="personal"
+                    value="Personal"
+                    v-model="purpose"
+                    class="form-radio"
+                    :disabled="!selectedRequest"
+                  />
+                  <label for="personal" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Personal</label>
+                  </div>
+                  <div>
+                  <input
+                    type="radio"
+                    id="others"
+                    value="Others"
+                    v-model="purpose"
+                    class="form-radio"
+                    :disabled="!selectedRequest"
+                  />
+                  <label for="others" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Others, specify:</label>
+                  <input
+                    v-if="purpose === 'Others'"
+                    type="text"
+                    v-model="customPurpose"
+                    placeholder="Specify purpose"
+                    class="form-input mt-2 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    :disabled="!selectedRequest"
+                  />
+                  </div>
+                </div>
+                </div>
+
+            <!-- Selected Products Summary -->
+            <div v-if="selectedForestProducts.length > 0" class="space-y-2">
+              <Label class="text-sm font-medium text-gray-700">Selected Products ({{ selectedForestProducts.length }})</Label>
+              <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div v-for="product in selectedForestProducts" :key="product.id" class="text-sm">
+                  {{ product.forest_product_name }} - {{ product.purchased_quantity > 0 ? product.purchased_quantity : 'No' }} {{ product.unit_name }}(s)
+                </div>
+              </div>
+              <p v-if="isRequestSelected" class="text-xs text-gray-500 mt-1">
+                Products were populated from the selected request
+              </p>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              :disabled="!isFormComplete"
+              class="w-full bg-green-900 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all text-white rounded-lg py-3 font-medium"
+            >
+              Create Collection Record
+            </button>
+          </form>
+        </CardContent>
+        <CardFooter class="bg-gray-50 px-6 py-4 rounded-b-lg">
+          <p class="text-xs text-gray-500 text-center">
+            Select a request to automatically populate products from that request
+          </p>
+        </CardFooter>
+      </Card>
+
+      <!-- Forest Product Modal -->
+      <div
+        v-if="isModalOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      >
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
+          <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-lg font-semibold text-green-800">{{ isRequestSelected ? 'Edit Selected Products' : 'Select Forest Products' }}</h2>
+            <button @click="isModalOpen = false" class="text-gray-500 hover:text-gray-700 p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-
-          <div v-if="showNotes" class="space-y-4">
-            <!-- Collection Process Note -->
-            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
-              <div class="flex">
-                <div class="flex-shrink-0">
-                  <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                  </svg>
-                </div>
-                <div class="ml-3">
-                  <p class="text-sm text-blue-700">
-                    <span class="font-medium">Collection Process:</span> When creating a collection record, you must select an approved and unrecorded request. The system will automatically populate the collector and products from the selected request.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Payment Process Note -->
-            <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
-              <div class="flex">
-                <div class="flex-shrink-0">
-                  <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                </div>
-                <div class="ml-3">
-                  <p class="text-sm text-green-700">
-                    <span class="font-medium">Payment Process:</span> After successfully recording the collection, the Forest Product Collector can proceed to make the payment. Once payment is completed, a forest conservation permit will be generated and can be downloaded for collection.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Form -->
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-            <!-- Request Number Selection -->
-            <div class="space-y-2">
-            <Label for="requestNumber" class="text-sm font-medium text-gray-700">Request Number</Label>
-            <select
-              id="requestNumber"
-              v-model="selectedRequest"
-              class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              :disabled="collectionRequests.length === 0"
-            >
-              <option value="" disabled>Select a request number</option>
-              <option v-for="request in collectionRequests" :key="request.id" :value="request.id">
-              {{ request.id }}
-              </option>
-            </select>
-            <p v-if="collectionRequests.length === 0" class="text-sm text-orange-400 mt-2">
-              You cannot record a forest product collection because a request number is required, and there are no approved and unrecorded collection requests available.
-            </p>
-            </div>
-
-            <!-- Collector Selection -->
-            <div class="space-y-2">
-            <Label for="collector" class="text-sm font-medium text-gray-700">Forest Product Collector</Label>
-            <div v-if="isRequestSelected" class="p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
-              {{ requestDetails?.profiles?.first_name }} {{ requestDetails?.profiles?.last_name }}
-            </div>
-            <select
-              v-else
-              id="collector"
-              v-model="selectedCollector"
-              class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              :disabled="!selectedRequest"
-            >
-              <option value="" disabled>Select a collector</option>
-              <option v-for="collector in collectors" :key="collector.id" :value="collector.id">
-              {{ collector.first_name }} {{ collector.last_name }}
-              </option>
-            </select>
-            </div>
-              <!-- Purpose Selection -->
-              <div class="space-y-2">
-              <Label for="purpose" class="text-sm font-medium text-gray-700">Purpose</Label>
-              <div class="space-y-2">
-                <div>
-                <input
-                  type="radio"
-                  id="official"
-                  value="Official"
-                  v-model="purpose"
-                  class="form-radio"
-                  :disabled="!selectedRequest"
-                />
-                <label for="official" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Official</label>
-                </div>
-                <div>
-                <input
-                  type="radio"
-                  id="personal"
-                  value="Personal"
-                  v-model="purpose"
-                  class="form-radio"
-                  :disabled="!selectedRequest"
-                />
-                <label for="personal" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Personal</label>
-                </div>
-                <div>
-                <input
-                  type="radio"
-                  id="others"
-                  value="Others"
-                  v-model="purpose"
-                  class="form-radio"
-                  :disabled="!selectedRequest"
-                />
-                <label for="others" class="ml-2 text-sm" :class="{ 'text-gray-400': !selectedRequest }">Others, specify:</label>
-                <input
-                  v-if="purpose === 'Others'"
-                  type="text"
-                  v-model="customPurpose"
-                  placeholder="Specify purpose"
-                  class="form-input mt-2 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  :disabled="!selectedRequest"
-                />
-                </div>
-              </div>
-              </div>
-
-          <!-- Selected Products Summary -->
-          <div v-if="selectedForestProducts.length > 0" class="space-y-2">
-            <Label class="text-sm font-medium text-gray-700">Selected Products ({{ selectedForestProducts.length }})</Label>
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-              <div v-for="product in selectedForestProducts" :key="product.id" class="text-sm">
-                {{ product.forest_product_name }} - {{ product.purchased_quantity > 0 ? product.purchased_quantity : 'No' }} {{ product.unit_name }}(s)
-              </div>
-            </div>
-            <p v-if="isRequestSelected" class="text-xs text-gray-500 mt-1">
-              Products were populated from the selected request
-            </p>
-          </div>
-
-            <!-- Forest Product Modal Trigger
-            <div>
-            <button
-              type="button"
-              class="w-full bg-green-900 hover:bg-green-700 text-white rounded-lg py-2.5 font-medium transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              @click="isModalOpen = true"
-              :disabled="!selectedRequest"
-              :class="{ 'opacity-50 cursor-not-allowed': !selectedRequest }"
-            >
-              <span class="text-lg">+</span>
-              <span>{{ isRequestSelected ? 'Edit Selected Products' : 'Select Forest Products' }}</span>
-            </button>
-            </div> -->
-
-          <!-- Submit Button -->
-          <button
-            type="submit"
-            :disabled="!isFormComplete"
-            class="w-full bg-green-900 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all text-white rounded-lg py-3 font-medium"
-          >
-            Create Collection Record
-          </button>
-        </form>
-      </CardContent>
-      <CardFooter class="bg-gray-50 px-6 py-4 rounded-b-lg">
-        <p class="text-xs text-gray-500 text-center">
-          Select a request to automatically populate products from that request
-        </p>
-      </CardFooter>
-    </Card>
-
-    <!-- Forest Product Modal -->
-    <div
-      v-if="isModalOpen"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
-        <div class="flex justify-between items-center p-4 border-b">
-          <h2 class="text-lg font-semibold text-green-800">{{ isRequestSelected ? 'Edit Selected Products' : 'Select Forest Products' }}</h2>
-          <button @click="isModalOpen = false" class="text-gray-500 hover:text-gray-700 p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="p-4 border-b">
-          <div class="relative">
-            <input
-              type="text"
-              v-model="searchQuery"
-              placeholder="Search forest products..."
-              class="w-full p-2.5 border border-gray-300 rounded-lg pl-10 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
-        <div class="p-4 overflow-y-auto flex-1">
-          <div v-if="filteredForestProducts.length === 0" class="text-center py-8 text-gray-500">
-            No forest products found matching your search
-          </div>
-          <div v-else class="space-y-3">
-            <div v-for="product in filteredForestProducts" :key="product.id" 
-                 class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
+          <div class="p-4 border-b">
+            <div class="relative">
               <input
-                type="checkbox"
-                :checked="isProductSelected(product.id)"
-                @change="toggleProductSelection(product)"
-                class="form-checkbox h-5 w-5 text-green-600 rounded"
+                type="text"
+                v-model="searchQuery"
+                placeholder="Search forest products..."
+                class="w-full p-2.5 border border-gray-300 rounded-lg pl-10 focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
-              <div class="flex-1">
-                <div class="font-medium">{{ product.forest_product_name }}</div>
-                <div class="text-sm text-gray-500">
-                  Location: {{ product.location_name }} | 
-                  Price: ₱{{ product.price }} per {{ product.unit_name }} | 
-                  <span v-if="product.hasPendingRequests" class="text-green-600">
-                    Adjusted Stock: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
-                  </span>
-                  <span v-else class="text-blue-600">
-                    Available: {{ product.quantity }} {{ product.unit_name }}(s)
-                  </span>
-                  <span v-if="product.hasPendingRequests" class="text-amber-600">
-                    ({{ product.pendingQuantity }} {{ product.unit_name }}(s) approved for collection)
-                  </span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+          <div class="p-4 overflow-y-auto flex-1">
+            <div v-if="filteredForestProducts.length === 0" class="text-center py-8 text-gray-500">
+              No forest products found matching your search
+            </div>
+            <div v-else class="space-y-3">
+              <div v-for="product in filteredForestProducts" :key="product.id" 
+                   class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
+                <input
+                  type="checkbox"
+                  :checked="isProductSelected(product.id)"
+                  @change="toggleProductSelection(product)"
+                  class="form-checkbox h-5 w-5 text-green-600 rounded"
+                />
+                <div class="flex-1">
+                  <div class="font-medium">{{ product.forest_product_name }}</div>
+                  <div class="text-sm text-gray-500">
+                    Location: {{ product.location_name }} | 
+                    Price: ₱{{ product.price }} per {{ product.unit_name }} | 
+                    <span v-if="product.hasPendingRequests" class="text-green-600">
+                      Adjusted Stock: {{ product.adjustedQuantity }} {{ product.unit_name }}(s)
+                    </span>
+                    <span v-else class="text-blue-600">
+                      Available: {{ product.quantity }} {{ product.unit_name }}(s)
+                    </span>
+                    <span v-if="product.hasPendingRequests" class="text-amber-600">
+                      ({{ product.pendingQuantity }} {{ product.unit_name }}(s) approved for collection)
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div v-if="isProductSelected(product.id)" class="flex flex-col">
-                <div class="flex items-center space-x-2">
-                  <label class="text-sm text-gray-600">Quantity:</label>
-                    <input
-                    type="number"
-                    v-model.number="selectedForestProducts.find(p => p.id === product.id).purchased_quantity"
-                    min="1"
-                    :max="product.adjustedQuantity"
-                    placeholder="Qty"
-                    @input="validateProductQuantity(product)"
-                    @keydown="(e) => ['e', 'E', '-', '+', '.'].includes(e.key) && e.preventDefault()"
-                    :class="['w-24 text-center border rounded p-1', 
-                      selectedForestProducts.find(p => p.id === product.id).quantityError || 
-                      selectedForestProducts.find(p => p.id === product.id).purchased_quantity <= 0 
-                        ? 'border-red-500 bg-red-50' 
-                        : 'border-gray-300']"
-                    />
-                </div>
-                <!-- Warning for zero or invalid quantity -->
-                <div v-if="selectedForestProducts.find(p => p.id === product.id).purchased_quantity <= 0" class="text-red-500 text-xs mt-1 text-right">
-                  Please enter a quantity greater than 0.
-                </div>
-                <!-- Inline error message for exceeding max quantity -->
-                <div v-else-if="selectedForestProducts.find(p => p.id === product.id).purchased_quantity > product.adjustedQuantity" class="text-red-500 text-xs mt-1 text-right">
-                  Max: {{ product.adjustedQuantity }}
+                <div v-if="isProductSelected(product.id)" class="flex flex-col">
+                  <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-600">Quantity:</label>
+                      <input
+                      type="number"
+                      v-model.number="selectedForestProducts.find(p => p.id === product.id).purchased_quantity"
+                      min="1"
+                      :max="product.adjustedQuantity"
+                      placeholder="Qty"
+                      @input="validateProductQuantity(product)"
+                      @keydown="(e) => ['e', 'E', '-', '+', '.'].includes(e.key) && e.preventDefault()"
+                      :class="['w-24 text-center border rounded p-1', 
+                        selectedForestProducts.find(p => p.id === product.id).quantityError || 
+                        selectedForestProducts.find(p => p.id === product.id).purchased_quantity <= 0 
+                          ? 'border-red-500 bg-red-50' 
+                          : 'border-gray-300']"
+                      />
+                  </div>
+                  <!-- Warning for zero or invalid quantity -->
+                  <div v-if="selectedForestProducts.find(p => p.id === product.id).purchased_quantity <= 0" class="text-red-500 text-xs mt-1 text-right">
+                    Please enter a quantity greater than 0.
+                  </div>
+                  <!-- Inline error message for exceeding max quantity -->
+                  <div v-else-if="selectedForestProducts.find(p => p.id === product.id).purchased_quantity > product.adjustedQuantity" class="text-red-500 text-xs mt-1 text-right">
+                    Max: {{ product.adjustedQuantity }}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="flex justify-end p-4 border-t">
-          <button
-            class="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 font-medium"
-            @click="isModalOpen = false"
-            :disabled="hasValidationErrors"
-          >
-            Done
-          </button>
+          <div class="flex justify-end p-4 border-t">
+            <button
+              class="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 font-medium"
+              @click="isModalOpen = false"
+              :disabled="hasValidationErrors"
+            >
+              Done
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Receipt Preview Modal -->
-    <div
-      v-if="showReceiptPreview"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
-        <div class="flex justify-between items-center p-4 border-b">
-          <h2 class="text-lg font-semibold text-gray-900">Confirm Collection Record</h2>
-          <button @click="cancelSubmit" class="text-gray-500 hover:text-gray-700 p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="p-4 overflow-y-auto flex-1">
-          <div class="space-y-4">
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <h3 class="font-medium text-gray-700 mb-2">Collector Information</h3>
-              <p>
-                {{ isRequestSelected 
-                  ? `${requestDetails?.profiles?.first_name} ${requestDetails?.profiles?.last_name}` 
-                  : `${collectors.find(c => c.id === selectedCollector)?.first_name} ${collectors.find(c => c.id === selectedCollector)?.last_name}` 
-                }}
-              </p>
-              <p v-if="isRequestSelected" class="text-sm text-gray-600 mt-1">
-                Request #: {{ selectedRequest }}
-              </p>
-            </div>
-            
-            <h3 class="font-medium text-gray-700">Receipt Details</h3>
-            <div class="border rounded-lg overflow-hidden">
-                <div class="overflow-x-auto overflow-y-auto max-h-96">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                  </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="item in receiptDetails" :key="item.fp_and_location_id">
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ item.forestProductName }}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ item.locationName }}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                    {{ item.purchasedQuantity }} {{ item.unitName }}(s)
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                    ₱{{ item.price }}
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                    ₱{{ item.totalCost.toFixed(2) }}
-                    </td>
-                  </tr>
-                  <tr class="bg-gray-50">
-                    <td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">Total</td>
-                    <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">₱{{ totalCost.toFixed(2) }}</td>
-                  </tr>
-                  </tbody>
-                </table>
-                </div>
+      <!-- Receipt Preview Modal -->
+      <div
+        v-if="showReceiptPreview"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      >
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
+          <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-lg font-semibold text-gray-900">Confirm Collection Record</h2>
+            <button @click="cancelSubmit" class="text-gray-500 hover:text-gray-700 p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-4 overflow-y-auto flex-1">
+            <div class="space-y-4">
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-medium text-gray-700 mb-2">Collector Information</h3>
+                <p>
+                  {{ isRequestSelected 
+                    ? `${requestDetails?.profiles?.first_name} ${requestDetails?.profiles?.last_name}` 
+                    : `${collectors.find(c => c.id === selectedCollector)?.first_name} ${collectors.find(c => c.id === selectedCollector)?.last_name}` 
+                  }}
+                </p>
+                <p v-if="isRequestSelected" class="text-sm text-gray-600 mt-1">
+                  Request #: {{ selectedRequest }}
+                </p>
+              </div>
+              
+              <h3 class="font-medium text-gray-700">Receipt Details</h3>
+              <div class="border rounded-lg overflow-hidden">
+                  <div class="overflow-x-auto overflow-y-auto max-h-96">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tr v-for="item in receiptDetails" :key="item.fp_and_location_id">
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ item.forestProductName }}</td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ item.locationName }}</td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
+                      {{ item.purchasedQuantity }} {{ item.unitName }}(s)
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
+                      ₱{{ item.price }}
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                      ₱{{ item.totalCost.toFixed(2) }}
+                      </td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                      <td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">Total</td>
+                      <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">₱{{ totalCost.toFixed(2) }}</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                  </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="flex justify-end space-x-3 p-4 border-t">
-          <button
-            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-            @click="cancelSubmit"
-          >
-            Cancel
-          </button>
-          <button
-            class="bg-green-900 hover:bg-green-700 text-white rounded-lg px-6 py-2 font-medium"
-            @click="confirmSubmit"
-            :disabled="isSubmitting"
-          >
-            <span v-if="isSubmitting">Processing...</span>
-            <span v-else>Confirm & Submit</span>
-          </button>
+          <div class="flex justify-end space-x-3 p-4 border-t">
+            <button
+              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              @click="cancelSubmit"
+            >
+              Cancel
+            </button>
+            <button
+              class="bg-green-900 hover:bg-green-700 text-white rounded-lg px-6 py-2 font-medium"
+              @click="confirmSubmit"
+              :disabled="isSubmitting"
+            >
+              <span v-if="isSubmitting">Processing...</span>
+              <span v-else>Confirm & Submit</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
