@@ -99,6 +99,22 @@ const fetchAllMeasurementUnits = async () => {
   }
 };
 
+const handlePriceInput = (e) => {
+  const cursorPosition = e.target.selectionStart;
+  const oldValue = e.target.value;
+  const newValue = oldValue.replace(/[^0-9.]/g, '');
+
+  // Only update if there's a change to avoid cursor reset
+  if (oldValue !== newValue) {
+    e.target.value = newValue;
+    // Restore cursor position
+    e.target.setSelectionRange(cursorPosition, cursorPosition);
+  }
+
+  // Update your price value
+  price_based_on_measurement_unit.value = parseFloat(newValue) || 0;
+};
+
 onMounted(() => {
   fetchLocations();
   fetchAllMeasurementUnits();
@@ -494,7 +510,7 @@ onMounted(() => {
                 required
                 placeholder="0.00"
                 class="pl-8 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                @input="(e) => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); quantity.value = parseFloat(e.target.value) || 0; }"
+                @input="handlePriceInput"
               />
             </div>
             <p
