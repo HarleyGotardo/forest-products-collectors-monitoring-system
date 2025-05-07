@@ -123,7 +123,7 @@ const handleForgotPassword = async () => {
 <template>
   <div class="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col lg:flex-row relative" :class="{ 'pointer-events-none': isProcessing || isLoginSuccessful }">
     <!-- Add overlay when processing -->
-    <div v-if="isProcessing || isLoginSuccessful" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-center justify-center">
+    <div v-if="isProcessing || isLoginSuccessful" class="fixed inset-0 bg-black/20 z-[100] flex items-center justify-center">
       <div class="bg-white p-4 rounded-lg shadow-lg flex items-center gap-3">
         <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
         <span class="text-gray-700">{{ isLoginSuccessful ? 'Redirecting...' : 'Signing in...' }}</span>
