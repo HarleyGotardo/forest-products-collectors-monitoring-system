@@ -59,10 +59,10 @@ const isMobileDevice = computed(() => {
   // Check if the device is a mobile device
   const userAgent = navigator.userAgent || navigator.vendor || window.opera;
   const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-  
+
   // Also check screen size as an additional indicator
   const isSmallScreen = window.innerWidth <= 768;
-  
+
   return isMobile || isSmallScreen;
 });
 
@@ -367,11 +367,11 @@ const getCurrentLocation = () => {
       } else {
         // Update existing map
         mapInstance.setView([latLngObj.lat, latLngObj.lng], CommonConstant.MAP_ZOOM_LEVEL.SIXTEEN);
-        
+
         // Clear existing markers
         const markers = mapInstance.getLayers().filter(layer => layer instanceof L.Marker);
         markers.forEach(marker => mapInstance.removeLayer(marker));
-        
+
         // Add new marker
         L.marker([latLngObj.lat, latLngObj.lng]).addTo(mapInstance);
       }
@@ -385,7 +385,7 @@ const getCurrentLocation = () => {
     (error) => {
       isGettingLocation.value = false;
       console.error('Geolocation error:', error);
-      
+
       switch (error.code) {
         case error.PERMISSION_DENIED:
           locationError.value = "Location access was denied";
@@ -416,22 +416,32 @@ const getCurrentLocation = () => {
   <div
     class="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-xl shadow-md border border-gray-100 mt-8"
   >
-    <!-- Back Button -->
-    <div class="mb-6">
-      <button
-        @click="router.back()"
-        class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
-      >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        <span class="hidden sm:inline">Back</span>
-      </button>
-    </div>
-
     <!-- Header with improved design -->
-    <div class="flex items-center space-x-3 mb-8 pb-4 border-b border-gray-100">
-      <div class="bg-emerald-100 p-2 rounded-full">
+    <div class="flex items-center mb-8 pb-4 border-b border-gray-100">
+      <div class="flex items-center space-x-4">
+        <!-- Back Button -->
+        <button
+          @click="router.back()"
+          class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150 mr-4"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            ></path>
+          </svg>
+          <span class="hidden sm:inline">Back</span>
+        </button>
+      </div>
+      <div class="bg-emerald-100 p-2 rounded-full mr-4">
         <svg
           class="w-6 h-6 text-green-600"
           fill="none"
@@ -576,18 +586,27 @@ const getCurrentLocation = () => {
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span>{{ isGettingLocation ? 'Getting Location...' : 'Use Current Location' }}</span>
+              <span
+                >{{ isGettingLocation ? 'Getting Location...' : 'Use Current Location' }}</span
+              >
             </button>
-            <div v-if="!isMobileDevice" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-100 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+            <div
+              v-if="!isMobileDevice"
+              class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-100 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
+            >
               This feature is only available on mobile devices
             </div>
-            <div v-else class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+            <div
+              v-else
+              class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
+            >
               Works best on mobile devices with GPS
             </div>
           </div>
         </div>
         <p class="text-xs text-gray-500 mt-1">
-          Click to open the map and select precise coordinates. For best results, use a mobile device with GPS.
+          Click to open the map and select precise coordinates. For best
+          results, use a mobile device with GPS.
         </p>
       </div>
 
@@ -602,49 +621,49 @@ const getCurrentLocation = () => {
         <div class="space-y-3">
           <!-- Map preview container -->
           <div
-        id="preview-map"
-        class="h-48 w-full rounded-lg border border-gray-200 overflow-hidden"
+            id="preview-map"
+            class="h-48 w-full rounded-lg border border-gray-200 overflow-hidden"
           ></div>
           <!-- Coordinates display -->
           <div
-        class="flex items-center justify-between px-3 py-2 bg-emerald-50 rounded-md border border-green-100"
+            class="flex items-center justify-between px-3 py-2 bg-emerald-50 rounded-md border border-green-100"
           >
-        <div class="flex items-center space-x-2">
-          <svg
-            class="w-5 h-5 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-          </svg>
-          <span class="text-sm text-gray-600">{{ coordinates }}</span>
-        </div>
-        <button
-          type="button"
-          @click="clearTempCoordinates"
-          class="text-red-600 hover:text-red-700 focus:outline-none"
-          title="Clear coordinates"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+            <div class="flex items-center space-x-2">
+              <svg
+                class="w-5 h-5 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+              </svg>
+              <span class="text-sm text-gray-600">{{ coordinates }}</span>
+            </div>
+            <button
+              type="button"
+              @click="clearTempCoordinates"
+              class="text-red-600 hover:text-red-700 focus:outline-none"
+              title="Clear coordinates"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -733,72 +752,72 @@ const getCurrentLocation = () => {
       >
         <div class="bg-white px-6 pt-5 pb-4">
           <div class="sm:flex sm:items-start">
-        <div
-          class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10"
-        >
-          <svg
-            class="h-6 w-6 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-          </svg>
-        </div>
-        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-          <h3
-            class="text-lg font-medium leading-6 text-gray-900"
-            id="modal-title"
-          >
-            {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
-          </h3>
-          <p class="mt-1 text-sm text-gray-500">
-            {{ modalField === 'coordinates' ? 'Click on the map to select precise coordinates for this location.' : '' }}
-          </p>
-        </div>
+            <div
+              class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10"
+            >
+              <svg
+                class="h-6 w-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <h3
+                class="text-lg font-medium leading-6 text-gray-900"
+                id="modal-title"
+              >
+                {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                {{ modalField === 'coordinates' ? 'Click on the map to select precise coordinates for this location.' : '' }}
+              </p>
+            </div>
           </div>
 
           <!-- Modal Content with improved map container -->
           <div class="mt-6">
-        <!-- Map View -->
-        <div v-if="modalField === 'coordinates'" class="mt-4">
-          <div
-            id="map"
-            class="h-[300px] sm:h-[450px] w-full rounded-lg border border-gray-200 shadow-inner"
-          ></div>
+            <!-- Map View -->
+            <div v-if="modalField === 'coordinates'" class="mt-4">
+              <div
+                id="map"
+                class="h-[300px] sm:h-[450px] w-full rounded-lg border border-gray-200 shadow-inner"
+              ></div>
 
-          <div
-            v-if="tempCoordinates"
-            class="mt-3 p-3 bg-emerald-50 border border-green-100 rounded-md text-sm text-green-800 flex justify-between items-center"
-          >
-            <span>Selected coordinates: {{ tempCoordinates }}</span>
-            <button
-          type="button"
-          @click="clearTempCoordinates"
-          class="text-red-600 hover:text-red-800 focus:outline-none"
-          title="Remove coordinates"
-            >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-            </button>
-          </div>
-        </div>
+              <div
+                v-if="tempCoordinates"
+                class="mt-3 p-3 bg-emerald-50 border border-green-100 rounded-md text-sm text-green-800 flex justify-between items-center"
+              >
+                <span>Selected coordinates: {{ tempCoordinates }}</span>
+                <button
+                  type="button"
+                  @click="clearTempCoordinates"
+                  class="text-red-600 hover:text-red-800 focus:outline-none"
+                  title="Remove coordinates"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -807,19 +826,19 @@ const getCurrentLocation = () => {
           class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100"
         >
           <button
-        v-if="tempCoordinatesObj"
-        type="button"
-        @click="saveModalValue"
-        class="inline-flex w-full justify-center rounded-md border border-transparent bg-emerald-600 px-5 py-2 text-base font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+            v-if="tempCoordinatesObj"
+            type="button"
+            @click="saveModalValue"
+            class="inline-flex w-full justify-center rounded-md border border-transparent bg-emerald-600 px-5 py-2 text-base font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
           >
-        Save Coordinates
+            Save Coordinates
           </button>
           <button
-        type="button"
-        @click="closeModal"
-        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-5 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            type="button"
+            @click="closeModal"
+            class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-5 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
           >
-        Cancel
+            Cancel
           </button>
         </div>
       </div>
@@ -827,13 +846,12 @@ const getCurrentLocation = () => {
   </div>
 
   <Toaster
-  theme="light"
-  :toastOptions="{
+    theme="light"
+    :toastOptions="{
     class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
     style: {
       padding: '1rem',
     }
   }"
-/>
-
+  />
 </template>

@@ -373,8 +373,8 @@ watch(currentPage, () => {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="restoreLocation(location.id)">Restore</AlertDialogAction>
+                        <AlertDialogCancel >Cancel</AlertDialogCancel>
+                        <AlertDialogAction class="bg-emerald-900 hover:bg-emerald-600"@click="restoreLocation(location.id)">Restore</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>

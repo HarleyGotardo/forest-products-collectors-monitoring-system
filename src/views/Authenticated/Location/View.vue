@@ -184,7 +184,18 @@ const deleteForestProduct = async () => {
 const fetchLocation = async () => {
   let { data, error: fetchError } = await supabase
     .from('locations')
-    .select('*')
+    .select(`
+      *,
+      fp_and_locations (
+        id,
+        collection_request_items (
+          id
+        ),
+        collection_record_items (
+          id
+        )
+      )
+    `)
     .eq('id', locationId)
     .single()
 
@@ -448,27 +459,186 @@ const prevPage = () => {
     currentPage.value--
   }
 }
+
+// Add these computed properties and functions
+const hasAssociatedRecords = computed(() => {
+  if (!location.value) return false;
+  return location.value.fp_and_locations?.some(fp => 
+    (fp.collection_request_items?.length > 0) || 
+    (fp.collection_record_items?.length > 0)
+  );
+});
+
+const editLocation = () => {
+  router.push(`/authenticated/locations/${locationId}/edit`)
+}
+
+const deleteLocation = async () => {
+  const currentDate = new Date().toISOString()
+
+  try {
+    const { error: deleteError } = await supabase
+      .from('locations')
+      .update({ deleted_at: currentDate })
+      .eq('id', locationId)
+
+    if (deleteError) throw deleteError
+
+    toast.success('Location deleted successfully')
+    router.push('/authenticated/locations')
+  } catch (err) {
+    toast.error('Failed to delete location: ' + err.message)
+  }
+}
 </script>
 
 <template>
   <div class="max-w-4xl mx-auto p-4 sm:p-6">
     <!-- Header Section -->
-    <div class="mb-4 sm:mb-6 flex items-center space-x-4">
-      <button
-        @click="router.back()"
-        class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
-      >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        <span class="hidden sm:inline">Back</span>
-      </button>
-      <img src="@/assets/location2.png" alt="Location" class="w-12 h-12 sm:w-16 sm:h-16" />
-      <div>
-        <h2 class="text-lg sm:text-xl font-bold text-gray-900">Location Details</h2>
-        <p class="text-xs sm:text-sm text-gray-600">
-          Detailed information about this location
-        </p>
+    <div class="mb-4 sm:mb-6 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <button
+          @click="router.back()"
+          class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          <span class="hidden sm:inline">Back</span>
+        </button>
+        <img src="@/assets/location2.png" alt="Location" class="w-12 h-12 sm:w-16 sm:h-16" />
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-gray-900">Location Details</h2>
+          <p class="text-xs sm:text-sm text-gray-600">
+            Detailed information about this location
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div v-if="!loading" class="flex items-center space-x-2">
+        <!-- Edit and Delete buttons for non-deleted locations -->
+        <template v-if="!location?.deleted_at && (isForestRanger || isFPUAdmin)">
+          <Button
+            @click="editLocation"
+            class="p-2"
+            title="Edit location"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                class="p-2" 
+                title="Delete location"
+                :disabled="hasAssociatedRecords"
+                :class="{ 'opacity-50 cursor-not-allowed': hasAssociatedRecords }"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Location?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {{ hasAssociatedRecords 
+                    ? 'This location cannot be deleted because it has associated collection records or requests.' 
+                    : 'This location will be transferred to the recycle bin.' }}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  @click="deleteLocation"
+                  :disabled="hasAssociatedRecords"
+                  class="bg-red-900 hover:bg-red-700"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </template>
+
+        <!-- Restore and Delete Permanently buttons for deleted locations -->
+        <template v-if="location?.deleted_at && (isForestRanger || isFPUAdmin)">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button class="p-2" title="Restore location">
+                <img src="@/assets/restore2.png" alt="Restore" class="w-5 h-5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Restore Location?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This location will be restored.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="restoreLocation">Restore</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button class="p-2" title="Delete permanently">
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Location Permanently?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deletePermanently">Delete Permanently</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </template>
       </div>
     </div>
 
@@ -655,50 +825,6 @@ const prevPage = () => {
                     {{ formatDate(location.deleted_at) }}
                   </span>
                 </div>
-              </div>
-
-              <div v-if="location.deleted_at" class="mt-4 sm:mt-6 flex flex-wrap justify-center md:justify-start gap-2 sm:gap-4">
-                <AlertDialog>
-                  <AlertDialogTrigger>
-                    <Button class="p-2 sm:p-3">
-                      <img src="@/assets/restore2.png" alt="Restore" class="w-4 h-4 sm:w-5 sm:h-5" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Restore Location?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This location will be restored.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction @click="restoreLocation">Restore</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-
-                <AlertDialog>
-                  <AlertDialogTrigger>
-                    <Button class="p-2 sm:p-3">
-                      <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Location Permanently?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction @click="deletePermanently">Delete Permanently</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
               </div>
 
               <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">

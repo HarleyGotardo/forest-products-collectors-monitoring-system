@@ -442,7 +442,7 @@ onMounted(async () => {
             <AlertDialogTrigger>
               <Button
                 v-if="isFPUAdmin || isForestRanger"
-                class="p-2 flex items-center justify-center"
+                class="p-2 flex items-center justify-center bg-red-600 hover:bg-red-700"
               >
                 <svg
                   class="w-5 h-5"
@@ -468,7 +468,7 @@ onMounted(async () => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="deleteCollectionRecord(record.id)">
+                <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="deleteCollectionRecord(record.id)">
                   Delete
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -602,7 +602,7 @@ onMounted(async () => {
               >
                 Invoice No.
               </p>
-              <p class="text-sm font-semibold text-gray-900 mt-1">
+              <p class="text-sm font-bold text-emerald-900 mt-1">
                 #{{ record.id }}
               </p>
             </div>

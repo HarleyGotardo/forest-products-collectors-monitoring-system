@@ -107,7 +107,7 @@ const fetchLocation = async () => {
     coordinatesObj.value = { lat: data.latitude, lng: data.longitude }
     originalCoordinatesObj.value = { lat: data.latitude, lng: data.longitude }
     coordinates.value = `${data.latitude}, ${data.longitude}`
-    
+
     nextTick(() => {
       initializePreviewMap();
     });
@@ -132,7 +132,7 @@ const handleSubmit = async () => {
     currentDate,
     CommonConstant.DATE_FORMAT.ISO_8601
   );
-  
+
   const payload = {
     name: name.value,
     latitude: coordinatesObj.value.lat,
@@ -252,9 +252,9 @@ const initializeMap = () => {
     };
 
     // Check if the clicked coordinates match any existing location
-    const isDuplicateLocation = existingLocations.value.some(location => 
-      location.id !== locationId && 
-      location.latitude === latLngObj.lat && 
+    const isDuplicateLocation = existingLocations.value.some(location =>
+      location.id !== locationId &&
+      location.latitude === latLngObj.lat &&
       location.longitude === latLngObj.lng
     );
 
@@ -288,14 +288,14 @@ const clearCoordinates = () => {
   // Reset to original coordinates
   coordinatesObj.value = { ...originalCoordinatesObj.value };
   coordinates.value = `${originalCoordinatesObj.value.lat}, ${originalCoordinatesObj.value.lng}`;
-  
+
   // Reinitialize preview map
   initializePreviewMap();
 };
 
 const isFormChanged = computed(() => {
-  return name.value !== originalName.value || 
-         coordinatesObj.value.lat !== originalCoordinatesObj.value.lat || 
+  return name.value !== originalName.value ||
+         coordinatesObj.value.lat !== originalCoordinatesObj.value.lat ||
          coordinatesObj.value.lng !== originalCoordinatesObj.value.lng;
 });
 
@@ -315,25 +315,82 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-xl shadow-md border border-gray-100 mt-8">
+  <div
+    class="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-xl shadow-md border border-gray-100 mt-8"
+  >
     <!-- Header with improved design -->
-    <div class="flex items-center space-x-3 mb-8 pb-4 border-b border-gray-100">
-      <div class="bg-emerald-100 p-2 rounded-full">
-        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </div>
-      <div>
-        <h2 class="text-2xl font-bold text-gray-800">Edit Location</h2>
-        <p class="text-sm text-gray-500 mt-1">Update location details of {{ name }}</p>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+      <div class="flex items-center space-x-4">
+        <button
+          @click="router.back()"
+          class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            ></path>
+          </svg>
+          <span class="hidden sm:inline">Back</span>
+        </button>
+
+        <div class="flex items-center space-x-3">
+          <div class="bg-emerald-100 p-2 rounded-full">
+            <svg
+              class="w-6 h-6 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Edit Location</h2>
+            <p class="text-sm text-gray-500 mt-1">
+              Update location details of {{ name }}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Error Alert with improved styling -->
-    <div v-if="error" class="mb-6 p-4 rounded-lg bg-red-50 border-l-4 border-red-500 flex items-center">
-      <svg class="w-5 h-5 text-red-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <div
+      v-if="error"
+      class="mb-6 p-4 rounded-lg bg-red-50 border-l-4 border-red-500 flex items-center"
+    >
+      <svg
+        class="w-5 h-5 text-red-500 mr-3 flex-shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
       <span class="text-red-700">{{ error }}</span>
     </div>
@@ -352,7 +409,9 @@ onBeforeUnmount(() => {
           class="w-full focus:ring-green-500 focus:border-green-500"
           placeholder="Enter a descriptive name for this location"
         />
-        <p class="text-xs text-gray-500 mt-1">Choose a clear, identifiable name for this forest location</p>
+        <p class="text-xs text-gray-500 mt-1">
+          Choose a clear, identifiable name for this forest location
+        </p>
       </div>
 
       <!-- Coordinates with improved interaction design -->
@@ -370,13 +429,25 @@ onBeforeUnmount(() => {
               {{ coordinates || "Click to set location coordinates" }}
             </span>
             <div class="flex items-center text-green-600">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                />
               </svg>
             </div>
           </button>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Click to open the map and select precise coordinates</p>
+        <p class="text-xs text-gray-500 mt-1">
+          Click to open the map and select precise coordinates
+        </p>
       </div>
 
       <!-- Preview section -->
@@ -446,26 +517,51 @@ onBeforeUnmount(() => {
               :disabled="!isFormChanged"
               class="inline-flex items-center px-5 py-2.5 bg-emerald-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg
+                class="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
               Update Location
             </button>
           </AlertDialogTrigger>
           <AlertDialogContent class="rounded-lg">
             <AlertDialogHeader>
-              <AlertDialogTitle class="text-xl">Confirm Update</AlertDialogTitle>
+              <AlertDialogTitle class="text-xl"
+                >Confirm Update</AlertDialogTitle
+              >
               <AlertDialogDescription class="text-gray-600">
-                Are you sure you want to update this location with the following details?
-                <div class="mt-3 p-3 bg-gray-50 rounded border border-gray-200 text-sm">
+                Are you sure you want to update this location with the following
+                details?
+                <div
+                  class="mt-3 p-3 bg-gray-50 rounded border border-gray-200 text-sm"
+                >
                   <p><span class="font-medium">Name:</span> {{ name }}</p>
-                  <p><span class="font-medium">Coordinates:</span> {{ coordinates }}</p>
+                  <p>
+                    <span class="font-medium">Coordinates:</span>
+                    {{ coordinates }}
+                  </p>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel class="bg-gray-100 hover:bg-gray-200 text-gray-800">Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="handleSubmit" class="bg-emerald-600 hover:bg-emerald-700">Update Location</AlertDialogAction>
+              <AlertDialogCancel
+                class="bg-gray-100 hover:bg-gray-200 text-gray-800"
+                >Cancel</AlertDialogCancel
+              >
+              <AlertDialogAction
+                @click="handleSubmit"
+                class="bg-emerald-600 hover:bg-emerald-700"
+                >Update Location</AlertDialogAction
+              >
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -481,21 +577,43 @@ onBeforeUnmount(() => {
     role="dialog"
     aria-modal="true"
   >
-    <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+    <div
+      class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0"
+    >
       <!-- Background overlay with improved transition -->
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeModal"></div>
+      <div
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+        @click="closeModal"
+      ></div>
 
       <!-- Modal panel with improved styling -->
-      <div class="inline-block transform overflow-hidden rounded-xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle">
+      <div
+        class="inline-block transform overflow-hidden rounded-xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:align-middle"
+      >
         <div class="bg-white px-6 pt-5 pb-4">
           <div class="sm:flex sm:items-start">
-            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10">
-              <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <div
+              class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10"
+            >
+              <svg
+                class="h-6 w-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
               </svg>
             </div>
             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-              <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
+              <h3
+                class="text-lg font-medium leading-6 text-gray-900"
+                id="modal-title"
+              >
                 {{ modalField === 'coordinates' ? 'Set Location Coordinates' : `Set ${modalField}` }}
               </h3>
               <p class="mt-1 text-sm text-gray-500">
@@ -508,7 +626,10 @@ onBeforeUnmount(() => {
           <div class="mt-6">
             <!-- Map View -->
             <div v-if="modalField === 'coordinates'" class="mt-4">
-              <div id="map" class="h-[450px] w-full rounded-lg border border-gray-200 shadow-inner"></div>
+              <div
+                id="map"
+                class="h-[450px] w-full rounded-lg border border-gray-200 shadow-inner"
+              ></div>
 
               <div
                 v-if="tempCoordinates"
@@ -521,8 +642,18 @@ onBeforeUnmount(() => {
                   class="text-red-600 hover:text-red-800 focus:outline-none"
                   title="Reset coordinates"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
                   </svg>
                 </button>
               </div>
@@ -531,7 +662,9 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- Modal Footer with improved button styling -->
-        <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100">
+        <div
+          class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100"
+        >
           <button
             v-if="tempCoordinatesObj"
             type="button"
@@ -553,13 +686,12 @@ onBeforeUnmount(() => {
   </div>
 
   <Toaster
-  theme="light"
-  :toastOptions="{
+    theme="light"
+    :toastOptions="{
     class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
     style: {
       padding: '1rem',
     }
   }"
-/>
-
+  />
 </template>

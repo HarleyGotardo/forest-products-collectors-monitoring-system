@@ -587,6 +587,9 @@ onMounted(() => {
               <p v-if="collectionRequests.length === 0" class="text-sm text-orange-400 mt-2">
                 You cannot record a forest product collection because a request number is required, and there are no approved and unrecorded collection requests available.
               </p>
+              <p v-else="collectionRequests.length === 0" class="text-sm text-emerald-400 mt-2">
+                Select a request number to record a forest product collection.
+              </p>
               </div>
 
               <!-- Collector Selection -->
@@ -784,90 +787,173 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Receipt Preview Modal -->
-      <div
-        v-if="showReceiptPreview"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+<!-- Receipt Preview Modal -->
+<div
+  v-if="showReceiptPreview"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-0"
+>
+  <!-- Backdrop with smooth fade -->
+  <div class="absolute inset-0 bg-gray-900 bg-opacity-75 transition-opacity duration-300"></div>
+  
+  <!-- Modal Container with animation -->
+  <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col transform transition-all duration-300 ease-out">
+    <!-- Header with improved spacing and typography -->
+    <div class="flex justify-between items-center p-4 sm:p-5 border-b border-gray-100">
+      <img src="@/assets/records2.png" alt="View Records" class="w-6 h-6 group-hover:scale-110 transition-transform" />
+      <h2 class="text-lg sm:text-xl font-semibold text-emerald-800">Confirm Collection Record</h2>
+      <button 
+        @click="cancelSubmit" 
+        class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-colors duration-200"
+        aria-label="Close modal"
       >
-        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl max-h-[80vh] flex flex-col">
-          <div class="flex justify-between items-center p-4 border-b">
-            <h2 class="text-lg font-semibold text-gray-900">Confirm Collection Record</h2>
-            <button @click="cancelSubmit" class="text-gray-500 hover:text-gray-700 p-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div class="p-4 overflow-y-auto flex-1">
-            <div class="space-y-4">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-medium text-gray-700 mb-2">Collector Information</h3>
-                <p>
-                  {{ isRequestSelected 
-                    ? `${requestDetails?.profiles?.first_name} ${requestDetails?.profiles?.last_name}` 
-                    : `${collectors.find(c => c.id === selectedCollector)?.first_name} ${collectors.find(c => c.id === selectedCollector)?.last_name}` 
-                  }}
-                </p>
-                <p v-if="isRequestSelected" class="text-sm text-gray-600 mt-1">
-                  Request #: {{ selectedRequest }}
-                </p>
-              </div>
-              
-              <h3 class="font-medium text-gray-700">Receipt Details</h3>
-              <div class="border rounded-lg overflow-hidden">
-                  <div class="overflow-x-auto overflow-y-auto max-h-96">
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                    <tr>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                    </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="item in receiptDetails" :key="item.fp_and_location_id">
-                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ item.forestProductName }}</td>
-                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ item.locationName }}</td>
-                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Modal Content with better spacing -->
+    <div class="p-4 sm:p-5 overflow-y-auto flex-1">
+      <div class="space-y-4 sm:space-y-5">
+        <!-- Collector Information Card -->
+        <div class="bg-emerald-50 p-3 sm:p-4 rounded-lg border border-emerald-100">
+          <h3 class="font-medium text-emerald-800 mb-2 flex items-center text-sm sm:text-base">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Collector Information
+          </h3>
+          <p class="text-gray-800 font-medium text-sm sm:text-base">
+            {{ isRequestSelected 
+              ? `${requestDetails?.profiles?.first_name} ${requestDetails?.profiles?.last_name}` 
+              : `${collectors.find(c => c.id === selectedCollector)?.first_name} ${collectors.find(c => c.id === selectedCollector)?.last_name}` 
+            }}
+          </p>
+          <p v-if="isRequestSelected" class="text-xs sm:text-sm text-emerald-600 mt-1 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Request #: {{ selectedRequest }}
+          </p>
+        </div>
+        
+        <!-- Receipt Details Section -->
+        <div>
+          <h3 class="font-medium text-gray-800 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Invoice Details
+          </h3>
+          
+          <!-- Table with improved styling -->
+          <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <!-- Desktop Table (hidden on small screens) -->
+              <table class="min-w-full divide-y divide-gray-200 hidden sm:table">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr 
+                    v-for="item in receiptDetails" 
+                    :key="item.fp_and_location_id"
+                    class="hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    <td class="px-4 py-3 text-sm text-gray-900">{{ item.forestProductName }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{{ item.locationName }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900 text-right">
                       {{ item.purchasedQuantity }} {{ item.unitName }}(s)
-                      </td>
-                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                      ₱{{ item.price }}
-                      </td>
-                      <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                      ₱{{ item.totalCost.toFixed(2) }}
-                      </td>
-                    </tr>
-                    <tr class="bg-gray-50">
-                      <td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">Total</td>
-                      <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">₱{{ totalCost.toFixed(2) }}</td>
-                    </tr>
-                    </tbody>
-                  </table>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900 text-right">
+                      {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.price) }}
+                    </td>
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                      {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.totalCost) }}
+                    </td>
+                  </tr>
+                  <!-- Total row with distinct styling -->
+                  <tr class="bg-emerald-50 font-medium border-t-2 border-emerald-200">
+                    <td colspan="4" class="px-4 py-3 text-sm font-bold text-gray-800 text-right">Total Amount</td>
+                    <td class="px-4 py-3 text-sm font-bold text-emerald-800 text-right">
+                      {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(totalCost) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <!-- Mobile Card View (visible only on small screens) -->
+              <div class="sm:hidden">
+                <div 
+                  v-for="item in receiptDetails" 
+                  :key="item.fp_and_location_id"
+                  class="border-b border-gray-200 p-3"
+                >
+                  <div class="font-medium text-gray-900">{{ item.forestProductName }}</div>
+                  <div class="text-xs text-gray-600 mb-2">{{ item.locationName }}</div>
+                  <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="text-gray-500">Quantity:</div>
+                    <div class="text-right font-medium text-gray-900">{{ item.purchasedQuantity }} {{ item.unitName }}(s)</div>
+                    
+                    <div class="text-gray-500">Price:</div>
+                    <div class="text-right font-medium text-gray-900">
+                      {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.price) }}
+                    </div>
+                    
+                    <div class="text-gray-500">Total:</div>
+                    <div class="text-right font-medium text-gray-900">
+                      {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.totalCost) }}
+                    </div>
                   </div>
+                </div>
+                
+                <!-- Mobile Total -->
+                <div class="bg-emerald-50 p-3 border-t-2 border-emerald-200">
+                  <div class="flex justify-between items-center">
+                    <div class="font-bold text-gray-800 text-sm">Total Amount:</div>
+                    <div class="font-bold text-emerald-800 text-sm">
+                      {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(totalCost) }}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="flex justify-end space-x-3 p-4 border-t">
-            <button
-              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              @click="cancelSubmit"
-            >
-              Cancel
-            </button>
-            <button
-              class="bg-emerald-900 hover:bg-emerald-700 text-white rounded-lg px-6 py-2 font-medium"
-              @click="confirmSubmit"
-              :disabled="isSubmitting"
-            >
-              <span v-if="isSubmitting">Processing...</span>
-              <span v-else>Confirm & Submit</span>
-            </button>
-          </div>
         </div>
       </div>
+    </div>
+    
+    <!-- Footer with improved buttons -->
+    <div class="flex flex-col-reverse sm:flex-row sm:justify-end space-y-reverse space-y-3 sm:space-y-0 sm:space-x-4 p-4 sm:p-5 border-t border-gray-100">
+      <button
+        class="w-full sm:w-auto px-4 sm:px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+        @click="cancelSubmit"
+      >
+        Cancel
+      </button>
+      <button
+        class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 sm:px-6 py-2 font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        @click="confirmSubmit"
+        :disabled="isSubmitting"
+      >
+        <span v-if="isSubmitting" class="flex items-center justify-center">
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Processing...
+        </span>
+        <span v-else>Confirm & Submit</span>
+      </button>
+    </div>
+  </div>
+</div>
     </div>
   </div>
 </template>

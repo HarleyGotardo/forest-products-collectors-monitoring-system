@@ -201,6 +201,15 @@ const fetchForestProduct = async () => {
     .from('forest_products')
     .select(`
       *,
+      fp_and_locations (
+        id,
+        collection_request_items (
+          id
+        ),
+        collection_record_items (
+          id
+        )
+      ),
       measurement_units:measurement_unit_id (
         unit_name
       )
@@ -1075,6 +1084,15 @@ watch(() => locations.value, (newLocations) => {
     })
   }
 }, { deep: true })
+
+// Add this computed property after other refs
+const hasAssociatedRecords = computed(() => {
+  if (!forestProduct.value) return false;
+  return forestProduct.value.fp_and_locations?.some(fp => 
+    (fp.collection_request_items?.length > 0) || 
+    (fp.collection_record_items?.length > 0)
+  );
+});
 </script>
 
 <template>
@@ -1136,7 +1154,7 @@ watch(() => locations.value, (newLocations) => {
           v-if="isDeleted"
           class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"
         >
-          Deleted at
+          Deleted:
           {{ format(new Date(forestProduct.deleted_at), 'MMMM dd, yyyy - hh:mm a') }}
         </div>
 
@@ -1166,7 +1184,12 @@ watch(() => locations.value, (newLocations) => {
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button class="p-2" title="Delete forest product">
+                <Button 
+                  class="p-2" 
+                  title="Delete forest product"
+                  :disabled="hasAssociatedRecords"
+                  :class="{ 'opacity-50 cursor-not-allowed': hasAssociatedRecords }"
+                >
                   <svg
                     class="w-5 h-5"
                     fill="none"
@@ -1186,14 +1209,18 @@ watch(() => locations.value, (newLocations) => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Forest Product?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This forest product will be transferred to the recycle bin.
+                    {{ hasAssociatedRecords 
+                      ? 'This forest product cannot be deleted because it has associated collection records or requests.' 
+                      : 'This forest product will be transferred to the recycle bin.' }}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="deleteProduct"
-                    >Delete</AlertDialogAction
-                  >
+                  <AlertDialogAction
+                    class="bg-red-900 hover:bg-red-700"
+                    @click="deleteProduct"
+                    :disabled="hasAssociatedRecords"
+                  >Delete</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
