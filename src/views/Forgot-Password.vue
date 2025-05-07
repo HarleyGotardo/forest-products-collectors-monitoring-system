@@ -104,13 +104,22 @@ const validateAndRedirect = async () => {
   isValidatingToken.value = true
   
   try {
-    // Get the hash parameters
+    // Get the hash parameters from the URL
     const hashParams = new URLSearchParams(window.location.hash.substring(1))
     const type = hashParams.get('type')
     const token_hash = hashParams.get('token_hash')
 
     // If no token hash or not a recovery type, redirect
     if (!token_hash || type !== 'recovery') {
+      // Check if we're on the root URL with hash parameters
+      if (window.location.pathname === '/' && token_hash && type === 'recovery') {
+        // Redirect to the forgot-password route with the hash parameters
+        router.replace({
+          path: '/forgot-password',
+          hash: `#type=recovery&token_hash=${token_hash}`
+        })
+        return
+      }
       throw new Error('Invalid or missing recovery token')
     }
 
