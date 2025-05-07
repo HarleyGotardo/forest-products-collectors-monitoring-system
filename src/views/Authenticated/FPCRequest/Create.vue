@@ -377,8 +377,19 @@ onMounted(() => {
           @click="router.back()"
           class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
         >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            ></path>
           </svg>
           <span class="hidden sm:inline">Back</span>
         </button>
@@ -386,7 +397,9 @@ onMounted(() => {
 
       <div class="w-full bg-white rounded-xl shadow-lg overflow-hidden">
         <!-- Header -->
-        <div class="bg-gray-200 px-6 py-5 text-black flex items-center space-x-4">
+        <div
+          class="bg-gray-200 px-6 py-5 text-black flex items-center space-x-4"
+        >
           <img
             src="@/assets/request2.png"
             alt="Forest Map"
@@ -452,9 +465,9 @@ onMounted(() => {
               <div class="ml-3">
                 <p class="text-sm text-blue-700">
                   <span class="font-medium">Request Process:</span> Select the
-                  forest products you wish to collect, specify the quantities, and
-                  choose your preferred collection date. Your request will be
-                  reviewed by the Forest Protection Unit.
+                  forest products you wish to collect, specify the quantities,
+                  and choose your preferred collection date. Your request will
+                  be reviewed by the Forest Protection Unit.
                 </p>
               </div>
             </div>
@@ -480,8 +493,9 @@ onMounted(() => {
                 <p class="text-sm text-green-700">
                   <span class="font-medium">Quantity Guidelines:</span> The
                   available quantities shown include pending requests. Make sure
-                  to check the snapshot availability before requesting quantities.
-                  You cannot request more than what is currently available.
+                  to check the snapshot availability before requesting
+                  quantities. You cannot request more than what is currently
+                  available.
                 </p>
               </div>
             </div>
@@ -505,9 +519,10 @@ onMounted(() => {
               </div>
               <div class="ml-3">
                 <p class="text-sm text-amber-700">
-                  <span class="font-medium">Collection Date:</span> Choose a date
-                  for collection. Same-day collections must be requested before
-                  4:00 PM. Future dates can be selected up to 30 days in advance.
+                  <span class="font-medium">Collection Date:</span> Choose a
+                  date for collection. Same-day collections must be requested
+                  before 4:00 PM. Future dates can be selected up to 30 days in
+                  advance.
                 </p>
               </div>
             </div>
@@ -547,60 +562,130 @@ onMounted(() => {
           </div>
 
           <!-- Selected Products Summary -->
-          <div v-if="selectedForestProducts.length > 0" class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700"
-              >Selected Products ({{ selectedForestProducts.length }})</label
-            >
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-              <div
-                v-for="product in selectedForestProducts"
-                :key="product.id"
-                class="text-sm mb-2"
+          <div v-if="selectedForestProducts.length > 0" class="space-y-3">
+            <!-- Header with count badge -->
+            <div class="flex items-center">
+              <h3 class="text-base font-medium text-gray-900">
+                Selected Products
+              </h3>
+              <span
+                class="ml-2 px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full"
               >
-                <div class="flex justify-between items-center">
-                  <span>
-                    {{ product.forest_product_name }} -
-                    {{ product.requested_quantity > 0 ? product.requested_quantity : 'No' }}
-                    {{ product.unit_name }}(s)
-                  </span>
-                  <span class="text-gray-500 text-xs">
-                    Available: {{ product.adjustedQuantity }} /
-                    {{ product.quantity }} {{ product.unit_name }}(s)
-                    <span v-if="product.hasRequests" class="text-amber-600"
-                      >({{ product.approvedQuantity }} approved,
-                      {{ product.unapprovedQuantity }} pending)</span
+                {{ selectedForestProducts.length }}
+              </span>
+            </div>
+
+            <!-- Products List Container -->
+            <div
+              class="bg-white rounded-lg border border-gray-200 overflow-hidden"
+            >
+              <!-- Each Selected Product -->
+              <div
+                v-for="(product, index) in selectedForestProducts"
+                :key="product.id"
+                class="border-b border-gray-100 last:border-b-0"
+              >
+                <div
+                  class="p-4 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <!-- Product Info Row -->
+                  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <!-- Product Name and Quantity -->
+                    <div class="flex items-center">
+                      <div
+                        class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 mr-3"
+                      >
+                        <img
+                          src="@/assets/forest-product.png"
+                          class="h-6 w-6"
+                          alt=""
+                        />
+                      </div>
+                      <div>
+                        <span
+                          class="font-medium text-gray-800"
+                          >{{ product.forest_product_name }}</span
+                        >
+                        <div class="flex items-center mt-1">
+                          <span class="text-sm font-medium text-gray-700">
+                            {{ product.requested_quantity > 0 ? product.requested_quantity : 'No' }}
+                            {{ product.unit_name }}(s)
+                          </span>
+                          <!-- Quantity Status Indicator -->
+                          <span
+                            v-if="product.requested_quantity > 0"
+                            class="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 rounded"
+                          >
+                            Requesting
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Availability Info -->
+                    <div
+                      class="flex items-center text-sm text-gray-600 mt-2 sm:mt-0"
                     >
-                  </span>
-                </div>
-                <!-- Error message for quantity validation -->
-                <div
-                  v-if="product.quantityError"
-                  class="text-red-500 text-xs mt-1"
-                >
-                  Requested quantity exceeds available amount
-                </div>
-                <!-- Error message for 0 quantity validation -->
-                <div
-                  v-if="product.requested_quantity === 0"
-                  class="text-red-500 text-xs mt-1"
-                >
-                  Please enter a valid quantity.
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 text-gray-500 mr-1 flex-shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <span class="text-right">
+                        Available:
+                        <span
+                          class="font-medium text-blue-600"
+                          >{{ product.adjustedQuantity }}</span
+                        >
+                        / {{ product.quantity }} {{ product.unit_name }}(s)
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Error Messages - Simplified -->
+                  <div
+                    v-if="product.quantityError || product.requested_quantity === 0"
+                    class="mt-2"
+                  >
+                    <div
+                      v-if="product.quantityError"
+                      class="text-red-500 text-xs"
+                    >
+                      Requested quantity exceeds available amount
+                    </div>
+                    <div
+                      v-if="product.requested_quantity === 0"
+                      class="text-red-500 text-xs"
+                    >
+                      Please enter a valid quantity
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <!-- Display warning if there are any quantity errors -->
+
+            <!-- Warning Messages - Simplified -->
             <div
-              v-if="hasQuantityErrors"
-              class="text-red-500 text-sm font-medium"
+              v-if="hasQuantityErrors || !selectedForestProducts.some(p => p.requested_quantity > 0)"
+              class="mt-2"
             >
-              Please correct the requested quantities before submitting
-            </div>
-            <!-- Display warning if no quantity is entered for selected products -->
-            <div
-              v-if="!selectedForestProducts.some(p => p.requested_quantity > 0)"
-              class="text-yellow-500 text-sm font-medium"
-            >
-              Please enter a quantity for your selected forest product(s)
+              <div v-if="hasQuantityErrors" class="text-red-600 text-sm">
+                Please correct the requested quantities before submitting
+              </div>
+
+              <div
+                v-if="!selectedForestProducts.some(p => p.requested_quantity > 0)"
+                class="text-amber-600 text-sm"
+              >
+                Please enter a quantity for your selected forest product(s)
+              </div>
             </div>
           </div>
 
@@ -615,6 +700,7 @@ onMounted(() => {
               type="date"
               v-model="collectionDate"
               id="collectionDate"
+              :min="new Date().toISOString().split('T')[0]"
               class="block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
@@ -641,7 +727,11 @@ onMounted(() => {
         >
           <div class="flex justify-between items-center p-4 border-b">
             <div class="flex items-center space-x-2">
-              <img src="@/assets/forest-product.png" alt="Logo" class="w-6 h-6" />
+              <img
+                src="@/assets/forest-product.png"
+                alt="Logo"
+                class="w-6 h-6"
+              />
               <h2 class="text-lg font-semibold text-green-800">
                 Select Forest Products
               </h2>
@@ -745,64 +835,200 @@ onMounted(() => {
               <div
                 v-for="product in filteredForestProducts"
                 :key="product.id"
-                class="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-gray-100"
+                class="flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-md hover:border-green-200"
               >
-                <div class="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  :value="product"
-                  v-model="selectedForestProducts"
-                  class="form-checkbox h-5 w-5 text-green-600 rounded"
-                />
-                <div class="flex-1">
-                  <div class="font-medium text-sm sm:text-base">{{ product.forest_product_name }}</div>
-                  <div class="text-xs sm:text-sm text-gray-500">
-                  Location: {{ product.location_name }} | Price: ₱{{ product.price }}
-                  per {{ product.unit_name }} |
-                  <span class="text-blue-600">
-                    Available: {{ product.quantity }} {{ product.unit_name }}(s)
-                  </span>
-                  <span v-if="product.hasRequests" class="text-amber-600">
-                    (Approved: {{ product.approvedQuantity }}, Pending:
-                    {{ product.unapprovedQuantity }})
-                  </span>
-                  <div class="mt-1 text-xs sm:text-sm">
-                    <span class="font-medium text-green-600">
-                    Available for Request: {{ product.adjustedQuantity }}
-                    {{ product.unit_name }}(s)
-                    </span>
+                <!-- Card Header with Checkbox and Product Name -->
+                <div
+                  class="flex items-center p-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-transparent"
+                >
+                  <input
+                    type="checkbox"
+                    :value="product"
+                    v-model="selectedForestProducts"
+                    class="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 focus:ring-2 focus:ring-offset-2"
+                  />
+                  <h3 class="ml-3 font-semibold text-gray-800">
+                    {{ product.forest_product_name }}
+                  </h3>
+                </div>
+
+                <!-- Card Body with Product Details -->
+                <div class="p-4 space-y-3">
+                  <!-- Product Info -->
+                  <div class="flex flex-wrap gap-y-2">
+                    <div class="w-full flex items-center text-sm text-gray-600">
+                      <svg
+                        class="w-4 h-4 mr-2 text-gray-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <span>{{ product.location_name }}</span>
+                    </div>
+
+                    <div class="w-1/2 flex items-center text-sm text-gray-600">
+                      <svg
+                        class="w-4 h-4 mr-2 text-gray-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <span>₱{{ product.price }}/{{ product.unit_name }}</span>
+                    </div>
+
+                    <div
+                      class="w-1/2 flex items-center text-sm font-medium text-blue-600"
+                    >
+                      <svg
+                        class="w-4 h-4 mr-2 text-blue-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"
+                        />
+                      </svg>
+                      <span
+                        >{{ product.quantity }} {{ product.unit_name }}(s)</span
+                      >
+                    </div>
                   </div>
+
+                  <!-- Status Info -->
+                  <div
+                    v-if="product.hasRequests"
+                    class="flex items-center space-x-1 text-xs text-amber-700 bg-amber-50 py-1 px-2 rounded"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span
+                      >Approved: {{ product.approvedQuantity }}, Pending:
+                      {{ product.unapprovedQuantity }}</span
+                    >
+                  </div>
+
+                  <!-- Available for Request -->
+                  <div
+                    class="mt-2 py-2 px-3 bg-green-50 rounded-lg border border-green-100"
+                  >
+                    <div class="flex items-center text-green-700 font-medium">
+                      <svg
+                        class="w-5 h-5 mr-2 text-green-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Available for Request: {{ product.adjustedQuantity }}
+                      {{ product.unit_name }}(s)
+                    </div>
                   </div>
                 </div>
-                </div>
+
+                <!-- Quantity Input Section -->
                 <div
-                v-if="selectedForestProducts.includes(product)"
-                class="flex flex-col sm:flex-row sm:items-center sm:space-x-2"
+                  v-if="selectedForestProducts.includes(product)"
+                  class="bg-gray-50 p-4 border-t border-gray-200"
                 >
-                <label class="text-xs sm:text-sm text-gray-600">Quantity:</label>
-                <input
-                  type="number"
-                  v-model="product.requested_quantity"
-                  min="0"
-                  :max="product.adjustedQuantity"
-                  placeholder="Qty"
-                  @input="validateProductQuantity(product)"
-                  :class="['w-full sm:w-24 text-center border rounded p-1 text-xs sm:text-sm', product.quantityError || product.requested_quantity === 0 ? 'border-red-500 bg-red-50' : 'border-gray-300']"
-                />
-                <!-- Warning for zero quantity -->
-                <div
-                  v-if="product.requested_quantity === 0"
-                  class="text-red-500 text-xs mt-1 sm:mt-0 sm:ml-2 text-right"
-                >
-                  Please enter a valid quantity.
-                </div>
-                <!-- Inline error message -->
-                <div
-                  v-if="product.quantityError"
-                  class="text-red-500 text-xs mt-1 sm:mt-0 sm:ml-2 text-right"
-                >
-                  Max: {{ product.adjustedQuantity }}
-                </div>
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between"
+                  >
+                    <label
+                      class="text-sm font-medium text-gray-700 mb-2 sm:mb-0"
+                      >Quantity to Request:</label
+                    >
+                    <div class="flex flex-col sm:flex-row sm:items-center">
+                      <div class="flex items-center">
+                        <div class="relative">
+                          <input
+                            type="number"
+                            v-model="product.requested_quantity"
+                            min="0"
+                            :max="product.adjustedQuantity"
+                            placeholder="Qty"
+                            @input="validateProductQuantity(product)"
+                            :class="['w-20 text-center border rounded-lg py-2 px-3 text-sm focus:ring-2 focus:outline-none', 
+                product.quantityError || product.requested_quantity === 0
+                  ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                  : 'border-gray-300 focus:ring-green-200 focus:border-green-400']"
+                          />
+                        </div>
+                        <span
+                          class="ml-2 text-gray-500 text-sm whitespace-nowrap"
+                          >{{ product.unit_name }}(s)</span
+                        >
+                      </div>
+
+                      <!-- Error messages -->
+                      <div class="mt-2 sm:mt-0 sm:ml-3">
+                        <p
+                          v-if="product.requested_quantity === 0"
+                          class="flex items-center text-red-600 text-xs"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-1"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                          Please enter a valid quantity
+                        </p>
+                        <p
+                          v-if="product.quantityError"
+                          class="flex items-center text-red-600 text-xs"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-1"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                          Limit exceeded: Max {{ product.adjustedQuantity }}
+                          {{ product.unit_name }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
