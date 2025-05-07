@@ -709,7 +709,7 @@ onMounted(() => {
           <button
             type="submit"
             :disabled="!isFormComplete || !isCollectionDateValid"
-            :class="[isFormComplete && isCollectionDateValid ? 'bg-gray-900 hover:bg-green-800' : 'bg-gray-400 cursor-not-allowed']"
+            :class="[isFormComplete && isCollectionDateValid ? 'bg-emerald-900 hover:bg-emerald-700' : 'bg-gray-400 cursor-not-allowed']"
             class="w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center"
           >
             Submit Collection Request
