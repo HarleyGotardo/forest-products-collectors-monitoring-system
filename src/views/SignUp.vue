@@ -192,14 +192,14 @@ const goToLoginPage = () => {
       <div class="absolute left-0 bottom-0 w-24 h-24 bg-emerald-700 rounded-tr-full opacity-10"></div>
       
       <div class="flex items-center space-x-3 mb-6">
-      <div class="w-12 h-12 bg-white rounded-full p-2 shadow-md">
+      <div class="w-12 h-12 bg-green-400 rounded-full p-2 shadow-md">
         <img src="@/assets/nature-cart.png" alt="Nature Cart Logo" class="w-full h-full object-contain" />
       </div>
       <h1 class="text-2xl font-bold">Nature Cart</h1>
       </div>
       
-      <h2 class="text-xl font-semibold mb-1">Forest Product Collectors</h2>
-      <p class="text-green-100">Monitoring & Management System</p>
+      <h2 class="text-xl font-semibold mb-1 font-style: italic">Forest treasures</h2>
+      <p class="text-green-100 font-style: italic">tracked with care</p>
       
       <!-- Mobile logos in a row -->
       <div class="flex justify-start space-x-4 mt-4">
@@ -222,13 +222,13 @@ const goToLoginPage = () => {
           </div>
           <div>
             <h1 class="text-4xl font-extrabold text-gray-800">Nature Cart</h1>
-            <p class="text-sm text-gray-600">Forest Product Collectors Monitoring System</p>
+            <p class="text-sm text-emerald-700 font-semibold font-style: italic">Forest treasures, tracked with care</p>
           </div>
         </div>
         
         <!-- Welcome Message -->
         <div class="mb-10 mt-5 sm:mt-5">
-          <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-900">Welcome</h2>
+          <h2 class="text-3xl lg:text-4xl font-extrabold text-emerald-700">Welcome to Nature Cart</h2>
             <p class="mt-3 text-lg text-gray-600">Please fill out the form below to create your account</p>
         </div>
         
@@ -572,7 +572,7 @@ const goToLoginPage = () => {
     <!-- Feature Column - Hidden on mobile, visible on desktop -->
     <div class="hidden lg:flex lg:w-1/2 bg-emerald-50 flex-col items-center p-12">
       <div class="max-w-lg">
-        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+        <h2 class="text-3xl font-bold text-emerald-800 mb-8 text-center">
           Forest Product Collectors Monitoring System
         </h2>
         
