@@ -21,10 +21,12 @@ const isLoading = ref(false)
 const showForgotPasswordModal = ref(false)
 const resetEmail = ref('')
 const isResetting = ref(false)
+const isProcessing = ref(false)
+const isLoginSuccessful = ref(false)
 
 // Add computed property to check if form is complete
 const isFormComplete = computed(() => {
-  return email.value && password.value
+  return email.value && password.value && !isLoginSuccessful.value
 })
 
 const handleLogin = async () => {
@@ -36,6 +38,7 @@ const handleLogin = async () => {
   }
 
   isLoading.value = true
+  isProcessing.value = true
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -60,6 +63,7 @@ const handleLogin = async () => {
         duration: 3000,
       })
     } else {
+      isLoginSuccessful.value = true
       toast.success('Successfully Logged In.', {
         duration: 2000,
       })
@@ -73,6 +77,7 @@ const handleLogin = async () => {
     })
   } finally {
     isLoading.value = false
+    isProcessing.value = false
   }
 }
 
@@ -116,7 +121,15 @@ const handleForgotPassword = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col lg:flex-row">
+  <div class="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col lg:flex-row relative" :class="{ 'pointer-events-none': isProcessing || isLoginSuccessful }">
+    <!-- Add overlay when processing -->
+    <div v-if="isProcessing || isLoginSuccessful" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-center justify-center">
+      <div class="bg-white p-4 rounded-lg shadow-lg flex items-center gap-3">
+        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
+        <span class="text-gray-700">{{ isLoginSuccessful ? 'Redirecting...' : 'Signing in...' }}</span>
+      </div>
+    </div>
+
     <!-- Green top banner for mobile view only -->
     <div class="lg:hidden relative bg-gradient-to-r from-green-600 to-green-500 py-8 px-6 text-white rounded-b-3xl shadow-lg">
       <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-400 rounded-bl-full opacity-20"></div>
@@ -196,6 +209,7 @@ const handleForgotPassword = async () => {
                 type="button"
                 @click.prevent="showForgotPasswordModal = true"
                 class="text-sm text-green-600 hover:text-green-500 font-medium"
+                :disabled="isProcessing || isLoginSuccessful"
               >
                 Forgot password?
               </button>
@@ -222,11 +236,11 @@ const handleForgotPassword = async () => {
             type="submit"
             variant="primary"
             size="lg"
-            :disabled="!isFormComplete"
+            :disabled="!isFormComplete || isProcessing || isLoginSuccessful"
             :loading="isLoading"
             class="w-full rounded-xl"
           >
-            {{ isLoading ? 'Signing in...' : 'Sign in' }}
+            {{ isLoginSuccessful ? 'Signed in' : (isLoading ? 'Signing in...' : 'Sign in') }}
           </CustomButton>
         </form>
 
@@ -234,7 +248,7 @@ const handleForgotPassword = async () => {
         <div class="mt-8 text-center">
           <p class="text-sm text-gray-600">
             Don't have an account?
-            <CustomButton @click="goToSignUpPage" variant="link" class="font-medium">
+            <CustomButton @click="goToSignUpPage" variant="link" class="font-medium" :disabled="isProcessing || isLoginSuccessful">
               Sign up
             </CustomButton>
           </p>
@@ -404,3 +418,11 @@ const handleForgotPassword = async () => {
     />
   </div>
 </template>
+
+<style scoped>
+/* Add styles for disabled state */
+.pointer-events-none {
+  pointer-events: none;
+  user-select: none;
+}
+</style>

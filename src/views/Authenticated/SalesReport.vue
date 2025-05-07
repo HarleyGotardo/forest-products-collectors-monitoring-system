@@ -186,14 +186,21 @@ const calculateStatistics = () => {
   const filteredData = getFilteredData()
   
   // Calculate total sales
-  totalSales.value = filteredData.reduce((sum, record) => sum + record.totalAmount, 0).toFixed(2)
+  totalSales.value = filteredData.reduce((sum, record) => {
+    if (productFilter.value) {
+      return sum + record.items
+        .filter(item => item.productName === productFilter.value)
+        .reduce((itemSum, item) => itemSum + item.cost, 0)
+    }
+    return sum + record.totalAmount
+  }, 0).toFixed(2)
   
   // Calculate total collections
   totalCollections.value = filteredData.length
   
   // Calculate average sale amount
   averageSaleAmount.value = filteredData.length > 0 
-    ? (filteredData.reduce((sum, record) => sum + record.totalAmount, 0) / filteredData.length).toFixed(2)
+    ? (totalSales.value / filteredData.length).toFixed(2)
     : '0.00'
   
   // Find top selling product
@@ -226,15 +233,24 @@ const prepareChartData = () => {
   const monthlySales = new Map()
   filteredData.forEach(record => {
     const monthKey = `${record.year}-${record.month}`
-    const current = monthlySales.get(monthKey) || 0
-    monthlySales.set(monthKey, current + record.totalAmount)
+    
+    // If filtering by product, only include sales for that product
+    if (productFilter.value) {
+      const productSales = record.items
+        .filter(item => item.productName === productFilter.value)
+        .reduce((sum, item) => sum + item.cost, 0)
+      const current = monthlySales.get(monthKey) || 0
+      monthlySales.set(monthKey, current + productSales)
+    } else {
+      const current = monthlySales.get(monthKey) || 0
+      monthlySales.set(monthKey, current + record.totalAmount)
+    }
   })
   
-  // Sort by date
+  // Sort by date and format for display
   monthlySalesData.value = Array.from(monthlySales.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([month, amount]) => {
-      // Format the month for display
       const [year, monthNum] = month.split('-')
       const monthName = availableMonths.value.find(m => m.value === monthNum)?.label
       return {
@@ -245,16 +261,34 @@ const prepareChartData = () => {
   
   // Prepare product sales data
   const productSales = new Map()
-  filteredData.forEach(record => {
-    record.items.forEach(item => {
-      const current = productSales.get(item.productName) || 0
-      productSales.set(item.productName, current + item.cost)
-    })
-  })
   
+  // If a specific product is selected, only show that product's data
+  if (productFilter.value) {
+    let totalSales = 0
+    filteredData.forEach(record => {
+      record.items
+        .filter(item => item.productName === productFilter.value)
+        .forEach(item => {
+          totalSales += item.cost
+        })
+    })
+    if (totalSales > 0) {
+      productSales.set(productFilter.value, totalSales)
+    }
+  } else {
+    // If no product filter, show all products
+    filteredData.forEach(record => {
+      record.items.forEach(item => {
+        const current = productSales.get(item.productName) || 0
+        productSales.set(item.productName, current + item.cost)
+      })
+    })
+  }
+  
+  // Sort by sales amount and get top 5 (or just the selected product)
   productSalesData.value = Array.from(productSales.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5) // Top 5 products
+    .slice(0, productFilter.value ? 1 : 5) // Only take top 1 if product is filtered, otherwise top 5
     .map(([product, amount]) => ({
       product,
       amount
@@ -263,13 +297,22 @@ const prepareChartData = () => {
   // Prepare collector sales data
   const collectorSales = new Map()
   filteredData.forEach(record => {
-    const current = collectorSales.get(record.collectorName) || 0
-    collectorSales.set(record.collectorName, current + record.totalAmount)
+    let saleAmount = productFilter.value
+      ? record.items
+          .filter(item => item.productName === productFilter.value)
+          .reduce((sum, item) => sum + item.cost, 0)
+      : record.totalAmount
+    
+    if (saleAmount > 0) { // Only include collectors with sales for the selected product
+      const current = collectorSales.get(record.collectorName) || 0
+      collectorSales.set(record.collectorName, current + saleAmount)
+    }
   })
   
+  // Sort by sales amount and get top 5
   collectorSalesData.value = Array.from(collectorSales.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5) // Top 5 collectors
+    .slice(0, 5)
     .map(([collector, amount]) => ({
       collector,
       amount
@@ -300,12 +343,9 @@ const getFilteredData = () => {
       return false
     }
     
-    // Filter by product
+    // Filter by product - check if any item matches the selected product
     if (productFilter.value) {
-      const hasProduct = record.items.some(item => item.productName === productFilter.value)
-      if (!hasProduct) {
-        return false
-      }
+      return record.items.some(item => item.productName === productFilter.value)
     }
     
     // Filter by collector
@@ -398,18 +438,25 @@ const viewCollectionDetails = (id) => {
 
 const renderCharts = async () => {
   try {
-    // Wait for the DOM to ensure the chart containers are available
     await nextTick()
+    
+    // Destroy existing chart instances before creating new ones
+    if (monthlySalesChartInstance) {
+      monthlySalesChartInstance.destroy()
+      monthlySalesChartInstance = null
+    }
+    if (productSalesChartInstance) {
+      productSalesChartInstance.destroy()
+      productSalesChartInstance = null
+    }
+    if (collectorSalesChartInstance) {
+      collectorSalesChartInstance.destroy()
+      collectorSalesChartInstance = null
+    }
     
     // Monthly Sales Chart
     const monthlyChartCtx = document.getElementById('monthlySalesChart')?.getContext('2d')
     if (monthlyChartCtx) {
-      // Destroy existing chart instance if it exists
-      if (monthlySalesChartInstance) {
-        monthlySalesChartInstance.destroy()
-        monthlySalesChartInstance = null
-      }
-      
       const labels = monthlySalesData.value.map(item => item.month)
       const data = monthlySalesData.value.map(item => item.amount)
       
@@ -418,7 +465,7 @@ const renderCharts = async () => {
         data: {
           labels,
           datasets: [{
-            label: 'Sales',
+            label: productFilter.value ? `Sales (${productFilter.value})` : 'Sales',
             data,
             backgroundColor: 'rgba(54, 162, 235, 0.2)',
             borderColor: 'rgba(54, 162, 235, 1)',
@@ -435,7 +482,7 @@ const renderCharts = async () => {
               beginAtZero: true,
               title: {
                 display: true,
-                text: 'Sales Amount'
+                text: 'Sales Amount (₱)'
               }
             },
             x: {
@@ -448,7 +495,7 @@ const renderCharts = async () => {
           plugins: {
             title: {
               display: true,
-              text: 'Monthly Sales Trend'
+              text: productFilter.value ? `Monthly Sales Trend - ${productFilter.value}` : 'Monthly Sales Trend'
             }
           }
         }
@@ -458,12 +505,6 @@ const renderCharts = async () => {
     // Product Sales Chart
     const productChartCtx = document.getElementById('productSalesChart')?.getContext('2d')
     if (productChartCtx) {
-      // Destroy existing chart instance if it exists
-      if (productSalesChartInstance) {
-        productSalesChartInstance.destroy()
-        productSalesChartInstance = null
-      }
-      
       const labels = productSalesData.value.map(item => item.product)
       const data = productSalesData.value.map(item => item.amount)
       
@@ -474,20 +515,24 @@ const renderCharts = async () => {
           datasets: [{
             label: 'Sales',
             data,
-            backgroundColor: [
-              'rgba(255, 99, 132, 0.6)',
-              'rgba(54, 162, 235, 0.6)',
-              'rgba(255, 206, 86, 0.6)',
-              'rgba(75, 192, 192, 0.6)',
-              'rgba(153, 102, 255, 0.6)'
-            ],
-            borderColor: [
-              'rgba(255, 99, 132, 1)',
-              'rgba(54, 162, 235, 1)',
-              'rgba(255, 206, 86, 1)',
-              'rgba(75, 192, 192, 1)',
-              'rgba(153, 102, 255, 1)'
-            ],
+            backgroundColor: productFilter.value 
+              ? ['rgba(54, 162, 235, 0.6)']
+              : [
+                  'rgba(255, 99, 132, 0.6)',
+                  'rgba(54, 162, 235, 0.6)',
+                  'rgba(255, 206, 86, 0.6)',
+                  'rgba(75, 192, 192, 0.6)',
+                  'rgba(153, 102, 255, 0.6)'
+                ],
+            borderColor: productFilter.value
+              ? ['rgba(54, 162, 235, 1)']
+              : [
+                  'rgba(255, 99, 132, 1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 1)',
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(153, 102, 255, 1)'
+                ],
             borderWidth: 1
           }]
         },
@@ -499,7 +544,7 @@ const renderCharts = async () => {
               beginAtZero: true,
               title: {
                 display: true,
-                text: 'Sales Amount'
+                text: 'Sales Amount (₱)'
               }
             },
             x: {
@@ -512,7 +557,7 @@ const renderCharts = async () => {
           plugins: {
             title: {
               display: true,
-              text: 'Top Products by Sales'
+              text: productFilter.value ? `Sales for ${productFilter.value}` : 'Top Products by Sales'
             }
           }
         }
@@ -522,12 +567,6 @@ const renderCharts = async () => {
     // Collector Sales Chart
     const collectorChartCtx = document.getElementById('collectorSalesChart')?.getContext('2d')
     if (collectorChartCtx) {
-      // Destroy existing chart instance if it exists
-      if (collectorSalesChartInstance) {
-        collectorSalesChartInstance.destroy()
-        collectorSalesChartInstance = null
-      }
-      
       const labels = collectorSalesData.value.map(item => item.collector)
       const data = collectorSalesData.value.map(item => item.amount)
       
@@ -561,7 +600,7 @@ const renderCharts = async () => {
           plugins: {
             title: {
               display: true,
-              text: 'Top Collectors by Sales'
+              text: productFilter.value ? `Top Collectors by Sales - ${productFilter.value}` : 'Top Collectors by Sales'
             },
             legend: {
               position: 'right'
@@ -571,8 +610,8 @@ const renderCharts = async () => {
       })
     }
   } catch (error) {
-    console.error('Chart rendering error:', error)
-    toast.error(error.message || 'Failed to render charts')
+    console.error('Error rendering charts:', error)
+    toast.error('Failed to render charts. Please try refreshing the page.')
   }
 }
 
@@ -580,6 +619,20 @@ const renderCharts = async () => {
 watch([yearFilter, monthFilter, productFilter, collectorFilter, dateRange], () => {
   currentPage.value = 1 // Reset to first page when filters change
   applyFilters()
+}, { deep: true })
+
+// Add validation for date range
+watch([dateRange], () => {
+  if (dateRange.value.start && dateRange.value.end) {
+    const startDate = new Date(dateRange.value.start)
+    const endDate = new Date(dateRange.value.end)
+    
+    if (endDate < startDate) {
+      toast.error('End date cannot be before start date')
+      dateRange.value.end = ''
+      return
+    }
+  }
 }, { deep: true })
 
 onMounted(() => {
