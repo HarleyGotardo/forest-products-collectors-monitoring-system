@@ -737,7 +737,7 @@ onMounted(async () => {
                   <span
                     :class="[
                       'px-2 py-0.5 rounded-full text-xs font-medium',
-                      record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      record.is_paid === 'Paid' ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     ]"
                   >
                     {{ record.is_paid }}
@@ -856,7 +856,7 @@ onMounted(async () => {
                     <span
                       :class="[
                         'px-3 py-1 rounded-full text-xs font-medium',
-                        record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        record.is_paid === 'Paid' ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                       ]"
                     >
                       {{ record.is_paid }}
@@ -907,7 +907,7 @@ onMounted(async () => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                           ]"
                         >
                           {{ item.value }}
@@ -987,7 +987,7 @@ onMounted(async () => {
                   <span
                     :class="[
                       'px-2 py-0.5 rounded-full text-xs font-medium',
-                      record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      record.is_paid === 'Paid' ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     ]"
                   >
                     {{ record.is_paid }}
@@ -1096,7 +1096,7 @@ onMounted(async () => {
                     <span
                       :class="[
                         'px-3 py-1 rounded-full text-xs font-medium',
-                        record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        record.is_paid === 'Paid' ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                       ]"
                     >
                       {{ record.is_paid }}
@@ -1147,7 +1147,7 @@ onMounted(async () => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                           ]"
                         >
                           {{ item.value }}
@@ -1225,7 +1225,7 @@ onMounted(async () => {
                   <span
                     :class="[
                       'px-2 py-0.5 rounded-full text-xs font-medium',
-                      record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      record.is_paid === 'Paid' ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     ]"
                   >
                     {{ record.is_paid }}
@@ -1334,7 +1334,7 @@ onMounted(async () => {
                     <span
                       :class="[
                         'px-3 py-1 rounded-full text-xs font-medium',
-                        record.is_paid === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        record.is_paid === 'Paid' ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                       ]"
                     >
                       {{ record.is_paid }}
@@ -1385,7 +1385,7 @@ onMounted(async () => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                           ]"
                         >
                           {{ item.value }}

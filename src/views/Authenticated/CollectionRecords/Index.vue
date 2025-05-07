@@ -613,14 +613,14 @@ watch(paymentFilter, () => {
           <Button
             v-if="isFPUAdmin || isForestRanger"
             @click="createCollectionRecord"
-            class="min-w-10 bg-green-900 text-white hover:bg-green-700"
+            class="min-w-10 bg-emerald-900 text-white hover:bg-emerald-700"
           >
             +
           </Button>
           <Button
             v-if="isFPUAdmin"
             @click="showEditSignatureDialog = true"
-            class="bg-green-900 text-white hover:bg-green-700"
+            class="bg-emerald-900 text-white hover:bg-emerald-700"
           >
             Edit Forest Conservation Officer
           </Button>
@@ -697,7 +697,7 @@ watch(paymentFilter, () => {
         </div>
 
         <!-- Payment Process Note -->
-        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+        <div class="bg-emerald-50 border-l-4 border-green-400 p-4 rounded-r-lg">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg
@@ -754,7 +754,7 @@ watch(paymentFilter, () => {
       >
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -880,7 +880,7 @@ watch(paymentFilter, () => {
       <!-- Desktop view (table) - hidden on small screens -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-green-900">
+          <thead class="bg-emerald-900">
             <tr>
               <th
                 scope="col"
@@ -967,7 +967,7 @@ watch(paymentFilter, () => {
                   :class="[
               'px-2.5 py-0.5 rounded-full text-xs font-medium',
               record.is_paid 
-                ? 'bg-green-100 text-green-800'
+                ? 'bg-emerald-100 text-green-800'
                 : 'bg-yellow-100 text-yellow-800'
             ]"
                 >
@@ -984,7 +984,7 @@ watch(paymentFilter, () => {
                     <AlertDialog>
                       <AlertDialogTrigger>
                         <Button
-                          class="bg-green-900 text-white hover:bg-green-600 p-2"
+                          class="bg-emerald-900 text-white hover:bg-emerald-600 p-2"
                           v-if="isVSUAdmin"
                         >
                           <svg
@@ -1024,7 +1024,7 @@ watch(paymentFilter, () => {
 
                   <!-- Edit Button -->
                   <!-- <Button
-            class="bg-green-900 text-white hover:bg-green-600 p-2"
+            class="bg-emerald-900 text-white hover:bg-emerald-600 p-2"
               v-if="(isFPUAdmin || isForestRanger) && !record.is_paid"
               @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
             >
@@ -1135,7 +1135,7 @@ watch(paymentFilter, () => {
             </div>
             <div>
               <span
-                :class="record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                :class="record.is_paid ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
                 class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
               >
                 {{ record.is_paid ? 'Paid' : 'Unpaid' }}
@@ -1315,7 +1315,7 @@ watch(paymentFilter, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

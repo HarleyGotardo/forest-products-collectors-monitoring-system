@@ -322,7 +322,7 @@ onMounted(() => {
         </div>
 
         <!-- Recording Note -->
-        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+        <div class="bg-emerald-50 border-l-4 border-green-400 p-4 rounded-r-lg">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -366,7 +366,7 @@ onMounted(() => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -475,7 +475,7 @@ onMounted(() => {
         <!-- Desktop view (table) - hidden on small screens -->
   <div class="hidden sm:block overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-green-900">
+      <thead class="bg-emerald-900">
         <tr>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
             ID
@@ -524,7 +524,7 @@ onMounted(() => {
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <span :class="{
-              'bg-green-100 text-green-800': request.remarks === 'Approved',
+              'bg-emerald-100 text-green-800': request.remarks === 'Approved',
               'bg-yellow-100 text-yellow-800': request.remarks === 'Pending',
               'bg-red-100 text-red-800': request.remarks === 'Rejected'
             }" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
@@ -546,7 +546,7 @@ onMounted(() => {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
-                    class="bg-green-900 text-white hover:bg-green-700 text-sm px-3 py-2"
+                    class="bg-emerald-900 text-white hover:bg-emerald-700 text-sm px-3 py-2"
                     v-if="isFPUAdmin || isForestRanger" @click="confirmApproveRequest(request.id)">
                       <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -563,7 +563,7 @@ onMounted(() => {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
-                      <AlertDialogAction class="bg-green-900 hover:bg-green-700" @click="approveRequest">Approve</AlertDialogAction>
+                      <AlertDialogAction class="bg-emerald-900 hover:bg-emerald-700" @click="approveRequest">Approve</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -633,7 +633,7 @@ onMounted(() => {
         <div class="flex space-x-2">
           <span
             :class="{
-              'bg-green-100 text-green-800': request.remarks === 'Approved',
+              'bg-emerald-100 text-green-800': request.remarks === 'Approved',
               'bg-yellow-100 text-yellow-800': request.remarks === 'Pending',
               'bg-red-100 text-red-800': request.remarks === 'Rejected'
             }"
@@ -778,7 +778,7 @@ onMounted(() => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

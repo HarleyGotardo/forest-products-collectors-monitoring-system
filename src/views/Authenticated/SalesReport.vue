@@ -690,13 +690,13 @@ onMounted(() => {
           </div>
         </div>
         <div class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative">
-          <div class="absolute top-0 left-0 w-2 h-full bg-green-500"></div>
+          <div class="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
               <p class="text-sm font-medium text-gray-500 mb-1">Total Collections</p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">{{ totalCollections }}</p>
             </div>
-            <div class="p-3 bg-green-100 rounded-lg"> <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 bg-emerald-100 rounded-lg"> <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
             </div>
@@ -808,7 +808,7 @@ onMounted(() => {
         <!-- Monthly Sales Chart -->
         <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6">
           <div class="flex items-center justify-center mb-6">
-            <div class="p-2 bg-green-100 rounded-lg">
+            <div class="p-2 bg-emerald-100 rounded-lg">
               <img
                 src="@/assets/trend3.png"
                 alt="Forest Logo"
@@ -829,7 +829,7 @@ onMounted(() => {
         <!-- Top Products Chart -->
         <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6">
           <div class="flex items-center justify-center mb-6">
-            <div class="p-2 bg-green-100 rounded-full">
+            <div class="p-2 bg-emerald-100 rounded-full">
               <img
                 src="@/assets/trend2.png"
                 alt="Forest Logo"
@@ -851,7 +851,7 @@ onMounted(() => {
       <!-- Top Collectors Chart -->
       <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6 mb-6">
         <div class="flex items-center justify-center mb-6">
-            <div class="p-2 bg-green-100 rounded-full">
+            <div class="p-2 bg-emerald-100 rounded-full">
               <img
                 src="@/assets/profile.png"
                 alt="Forest Logo"
@@ -885,7 +885,7 @@ onMounted(() => {
       <!-- Sales Data Table -->
       <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6">
         <div class="flex items-center justify-center mb-6">
-            <div class="p-2 bg-green-100 rounded-full">
+            <div class="p-2 bg-emerald-100 rounded-full">
               <img
                 src="@/assets/bill.png"
                 alt="Forest Logo"
@@ -941,7 +941,7 @@ onMounted(() => {
                 <span
                   :class="[
                     'px-2 py-0.5 rounded-full text-xs font-medium',
-                    record.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    record.isPaid ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                   ]"
                 >
                   {{ record.isPaid ? 'Paid' : 'Unpaid' }}
@@ -1026,7 +1026,7 @@ onMounted(() => {
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap">
                   <span :class="[
-                    record.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800',
+                    record.isPaid ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800',
                     'px-2 inline-flex text-xs leading-5 font-semibold rounded-full'
                   ]">
                     {{ record.isPaid ? 'Paid' : 'Unpaid' }}
@@ -1083,7 +1083,7 @@ onMounted(() => {
                         :value="item.value"
                         :class="[
                           'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                          item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                          item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                         ]"
                       >
                         {{ item.value }}

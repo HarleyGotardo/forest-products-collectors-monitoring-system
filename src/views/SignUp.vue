@@ -188,8 +188,8 @@ const goToLoginPage = () => {
   <div class="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col lg:flex-row">
     <!-- Green top banner for mobile view only -->
     <div class="lg:hidden relative bg-gradient-to-r from-green-600 to-green-500 py-8 px-6 text-white rounded-b-3xl shadow-lg">
-      <div class="absolute right-0 top-0 w-32 h-32 bg-green-400 rounded-bl-full opacity-20"></div>
-      <div class="absolute left-0 bottom-0 w-24 h-24 bg-green-700 rounded-tr-full opacity-10"></div>
+      <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-400 rounded-bl-full opacity-20"></div>
+      <div class="absolute left-0 bottom-0 w-24 h-24 bg-emerald-700 rounded-tr-full opacity-10"></div>
       
       <div class="flex items-center space-x-3 mb-6">
       <div class="w-12 h-12 bg-white rounded-full p-2 shadow-md">
@@ -394,23 +394,23 @@ const goToLoginPage = () => {
               <!-- Password requirements -->
               <div class="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
                 <div class="flex items-center text-xs">
-                  <div class="w-3 h-3 rounded-full mr-2" :class="hasMinLength ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasMinLength ? 'bg-emerald-500' : 'bg-gray-300'"></div>
                   <span :class="hasMinLength ? 'text-gray-700' : 'text-gray-500'">At least 8 characters</span>
                 </div>
                 <div class="flex items-center text-xs">
-                  <div class="w-3 h-3 rounded-full mr-2" :class="hasUppercase ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasUppercase ? 'bg-emerald-500' : 'bg-gray-300'"></div>
                   <span :class="hasUppercase ? 'text-gray-700' : 'text-gray-500'">Uppercase letter</span>
                 </div>
                 <div class="flex items-center text-xs">
-                  <div class="w-3 h-3 rounded-full mr-2" :class="hasLowercase ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasLowercase ? 'bg-emerald-500' : 'bg-gray-300'"></div>
                   <span :class="hasLowercase ? 'text-gray-700' : 'text-gray-500'">Lowercase letter</span>
                 </div>
                 <div class="flex items-center text-xs">
-                  <div class="w-3 h-3 rounded-full mr-2" :class="hasNumber ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasNumber ? 'bg-emerald-500' : 'bg-gray-300'"></div>
                   <span :class="hasNumber ? 'text-gray-700' : 'text-gray-500'">Number</span>
                 </div>
                 <div class="flex items-center text-xs">
-                  <div class="w-3 h-3 rounded-full mr-2" :class="hasSpecialChar ? 'bg-green-500' : 'bg-gray-300'"></div>
+                  <div class="w-3 h-3 rounded-full mr-2" :class="hasSpecialChar ? 'bg-emerald-500' : 'bg-gray-300'"></div>
                   <span :class="hasSpecialChar ? 'text-gray-700' : 'text-gray-500'">Special character</span>
                 </div>
               </div>
@@ -570,7 +570,7 @@ const goToLoginPage = () => {
     </div>
     
     <!-- Feature Column - Hidden on mobile, visible on desktop -->
-    <div class="hidden lg:flex lg:w-1/2 bg-green-50 flex-col items-center p-12">
+    <div class="hidden lg:flex lg:w-1/2 bg-emerald-50 flex-col items-center p-12">
       <div class="max-w-lg">
         <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
           Forest Product Collectors Monitoring System

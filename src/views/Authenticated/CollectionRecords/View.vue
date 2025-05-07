@@ -839,7 +839,7 @@ onMounted(async () => {
                   <dt class="text-gray-600">Payment Status</dt>
                   <dd
                     class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                    :class="record.is_paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                    :class="record.is_paid ? 'bg-emerald-100 text-green-800' : 'bg-red-100 text-red-800'"
                   >
                     {{ record.is_paid ? 'PAID' : 'UNPAID' }}
                   </dd>
@@ -866,7 +866,7 @@ onMounted(async () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
-                        class="w-full bg-green-600 hover:bg-green-700 text-white"
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                       >
                         Mark as Paid
                       </Button>
@@ -883,7 +883,7 @@ onMounted(async () => {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           @click="markAsPaid"
-                          class="bg-green-600 hover:bg-green-700"
+                          class="bg-emerald-600 hover:bg-emerald-700"
                         >
                           Confirm Mark as Paid
                         </AlertDialogAction>

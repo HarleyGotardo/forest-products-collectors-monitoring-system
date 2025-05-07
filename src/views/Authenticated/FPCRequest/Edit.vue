@@ -599,7 +599,7 @@ onMounted(() => {
           :disabled="!isFormComplete || !hasChanges || !isCollectionDateValid"
           :class="[
     'w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center',
-    isFormComplete && hasChanges && isCollectionDateValid ? 'bg-gray-900 hover:bg-green-800' : 'bg-gray-400 cursor-not-allowed'
+    isFormComplete && hasChanges && isCollectionDateValid ? 'bg-gray-900 hover:bg-emerald-800' : 'bg-gray-400 cursor-not-allowed'
   ]"
         >
           <svg
@@ -759,7 +759,7 @@ onMounted(() => {
         </div>
         <div class="flex justify-end p-4 border-t">
           <button
-            class="bg-green-600 hover:bg-green-700 text-white rounded-lg px-6 py-2.5 font-medium"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-6 py-2.5 font-medium"
             @click="showModal = false"
           >
             Done
@@ -803,7 +803,7 @@ onMounted(() => {
           </AlertDialogCancel>
           <AlertDialogAction
             @click="confirmSubmit"
-            class="px-4 py-2 bg-gray-900 border border-transparent rounded-lg text-white hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+            class="px-4 py-2 bg-gray-900 border border-transparent rounded-lg text-white hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             Update
           </AlertDialogAction>

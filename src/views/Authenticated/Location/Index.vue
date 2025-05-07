@@ -213,7 +213,7 @@ watch(currentPage, () => {
             </svg>
           </div>
         </div>
-        <Button class="bg-green-900 text-white hover:bg-green-600" v-if="isFPUAdmin || isForestRanger" @click="createLocation">
+        <Button class="bg-emerald-900 text-white hover:bg-emerald-600" v-if="isFPUAdmin || isForestRanger" @click="createLocation">
           +
         </Button>
       </div>
@@ -296,7 +296,7 @@ watch(currentPage, () => {
       <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -390,7 +390,7 @@ watch(currentPage, () => {
   <!-- Desktop Table View - Hidden on mobile -->
   <div class="hidden md:block overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-green-900">
+      <thead class="bg-emerald-900">
         <tr>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
             ID
@@ -423,7 +423,7 @@ watch(currentPage, () => {
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="flex items-center">
-              <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-green-50">
+              <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-emerald-50">
                 <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -446,7 +446,7 @@ watch(currentPage, () => {
           <td v-if="isFPUAdmin || isForestRanger" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
             <div class="flex items-center justify-end space-x-3">
               <Button
-                class="bg-green-900 text-white hover:bg-green-600"
+                class="bg-emerald-900 text-white hover:bg-emerald-600"
                 v-if="isFPUAdmin || isForestRanger" 
                 @click="editLocation(location.id, $event)"
               >
@@ -515,7 +515,7 @@ watch(currentPage, () => {
             </span>
           <div class="flex space-x-2" @click.stop>
             <Button 
-              class="bg-green-900 text-white hover:bg-green-600 p-1"
+              class="bg-emerald-900 text-white hover:bg-emerald-600 p-1"
               v-if="isFPUAdmin || isForestRanger" 
               @click="editLocation(location.id, $event)"
             >
@@ -583,7 +583,7 @@ watch(currentPage, () => {
                   :value="item.value"
                   :class="[
                     'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                    item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                    item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                   ]"
                 >
                   {{ item.value }}

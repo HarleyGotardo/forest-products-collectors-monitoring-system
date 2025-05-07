@@ -427,7 +427,7 @@ onMounted(async () => {
       <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="hidden sm:table-cell px-6 py-3 h-12"></th>
@@ -488,7 +488,7 @@ onMounted(async () => {
       <!-- Desktop Table View -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-green-900">
+          <thead class="bg-emerald-900">
             <tr>
               <th
                 scope="col"
@@ -544,7 +544,7 @@ onMounted(async () => {
               :key="user.id"
               :class="{
               'hover:bg-gray-50 transition-colors cursor-pointer': true,
-              'bg-green-50': user.id === getUser().id
+              'bg-emerald-50': user.id === getUser().id
               }"
             >
               <router-link
@@ -577,7 +577,7 @@ onMounted(async () => {
                         {{ user.email_address }}
                       </div>
                       <div
-                        class="block sm:hidden mt-1 text-xs font-medium rounded-full bg-green-100 px-2 py-1 text-green-800"
+                        class="block sm:hidden mt-1 text-xs font-medium rounded-full bg-emerald-100 px-2 py-1 text-green-800"
                       >
                         {{ user.role.name }}
                       </div>
@@ -680,7 +680,7 @@ onMounted(async () => {
             :key="user.id"
             :to="{ name: 'SystemUsersView', params: { id: user.id } }"
             class="block bg-white rounded-lg shadow-sm p-4 mb-3 hover:bg-gray-50 transition-colors"
-            :class="{ 'bg-green-50': user.id === getUser().id }"
+            :class="{ 'bg-emerald-50': user.id === getUser().id }"
           >
             <!-- User Header -->
             <div class="flex items-start space-x-4">
@@ -789,7 +789,7 @@ onMounted(async () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-700'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-700'
                       ]"
                     >
                       {{ item.value }}
@@ -893,7 +893,7 @@ onMounted(async () => {
             <!-- Desktop Table View -->
             <div class="hidden sm:block overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-green-900">
+                <thead class="bg-emerald-900">
                   <tr>
                     <th
                       scope="col"
@@ -984,7 +984,7 @@ onMounted(async () => {
                           <div class="block sm:hidden mt-3 space-x-2">
                             <button
                               @click="approveUser(user.id)"
-                              class="px-3 py-1.5 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
+                              class="px-3 py-1.5 bg-emerald-600 text-white rounded-md shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
                               aria-label="Approve user"
                             >
                               <div class="flex items-center space-x-1">
@@ -1163,7 +1163,7 @@ onMounted(async () => {
       <div class="grid grid-cols-2 border-t border-gray-100">
         <button
           @click="approveUser(user.id)"
-          class="flex items-center justify-center py-3 px-2 bg-white text-green-600 hover:bg-green-50 transition-colors font-medium"
+          class="flex items-center justify-center py-3 px-2 bg-white text-green-600 hover:bg-emerald-50 transition-colors font-medium"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -1225,7 +1225,7 @@ onMounted(async () => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-700'
+                            item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-700'
                           ]"
                         >
                           {{ item.value }}
@@ -1277,7 +1277,7 @@ onMounted(async () => {
         >
         <AlertDialogAction
           @click="handleApproveConfirm"
-          class="bg-green-600 hover:bg-green-700"
+          class="bg-emerald-600 hover:bg-emerald-700"
         >
           Approve
         </AlertDialogAction>

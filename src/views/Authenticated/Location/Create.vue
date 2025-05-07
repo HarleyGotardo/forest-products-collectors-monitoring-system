@@ -431,7 +431,7 @@ const getCurrentLocation = () => {
 
     <!-- Header with improved design -->
     <div class="flex items-center space-x-3 mb-8 pb-4 border-b border-gray-100">
-      <div class="bg-green-100 p-2 rounded-full">
+      <div class="bg-emerald-100 p-2 rounded-full">
         <svg
           class="w-6 h-6 text-green-600"
           fill="none"
@@ -533,7 +533,7 @@ const getCurrentLocation = () => {
               type="button"
               @click="getCurrentLocation"
               :disabled="isGettingLocation || !isMobileDevice"
-              class="mt-2 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+              class="mt-2 sm:mt-0 px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
             >
               <svg
                 v-if="isGettingLocation"
@@ -607,7 +607,7 @@ const getCurrentLocation = () => {
           ></div>
           <!-- Coordinates display -->
           <div
-        class="flex items-center justify-between px-3 py-2 bg-green-50 rounded-md border border-green-100"
+        class="flex items-center justify-between px-3 py-2 bg-emerald-50 rounded-md border border-green-100"
           >
         <div class="flex items-center space-x-2">
           <svg
@@ -656,7 +656,7 @@ const getCurrentLocation = () => {
             <button
               type="button"
               :disabled="!isFormValid"
-              class="inline-flex items-center px-5 py-2.5 bg-green-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              class="inline-flex items-center px-5 py-2.5 bg-emerald-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <svg
                 class="w-5 h-5 mr-2"
@@ -700,7 +700,7 @@ const getCurrentLocation = () => {
               >
               <AlertDialogAction
                 @click="handleSubmit"
-                class="bg-green-600 hover:bg-green-700"
+                class="bg-emerald-600 hover:bg-emerald-700"
                 >Create Location</AlertDialogAction
               >
             </AlertDialogFooter>
@@ -734,7 +734,7 @@ const getCurrentLocation = () => {
         <div class="bg-white px-6 pt-5 pb-4">
           <div class="sm:flex sm:items-start">
         <div
-          class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10"
+          class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10"
         >
           <svg
             class="h-6 w-6 text-green-600"
@@ -774,7 +774,7 @@ const getCurrentLocation = () => {
 
           <div
             v-if="tempCoordinates"
-            class="mt-3 p-3 bg-green-50 border border-green-100 rounded-md text-sm text-green-800 flex justify-between items-center"
+            class="mt-3 p-3 bg-emerald-50 border border-green-100 rounded-md text-sm text-green-800 flex justify-between items-center"
           >
             <span>Selected coordinates: {{ tempCoordinates }}</span>
             <button
@@ -810,7 +810,7 @@ const getCurrentLocation = () => {
         v-if="tempCoordinatesObj"
         type="button"
         @click="saveModalValue"
-        class="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-5 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+        class="inline-flex w-full justify-center rounded-md border border-transparent bg-emerald-600 px-5 py-2 text-base font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
           >
         Save Coordinates
           </button>

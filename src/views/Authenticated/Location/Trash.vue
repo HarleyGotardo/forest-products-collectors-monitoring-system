@@ -205,7 +205,7 @@ watch(currentPage, () => {
       <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -299,7 +299,7 @@ watch(currentPage, () => {
       <!-- Desktop Table View - Hidden on mobile -->
       <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-green-900">
+          <thead class="bg-emerald-900">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 ID
@@ -358,7 +358,7 @@ watch(currentPage, () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
-                      class="bg-green-900 text-white hover:bg-green-600">
+                      class="bg-emerald-900 text-white hover:bg-emerald-600">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                 d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
@@ -455,7 +455,7 @@ watch(currentPage, () => {
               <div class="flex space-x-2" @click.stop>
                 <AlertDialog>
                   <AlertDialogTrigger>
-                    <Button class="bg-green-900 text-white hover:bg-green-600 p-1">
+                    <Button class="bg-emerald-900 text-white hover:bg-emerald-600 p-1">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
@@ -544,7 +544,7 @@ watch(currentPage, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

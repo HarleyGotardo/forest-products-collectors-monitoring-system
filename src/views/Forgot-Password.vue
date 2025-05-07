@@ -91,8 +91,8 @@ const strengthColor = computed(() => {
   if (score === 0) return 'bg-gray-200'
   if (score <= 2) return 'bg-red-500'
   if (score <= 3) return 'bg-yellow-500'
-  if (score <= 4) return 'bg-green-400'
-  return 'bg-green-600'
+  if (score <= 4) return 'bg-emerald-400'
+  return 'bg-emerald-600'
 })
 
 const passwordsMatch = computed(() => {
@@ -379,7 +379,7 @@ const handleBackToLogin = async () => {
               type="submit"
               :disabled="isLoading || (password && passwordStrength.score < 3)"
               class="w-full text-white"
-              :class="password && passwordStrength.score >= 3 ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'"
+              :class="password && passwordStrength.score >= 3 ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-400'"
             >
               <svg
                 v-if="isLoading"
@@ -418,7 +418,7 @@ const handleBackToLogin = async () => {
               </AlertDialogCancel>
               <AlertDialogAction 
                 @click="handlePasswordReset"
-                class="bg-green-600 hover:bg-green-700"
+                class="bg-emerald-600 hover:bg-emerald-700"
               >
                 Update Password
               </AlertDialogAction>
@@ -450,7 +450,7 @@ const handleBackToLogin = async () => {
                 </AlertDialogCancel>
                 <AlertDialogAction 
                   @click="handleBackToLogin"
-                  class="bg-green-600 hover:bg-green-700"
+                  class="bg-emerald-600 hover:bg-emerald-700"
                 >
                   Go Back to Login
                 </AlertDialogAction>

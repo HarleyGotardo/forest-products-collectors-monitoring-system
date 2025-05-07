@@ -716,7 +716,7 @@ onMounted(() => {
           v-if="isForestRanger || isFPUAdmin"
           @click="createCollectionRoute"
           :disabled="loading || !isApprovalChecked"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -738,7 +738,7 @@ onMounted(() => {
           v-if="isForestRanger || isFPUAdmin"
           @click="createNewProduct"
           :disabled="loading || !isApprovalChecked"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -862,13 +862,13 @@ onMounted(() => {
           class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
           :title="mostCollectedProduct"
         >
-          <div class="absolute top-0 left-0 w-2 h-full bg-green-500"></div>
+          <div class="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
             <div class="flex items-center justify-between overflow-x-auto space-x-4">
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-500 mb-1">Most Collected Product</p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{{ mostCollectedProduct }}</p>
             </div>
-            <div class="p-3 bg-green-100 rounded-lg flex-shrink-0">
+            <div class="p-3 bg-emerald-100 rounded-lg flex-shrink-0">
               <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
@@ -1101,7 +1101,7 @@ onMounted(() => {
         <!-- Charts Card -->
         <div class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100">
           <div class="flex items-center justify-center mb-6">
-            <div class="p-2 bg-green-100 rounded-full">
+            <div class="p-2 bg-emerald-100 rounded-full">
               <img
                 src="@/assets/graph.png"
                 alt="Forest Logo"
@@ -1135,7 +1135,7 @@ onMounted(() => {
         <!-- Forest Products Available Card -->
         <div class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100">
           <div class="flex items-center justify-center mb-6">
-            <div class="p-2 bg-green-100 rounded-full">
+            <div class="p-2 bg-emerald-100 rounded-full">
               <img
                 src="@/assets/stocks.png"
                 alt="Forest Logo"
@@ -1153,7 +1153,7 @@ onMounted(() => {
               <li
                 v-for="item in forestProductsData"
                 :key="item.id"
-                class="py-3 flex items-center justify-between cursor-pointer hover:bg-green-50 transition-colors px-4"
+                class="py-3 flex items-center justify-between cursor-pointer hover:bg-emerald-50 transition-colors px-4"
                 @click="viewFP_Details(item.fp_id)"
               >
                 <span class="text-sm text-gray-800 font-medium">
@@ -1162,7 +1162,7 @@ onMounted(() => {
                 </span>
                 <div class="flex flex-col items-end">
                   <span class="text-sm font-medium text-gray-900 flex items-center">
-                    <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 mr-2"></span>
                     {{ item.quantity }} {{ item.measurementUnit }}(s)
                   </span>
                   <span 

@@ -110,7 +110,7 @@ onMounted(async () => {
     </div>
 
     <!-- Improved Mobile Header - Better spacing and organization while preserving original elements -->
-    <div class="fixed top-0 left-0 w-full h-16 bg-emerald-700 z-40 md:hidden flex items-center justify-between px-4">
+    <div class="fixed top-0 left-0 w-full h-16 bg-emerald-900 z-40 md:hidden flex items-center justify-between px-4">
       <div class="flex items-center">
         <button 
           @click="toggleSidebar"

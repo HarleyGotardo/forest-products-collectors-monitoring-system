@@ -284,7 +284,7 @@ watch(currentPage, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -416,7 +416,7 @@ watch(currentPage, () => {
       <!-- Desktop view (table) - hidden on small screens -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-green-900">
+          <thead class="bg-emerald-900">
             <tr>
               <th
                 scope="col"
@@ -503,7 +503,7 @@ watch(currentPage, () => {
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   :class="`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    record.is_paid ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                   }`"
                 >
                   {{ record.is_paid ? 'Paid' : 'Unpaid' }}
@@ -519,7 +519,7 @@ watch(currentPage, () => {
                     <AlertDialogTrigger asChild>
                       <div @click.stop>
                         <Button
-                        class="bg-green-900 text-white hover:bg-green-600">
+                        class="bg-emerald-900 text-white hover:bg-emerald-600">
                           <svg
                             class="w-5 h-5"
                             fill="none"
@@ -622,7 +622,7 @@ watch(currentPage, () => {
             <div>
               <span
                 :class="`px-2 py-0.5 rounded-full text-xs font-medium ${
-                  record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  record.is_paid ? 'bg-emerald-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                 }`"
               >
                 {{ record.is_paid ? 'Paid' : 'Unpaid' }}
@@ -757,7 +757,7 @@ watch(currentPage, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

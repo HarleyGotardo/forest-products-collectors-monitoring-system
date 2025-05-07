@@ -250,7 +250,7 @@ watch(selectedType, () => {
             <option value="Non-Timber">Non-Timber</option>
           </select>
           <Button
-            class="bg-green-900 text-white hover:bg-green-600"
+            class="bg-emerald-900 text-white hover:bg-emerald-600"
             v-if="isForestRanger || isFPUAdmin"
             @click="createForestProduct"
           >
@@ -344,7 +344,7 @@ watch(selectedType, () => {
       >
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -484,7 +484,7 @@ watch(selectedType, () => {
         <table
           class="min-w-full border-collapse sm:border-separate sm:border-spacing-0 cursor-pointer"
         >
-          <thead class="bg-green-900 hidden sm:table-header-group">
+          <thead class="bg-emerald-900 hidden sm:table-header-group">
             <tr>
               <th
                 scope="col"
@@ -573,7 +573,7 @@ watch(selectedType, () => {
                     @click.stop
                   >
                     <Button
-                      class="bg-green-900 text-white hover:bg-green-600"
+                      class="bg-emerald-900 text-white hover:bg-emerald-600"
                       v-if="isForestRanger || isFPUAdmin"
                       @click="editProduct(product.id, $event)"
                       aria-label="Edit product"
@@ -734,7 +734,7 @@ watch(selectedType, () => {
               >
                 <div class="flex items-center justify-end space-x-2">
                   <Button
-                    class="bg-green-900 text-white hover:bg-green-600"
+                    class="bg-emerald-900 text-white hover:bg-emerald-600"
                     v-if="isForestRanger || isFPUAdmin"
                     @click="editProduct(product.id, $event)"
                     aria-label="Edit product"
@@ -853,7 +853,7 @@ watch(selectedType, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

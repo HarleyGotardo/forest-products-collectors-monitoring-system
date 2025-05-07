@@ -213,7 +213,7 @@ watch(currentPage, () => {
         <Button
         v-if="isFPCollector"
         @click="router.push('/authenticated/collection-request/create')"
-        class="min-w-10 bg-green-900 text-white hover:bg-green-700"
+        class="min-w-10 bg-emerald-900 text-white hover:bg-emerald-700"
         >
         +
         </Button>
@@ -314,7 +314,7 @@ watch(currentPage, () => {
         </div>
 
         <!-- Recording Status Note -->
-        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+        <div class="bg-emerald-50 border-l-4 border-green-400 p-4 rounded-r-lg">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg
@@ -370,7 +370,7 @@ watch(currentPage, () => {
       >
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -482,7 +482,7 @@ watch(currentPage, () => {
       <!-- Desktop view (table) - hidden on small screens -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-green-900">
+          <thead class="bg-emerald-900">
             <tr>
               <th
                 scope="col"
@@ -564,7 +564,7 @@ watch(currentPage, () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
-                  :class="request.remarks === 'Approved' ? 'bg-green-100 text-green-800' : request.remarks === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'"
+                  :class="request.remarks === 'Approved' ? 'bg-emerald-100 text-green-800' : request.remarks === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'"
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                 >
                   {{ request.remarks === 'Approved' ? 'Approved' : request.remarks === 'Rejected' ? 'Rejected' : 'Pending' }}
@@ -584,7 +584,7 @@ watch(currentPage, () => {
               >
                 <div class="flex items-center justify-end space-x-3">
                   <Button
-                    class="bg-green-900 text-white hover:bg-green-600"
+                    class="bg-emerald-900 text-white hover:bg-emerald-600"
                     @click="editRequest(request.id, $event)"
                     :disabled="request.remarks !== 'Pending'"
                   >
@@ -690,7 +690,7 @@ watch(currentPage, () => {
             </div>
             <div class="flex space-x-2">
               <span
-                :class="request.remarks === 'Approved' ? 'bg-green-100 text-green-800' : request.remarks === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'"
+                :class="request.remarks === 'Approved' ? 'bg-emerald-100 text-green-800' : request.remarks === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'"
                 class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
               >
                 {{ request.remarks === 'Approved' ? 'Approved' : request.remarks === 'Rejected' ? 'Rejected' : 'Pending' }}
@@ -747,7 +747,7 @@ watch(currentPage, () => {
             @click.stop
           >
             <Button
-              class="bg-green-900 text-white hover:bg-green-600 text-sm"
+              class="bg-emerald-900 text-white hover:bg-emerald-600 text-sm"
               @click="editRequest(request.id, $event)"
             >
               <svg
@@ -856,7 +856,7 @@ watch(currentPage, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

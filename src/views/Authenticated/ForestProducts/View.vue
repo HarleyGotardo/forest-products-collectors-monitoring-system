@@ -1991,7 +1991,7 @@ watch(() => locations.value, (newLocations) => {
                         :value="item.value"
                         :class="[
                   'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                  item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                  item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                 ]"
                       >
                         {{ item.value }}
@@ -2296,7 +2296,7 @@ watch(() => locations.value, (newLocations) => {
                       type="button"
                       @click="getCurrentLocation"
                       :disabled="isGettingLocation || !isMobileDevice"
-                      class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                      class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                     >
                       <svg
                         v-if="isGettingLocation"

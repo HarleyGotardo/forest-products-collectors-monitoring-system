@@ -754,7 +754,7 @@ const prevPage = () => {
           <Button 
             v-if="isFPUAdmin || isForestRanger"
             @click="openAddDialog" 
-            class="ml-4 bg-green-800 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-md shadow-sm px-4 py-2 text-sm font-medium"
+            class="ml-4 bg-emerald-800 text-white hover:bg-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-md shadow-sm px-4 py-2 text-sm font-medium"
           >
             + Add Forest Product
           </Button>
@@ -899,7 +899,7 @@ const prevPage = () => {
                           :value="item.value"
                           :class="[
                             'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                            item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                            item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                           ]"
                         >
                           {{ item.value }}

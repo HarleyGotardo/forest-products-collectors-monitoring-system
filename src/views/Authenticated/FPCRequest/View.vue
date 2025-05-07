@@ -516,7 +516,7 @@ const formatDateTime = (dateTimeString) => {
           >Cancel</AlertDialogCancel
             >
             <AlertDialogAction
-          class="bg-green-900 hover:bg-green-700"
+          class="bg-emerald-900 hover:bg-emerald-700"
           @click="approveRequest"
           >Approve</AlertDialogAction
             >

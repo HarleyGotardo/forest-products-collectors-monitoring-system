@@ -551,7 +551,7 @@ onMounted(() => {
               </div>
 
               <!-- Payment Process Note -->
-              <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+              <div class="bg-emerald-50 border-l-4 border-green-400 p-4 rounded-r-lg">
                 <div class="flex">
                   <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -673,7 +673,7 @@ onMounted(() => {
             <button
               type="submit"
               :disabled="!isFormComplete"
-              class="w-full bg-green-900 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all text-white rounded-lg py-3 font-medium"
+              class="w-full bg-emerald-900 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all text-white rounded-lg py-3 font-medium"
             >
               Create Collection Record
             </button>
@@ -774,7 +774,7 @@ onMounted(() => {
           </div>
           <div class="flex justify-end p-4 border-t">
             <button
-              class="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 font-medium"
+              class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 font-medium"
               @click="isModalOpen = false"
               :disabled="hasValidationErrors"
             >
@@ -858,7 +858,7 @@ onMounted(() => {
               Cancel
             </button>
             <button
-              class="bg-green-900 hover:bg-green-700 text-white rounded-lg px-6 py-2 font-medium"
+              class="bg-emerald-900 hover:bg-emerald-700 text-white rounded-lg px-6 py-2 font-medium"
               @click="confirmSubmit"
               :disabled="isSubmitting"
             >

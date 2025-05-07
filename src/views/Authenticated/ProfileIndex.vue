@@ -83,8 +83,8 @@ const strengthColor = computed(() => {
   if (score === 0) return 'bg-gray-200'
   if (score <= 2) return 'bg-red-500'
   if (score <= 3) return 'bg-yellow-500'
-  if (score <= 4) return 'bg-green-400'
-  return 'bg-green-600'
+  if (score <= 4) return 'bg-emerald-400'
+  return 'bg-emerald-600'
 })
 
 // Update the passwordsMatch computed property
@@ -320,7 +320,7 @@ onMounted(async () => {
           <div class="hidden sm:block">
             <button
               @click="showPasswordModal = true"
-              class="inline-flex items-center gap-x-2 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="inline-flex items-center gap-x-2 px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500"
               title="Update Password"
             >
               <svg
@@ -436,7 +436,7 @@ onMounted(async () => {
       <div class="sm:hidden my-6 flex justify-center">
         <button
           @click="showPasswordModal = true"
-          class="inline-flex items-center justify-center gap-x-2 w-full px-4 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+          class="inline-flex items-center justify-center gap-x-2 w-full px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -469,7 +469,7 @@ onMounted(async () => {
         <div class="space-y-3">
           <div class="flex items-center">
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 flex-shrink-0"
             >
               <svg
                 class="w-5 h-5 text-green-600"
@@ -493,7 +493,7 @@ onMounted(async () => {
 
           <div class="flex items-center">
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 flex-shrink-0"
             >
               <svg
                 class="w-5 h-5 text-green-600"
@@ -519,7 +519,7 @@ onMounted(async () => {
 
           <div class="flex items-center">
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 flex-shrink-0"
             >
               <svg
                 class="w-5 h-5 text-green-600"
@@ -566,7 +566,7 @@ onMounted(async () => {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="flex items-center">
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 flex-shrink-0"
             >
               <svg
                 class="w-5 h-5 text-green-600"
@@ -592,7 +592,7 @@ onMounted(async () => {
 
           <div class="flex items-center">
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 flex-shrink-0"
             >
               <svg
                 class="w-5 h-5 text-green-600"
@@ -618,7 +618,7 @@ onMounted(async () => {
 
           <div class="flex items-center">
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 flex-shrink-0"
             >
               <svg
                 class="w-5 h-5 text-green-600"
@@ -659,7 +659,7 @@ onMounted(async () => {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="flex items-center">
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 flex-shrink-0"
             >
               <svg
                 class="w-5 h-5 text-green-600"
@@ -685,7 +685,7 @@ onMounted(async () => {
 
           <div class="flex items-center">
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 flex-shrink-0"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 flex-shrink-0"
             >
               <svg
                 class="w-5 h-5 text-green-600"
@@ -760,7 +760,7 @@ onMounted(async () => {
               type="file"
               @change="handleImageChange"
               accept="image/png, image/jpeg, image/gif"
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200 cursor-pointer border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-100 file:text-green-700 hover:file:bg-emerald-200 cursor-pointer border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             />
             <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF. Max 2MB.</p>
           </div>
@@ -777,7 +777,7 @@ onMounted(async () => {
               type="button"
               :disabled="!newProfileImage"
               @click="handleImageSubmit"
-              class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Update Picture
             </button>
@@ -947,7 +947,7 @@ onMounted(async () => {
               <button
                 type="submit"
                 :disabled="!passwordsMatch || !currentPassword || passwordStrength.score < 5"
-                class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Update Password
               </button>

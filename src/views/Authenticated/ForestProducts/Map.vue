@@ -413,7 +413,7 @@ onUnmounted(() => {
     
       @click="searchLocation"
       :disabled="isSearching"
-      class="flex-1 sm:flex-none transition-all duration-200 bg-green-900 text-white hover:bg-green-600"
+      class="flex-1 sm:flex-none transition-all duration-200 bg-emerald-900 text-white hover:bg-emerald-600"
     >
       <span v-if="isSearching" class="flex items-center">
         <svg
@@ -439,10 +439,10 @@ onUnmounted(() => {
         Searching...
       </span>
       <span v-else>Search</span>
-    </Button class="bg-green-900 text-white hover:bg-green-600">
+    </Button class="bg-emerald-900 text-white hover:bg-emerald-600">
     <Button  
     v-if="isFPUAdmin || isForestRanger"
-    @click="createLocation" class="flex-1 sm:flex-none bg-green-900 text-white hover:bg-green-600"> + Create Location </Button>
+    @click="createLocation" class="flex-1 sm:flex-none bg-emerald-900 text-white hover:bg-emerald-600"> + Create Location </Button>
   </div>
 </div>
     </div>
@@ -627,7 +627,7 @@ onUnmounted(() => {
                   </div>
                   <button
                     @click="goToForestProduct(product.id)"
-                    class="px-4 py-2 w-full sm:w-auto bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+                    class="px-4 py-2 w-full sm:w-auto bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
                   >
                     View Details
                   </button>
@@ -748,7 +748,7 @@ onUnmounted(() => {
                         :value="item.value"
                         :class="[
                           'w-8 h-8 flex items-center justify-center rounded-lg transition-colors',
-                          item.value === page ? 'bg-green-600 text-white' : 'hover:bg-gray-100'
+                          item.value === page ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'
                         ]"
                       >
                         {{ item.value }}
@@ -775,7 +775,7 @@ onUnmounted(() => {
                 </button>
                 <button
                   @click="router.push('/authenticated/forest-products')"
-                  class="flex-1 px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+                  class="flex-1 px-4 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
                 >
                   View All Products
                 </button>

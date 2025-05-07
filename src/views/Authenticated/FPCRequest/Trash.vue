@@ -201,7 +201,7 @@ watch(currentPage, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -297,7 +297,7 @@ watch(currentPage, () => {
       <!-- Desktop view (table) - hidden on small screens -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-green-900">
+          <thead class="bg-emerald-900">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Requested At</th>
@@ -341,7 +341,7 @@ watch(currentPage, () => {
                     <AlertDialogTrigger asChild>
                       <div>
                         <Button
-                        class="bg-green-900 hover:bg-green-600 text-white">
+                        class="bg-emerald-900 hover:bg-emerald-600 text-white">
                           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path 
                               stroke-linecap="round" 
@@ -451,7 +451,7 @@ watch(currentPage, () => {
             <!-- Restore Button -->
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button class="bg-green-900 hover:bg-green-600 text-white text-sm">
+                <Button class="bg-emerald-900 hover:bg-emerald-600 text-white text-sm">
                   <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path 
                       stroke-linecap="round" 
@@ -546,7 +546,7 @@ watch(currentPage, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}

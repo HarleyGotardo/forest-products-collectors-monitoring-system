@@ -205,7 +205,7 @@ watch(selectedType, () => {
       <div class="hidden sm:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-green-900">
+            <thead class="bg-emerald-900">
               <tr>
                 <th class="px-6 py-3 h-12"></th>
                 <th class="px-6 py-3 h-12"></th>
@@ -319,7 +319,7 @@ watch(selectedType, () => {
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full border-collapse sm:border-separate sm:border-spacing-0 cursor-pointer">
-          <thead class="bg-green-900 hidden sm:table-header-group">
+          <thead class="bg-emerald-900 hidden sm:table-header-group">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">ID</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-b border-gray-600">Name</th>
@@ -357,7 +357,7 @@ watch(selectedType, () => {
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
-                        class="bg-green-900 text-white hover:bg-green-600"
+                        class="bg-emerald-900 text-white hover:bg-emerald-600"
                         @click.stop>
                           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -448,7 +448,7 @@ watch(selectedType, () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button 
-                      class="bg-green-900 text-white hover:bg-green-600" @click.stop>
+                      class="bg-emerald-900 text-white hover:bg-emerald-600" @click.stop>
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                             d="M9 5L4 10m0 0l5 5m-5-5h7a5 5 0 1 1 0 10" />
@@ -540,7 +540,7 @@ watch(selectedType, () => {
                       :value="item.value"
                       :class="[
                         'w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors',
-                        item.value === page ? 'bg-green-900 text-white' : 'hover:bg-gray-100'
+                        item.value === page ? 'bg-emerald-900 text-white' : 'hover:bg-gray-100'
                       ]"
                     >
                       {{ item.value }}
