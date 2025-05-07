@@ -96,7 +96,7 @@ const handleForgotPassword = async () => {
   isResetting.value = true
 
   try {
-    const redirectUrl = `https://fpms-three.vercel.app/forgot-password/`
+    const redirectUrl = `https://fpms-three.vercel.app/forgot-password`
 
     const { data, error } = await supabase.auth.resetPasswordForEmail(resetEmail.value, {
       redirectTo: redirectUrl,
