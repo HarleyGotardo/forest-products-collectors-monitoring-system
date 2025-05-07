@@ -424,6 +424,7 @@ onMounted(() => {
               class="w-full"
               placeholder="Enter product name"
               required
+              autocomplete="off"
             />
           </div>
 

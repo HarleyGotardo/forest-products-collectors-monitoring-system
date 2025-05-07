@@ -183,23 +183,28 @@ onMounted(async () => {
       } md:translate-x-0`"
     >
       <div class="flex flex-col h-full">
-        <!-- Enhanced Header with close button for mobile -->
+        <!-- Enhanced Header with tagline and close button for mobile -->
         <div
-          class="p-5 border-b border-gray-100 flex items-center justify-between"
+          class="p-5 border-b border-gray-100 relative"
         >
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 p-2">
-              <NatureCartLogo />
+          <div class="flex flex-col">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 p-2">
+                <NatureCartLogo />
+              </div>
+              <h1
+                class="text-xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent"
+              >
+                Nature Cart
+              </h1>
             </div>
-            <h1
-              class="text-xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent"
-            >
-              Nature Cart
-            </h1>
+            <p class="text-xs text-green-600 mt-2 font-medium italic tracking-wide">
+              Forest treasures, tracked with care.
+            </p>
           </div>
           <button
             @click="closeSidebar"
-            class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-all"
+            class="md:hidden absolute top-5 right-4 p-2 rounded-lg hover:bg-gray-100 transition-all"
           >
             <svg
               class="w-5 h-5 text-gray-500"
@@ -399,7 +404,7 @@ onMounted(async () => {
                     >Trash Requests</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
-                    View and restore deleted requests
+                    Review and take action on previously deleted requests
                   </p>
                 </div>
               </router-link>
@@ -683,7 +688,7 @@ onMounted(async () => {
                 class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 hover:ring-emerald-200 transition-all"
               />
               <div>
-                <p class="font-medium text-gray-800">{{ getName() }}</p>
+                <p class="font-medium text-emerald-800">{{ getName() }}</p>
                 <p class="text-sm text-gray-500">{{ getUserRole() }}</p>
               </div>
             </router-link>

@@ -502,6 +502,7 @@ const getCurrentLocation = () => {
           type="text"
           class="w-full focus:ring-green-500 focus:border-green-500"
           placeholder="Enter a descriptive name for this location"
+          autocomplete="off"
         />
         <p class="text-xs text-gray-500 mt-1">
           Choose a clear, identifiable name for this forest location

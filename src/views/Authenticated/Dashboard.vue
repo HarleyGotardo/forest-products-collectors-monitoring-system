@@ -1098,39 +1098,41 @@ onMounted(() => {
 
       <!-- Third row: Charts and product distribution -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <!-- Charts Card -->
-        <div class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100">
-          <div class="flex items-center justify-center mb-6">
-            <div class="p-2 bg-emerald-100 rounded-full">
-              <img
-                src="@/assets/graph.png"
-                alt="Forest Logo"
-                class="w-6 h-6"
-              />
-            </div>
-            <h3
-              class="ml-3 text-lg font-semibold text-gray-800 text-center"
-            >
-              Most Collected Forest Products
-            </h3>
-          </div>
-          <div class="w-full h-60 sm:h-80 md:h-96 lg:h-[400px] relative">
-            <canvas id="mostCollectedChart"></canvas>
-            <!-- No data message -->
-            <div 
-              v-if="!mostCollectedProduct || mostCollectedProduct === 'N/A'"
-              class="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-gray-50 bg-opacity-80"
-            >
-              <img
-                src="@/assets/chill.png"
-                alt="No Data"
-                class="w-28 h-28 mb-4 opacity-70"
-              />
-              <p class="text-gray-600 text-lg font-medium">No collection data available</p>
-              <p v-if="isFPCollector" class="text-gray-500 text-sm mt-2 text-center px-4">Start collecting forest products to see statistics</p>
-            </div>
-          </div>
-        </div>
+<!-- Charts Card -->
+<div class="bg-white rounded-2xl shadow-lg p-6 transform hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-emerald-100 overflow-hidden">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center">
+      <div class="p-3 bg-emerald-100 rounded-full shadow-sm">
+        <img
+          src="@/assets/graph.png"
+          alt="Forest Logo"
+          class="w-7 h-7"
+        />
+      </div>
+      <h3 class="ml-4 text-xl font-semibold text-gray-800">
+        Most Collected Forest Products
+      </h3>
+    </div>
+  </div>
+  <div class="w-full h-64 sm:h-80 md:h-96 lg:h-96 relative">
+    <canvas id="mostCollectedChart"></canvas>
+    <!-- No data message -->
+    <div
+      v-if="!mostCollectedProduct || mostCollectedProduct === 'N/A'"
+      class="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-gray-50 bg-opacity-90 backdrop-blur-sm"
+    >
+      <img
+        src="@/assets/chill.png"
+        alt="No Data"
+        class="w-32 h-32 mb-6 opacity-80 drop-shadow-sm"
+      />
+      <p class="text-gray-700 text-lg font-medium">No collection data available</p>
+      <p v-if="isFPCollector" class="text-gray-500 text-sm mt-3 text-center px-6 max-w-md">
+        Start collecting forest products to see your statistics here
+      </p>
+    </div>
+  </div>
+</div>
 
         <!-- Forest Products Available Card -->
         <div class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100">
