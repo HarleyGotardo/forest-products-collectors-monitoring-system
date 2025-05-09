@@ -540,6 +540,68 @@ const generatePDF = async (record) => {
   }
 }
 
+const revertCollectionRecord = async (recordId, requestId) => {
+  try {
+    // First, verify that the collection request exists and get its current state
+    const { data: requestData, error: fetchError } = await supabase
+      .from('collection_requests')
+      .select('id, is_recorded')
+      .eq('id', requestId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching collection request:', fetchError);
+      toast.error('Failed to verify collection request');
+      return;
+    }
+
+    if (!requestData) {
+      toast.error('Collection request not found');
+      return;
+    }
+
+    // Update the collection request to set is_recorded to false
+    const { error: updateRequestError } = await supabase
+      .from('collection_requests')
+      .update({ is_recorded: false })
+      .eq('id', requestId);
+
+    if (updateRequestError) {
+      console.error('Error updating collection request:', updateRequestError);
+      toast.error('Failed to update collection request');
+      return;
+    }
+
+    // Only proceed with deletion if the request update was successful
+    const { error: deleteError } = await supabase
+      .from('collection_records')
+      .delete()
+      .eq('id', recordId);
+
+    if (deleteError) {
+      // If deletion fails, try to revert the request update
+      const { error: revertError } = await supabase
+        .from('collection_requests')
+        .update({ is_recorded: true })
+        .eq('id', requestId);
+
+      if (revertError) {
+        console.error('Error reverting collection request:', revertError);
+      }
+
+      console.error('Error deleting collection record:', deleteError);
+      toast.error('Failed to delete collection record');
+      return;
+    }
+
+    toast.success('Collection record reverted successfully');
+    fetchCollectionRecords();
+  } catch (err) {
+    console.error('Error in revertCollectionRecord:', err);
+    toast.error('Failed to revert collection record');
+  }
+};
+
 onMounted(() => {
   fetchCollectionRecords()
   fetchForestConservationOfficer()
@@ -590,6 +652,7 @@ watch(paymentFilter, () => {
             type="text"
             placeholder="Search records..."
             class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+            title="Search Collection Record"
           />
           <div
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
@@ -614,6 +677,7 @@ watch(paymentFilter, () => {
             v-if="isFPUAdmin || isForestRanger"
             @click="createCollectionRecord"
             class="min-w-10 bg-emerald-900 text-white hover:bg-emerald-700"
+            title="Create New Collection Record"
           >
             +
           </Button>
@@ -1020,28 +1084,47 @@ watch(paymentFilter, () => {
                     </AlertDialog>
                   </span>
                   <span v-else class="inline-block w-[40px]"></span>
-                  <!-- Placeholder for alignment -->
 
-                  <!-- Edit Button -->
-                  <!-- <Button
-            class="bg-emerald-900 text-white hover:bg-emerald-600 p-2"
-              v-if="(isFPUAdmin || isForestRanger) && !record.is_paid"
-              @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
-            >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-            </Button> -->
+                  <!-- Revert Button -->
+                  <AlertDialog v-if="!record.is_paid">
+                    <AlertDialogTrigger>
+                      <Button
+                        v-if="isFPUAdmin || isForestRanger"
+                        class="p-2 bg-orange-900 text-white hover:bg-orange-600"
+                        title="Revert Collection Record"
+                      >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                          />
+                        </svg>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Revert Collection Record?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete the collection record and revert the associated request to unrecorded status.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          class="bg-orange-900 hover:bg-orange-700"
+                          @click="revertCollectionRecord(record.id, record.collection_request_id)"
+                          >Revert</AlertDialogAction
+                        >
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
 
                   <!-- Delete Button -->
                   <AlertDialog v-if="!record.is_paid">
@@ -1049,6 +1132,7 @@ watch(paymentFilter, () => {
                       <Button
                         v-if="isFPUAdmin || isForestRanger"
                         class="p-2 bg-red-900 text-white hover:bg-red-600"
+                        title="Delete Collection Record"
                       >
                         <svg
                           class="w-5 h-5"
@@ -1067,12 +1151,9 @@ watch(paymentFilter, () => {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle
-                          >Delete Collection Record?</AlertDialogTitle
-                        >
+                        <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This collection record will be transferred to the
-                          recycle bin.
+                          This collection record will be transferred to the recycle bin.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -1201,6 +1282,47 @@ watch(paymentFilter, () => {
               </svg>
               Mark as Paid
             </Button>
+
+            <!-- Revert Button -->
+            <AlertDialog v-if="!record.is_paid">
+              <AlertDialogTrigger asChild>
+                <Button
+                  v-if="isFPUAdmin || isForestRanger"
+                  class="text-sm bg-orange-900 text-white hover:bg-orange-600"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                    />
+                  </svg>
+                  Revert
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Revert Collection Record?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the collection record and revert the associated request to unrecorded status.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    class="bg-orange-900 hover:bg-orange-700"
+                    @click="revertCollectionRecord(record.id, record.collection_request_id)"
+                    >Revert</AlertDialogAction
+                  >
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             <!-- Edit Button -->
             <Button

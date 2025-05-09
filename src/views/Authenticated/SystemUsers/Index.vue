@@ -24,6 +24,7 @@ import {
   PaginationPrev,
   PaginationEllipsis,
 } from '@/components/ui/pagination'
+import { Button } from '@/components/ui/button'
 
 const showRejectDialog = ref(false) // State for reject confirmation dialog
 const userToReject = ref(null) // Store the user ID to reject
@@ -43,6 +44,8 @@ const isLoading = ref(true) // Loading state for data processing
 const showChangeRoleDialog = ref(false)
 const userToChangeRole = ref(null)
 const newRoleId = ref('')
+const showUnapproveDialog = ref(false)
+const userToUnapprove = ref(null)
 
 // Add computed property for formatting user names
 const formatUserName = (user) => {
@@ -289,6 +292,33 @@ const prevPage = () => {
   }
 }
 
+const unapproveUser = (userId) => {
+  userToUnapprove.value = userId
+  showUnapproveDialog.value = true
+}
+
+const handleUnapproveConfirm = async () => {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ approval_flag: null })
+      .eq('id', userToUnapprove.value)
+
+    if (error) {
+      toast.error('Error unapproving user: ' + error.message)
+    } else {
+      toast.success('User unapproved successfully')
+      await fetchUsers() // Refresh the users list
+    }
+  } catch (err) {
+    console.error('Error in handleUnapproveConfirm:', err)
+    toast.error('Failed to unapprove user')
+  } finally {
+    showUnapproveDialog.value = false
+    userToUnapprove.value = null
+  }
+}
+
 onMounted(async () => {
   isLoading.value = true;
   await fetchUsers();
@@ -514,6 +544,12 @@ onMounted(async () => {
               >
                 Role
               </th>
+              <th
+                scope="col"
+                class="hidden sm:table-cell px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider"
+              >
+                Action
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -648,6 +684,30 @@ onMounted(async () => {
                 >
                   {{ user.role.name }}
                 </span>
+                </td>
+                <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right">
+                  <div class="flex justify-end space-x-2">
+                    <Button
+                      :disabled="user.id === getUser().id || isForestRanger"
+                      class="inline-flex items-center justify-center px-3 py-1.5 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      @click="user.id !== getUser().id ? unapproveUser(user.id) : null"
+                    >
+                      <svg
+                        class="w-4 h-4 mr-1.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                      Unapprove
+                    </Button>
+                  </div>
                 </td>
             </tr>
           </tbody>
@@ -1333,6 +1393,32 @@ onMounted(async () => {
           class="bg-blue-600 hover:bg-blue-700"
         >
           Confirm Change
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+
+  <!-- Unapprove Confirmation Dialog -->
+  <AlertDialog
+    :open="showUnapproveDialog"
+    @update:open="showUnapproveDialog = $event"
+  >
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Unapprove User?</AlertDialogTitle>
+        <AlertDialogDescription>
+          Are you sure you want to unapprove this user? They will need to be approved again to access the system.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel @click="showUnapproveDialog = false">
+          Cancel
+        </AlertDialogCancel>
+        <AlertDialogAction
+          @click="handleUnapproveConfirm"
+          class="bg-yellow-600 hover:bg-yellow-700"
+        >
+          Unapprove
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
