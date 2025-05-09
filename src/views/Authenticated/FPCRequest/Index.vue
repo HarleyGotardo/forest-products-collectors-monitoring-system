@@ -177,7 +177,7 @@ watch(currentPage, () => {
       />
       <div>
         <h2 class="text-xl sm:text-2xl font-bold text-green-900">
-        Collection Requests
+        Your Collection Requests
         </h2>
         <p class="mt-1 text-sm text-green-900">
         View and manage all your collection requests
