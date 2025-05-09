@@ -6,6 +6,9 @@ import { format } from 'date-fns'
 import defaultProfileImage from '@/assets/profile.png'
 import { getUser, fetchUserDetails } from '@/router/routeGuard'
 import EditProfileModal from '@/views/Authenticated/EditProfileModal.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const showEditProfileModal = ref(false)
 const newProfileImage = ref(null)
@@ -212,7 +215,7 @@ const handlePasswordUpdate = async () => {
       throw new Error(updateError.message)
     }
 
-    toast.success('Password updated successfully. You’ve been logged out and will be redirected to the login page upon clicking any button.', { duration: 4000 })
+    toast.success('Password updated successfully. Logging out...', { duration: 4000 })
     showPasswordModal.value = false
 
     // Clear the form
@@ -220,10 +223,15 @@ const handlePasswordUpdate = async () => {
     newPassword.value = ''
     confirmPassword.value = ''
 
-    // Log out the user after a short delay
-    setTimeout(async () => {
-      await supabase.auth.signOut()
-    }, 2000)
+    // Handle logout and redirect to login page
+    const { error: logoutError } = await supabase.auth.signOut()
+    if (logoutError) {
+      throw new Error('Error logging out')
+    }
+
+    setTimeout(() => {
+      router.push({ name: 'Index' })
+    }, 1000) // 1 second delay
   } catch (err) {
     error.value = err.message
     toast.error(err.message, { duration: 3000 })
