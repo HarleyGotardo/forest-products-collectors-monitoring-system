@@ -66,6 +66,7 @@ const fetchCollectionRecords = async () => {
         purpose
       `)
       .is('deleted_at', null)
+      .order('id', { ascending: false })
 
     if (fetchError) {
       error.value = fetchError.message
@@ -1106,6 +1107,7 @@ watch(paymentFilter, () => {
                             d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
                           />
                         </svg>
+                        Revert
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -1147,6 +1149,7 @@ watch(paymentFilter, () => {
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                           />
                         </svg>
+                        Delete
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>

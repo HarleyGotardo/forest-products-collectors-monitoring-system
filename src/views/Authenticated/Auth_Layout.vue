@@ -158,7 +158,7 @@ onMounted(async () => {
         :class="{ 'ring-2 ring-emerald-400 shadow-md': $route.name === 'Profile' }"
       >
         <div class="text-right hidden sm:block">
-          <p class="text-white text-sm font-medium">{{ getName() }}</p>
+          <p class="text-white text-sm font-bold">{{ getName() }}</p>
           <p class="text-emerald-300 text-xs">{{ getUserRole() }}</p>
         </div>
         <img
@@ -198,7 +198,7 @@ onMounted(async () => {
                 Nature Cart
               </h1>
             </div>
-            <p class="text-xs text-green-600 mt-2 font-medium italic tracking-wide">
+            <p class="text-xs text-green-600 mt-2 font-bold italic tracking-wide">
               Forest treasures, tracked with care.
             </p>
           </div>
@@ -248,7 +248,7 @@ onMounted(async () => {
               </div>
               <div>
                 <span
-                  class="font-medium text-gray-700 group-hover:text-emerald-600"
+                  class="font-bold text-gray-700 group-hover:text-emerald-600"
                   >Dashboard</span
                 >
                 <p class="text-xs text-gray-500 mt-0.5">
@@ -274,7 +274,7 @@ onMounted(async () => {
               </div>
               <div>
                 <span
-                  class="font-medium text-gray-700 group-hover:text-emerald-600"
+                  class="font-bold text-gray-700 group-hover:text-emerald-600"
                   >Sales Report</span
                 >
                 <p class="text-xs text-gray-500 mt-0.5">
@@ -300,7 +300,7 @@ onMounted(async () => {
               </div>
               <div>
                 <span
-                  class="font-medium text-gray-700 group-hover:text-emerald-600"
+                  class="font-bold text-gray-700 group-hover:text-emerald-600"
                   >System Users</span
                 >
                 <p class="text-xs text-gray-500 mt-0.5">
@@ -337,7 +337,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >All Requests</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -358,7 +358,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >Your Requests</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -379,7 +379,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >New Request</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -400,7 +400,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >Trash Requests</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -430,7 +430,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >View Records</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -451,7 +451,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >Your Records</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -472,7 +472,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >New Record</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -493,7 +493,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >Trashed Records</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -530,7 +530,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >View Forest Products</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -551,7 +551,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >New Forest Product</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -571,7 +571,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >Forest Products Map</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -592,7 +592,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >Trashed Forest Products</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -620,7 +620,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >View Locations</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -641,7 +641,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >New Location</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -662,7 +662,7 @@ onMounted(async () => {
                 />
                 <div>
                   <span
-                    class="font-medium text-emerald-700 group-hover:text-emerald-600"
+                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
                     >Trashed Locations</span
                   >
                   <p class="text-xs text-gray-500 mt-0.5">
@@ -688,7 +688,7 @@ onMounted(async () => {
                 class="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-100 hover:ring-emerald-200 transition-all"
               />
               <div>
-                <p class="font-medium text-emerald-800">{{ getName() }}</p>
+                <p class="font-bold text-emerald-800">{{ getName() }}</p>
                 <p class="text-sm text-gray-500">{{ getUserRole() }}</p>
               </div>
             </router-link>
@@ -746,7 +746,7 @@ onMounted(async () => {
 
 <style scoped>
 .router-link-active {
-  @apply bg-emerald-50 text-emerald-600 font-medium;
+  @apply bg-emerald-50 text-emerald-600 font-bold;
 }
 
 /* Smooth transitions */

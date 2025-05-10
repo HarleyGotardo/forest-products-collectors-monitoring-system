@@ -23,7 +23,7 @@ const toggleDropdown = () => {
   <div>
     <button @click="toggleDropdown" class="flex items-center gap-3 p-3 w-full text-left hover:bg-gray-100 rounded-lg">
       <img src="@/assets/request.png" alt="icon" class="w-6 h-6" />
-      <span>{{ label }}</span>
+      <span class="font-semibold">{{ label }}</span>
       <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path v-if="!isDropdownOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 15l-7-7-7 7" />

@@ -791,7 +791,7 @@ onMounted(() => {
       <!-- Filters -->
       <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <h3 class="text-lg font-semibold text-gray-800">Filters</h3>
+          <h3 class="text-lg font-bold text-gray-800">Filters</h3>
           <button @click="resetFilters" class="text-sm text-blue-600 hover:text-blue-800">Reset All</button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -869,7 +869,7 @@ onMounted(() => {
               />
             </div>
             <h3
-              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+              class="ml-3 text-lg font-bold text-gray-800 text-center"
             >
               Monthly Sales Trend (₱)
             </h3>
@@ -890,7 +890,7 @@ onMounted(() => {
               />
             </div>
             <h3
-              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+              class="ml-3 text-lg font-bold text-gray-800 text-center"
             >
               Top Products by Sales (₱)
             </h3>
@@ -912,7 +912,7 @@ onMounted(() => {
               />
             </div>
             <h3
-              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+              class="ml-3 text-lg font-bold text-gray-800 text-center"
             >
               Top Collectors by Sales
             </h3>
@@ -946,7 +946,7 @@ onMounted(() => {
               />
             </div>
             <h3
-              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+              class="ml-3 text-lg font-bold text-gray-800 text-center"
             >
               Sales Transactions
             </h3>

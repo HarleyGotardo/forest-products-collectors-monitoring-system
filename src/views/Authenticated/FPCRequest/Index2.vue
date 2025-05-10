@@ -53,7 +53,8 @@ const fetchAllRequests = async () => {
       *,
       profiles!collection_requests_user_id_fkey (first_name, last_name)
     `)
-    .is('deleted_at', null); // Fetch only requests with null deleted_at
+    .is('deleted_at', null) // Fetch only requests with null deleted_at
+    .order('id', { ascending: false }); // Sort by ID in descending order
 
   if (fetchError) {
     error.value = fetchError.message;
