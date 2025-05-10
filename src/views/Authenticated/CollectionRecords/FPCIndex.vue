@@ -53,7 +53,8 @@ const fetchAllCollectionRecords = async () => {
         collection_request_id
       `)
       .eq('user_id', currentUser.id) // Filter by authenticated user's ID
-      .is('deleted_at', null); // Exclude records with non-null deleted_at
+      .is('deleted_at', null) // Exclude records with non-null deleted_at
+      .order('id', { ascending: false }); // Sort by ID descending
 
     if (recordsError) throw recordsError;
     
