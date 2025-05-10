@@ -1256,135 +1256,113 @@ watch(paymentFilter, () => {
             </div>
           </div>
 
-          <!-- Card actions -->
-          <div
+            <!-- Card actions -->
+            <div
             class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between"
             @click.stop
-          >
+            >
             <!-- Mark as Paid Button -->
             <Button
               v-if="isVSUAdmin && !record.is_paid"
-              class="text-sm"
+              class="text-sm sm:inline-flex sm:items-center sm:space-x-1"
               @click="() => {}"
             >
               <svg
-                class="w-4 h-4 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+              class="w-4 h-4 sm:mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
               </svg>
-              Mark as Paid
+              <span class="hidden sm:inline">Mark as Paid</span>
             </Button>
 
             <!-- Revert Button -->
             <AlertDialog v-if="!record.is_paid">
               <AlertDialogTrigger asChild>
-                <Button
-                  v-if="isFPUAdmin || isForestRanger"
-                  class="text-sm bg-orange-900 text-white hover:bg-orange-600"
-                >
-                  <svg
-                    class="w-4 h-4 mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                    />
-                  </svg>
-                  Revert
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Revert Collection Record?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete the collection record and revert the associated request to unrecorded status.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    class="bg-orange-900 hover:bg-orange-700"
-                    @click="revertCollectionRecord(record.id, record.collection_request_id)"
-                    >Revert</AlertDialogAction
-                  >
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            <!-- Edit Button -->
-            <Button
-              v-if="(isFPUAdmin || isForestRanger) && !record.is_paid"
-              class="text-sm"
-              @click="router.push({ name: 'CollectionRecordsEdit', params: { id: record.id } })"
-            >
-              <svg
-                class="w-4 h-4 mr-1"
+              <Button
+                v-if="isFPUAdmin || isForestRanger"
+                class="text-sm bg-orange-900 text-white hover:bg-orange-600 sm:inline-flex sm:items-center sm:space-x-1"
+              >
+                <svg
+                class="w-4 h-4 sm:mr-1"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-              >
+                >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
                 />
-              </svg>
-              Edit
-            </Button>
+                </svg>
+                <span class="hidden sm:inline">Revert</span>
+              </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Revert Collection Record?</AlertDialogTitle>
+                <AlertDialogDescription>
+                This will permanently delete the collection record and revert the associated request to unrecorded status.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                class="bg-orange-900 hover:bg-orange-700"
+                @click="revertCollectionRecord(record.id, record.collection_request_id)"
+                >Revert</AlertDialogAction
+                >
+              </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             <!-- Delete Button -->
             <AlertDialog
               v-if="!record.is_paid && (isFPUAdmin || isForestRanger)"
             >
               <AlertDialogTrigger asChild>
-                <Button class="text-sm">
-                  <svg
-                    class="w-4 h-4 mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                  Delete
-                </Button>
+              <Button class="text-sm sm:inline-flex sm:items-center sm:space-x-1">
+                <svg
+                class="w-4 h-4 sm:mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+                </svg>
+                <span class="hidden sm:inline">Delete</span>
+              </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This collection record will be transferred to the recycle
-                    bin.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction @click="deleteCollectionRecord(record.id)"
-                    >Delete</AlertDialogAction
-                  >
-                </AlertDialogFooter>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+                <AlertDialogDescription>
+                This collection record will be transferred to the recycle
+                bin.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="deleteCollectionRecord(record.id)"
+                >Delete</AlertDialogAction
+                >
+              </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
+            </div>
         </div>
       </div>
 
