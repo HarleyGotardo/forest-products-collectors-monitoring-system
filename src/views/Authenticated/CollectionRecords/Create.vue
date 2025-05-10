@@ -587,7 +587,7 @@ onMounted(() => {
               <p v-if="collectionRequests.length === 0" class="text-sm text-orange-400 mt-2">
                 You cannot record a forest product collection because a request number is required, and there are no approved and unrecorded collection requests available.
               </p>
-              <p v-else="collectionRequests.length === 0" class="text-sm text-emerald-400 mt-2">
+              <p v-else="collectionRequests.length === 0" class="text-sm text-emerald-700 mt-2">
                 Select a request number to record a forest product collection.
               </p>
               </div>

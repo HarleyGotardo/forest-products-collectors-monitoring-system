@@ -1857,14 +1857,6 @@ const hasAssociatedRecords = computed(() => {
                     class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600"
                   >
                     <div class="flex items-center space-x-1">
-                      <span class="font-medium text-gray-700">Lat:</span>
-                      <span>{{ location.latitude }}</span>
-                    </div>
-                    <div class="flex items-center space-x-1">
-                      <span class="font-medium text-gray-700">Long:</span>
-                      <span>{{ location.longitude }}</span>
-                    </div>
-                    <div class="flex items-center space-x-1">
                       <span class="font-medium text-gray-700">Quantity:</span>
                       <span
                         :class="{

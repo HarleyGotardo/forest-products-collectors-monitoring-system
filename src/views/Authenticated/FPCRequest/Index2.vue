@@ -36,6 +36,7 @@ const searchQuery = ref('');
 const showDialog = ref(false);
 const requestToApprove = ref(null);
 const requestToReject = ref(null);
+const requestToRevert = ref(null);
 const rejectionReason = ref('');
 const loading = ref(true); // Add loading state
 const showNotes = ref(true); // Add showNotes state
@@ -178,6 +179,31 @@ const rejectRequest = async () => {
     toast.success('Request rejected successfully', { duration: 2000 });
   }
   showDialog.value = false;
+};
+
+const revertRequest = async () => {
+  const { error: revertError } = await supabase
+    .from('collection_requests')
+    .update({
+      remarks: 'Pending',
+      remarked_at: null,
+      remarked_by: null,
+      rejection_reason: null
+    })
+    .eq('id', requestToRevert.value);
+
+  if (revertError) {
+    error.value = revertError.message;
+  } else {
+    fetchAllRequests();
+    toast.success('Request reverted successfully', { duration: 2000 });
+  }
+  showDialog.value = false;
+};
+
+const confirmRevertRequest = (requestId) => {
+  requestToRevert.value = requestId;
+  showDialog.value = true;
 };
 
 // Reset page when filters change
@@ -541,6 +567,33 @@ onMounted(() => {
               <template v-if="request.remarks && request.remarks !== 'Pending'">
                 <span class="text-sm text-gray-500">{{ request.remarks }} at {{ new Date(request.remarked_at).toLocaleDateString() }}</span>
                 <span v-if="request.remarks === 'Rejected'" class="text-sm text-red-500"></span>
+                <AlertDialog v-if="request.remarks === 'Approved' && !request.is_recorded">
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      title="Revert the request so that it can be editable"
+                      class="bg-gray-600 text-white hover:bg-gray-700 text-sm px-3 py-2"
+                      v-if="isFPUAdmin || isForestRanger"
+                      @click="confirmRevertRequest(request.id)"
+                    >
+                      <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                      <span>Revert</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Revert Request</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to revert this request back to pending status? This will remove all approval information.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
+                      <AlertDialogAction class="bg-gray-600 hover:bg-gray-700" @click="revertRequest">Revert</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </template>
               <template v-if="request.remarks === 'Pending' || !request.remarks">
                 <AlertDialog>
@@ -679,58 +732,85 @@ onMounted(() => {
         </div>
       </div>
       
+      <!-- Action buttons -->
       <div v-if="(request.remarks === 'Pending' || !request.remarks) && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-        <Button class="w-full justify-center text-sm mb-2" @click="confirmApproveRequest(request.id)">
-          <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          Approve Request
-        </Button>
+            <Button class="w-full justify-center text-sm mb-2" @click="confirmApproveRequest(request.id)">
+              <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Approve Request
+            </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Approve Request</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to approve this request?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
-        </AlertDialogFooter>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Approve Request</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to approve this request?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
+            </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-        <Button class="w-full justify-center text-sm bg-red-600 text-white hover:bg-red-700" @click="confirmRejectRequest(request.id)">
-          <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-          Reject Request
-        </Button>
+            <Button class="w-full justify-center text-sm bg-red-600 text-white hover:bg-red-700" @click="confirmRejectRequest(request.id)">
+              <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Reject Request
+            </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Reject Request</AlertDialogTitle>
-          <AlertDialogDescription>
-            Please provide a reason for rejecting this request.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <div class="mt-4">
-          <textarea
-            v-model="rejectionReason"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            rows="3"
-            placeholder="Enter rejection reason..."
-          ></textarea>
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Reject</AlertDialogAction>
-        </AlertDialogFooter>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reject Request</AlertDialogTitle>
+              <AlertDialogDescription>
+                Please provide a reason for rejecting this request.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div class="mt-4">
+              <textarea
+                v-model="rejectionReason"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                rows="3"
+                placeholder="Enter rejection reason..."
+              ></textarea>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Reject</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      <!-- Revert button for approved/rejected unrecorded requests -->
+      <div v-else-if="request.remarks === 'Approved' && !request.is_recorded && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button class="w-full justify-center text-sm bg-gray-600 text-white hover:bg-gray-700" @click="confirmRevertRequest(request.id)">
+              <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              Revert Request
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Revert Request</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to revert this request back to pending status? This will remove all approval information.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction class="bg-gray-600 hover:bg-gray-700" @click="revertRequest">Revert</AlertDialogAction>
+            </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>

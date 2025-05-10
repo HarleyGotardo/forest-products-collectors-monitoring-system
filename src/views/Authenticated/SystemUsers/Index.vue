@@ -685,7 +685,9 @@ onMounted(async () => {
                   {{ user.role.name }}
                 </span>
                 </td>
-                <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right">
+                <td
+                v-if="user.id !== getUser().id" 
+                class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right">
                   <div class="flex justify-end space-x-2">
                     <Button
                       :disabled="user.id === getUser().id || isForestRanger || isVSUAdmin"
@@ -708,6 +710,8 @@ onMounted(async () => {
                       Unapprove
                     </Button>
                   </div>
+                </td>
+                <td v-else class="bg-green-50">
                 </td>
             </tr>
           </tbody>

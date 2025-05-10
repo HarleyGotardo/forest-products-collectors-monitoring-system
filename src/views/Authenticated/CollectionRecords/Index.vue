@@ -1090,7 +1090,7 @@ watch(paymentFilter, () => {
                     <AlertDialogTrigger>
                       <Button
                         v-if="isFPUAdmin || isForestRanger"
-                        class="p-2 bg-orange-900 text-white hover:bg-orange-600"
+                        class="p-2 bg-gray-500 text-white hover:bg-gray-400"
                         title="Revert Collection Record"
                       >
                         <svg
@@ -1118,7 +1118,7 @@ watch(paymentFilter, () => {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          class="bg-orange-900 hover:bg-orange-700"
+                          class="bg-gray-500 hover:bg-gray-400"
                           @click="revertCollectionRecord(record.id, record.collection_request_id)"
                           >Revert</AlertDialogAction
                         >
@@ -1288,7 +1288,7 @@ watch(paymentFilter, () => {
               <AlertDialogTrigger asChild>
               <Button
                 v-if="isFPUAdmin || isForestRanger"
-                class="text-sm bg-orange-900 text-white hover:bg-orange-600 sm:inline-flex sm:items-center sm:space-x-1"
+                class="text-sm bg-gray-500 text-white hover:bg-gray-400 sm:inline-flex sm:items-center sm:space-x-1"
               >
                 <svg
                 class="w-4 h-4 sm:mr-1"
@@ -1316,7 +1316,7 @@ watch(paymentFilter, () => {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                class="bg-orange-900 hover:bg-orange-700"
+                class="bg-gray-500 hover:bg-gray-400"
                 @click="revertCollectionRecord(record.id, record.collection_request_id)"
                 >Revert</AlertDialogAction
                 >
@@ -1329,7 +1329,7 @@ watch(paymentFilter, () => {
               v-if="!record.is_paid && (isFPUAdmin || isForestRanger)"
             >
               <AlertDialogTrigger asChild>
-              <Button class="text-sm sm:inline-flex sm:items-center sm:space-x-1">
+              <Button class="text-sm sm:inline-flex sm:items-center sm:space-x-1 bg-red-800 hover:bg-red-600">
                 <svg
                 class="w-4 h-4 sm:mr-1"
                 fill="none"
@@ -1356,7 +1356,7 @@ watch(paymentFilter, () => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="deleteCollectionRecord(record.id)"
+                <AlertDialogAction @click="deleteCollectionRecord(record.id)" class="bg-red-800 hover:bg-red-600"
                 >Delete</AlertDialogAction
                 >
               </AlertDialogFooter>
@@ -1441,7 +1441,14 @@ watch(paymentFilter, () => {
   <AlertDialog v-model:open="showEditSignatureDialog">
     <AlertDialogContent>
       <AlertDialogHeader>
-        <AlertDialogTitle>Edit Forest Conservation Officer</AlertDialogTitle>
+        <div class="flex items-center space-x-2">
+          <img
+            src="@/assets/fco.png"
+            alt="Logo"
+            class="w-8 h-8"
+          />
+          <AlertDialogTitle>Edit Forest Conservation Officer</AlertDialogTitle>
+        </div>
         <AlertDialogDescription>
           Update the name of the Forest Conservation Officer who will be signing
           the permits.
@@ -1477,7 +1484,7 @@ watch(paymentFilter, () => {
           >Cancel</AlertDialogCancel
         >
         <AlertDialogAction @click="updateForestConservationOfficer"
-          >Save Changes</AlertDialogAction
+           class="bg-green-800 hover:bg-green-600">Save Changes</AlertDialogAction
         >
       </AlertDialogFooter>
     </AlertDialogContent>

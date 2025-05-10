@@ -587,7 +587,7 @@ watch(currentPage, () => {
                   <Button
                     class="bg-emerald-900 text-white hover:bg-emerald-600"
                     @click="editRequest(request.id, $event)"
-                    :disabled="request.remarks !== 'Pending'"
+                    :disabled="request.remarks === 'Approved'"
                   >
                     <svg
                       class="w-5 h-5"
@@ -603,7 +603,7 @@ watch(currentPage, () => {
                       />
                     </svg>
                   </Button>
-                  <AlertDialog v-if="request.remarks === 'Pending'">
+                  <AlertDialog v-if="request.remarks === 'Pending' || request.remarks === 'Rejected'">
                     <AlertDialogTrigger>
                       <Button
                         class="bg-red-900 text-white hover:bg-red-700"
@@ -743,7 +743,7 @@ watch(currentPage, () => {
 
           <!-- Card actions -->
           <div
-            v-if="request.remarks === 'Pending'"
+            v-if="request.remarks === 'Pending' || request.remarks === 'Rejected'"
             class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between"
             @click.stop
           >

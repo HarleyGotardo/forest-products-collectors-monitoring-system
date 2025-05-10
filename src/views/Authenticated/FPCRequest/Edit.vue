@@ -296,6 +296,11 @@ const handleSubmit = () => {
 const confirmSubmit = async () => {
   const collectionRequest = {
     collection_date: collectionDate.value,
+    remarks: 'Pending',
+    remarked_at: null,
+    remarked_by: null,
+    rejection_reason: null,
+    updated_at: new Date().toISOString()
   };
 
   const { error: requestError } = await supabase
@@ -309,34 +314,88 @@ const confirmSubmit = async () => {
     return;
   }
 
-  const { error: deleteItemsError } = await supabase
+  // First, get existing items to compare
+  const { data: existingItems, error: fetchError } = await supabase
     .from('collection_request_items')
-    .delete()
+    .select('*')
     .eq('collection_request_id', requestId);
 
-  if (deleteItemsError) {
-    console.error('Error deleting old collection request items:', deleteItemsError);
-    toast.error('Error deleting old collection request items - ' + deleteItemsError.message);
+  if (fetchError) {
+    console.error('Error fetching existing items:', fetchError);
+    toast.error('Error fetching existing items - ' + fetchError.message);
     return;
   }
 
-  const { error: itemsError } = await supabase
-    .from('collection_request_items')
-    .insert(
-      selectedForestProducts.value.map(item => ({
-        fp_and_location_id: item.id,
-        collection_request_id: requestId,
-        requested_quantity: item.requested_quantity,
-      }))
+  // Prepare items to insert/update
+  const itemsToProcess = selectedForestProducts.value.map(item => ({
+    fp_and_location_id: item.id,
+    collection_request_id: requestId,
+    requested_quantity: item.requested_quantity,
+  }));
+
+  // Find items to delete (exist in DB but not in new selection)
+  const itemsToDelete = existingItems.filter(
+    existing => !itemsToProcess.some(newItem => newItem.fp_and_location_id === existing.fp_and_location_id)
+  );
+
+  // Find items to insert (new items not in DB)
+  const itemsToInsert = itemsToProcess.filter(
+    newItem => !existingItems.some(existing => existing.fp_and_location_id === newItem.fp_and_location_id)
+  );
+
+  // Find items to update (exist in both DB and new selection)
+  const itemsToUpdate = itemsToProcess.filter(newItem =>
+    existingItems.some(existing => existing.fp_and_location_id === newItem.fp_and_location_id)
+  );
+
+  // Delete items that are no longer needed
+  if (itemsToDelete.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('collection_request_items')
+      .delete()
+      .in('id', itemsToDelete.map(item => item.id));
+
+    if (deleteError) {
+      console.error('Error deleting removed items:', deleteError);
+      toast.error('Error deleting removed items - ' + deleteError.message);
+      return;
+    }
+  }
+
+  // Insert new items
+  if (itemsToInsert.length > 0) {
+    const { error: insertError } = await supabase
+      .from('collection_request_items')
+      .insert(itemsToInsert);
+
+    if (insertError) {
+      console.error('Error inserting new items:', insertError);
+      toast.error('Error inserting new items - ' + insertError.message);
+      return;
+    }
+  }
+
+  // Update existing items
+  for (const item of itemsToUpdate) {
+    const existingItem = existingItems.find(
+      existing => existing.fp_and_location_id === item.fp_and_location_id
     );
 
-  if (itemsError) {
-    console.error('Error creating collection request items:', itemsError);
-    toast.error('Error creating collection request items - ' + itemsError.message);
-    return;
+    if (existingItem && existingItem.requested_quantity !== item.requested_quantity) {
+      const { error: updateError } = await supabase
+        .from('collection_request_items')
+        .update({ requested_quantity: item.requested_quantity })
+        .eq('id', existingItem.id);
+
+      if (updateError) {
+        console.error('Error updating item:', updateError);
+        toast.error('Error updating item - ' + updateError.message);
+        return;
+      }
+    }
   }
 
-  toast.success('Collection request updated successfully');
+  toast.success('Collection request updated successfully and reset to pending status');
   router.push('/authenticated/collection-requests');
 };
 
