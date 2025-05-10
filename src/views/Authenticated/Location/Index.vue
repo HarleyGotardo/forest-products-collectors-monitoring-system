@@ -220,7 +220,7 @@ watch(currentPage, () => {
     </div>
 
     <!-- Info Notes -->
-    <div class="mb-6">
+    <div v-if="isForestRanger || isFPUAdmin" class="mb-6">
       <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
       <button
