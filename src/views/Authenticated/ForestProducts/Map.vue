@@ -52,6 +52,13 @@ const goToForestProduct = (forestProductId) => {
   })
 }
 
+const goToLocation = (locationId) => {
+  router.push({
+    name: 'LocationsView',
+    params: { id: locationId },
+  })
+}
+
 const createLocation = () => {
   router.push('/authenticated/locations/create')
 }
@@ -562,23 +569,43 @@ onUnmounted(() => {
             class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-green-100"
           >
             <div class="flex justify-between items-center">
-              <h3
-                class="text-xl font-semibold text-gray-800 flex items-center gap-2"
-              >
-                <span class="text-green-600">
+              <div class="flex items-center gap-2">
+                <h3
+                  class="text-xl font-semibold text-gray-800 flex items-center gap-2"
+                >
+                  <span class="text-green-600">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M10 3.5a6.5 6.5 0 00-6.5 6.5c0 3.13 2.185 5.754 5.105 6.395l.007-.007c.407.107.832.165 1.273.165.441 0 .866-.058 1.273-.165l.007.007c2.92-.641 5.105-3.265 5.105-6.395A6.5 6.5 0 0010 3.5z"
+                      />
+                    </svg>
+                  </span>
+                  {{ selectedLocation?.name }}
+                </h3>
+                <button
+                  @click="goToLocation(selectedLocation.id)"
+                  class="inline-flex items-center px-3 py-1 text-sm font-medium text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors duration-200"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
+                    class="h-4 w-4 mr-1"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
                     <path
-                      d="M10 3.5a6.5 6.5 0 00-6.5 6.5c0 3.13 2.185 5.754 5.105 6.395l.007-.007c.407.107.832.165 1.273.165.441 0 .866-.058 1.273-.165l.007.007c2.92-.641 5.105-3.265 5.105-6.395A6.5 6.5 0 0010 3.5z"
+                      fill-rule="evenodd"
+                      d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z"
+                      clip-rule="evenodd"
                     />
                   </svg>
-                </span>
-                {{ selectedLocation?.name }}
-              </h3>
+                  View Location
+                </button>
+              </div>
               <button
                 @click="closeModal"
                 class="text-gray-500 hover:text-gray-700 focus:outline-none"
@@ -625,12 +652,14 @@ onUnmounted(() => {
                       {{ product.description }}
                     </p>
                   </div>
-                  <button
-                    @click="goToForestProduct(product.id)"
-                    class="px-4 py-2 w-full sm:w-auto bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
-                  >
-                    View Details
-                  </button>
+                  <div class="flex flex-col sm:flex-row gap-2">
+                    <button
+                      @click="goToForestProduct(product.id)"
+                      class="px-4 py-2 w-full sm:w-auto bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
                 <div
                   class="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-gray-100"
