@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { getUser, fetchUserDetails, isFPCollector } from '@/router/routeGuard';
@@ -38,9 +38,94 @@ const requestToDelete = ref(null);
 const loading = ref(true); // Add loading state
 const showNotes = ref(true); // Add showNotes state
 
+// Add subscription channel
+const subscription = ref(null);
+
 // Add filter states
 const statusFilter = ref('all'); // 'all', 'approved', 'pending', 'rejected'
 const recordedFilter = ref('all'); // 'all', 'recorded', 'unrecorded'
+
+// Function to handle real-time updates
+const handleRealtimeUpdate = (payload) => {
+  const { eventType, new: newRecord, old: oldRecord } = payload;
+  
+  if (eventType === 'UPDATE') {
+    // Update the request in the local array
+    const index = requests.value.findIndex(r => r.id === newRecord.id);
+    if (index !== -1) {
+      requests.value[index] = newRecord;
+      paginateRequests();
+      
+      // Check if remarks changed
+      if (newRecord.remarks !== oldRecord.remarks) {
+        // Show appropriate notification based on remarks change
+        if (newRecord.remarks === 'Approved') {
+          toast.success(`Request #${newRecord.id} has been approved!`, {
+            duration: 5000,
+            description: 'You can now proceed to record your collection.'
+          });
+        } else if (newRecord.remarks === 'Rejected') {
+          toast.error(`Request #${newRecord.id} has been rejected`, {
+            duration: 5000,
+            description: newRecord.rejection_reason ? `Reason: ${newRecord.rejection_reason}` : 'No reason provided'
+          });
+        } else if (newRecord.remarks === 'Pending') {
+          toast.info(`Request #${newRecord.id} status has been changed to pending`, {
+            duration: 5000
+          });
+        }
+      }
+      
+      // Check if recording status changed
+      if (newRecord.is_recorded !== oldRecord.is_recorded) {
+        if (newRecord.is_recorded) {
+          // Changed from unrecorded to recorded
+          toast.success(`Request #${newRecord.id} has been recorded!`, {
+            duration: 5000,
+            description: 'Your collection has been successfully recorded in the system.',
+            action: {
+              label: 'View',
+              onClick: () => viewRequest(newRecord.id)
+            }
+          });
+        } else {
+          // Changed from recorded to unrecorded
+          toast.info(`Request #${newRecord.id} recording status has been reset`, {
+            duration: 5000,
+            description: 'The recording status has been reset to unrecorded.'
+          });
+        }
+      }
+    }
+  }
+};
+
+// Subscribe to real-time updates
+const subscribeToChanges = () => {
+  const user = getUser();
+  if (user) {
+    subscription.value = supabase
+      .channel('collection-requests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'collection_requests',
+          filter: `user_id=eq.${user.id}`
+        },
+        handleRealtimeUpdate
+      )
+      .subscribe();
+  }
+};
+
+// Unsubscribe when component is unmounted
+onUnmounted(() => {
+  if (subscription.value) {
+    subscription.value.unsubscribe();
+  }
+});
 
 const fetchAllRequests = async () => {
   loading.value = true; // Set loading to true before fetching
@@ -151,6 +236,7 @@ const deleteRequest = async () => {
 onMounted(() => {
   fetchUserDetails();
   fetchAllRequests();
+  subscribeToChanges(); // Add subscription when component mounts
 });
 
 // Reset page when filters change

@@ -1045,45 +1045,52 @@ watch(paymentFilter, () => {
                 @click.stop
               >
                 <div class="flex items-center justify-end space-x-3">
-                  <!-- Mark as Paid Button or Placeholder -->
-                  <span v-if="!record.is_paid" class="inline-block">
-                    <AlertDialog>
-                      <AlertDialogTrigger>
-                        <Button
-                          class="bg-emerald-900 text-white hover:bg-emerald-600 p-2"
-                          v-if="isVSUAdmin"
-                        >
-                          <svg
-                            class="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                  <!-- Mark as Paid Button or Paid At Message -->
+                  <template v-if="isVSUAdmin">
+                    <span v-if="record.is_paid" class="text-green-700 text-xs font-semibold">
+                      Paid at {{ record.approved_at ? record.approved_at : 'N/A' }}
+                    </span>
+                    <span v-else class="inline-block">
+                      <AlertDialog>
+                        <AlertDialogTrigger>
+                          <Button
+                            class="bg-emerald-900 text-white hover:bg-emerald-600 p-2"
                           >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          Mark as Paid
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will mark the collection record as paid.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction @click="markAsPaid(record.id)"
-                            >Mark as Paid</AlertDialogAction
-                          >
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            <svg
+                              class="w-5 h-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Mark as Paid
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will mark the collection record as paid.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction @click="markAsPaid(record.id)">
+                              Mark as Paid
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </span>
+                  </template>
+                  <span v-else-if="record.is_paid" class="text-green-700 text-xs font-semibold">
+                    Paid
                   </span>
                   <span v-else class="inline-block w-[40px]"></span>
 
@@ -1265,27 +1272,35 @@ watch(paymentFilter, () => {
             class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between"
             @click.stop
             >
-            <!-- Mark as Paid Button -->
-            <Button
-              v-if="isVSUAdmin && !record.is_paid"
-              class="text-sm sm:inline-flex sm:items-center sm:space-x-1"
-              @click="() => {}"
-            >
-              <svg
-              class="w-4 h-4 sm:mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <!-- Mark as Paid Button or Paid At Message -->
+            <template v-if="isVSUAdmin">
+              <span v-if="record.is_paid" class="text-green-700 text-xs font-semibold">
+                Paid at {{ record.approved_at ? record.approved_at : 'N/A' }}
+              </span>
+              <Button
+                v-else
+                class="text-sm sm:inline-flex sm:items-center sm:space-x-1"
+                @click="() => {}"
               >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              />
-              </svg>
-              <span class="hidden sm:inline">Mark as Paid</span>
-            </Button>
+                <svg
+                  class="w-4 h-4 sm:mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span class="hidden sm:inline">Mark as Paid</span>
+              </Button>
+            </template>
+            <span v-else-if="record.is_paid" class="text-green-700 text-xs font-semibold">
+              Paid
+            </span>
 
             <!-- Revert Button -->
             <AlertDialog v-if="!record.is_paid">

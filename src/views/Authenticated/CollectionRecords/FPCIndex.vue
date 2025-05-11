@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
@@ -27,6 +27,7 @@ const itemsPerPage = 8
 const searchQuery = ref('')
 const selectedStatus = ref('') // New ref for selected status
 const showNotes = ref(true); // Add showNotes state
+const subscription = ref(null); // Add subscription ref
 
 const createCollectionRecord = () => {
   router.push('/authenticated/collection-records/create')
@@ -183,9 +184,193 @@ const viewRecord = (recordId) => {
   router.push(`/authenticated/collection-records/${recordId}`)
 }
 
+// Function to handle real-time updates
+const handleRealtimeUpdate = async (payload) => {
+  const { eventType, new: newRecord, old: oldRecord } = payload;
+  
+  if (eventType === 'INSERT') {
+    // Fetch the complete new record data with related information
+    const { data: completeRecord, error: fetchError } = await supabase
+      .from('collection_records')
+      .select(`
+        *,
+        collection_record_items (
+          id,
+          purchased_quantity,
+          total_cost,
+          fp_and_location:fp_and_locations (
+            id,
+            quantity,
+            forest_product:forest_products (
+              id,
+              name,
+              image_url,
+              type,
+              price_based_on_measurement_unit,
+              measurement_unit:measurement_units (
+                id,
+                unit_name
+              )
+            ),
+            location:locations (
+              id,
+              name
+            )
+          )
+        )
+      `)
+      .eq('id', newRecord.id)
+      .single();
+
+    if (!fetchError && completeRecord) {
+      // Format the new record
+      const formattedRecord = {
+        ...completeRecord,
+        product_name: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.name || 'N/A',
+        product_type: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.type || 'N/A',
+        product_price: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.price_based_on_measurement_unit || 0,
+        unit_name: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'N/A',
+        location_name: completeRecord.collection_record_items[0]?.fp_and_location?.location?.name || 'N/A',
+        image_url: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.image_url ? 
+          JSON.parse(completeRecord.collection_record_items[0].fp_and_location.forest_product.image_url).data.publicUrl : null,
+        quantity: completeRecord.collection_record_items[0]?.purchased_quantity || 0,
+        total_value: completeRecord.collection_record_items[0]?.total_cost || 0,
+        status: completeRecord.is_paid ? 'Paid' : 'Unpaid'
+      };
+
+      // Add to the beginning of the array
+      allCollectionRecords.value.unshift(formattedRecord);
+      paginateCollectionRecords();
+
+      // Show notification for new record
+      toast.success('New Collection Record', {
+        duration: 5000,
+        description: `A new collection record #${newRecord.id} has been added to your records.`,
+        action: {
+          label: 'View',
+          onClick: () => viewRecord(newRecord.id)
+        }
+      });
+    }
+  }
+  else if (eventType === 'UPDATE') {
+    // Check if the record was marked as paid
+    if (newRecord.is_paid && !oldRecord.is_paid) {
+      // Update the record in the local array
+      const index = allCollectionRecords.value.findIndex(r => r.id === newRecord.id);
+      if (index !== -1) {
+        // Fetch the complete updated record data
+        const { data: completeRecord, error: fetchError } = await supabase
+          .from('collection_records')
+          .select(`
+            *,
+            collection_record_items (
+              id,
+              purchased_quantity,
+              total_cost,
+              fp_and_location:fp_and_locations (
+                id,
+                quantity,
+                forest_product:forest_products (
+                  id,
+                  name,
+                  image_url,
+                  type,
+                  price_based_on_measurement_unit,
+                  measurement_unit:measurement_units (
+                    id,
+                    unit_name
+                  )
+                ),
+                location:locations (
+                  id,
+                  name
+                )
+              )
+            )
+          `)
+          .eq('id', newRecord.id)
+          .single();
+
+        if (!fetchError && completeRecord) {
+          // Format the updated record
+          const formattedRecord = {
+            ...completeRecord,
+            product_name: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.name || 'N/A',
+            product_type: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.type || 'N/A',
+            product_price: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.price_based_on_measurement_unit || 0,
+            unit_name: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'N/A',
+            location_name: completeRecord.collection_record_items[0]?.fp_and_location?.location?.name || 'N/A',
+            image_url: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.image_url ? 
+              JSON.parse(completeRecord.collection_record_items[0].fp_and_location.forest_product.image_url).data.publicUrl : null,
+            quantity: completeRecord.collection_record_items[0]?.purchased_quantity || 0,
+            total_value: completeRecord.collection_record_items[0]?.total_cost || 0,
+            status: 'Paid'
+          };
+
+          allCollectionRecords.value[index] = formattedRecord;
+          paginateCollectionRecords();
+
+          // Show success notification
+          toast.success('Collection Record Paid', {
+            duration: 5000,
+            description: `Your collection record #${newRecord.id} has been marked as paid. You can now proceed with your collection.`,
+            action: {
+              label: 'View',
+              onClick: () => viewRecord(newRecord.id)
+            }
+          });
+        }
+      }
+    }
+  }
+  else if (eventType === 'DELETE') {
+    // Remove the record from the local array
+    const index = allCollectionRecords.value.findIndex(r => r.id === oldRecord.id);
+    if (index !== -1) {
+      allCollectionRecords.value.splice(index, 1);
+      paginateCollectionRecords();
+
+      // Show notification for deleted record
+      toast.info('Collection Record Deleted', {
+        duration: 5000,
+        description: `Collection record #${oldRecord.id} has been removed from your records.`
+      });
+    }
+  }
+};
+
+// Subscribe to real-time updates
+const subscribeToChanges = () => {
+  const currentUser = getUser();
+  if (currentUser) {
+    subscription.value = supabase
+      .channel('collection-records-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'collection_records',
+          filter: `user_id=eq.${currentUser.id}`
+        },
+        handleRealtimeUpdate
+      )
+      .subscribe();
+  }
+};
+
+// Unsubscribe when component is unmounted
+onUnmounted(() => {
+  if (subscription.value) {
+    subscription.value.unsubscribe();
+  }
+});
+
 onMounted(() => {
   fetchUserDetails()
   fetchAllCollectionRecords()
+  subscribeToChanges() // Add subscription when component mounts
 })
 
 watch(searchQuery, () => {

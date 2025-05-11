@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { toast, Toaster } from 'vue-sonner';
@@ -44,6 +44,9 @@ const showNotes = ref(true); // Add showNotes state
 // Add filter states
 const statusFilter = ref('all'); // 'all', 'approved', 'pending', 'rejected'
 const recordedFilter = ref('all'); // 'all', 'recorded', 'unrecorded'
+
+// Add subscription channel
+const subscription = ref(null);
 
 const fetchAllRequests = async () => {
   loading.value = true; // Set loading to true before fetching
@@ -217,8 +220,91 @@ watch(currentPage, () => {
   paginateRequests();
 });
 
+// Function to handle real-time updates
+const handleRealtimeUpdate = async (payload) => {
+  const { eventType, new: newRecord, old: oldRecord } = payload;
+  
+  if (eventType === 'INSERT') {
+    // Fetch the complete request data including profile information
+    const { data: completeRequest, error: fetchError } = await supabase
+      .from('collection_requests')
+      .select(`
+        *,
+        profiles!collection_requests_user_id_fkey (first_name, last_name)
+      `)
+      .eq('id', newRecord.id)
+      .single();
+
+    if (!fetchError && completeRequest) {
+      // Add the new request to the beginning of the array
+      requests.value.unshift(completeRequest);
+      paginateRequests();
+      
+      // Show notification for new request
+      toast.info('New Collection Request Received', {
+        duration: 5000,
+        description: `Request #${newRecord.id} from ${completeRequest.profiles.first_name} ${completeRequest.profiles.last_name}`,
+        action: {
+          label: 'View',
+          onClick: () => viewRequest(newRecord.id)
+        }
+      });
+    }
+  } else if (eventType === 'UPDATE') {
+    // Update the request in the local array
+    const index = requests.value.findIndex(r => r.id === newRecord.id);
+    if (index !== -1) {
+      // Fetch the complete updated request data
+      const { data: completeRequest, error: fetchError } = await supabase
+        .from('collection_requests')
+        .select(`
+          *,
+          profiles!collection_requests_user_id_fkey (first_name, last_name)
+        `)
+        .eq('id', newRecord.id)
+        .single();
+
+      if (!fetchError && completeRequest) {
+        requests.value[index] = completeRequest;
+        paginateRequests();
+      }
+    }
+  } else if (eventType === 'DELETE') {
+    // Remove the deleted request from the local array
+    const index = requests.value.findIndex(r => r.id === oldRecord.id);
+    if (index !== -1) {
+      requests.value.splice(index, 1);
+      paginateRequests();
+    }
+  }
+};
+
+// Subscribe to real-time updates
+const subscribeToChanges = () => {
+  subscription.value = supabase
+    .channel('collection-requests-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'collection_requests'
+      },
+      handleRealtimeUpdate
+    )
+    .subscribe();
+};
+
+// Unsubscribe when component is unmounted
+onUnmounted(() => {
+  if (subscription.value) {
+    subscription.value.unsubscribe();
+  }
+});
+
 onMounted(() => {
   fetchAllRequests();
+  subscribeToChanges(); // Add subscription when component mounts
 });
 </script>
 

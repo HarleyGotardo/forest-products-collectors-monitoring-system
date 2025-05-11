@@ -441,12 +441,6 @@ watch(currentPage, () => {
                 scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
               >
-                Location
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-              >
                 Total Cost
               </th>
               <th
@@ -494,9 +488,6 @@ watch(currentPage, () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ record.user_name }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ record.location_name }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 ₱{{ record.total_cost.toFixed(2) }}
