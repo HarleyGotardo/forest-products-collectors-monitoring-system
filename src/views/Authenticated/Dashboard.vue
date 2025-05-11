@@ -834,7 +834,7 @@ onMounted(() => {
           <div class="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500 mb-1">Total Collectors</p>
+              <p class="text-sm font-bold text-gray-500 mb-1">Total Collectors</p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">
                 {{ totalCollectors }}
               </p>
@@ -865,7 +865,7 @@ onMounted(() => {
           <div class="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
             <div class="flex items-center justify-between overflow-x-auto space-x-4">
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-500 mb-1">Most Collected Product</p>
+              <p class="text-sm font-bold text-gray-500 mb-1">Most Collected Product</p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{{ mostCollectedProduct }}</p>
             </div>
             <div class="p-3 bg-emerald-100 rounded-lg flex-shrink-0">
@@ -883,7 +883,7 @@ onMounted(() => {
           <div class="absolute top-0 left-0 w-2 h-full bg-purple-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500 mb-1">
+              <p class="text-sm font-bold text-gray-500 mb-1">
                 Registered Locations
               </p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -915,7 +915,7 @@ onMounted(() => {
           <div class="absolute top-0 left-0 w-2 h-full bg-yellow-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500 mb-1">
+              <p class="text-sm font-bold text-gray-500 mb-1">
                 Total Forest Products
               </p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -966,7 +966,7 @@ onMounted(() => {
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">
+                  <p class="text-sm font-bold text-gray-500">
                     {{ isFPCollector ? "Your Collection Requests Today" : "Today's Collection Requests" }}
                   </p>
                   <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
@@ -1046,7 +1046,7 @@ onMounted(() => {
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">
+                  <p class="text-sm font-bold text-gray-500">
                     Low Stock Products
                   </p>
                   <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
@@ -1109,7 +1109,7 @@ onMounted(() => {
           class="w-7 h-7"
         />
       </div>
-      <h3 class="ml-4 text-xl font-semibold text-gray-800">
+      <h3 class="ml-4 text-xl font-bold text-gray-800">
         Most Collected Forest Products
       </h3>
     </div>
@@ -1136,7 +1136,7 @@ onMounted(() => {
 
         <!-- Forest Products Available Card -->
         <div class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100">
-          <div class="flex items-center justify-center mb-6">
+          <div class="flex items-center mb-6">
             <div class="p-2 bg-emerald-100 rounded-full">
               <img
                 src="@/assets/stocks.png"
@@ -1145,7 +1145,7 @@ onMounted(() => {
               />
             </div>
             <h3
-              class="ml-3 text-lg font-semibold text-gray-800 text-center"
+              class="ml-3 text-lg font-bold text-gray-800 text-center"
             >
               Forest Products Available (Available | Snapshot)
             </h3>
