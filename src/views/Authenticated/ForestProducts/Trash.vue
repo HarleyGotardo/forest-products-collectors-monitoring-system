@@ -56,6 +56,7 @@ const fetchTrashedProducts = async () => {
       )
     `)
     .not('deleted_at', 'is', null) // Get only products with non-null deleted_at
+    .order('deleted_at', { ascending: false })
 
   if (fetchError) {
     error.value = fetchError.message

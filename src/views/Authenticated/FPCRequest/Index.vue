@@ -50,7 +50,7 @@ const fetchAllRequests = async () => {
     .select('*')
     .eq('user_id', user.id)
     .is('deleted_at', null)
-    .order('requested_at', { ascending: false }); // Add sorting by requested_at in descending order
+    .order('id', { ascending: false }); // Add sorting by requested_at in descending order
 
   if (fetchError) {
     error.value = fetchError.message;

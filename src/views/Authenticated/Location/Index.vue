@@ -57,6 +57,7 @@ const fetchAllLocations = async () => {
       )
     `)
     .is('deleted_at', null) // Fetch only locations with null deleted_at
+    .order('id', { ascending: false }) 
 
   if (fetchError) {
     error.value = fetchError.message

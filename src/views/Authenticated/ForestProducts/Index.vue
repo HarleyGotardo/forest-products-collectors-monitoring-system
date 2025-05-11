@@ -78,6 +78,7 @@ const fetchAllForestProducts = async () => {
       )
     `)
     .is('deleted_at', null) // Exclude products with non-null deleted_at
+    .order('id', { ascending: false })
 
   if (fetchError) {
     error.value = fetchError.message

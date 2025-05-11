@@ -52,7 +52,8 @@ const fetchDeletedCollectionRecords = async () => {
         approved_at,
         deleted_at
       `)
-      .not('deleted_at', 'is', null); // Only include records with non-null deleted_at
+      .not('deleted_at', 'is', null) // Only include records with non-null deleted_at
+      .order('deleted_at', { ascending: false });
 
     if (fetchError) {
       error.value = fetchError.message;

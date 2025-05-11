@@ -44,7 +44,8 @@ const fetchDeletedRequests = async () => {
       .from('collection_requests')
       .select('*')
       .eq('user_id', user.id)
-      .not('deleted_at', 'is', null); // Fetch only requests with non-null deleted_at
+      .not('deleted_at', 'is', null) // Fetch only requests with non-null deleted_at
+      .order('deleted_at', { ascending: false });
 
     if (fetchError) {
       error.value = fetchError.message;
