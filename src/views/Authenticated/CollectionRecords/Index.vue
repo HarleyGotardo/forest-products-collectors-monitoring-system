@@ -396,13 +396,14 @@ const markAsPaid = async (recordId) => {
 
     // Format the list of forest products for the permit
     const forestProductsList = recordItems.map((item) => {
-      if (!item || !item.fp_and_location) return '';
-      const productName = item.fp_and_location.forest_product?.name || 'Unknown Product';
-      const locationName = item.fp_and_location.location?.name || 'Unknown Location';
-      const quantity = item.purchased_quantity || 0;
-      const total = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost || 0);
-      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ${total})`;
-    }).filter(Boolean).join('; ');
+      if (!item || !item.fp_and_location) return null;
+      return {
+        productName: item.fp_and_location.forest_product?.name || 'Unknown Product',
+        locationName: item.fp_and_location.location?.name || 'Unknown Location',
+        quantity: `${item.purchased_quantity || 0} ${item.fp_and_location.forest_product?.measurement_unit?.unit_name || ''}`.trim(),
+        totalCost: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost || 0)
+      };
+    }).filter(Boolean);
 
     // Check if any product is firewood
     const firewoodNote = recordItems.some((item) =>
@@ -416,7 +417,7 @@ const markAsPaid = async (recordId) => {
       permitNo: recordId,
       dateIssued: new Date().toLocaleDateString(),
       name: recordItems[0]?.user_name || 'N/A',
-      permission: `collect the forest products: ${forestProductsList}`,
+      permission: forestProductsList,
       purpose: updatedRecord.purpose || 'N/A',
       collectionRequestId: updatedRecord.collection_request_id || 'N/A',
       expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString(),

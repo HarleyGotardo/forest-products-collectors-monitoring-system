@@ -166,14 +166,15 @@ const downloadPermit = async () => {
       return;
     }
 
-    // Format the list of forest products
+    // Format the list of forest products as an array for the table
     const forestProductsList = recordItems.value.map((item) => {
-      const productName = item.fp_and_location.forest_product.name;
-      const locationName = item.fp_and_location.location.name;
-      const quantity = item.purchased_quantity;
-      const totalCost = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost);
-      return `${productName} (Location: ${locationName}, Quantity: ${quantity}, Total: ${totalCost})`;
-    }).join('; ');
+      return {
+        productName: item.fp_and_location.forest_product.name,
+        locationName: item.fp_and_location.location.name,
+        quantity: `${item.purchased_quantity} ${item.fp_and_location.forest_product.measurement_unit?.unit_name || ''}`.trim(),
+        totalCost: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost)
+      };
+    });
 
     // Check if any product is firewood
     const firewoodNote = recordItems.value.some((item) =>
@@ -187,7 +188,7 @@ const downloadPermit = async () => {
       permitNo: record.value.id,
       dateIssued: new Date(record.value.created_at).toLocaleDateString(),
       name: `${record.value.user.first_name} ${record.value.user.last_name}`,
-      permission: `collect the forest products: ${forestProductsList}`,
+      permission: forestProductsList,
       purpose: record.value.purpose || 'N/A',
       collectionRequestId: record.value.collection_request_id,
       expiryDate: new Date(new Date(record.value.created_at).setFullYear(new Date(record.value.created_at).getFullYear() + 1)).toLocaleDateString(),

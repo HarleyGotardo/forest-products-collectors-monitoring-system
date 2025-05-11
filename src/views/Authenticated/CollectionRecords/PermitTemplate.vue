@@ -53,7 +53,32 @@
 
       <p class="my-3 leading-relaxed">
       This is to certify that Mr./Ms. <span class="font-bold">{{ permitData.name }}</span> is given permission to
-      <span class="font-bold">{{ permitData.permission }}</span>.
+      <span class="font-bold">
+        <template v-if="Array.isArray(permitData.permission)">
+          collect the following forest products:
+          <table class="w-full mt-2 mb-2 border border-gray-400 text-xs">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="border border-gray-400 px-2 py-1 text-left">Forest Product</th>
+                <th class="border border-gray-400 px-2 py-1 text-left">Location</th>
+                <th class="border border-gray-400 px-2 py-1 text-right">Quantity</th>
+                <th class="border border-gray-400 px-2 py-1 text-right">Total Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, idx) in permitData.permission" :key="idx">
+                <td class="border border-gray-400 px-2 py-1 font-normal">{{ item.productName }}</td>
+                <td class="border border-gray-400 px-2 py-1 font-normal">{{ item.locationName }}</td>
+                <td class="border border-gray-400 px-2 py-1 text-right font-normal">{{ item.quantity }}</td>
+                <td class="border border-gray-400 px-2 py-1 text-right font-normal">{{ item.totalCost }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+        <template v-else>
+          {{ permitData.permission }}
+        </template>
+      </span>
       </p>
 
       <div class="my-3 border border-gray-300 p-2">
