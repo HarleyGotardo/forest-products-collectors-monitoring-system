@@ -203,12 +203,15 @@ const goToLoginPage = () => {
       
       <!-- Mobile logos in a row -->
       <div class="flex justify-start space-x-4 mt-4">
-      <div class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center p-1">
-        <img src="@/assets/vsu_logo.png" alt="VSU Logo" class="max-h-full max-w-full object-contain" />
-      </div>
-      <div class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center p-1">
-        <img src="@/assets/DFS_logo.png" alt="DFS Logo" class="max-h-full max-w-full object-contain" />
-      </div>
+        <div class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center p-1">
+          <img src="@/assets/vsu_logo.png" alt="VSU Logo" class="max-h-full max-w-full object-contain" />
+        </div>
+        <div class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center p-1">
+          <img src="@/assets/DFS_logo.png" alt="DFS Logo" class="max-h-full max-w-full object-contain" />
+        </div>
+        <div class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center p-1">
+          <img src="@/assets/foc-logo.jpg" alt="FCO Logo" class="max-h-full max-w-full object-contain" />
+        </div>
       </div>
     </div>
     
@@ -583,6 +586,9 @@ const goToLoginPage = () => {
           </div>
           <div class="w-32 h-32 bg-white rounded-lg shadow-md flex items-center justify-center p-4">
             <img src="@/assets/DFS_logo.png" alt="DFS Logo" class="max-h-full max-w-full object-contain" />
+          </div>
+          <div class="w-32 h-32 bg-white rounded-lg shadow-md flex items-center justify-center p-4">
+            <img src="@/assets/foc-logo.jpg" alt="FCO Logo" class="max-h-full max-w-full object-contain" />
           </div>
         </div>
         

@@ -153,6 +153,9 @@ const handleForgotPassword = async () => {
         <div class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center p-1">
           <img src="@/assets/DFS_logo.png" alt="DFS Logo" class="max-h-full max-w-full object-contain" />
         </div>
+        <div class="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center p-1">
+          <img src="@/assets/foc-logo.jpg" alt="FCO Logo" class="max-h-full max-w-full object-contain" />
+        </div>
       </div>
     </div>
 
@@ -307,6 +310,9 @@ const handleForgotPassword = async () => {
           </div>
           <div class="w-32 h-32 bg-white rounded-lg shadow-md flex items-center justify-center p-4">
             <img src="@/assets/DFS_logo.png" alt="DFS Logo" class="max-h-full max-w-full object-contain" />
+          </div>
+          <div class="w-32 h-32 bg-white rounded-lg shadow-md flex items-center justify-center p-4">
+            <img src="@/assets/foc-logo.jpg" alt="FCO Logo" class="max-h-full max-w-full object-contain" />
           </div>
         </div>
 
