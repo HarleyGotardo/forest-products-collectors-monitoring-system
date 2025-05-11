@@ -119,14 +119,14 @@
     <div class="mb-6">
       <div class="flex justify-between mb-6">
         <div class="w-5/12">
-          <p class="text-xs m-0">Issued by (Created by):</p>
+          <p class="text-xs m-0">Issued by:</p>
           <p class=" underline mt-4 mb-1 text-sm">{{ permitData.issuedBy }}</p>
-          <p class="text-xs m-0">Forest Guard On-Duty</p>
+          <p class="text-xs m-0">Forest Protection Unit Personnel</p>
         </div>
         <div class="w-5/12">
-          <p class="text-xs m-0">Inspected by (Approved by):</p>
+          <p class="text-xs m-0">Inspected by:</p>
           <p class=" underline mt-4 mb-1 text-sm">{{ permitData.inspectedBy }}</p>
-          <p class="text-xs m-0">VSU-Administrator</p>
+          <p class="text-xs m-0">VSU Cash Division</p>
         </div>
       </div>
 
