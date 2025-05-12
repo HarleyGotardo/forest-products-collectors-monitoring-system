@@ -96,7 +96,7 @@ const handleRealtimeUpdate = (payload) => {
           toast.success(`Request #${newRecord.id} approved. You can now proceed to collection.`, { duration: 5000 });
         } else if (newRecord.remarks === 'Rejected' && oldRecord.remarks !== 'Rejected') {
           toast.error(`Request #${newRecord.id} rejected.`, { duration: 5000, description: newRecord.rejection_reason ? `Reason: ${newRecord.rejection_reason}` : undefined });
-        } else if (oldRecord.remarks === 'Approved' && newRecord.remarks === 'Pending') {
+        } else {
           toast.info(`Request #${newRecord.id} reverted.`, { duration: 5000, description: 'The request has been reverted to pending.' });
         }
         return;

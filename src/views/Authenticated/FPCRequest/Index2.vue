@@ -362,6 +362,78 @@ const subscribeToChanges = () => {
     )
     .subscribe();
 
+  // Specific subscription for deleted_at updates
+  const deletedAtSubscription = supabase
+    .channel('deleted-at-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'collection_requests',
+      },
+      async (payload) => {
+        console.log('UPDATE event detected:', payload);
+        const { new: newRecord, old: oldRecord } = payload;
+        
+        // More detailed logging
+        console.log('Old record:', oldRecord);
+        console.log('New record:', newRecord);
+        console.log('Old deleted_at:', oldRecord?.deleted_at);
+        console.log('New deleted_at:', newRecord?.deleted_at);
+        
+        // Check if deleted_at changed from null to a value (deleted)
+        // This needs to catch when a request is moved to the recycle bin
+        if (oldRecord && newRecord && 
+            (oldRecord.deleted_at === null || oldRecord.deleted_at === undefined) && 
+            newRecord.deleted_at !== null && newRecord.deleted_at !== undefined) {
+          
+          console.log(`✅ Request #${newRecord.id} moved to recycle bin - detected!`);
+          
+          // Remove from local array 
+          const index = requests.value.findIndex(r => r.id === newRecord.id);
+          if (index !== -1) {
+            console.log(`Removing request #${newRecord.id} from local array at index ${index}`);
+            requests.value.splice(index, 1);
+            paginateRequests();
+          } else {
+            console.log(`Request #${newRecord.id} not found in local array, refetching all`);
+          }
+          
+          // To ensure data consistency, refetch all
+          await fetchAllRequests();
+          toast.info(`Request #${newRecord.id} has been moved to recycle bin.`, { duration: 5000 });
+          return;
+        }
+        
+        // Check if deleted_at changed from a value to null (restored)
+        if (oldRecord && newRecord && 
+            oldRecord.deleted_at !== null && oldRecord.deleted_at !== undefined && 
+            (newRecord.deleted_at === null || newRecord.deleted_at === undefined)) {
+          
+          console.log(`✅ Request #${newRecord.id} restored from recycle bin - detected!`);
+          
+          // Fetch and add the restored request
+          const { data: completeRequest, error: fetchError } = await supabase
+            .from('collection_requests')
+            .select('*, profiles!collection_requests_user_id_fkey (first_name, last_name)')
+            .eq('id', newRecord.id)
+            .single();
+          
+          if (!fetchError && completeRequest) {
+            console.log(`Adding restored request #${newRecord.id} to local array`);
+            requests.value.unshift(completeRequest);
+            paginateRequests();
+            toast.success(`Request #${newRecord.id} restored.`, { duration: 5000 });
+          } else {
+            console.log('Error fetching restored request:', fetchError);
+          }
+          return;
+        }
+      }
+    )
+    .subscribe();
+
   // Additional subscription for collection_request_items changes
   const itemsSubscription = supabase
     .channel('collection-request-items-changes')
@@ -411,7 +483,8 @@ onUnmounted(() => {
     subscription.value.unsubscribe();
   }
   
-  // Also unsubscribe from the items channel
+  // Unsubscribe from all channels
+  supabase.removeChannel('deleted-at-changes');
   supabase.removeChannel('collection-request-items-changes');
 });
 
