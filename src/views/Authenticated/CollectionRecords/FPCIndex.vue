@@ -29,6 +29,12 @@ const selectedStatus = ref('') // New ref for selected status
 const showNotes = ref(true); // Add showNotes state
 const subscription = ref(null); // Add subscription ref
 
+// Add multiple subscription channels
+const insertChannel = ref(null);
+const updateChannel = ref(null);
+const deleteChannel = ref(null);
+const softDeleteChannel = ref(null);
+
 const createCollectionRecord = () => {
   router.push('/authenticated/collection-records/create')
 }
@@ -184,186 +190,244 @@ const viewRecord = (recordId) => {
   router.push(`/authenticated/collection-records/${recordId}`)
 }
 
-// Function to handle real-time updates
-const handleRealtimeUpdate = async (payload) => {
+// Subscribe to real-time updates with multiple channels 
+const subscribeToChanges = () => {
+  const currentUser = getUser();
+  if (!currentUser) return;
+
+  // Main channel for all changes to the user's records
+  subscription.value = supabase
+    .channel('collection-records-all-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',  // Listen to ALL events (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'collection_records',
+        filter: `user_id=eq.${currentUser.id}`
+      },
+      handleRealtimeChanges
+    )
+    .subscribe((status) => {
+      console.log('Realtime subscription status:', status);
+    });
+    
+  // Dedicated channel specifically for DELETE events (to catch revert actions)
+  deleteChannel.value = supabase
+    .channel('collection-records-delete-events')
+    .on(
+      'postgres_changes',
+      {
+        event: 'DELETE',  // Only listen to DELETE events
+        schema: 'public',
+        table: 'collection_records',
+        filter: `user_id=eq.${currentUser.id}`
+      },
+      handleDeleteEvent
+    )
+    .subscribe((status) => {
+      console.log('Delete event subscription status:', status);
+    });
+};
+
+// Unified handler for all realtime changes
+const handleRealtimeChanges = async (payload) => {
+  console.log('Collection record change detected:', payload);
   const { eventType, new: newRecord, old: oldRecord } = payload;
-  
-  if (eventType === 'INSERT') {
-    // Fetch the complete new record data with related information
-    const { data: completeRecord, error: fetchError } = await supabase
-      .from('collection_records')
-      .select(`
-        *,
-        collection_record_items (
-          id,
-          purchased_quantity,
-          total_cost,
-          fp_and_location:fp_and_locations (
-            id,
-            quantity,
-            forest_product:forest_products (
-              id,
-              name,
-              image_url,
-              type,
-              price_based_on_measurement_unit,
-              measurement_unit:measurement_units (
-                id,
-                unit_name
-              )
-            ),
-            location:locations (
-              id,
-              name
-            )
-          )
-        )
-      `)
-      .eq('id', newRecord.id)
-      .single();
 
-    if (!fetchError && completeRecord) {
-      // Format the new record
-      const formattedRecord = {
-        ...completeRecord,
-        product_name: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.name || 'N/A',
-        product_type: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.type || 'N/A',
-        product_price: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.price_based_on_measurement_unit || 0,
-        unit_name: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'N/A',
-        location_name: completeRecord.collection_record_items[0]?.fp_and_location?.location?.name || 'N/A',
-        image_url: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.image_url ? 
-          JSON.parse(completeRecord.collection_record_items[0].fp_and_location.forest_product.image_url).data.publicUrl : null,
-        quantity: completeRecord.collection_record_items[0]?.purchased_quantity || 0,
-        total_value: completeRecord.collection_record_items[0]?.total_cost || 0,
-        status: completeRecord.is_paid ? 'Paid' : 'Unpaid'
-      };
-
-      // Add to the beginning of the array
-      allCollectionRecords.value.unshift(formattedRecord);
-      paginateCollectionRecords();
-
-      // Show notification for new record
-      toast.success('New Collection Record', {
-        duration: 5000,
-        description: `A new collection record #${newRecord.id} has been added to your records.`,
-        action: {
-          label: 'View',
-          onClick: () => viewRecord(newRecord.id)
-        }
-      });
-    }
-  }
-  else if (eventType === 'UPDATE') {
-    // Check if the record was marked as paid
-    if (newRecord.is_paid && !oldRecord.is_paid) {
-      // Update the record in the local array
-      const index = allCollectionRecords.value.findIndex(r => r.id === newRecord.id);
-      if (index !== -1) {
-        // Fetch the complete updated record data
-        const { data: completeRecord, error: fetchError } = await supabase
-          .from('collection_records')
-          .select(`
-            *,
-            collection_record_items (
-              id,
-              purchased_quantity,
-              total_cost,
-              fp_and_location:fp_and_locations (
-                id,
-                quantity,
-                forest_product:forest_products (
-                  id,
-                  name,
-                  image_url,
-                  type,
-                  price_based_on_measurement_unit,
-                  measurement_unit:measurement_units (
-                    id,
-                    unit_name
-                  )
-                ),
-                location:locations (
-                  id,
-                  name
-                )
-              )
-            )
-          `)
-          .eq('id', newRecord.id)
-          .single();
-
-        if (!fetchError && completeRecord) {
-          // Format the updated record
-          const formattedRecord = {
-            ...completeRecord,
-            product_name: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.name || 'N/A',
-            product_type: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.type || 'N/A',
-            product_price: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.price_based_on_measurement_unit || 0,
-            unit_name: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'N/A',
-            location_name: completeRecord.collection_record_items[0]?.fp_and_location?.location?.name || 'N/A',
-            image_url: completeRecord.collection_record_items[0]?.fp_and_location?.forest_product?.image_url ? 
-              JSON.parse(completeRecord.collection_record_items[0].fp_and_location.forest_product.image_url).data.publicUrl : null,
-            quantity: completeRecord.collection_record_items[0]?.purchased_quantity || 0,
-            total_value: completeRecord.collection_record_items[0]?.total_cost || 0,
-            status: 'Paid'
-          };
-
-          allCollectionRecords.value[index] = formattedRecord;
-          paginateCollectionRecords();
-
-          // Show success notification
-          toast.success('Collection Record Paid', {
-            duration: 5000,
-            description: `Your collection record #${newRecord.id} has been marked as paid. You can now proceed with your collection.`,
-            action: {
-              label: 'View',
-              onClick: () => viewRecord(newRecord.id)
-            }
-          });
-        }
-      }
-    }
-  }
-  else if (eventType === 'DELETE') {
-    // Remove the record from the local array
+  // HANDLE DELETE EVENTS (permanent deletion)
+  if (eventType === 'DELETE') {
+    console.log('Record permanently deleted:', oldRecord.id);
+    // Remove from local records
     const index = allCollectionRecords.value.findIndex(r => r.id === oldRecord.id);
     if (index !== -1) {
       allCollectionRecords.value.splice(index, 1);
       paginateCollectionRecords();
-
-      // Show notification for deleted record
-      toast.info('Collection Record Deleted', {
-        duration: 5000,
-        description: `Collection record #${oldRecord.id} has been removed from your records.`
+      
+      // Show prominent toast notification for permanent deletion
+      toast.error('Collection Record Deleted', {
+        duration: 8000,
+        description: `Your collection record #${oldRecord.id} has been permanently deleted.`,
+        position: 'top-center',
+        important: true,
+        style: { 
+          border: '2px solid red',
+          fontWeight: 'bold'
+        }
+      });
+    } else {
+      // If we couldn't find the record in our array, refresh the data anyway
+      console.log('Deleted record not found in local array, refreshing data');
+      await fetchAllCollectionRecords();
+      
+      // Still show the notification even if record wasn't in our array
+      toast.error('Collection Record Deleted', {
+        duration: 8000,
+        description: `One of your collection records has been deleted.`,
+        position: 'top-center',
+        important: true,
+        style: { 
+          border: '2px solid red',
+          fontWeight: 'bold'
+        }
       });
     }
+    return;
+  }
+
+  // HANDLE INSERT EVENTS (new records)
+  if (eventType === 'INSERT') {
+    console.log('New record created:', newRecord.id);
+    // Refresh all records to get the complete data structure
+    await fetchAllCollectionRecords();
+    
+    // Show toast notification for new record
+    toast.success('Collection Record Created', {
+      duration: 5000,
+      description: `A new collection record #${newRecord.id} has been created.`,
+      action: {
+        label: 'View',
+        onClick: () => viewRecord(newRecord.id)
+      }
+    });
+    return;
+  }
+
+  // HANDLE UPDATE EVENTS (including soft deletes, restoration, and payment status changes)
+  if (eventType === 'UPDATE') {
+    console.log('Record updated:', newRecord.id);
+    
+    // Check for payment status change to paid
+    if (!oldRecord.is_paid && newRecord.is_paid) {
+      // Update the local record
+      const index = allCollectionRecords.value.findIndex(r => r.id === newRecord.id);
+      if (index !== -1) {
+        allCollectionRecords.value[index].status = 'Paid';
+        paginateCollectionRecords();
+        
+        // Show toast notification for payment
+        toast.success('Collection Record Paid', {
+          duration: 5000,
+          description: `Your collection record #${newRecord.id} has been marked as paid. You can now proceed with your collection.`,
+          action: {
+            label: 'View',
+            onClick: () => viewRecord(newRecord.id)
+          }
+        });
+      } else {
+        // If we can't find the record locally, refresh all records
+        await fetchAllCollectionRecords();
+      }
+      return;
+    }
+    
+    // Check for payment status change from paid to unpaid
+    if (oldRecord.is_paid && !newRecord.is_paid) {
+      // Update the local record
+      const index = allCollectionRecords.value.findIndex(r => r.id === newRecord.id);
+      if (index !== -1) {
+        allCollectionRecords.value[index].status = 'Unpaid';
+        paginateCollectionRecords();
+        
+        // Show toast notification for unpaid status
+        toast.warning('Payment Status Changed', {
+          duration: 5000,
+          description: `Your collection record #${newRecord.id} has been marked as unpaid. Please contact the Forest Protection Unit for assistance.`,
+          action: {
+            label: 'View',
+            onClick: () => viewRecord(newRecord.id)
+          }
+        });
+      } else {
+        // If we can't find the record locally, refresh all records
+        await fetchAllCollectionRecords();
+      }
+      return;
+    }
+    
+    // Check for soft delete (deleted_at changed from null to a value)
+    if (oldRecord.deleted_at === null && newRecord.deleted_at !== null) {
+      // Remove the soft-deleted record from our local array
+      const index = allCollectionRecords.value.findIndex(r => r.id === newRecord.id);
+      if (index !== -1) {
+        allCollectionRecords.value.splice(index, 1);
+        paginateCollectionRecords();
+        
+        // Show toast notification for soft deletion
+        toast.warning('Collection Record Removed', {
+          duration: 5000,
+          description: `Your collection record #${newRecord.id} has been moved to trash.`
+        });
+      }
+      return;
+    }
+    
+    // Check for record restoration (deleted_at changed from a value to null)
+    if (oldRecord.deleted_at !== null && newRecord.deleted_at === null) {
+      // Refresh all records to include the restored record
+      await fetchAllCollectionRecords();
+      
+      // Show toast notification for restoration
+      toast.success('Collection Record Restored', {
+        duration: 5000,
+        description: `Your collection record #${newRecord.id} has been restored from trash.`
+      });
+      return;
+    }
+    
+    // Generic update notification for other types of updates
+    toast.info('Collection Record Updated', {
+      duration: 5000,
+      description: `Your collection record #${newRecord.id} has been updated.`,
+      action: {
+        label: 'Refresh',
+        onClick: () => fetchAllCollectionRecords()
+      }
+    });
+    
+    // Refresh records to ensure we have the latest data
+    await fetchAllCollectionRecords();
   }
 };
 
-// Subscribe to real-time updates
-const subscribeToChanges = () => {
-  const currentUser = getUser();
-  if (currentUser) {
-    subscription.value = supabase
-      .channel('collection-records-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'collection_records',
-          filter: `user_id=eq.${currentUser.id}`
-        },
-        handleRealtimeUpdate
-      )
-      .subscribe();
+// Special handler specifically for DELETE events (revert actions)
+const handleDeleteEvent = async (payload) => {
+  console.log('DELETE EVENT DETECTED:', payload);
+  const { old: oldRecord } = payload;
+  
+  // Remove from local records
+  const index = allCollectionRecords.value.findIndex(r => r.id === oldRecord.id);
+  if (index !== -1) {
+    allCollectionRecords.value.splice(index, 1);
+    paginateCollectionRecords();
   }
+  
+  // Show highly visible notification for delete action
+  toast.error('Collection Record Deleted', {
+    duration: 10000,
+    description: `Your collection record #${oldRecord.id} has been permanently deleted.`,
+    position: 'top-center',
+    important: true,
+    style: { 
+      border: '3px solid red',
+      fontWeight: 'bold',
+      backgroundColor: '#FEE2E2'
+    }
+  });
+  
+  // Force refresh collection records
+  await fetchAllCollectionRecords();
 };
 
 // Unsubscribe when component is unmounted
 onUnmounted(() => {
   if (subscription.value) {
     subscription.value.unsubscribe();
+    console.log('Unsubscribed from realtime updates');
+  }
+  if (deleteChannel.value) {
+    deleteChannel.value.unsubscribe();
+    console.log('Unsubscribed from delete events');
   }
 });
 

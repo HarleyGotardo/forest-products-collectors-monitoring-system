@@ -86,25 +86,17 @@ const handleRealtimeUpdate = (payload) => {
     
     const index = requests.value.findIndex(r => r.id === newRecord.id);
     if (index !== -1) {
+      // Update the local data first
       requests.value[index] = newRecord;
       paginateRequests();
+      
+      // Now handle the specific change types independently
 
-      // Check for remarks changes - BUT only if deleted_at is still null
-      // This prevents multiple notifications when a rejected request is deleted
-      if (newRecord.remarks !== oldRecord.remarks && newRecord.deleted_at === null) {
-        if (newRecord.remarks === 'Approved') {
-          toast.success(`Request #${newRecord.id} approved. You can now proceed to collection.`, { duration: 5000 });
-        } else if (newRecord.remarks === 'Rejected' && oldRecord.remarks !== 'Rejected') {
-          toast.error(`Request #${newRecord.id} rejected.`, { duration: 5000, description: newRecord.rejection_reason ? `Reason: ${newRecord.rejection_reason}` : undefined });
-        } else {
-          toast.info(`Request #${newRecord.id} reverted.`, { duration: 5000, description: 'The request has been reverted to pending.' });
-        }
-        return;
-      }
-
-      // Only show recording status notification if that's the only change AND not deleted
+      // RECORDING STATUS CHANGES - completely separate from approval/rejection
       if (newRecord.is_recorded !== oldRecord.is_recorded && newRecord.deleted_at === null) {
-        if (newRecord.is_recorded) {
+        // Only recording status changed
+        if (newRecord.is_recorded === true && newRecord.deleted_at === null && newRecord.remarks === 'Approved') {
+          // Changed from unrecorded to recorded
           toast.success(`Request #${newRecord.id} has been recorded!`, {
             duration: 5000,
             description: 'Your collection has been successfully recorded in the system.',
@@ -113,12 +105,31 @@ const handleRealtimeUpdate = (payload) => {
               onClick: () => viewRequest(newRecord.id)
             }
           });
-        } else {
-          toast.info(`Request #${newRecord.id} recording status has been reset.`, {
+          return; // Important: return to prevent other notifications
+        } else if (newRecord.is_recorded === false && oldRecord.is_recorded === true) {
+          // Changed from recorded to unrecorded
+          toast.info(`Request #${newRecord.id} has been marked as unrecorded`, {
             duration: 5000,
-            description: 'The recording status has been reset to unrecorded.'
+            description: 'The collection has been marked as unrecorded in the system.',
+            action: {
+              label: 'View',
+              onClick: () => viewRequest(newRecord.id)
+            }
           });
+          return; // Important: return to prevent other notifications
         }
+      }
+      
+      // APPROVAL/REJECTION CHANGES - only if no recording status change was handled
+      if (newRecord.remarks !== oldRecord.remarks && newRecord.deleted_at === null && newRecord.is_recorded === false) {
+        if (newRecord.remarks === 'Approved') {
+          toast.success(`Request #${newRecord.id} approved. You can now proceed to collection.`, { duration: 5000 });
+        } else if (newRecord.remarks === 'Rejected' && oldRecord.remarks !== 'Rejected') {
+          toast.error(`Request #${newRecord.id} rejected.`, { duration: 5000, description: newRecord.rejection_reason ? `Reason: ${newRecord.rejection_reason}` : undefined });
+        } else {
+          toast.info(`Request #${newRecord.id} reverted.`, { duration: 5000, description: 'The request has been reverted to pending.' });
+        }
+        return; // Return to prevent further notifications
       }
     }
   }
