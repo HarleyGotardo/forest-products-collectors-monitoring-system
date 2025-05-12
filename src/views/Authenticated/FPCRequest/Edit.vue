@@ -140,7 +140,13 @@ const fetchRequestDetails = async () => {
 
     if (requestError) throw requestError;
 
-    const formattedDate = new Date(requestData.collection_date).toISOString().split('T')[0];
+    // Fix date handling to account for timezone
+    const date = new Date(requestData.collection_date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
     collectionDate.value = formattedDate;
     initialCollectionDate.value = formattedDate;
 
@@ -240,7 +246,11 @@ const isCollectionDateValid = computed(() => {
   const selectedDate = new Date(collectionDate.value);
   selectedDate.setHours(0, 0, 0, 0);
 
-  return selectedDate.getTime() >= today.getTime();
+  // Compare dates using UTC to avoid timezone issues
+  const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const selectedUTC = Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+
+  return selectedUTC >= todayUTC;
 });
 
 const hasChanges = computed(() => {
@@ -423,8 +433,16 @@ const validateDate = () => {
     const selectedDate = new Date(collectionDate.value);
     selectedDate.setHours(0, 0, 0, 0);
 
-    if (selectedDate < today) {
-      collectionDate.value = new Date().toISOString().split('T')[0];
+    // Compare dates using UTC
+    const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    const selectedUTC = Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+
+    if (selectedUTC < todayUTC) {
+      // Format today's date properly
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      collectionDate.value = `${year}-${month}-${day}`;
       toast.error('Past dates are not allowed. Date has been reset to today.');
     }
   }

@@ -48,38 +48,63 @@ const recordedFilter = ref('all'); // 'all', 'recorded', 'unrecorded'
 // Function to handle real-time updates
 const handleRealtimeUpdate = (payload) => {
   const { eventType, new: newRecord, old: oldRecord } = payload;
-  
+  console.log(`Received ${eventType} event:`, payload);
+
+  if (eventType === 'DELETE') {
+    // Remove the request from the local array
+    const index = requests.value.findIndex(r => r.id === oldRecord.id);
+    if (index !== -1) {
+      requests.value.splice(index, 1);
+      paginateRequests();
+      toast.success(`Request #${oldRecord.id} deleted successfully, now in trashed requests.`, { duration: 5000 });
+    }
+    return;
+  }
+
+  if (eventType === 'INSERT') {
+    // Add the new request to the local array
+    requests.value.unshift(newRecord);
+    paginateRequests();
+    // Optionally show a notification for new requests
+    // toast.info(`New request #${newRecord.id} submitted.`, { duration: 5000 });
+    return;
+  }
+
   if (eventType === 'UPDATE') {
-    // Update the request in the local array
+    // First, check if this is a deleted_at change (moved to recycle bin)
+    if (oldRecord?.deleted_at === null && newRecord?.deleted_at !== null) {
+      console.log(`Request #${newRecord.id} moved to recycle bin`);
+      // Simply remove from local array - no need for refetch in this component
+      const index = requests.value.findIndex(r => r.id === newRecord.id);
+      if (index !== -1) {
+        requests.value.splice(index, 1);
+        paginateRequests();
+        toast.success(`Request #${newRecord.id} deleted successfully, now in trashed requests.`, { duration: 5000 });
+      }
+      return;
+    }
+    
     const index = requests.value.findIndex(r => r.id === newRecord.id);
     if (index !== -1) {
       requests.value[index] = newRecord;
       paginateRequests();
-      
-      // Check if remarks changed
-      if (newRecord.remarks !== oldRecord.remarks) {
-        // Show appropriate notification based on remarks change
+
+      // Check for remarks changes - BUT only if deleted_at is still null
+      // This prevents multiple notifications when a rejected request is deleted
+      if (newRecord.remarks !== oldRecord.remarks && newRecord.deleted_at === null) {
         if (newRecord.remarks === 'Approved') {
-          toast.success(`Request #${newRecord.id} has been approved!`, {
-            duration: 5000,
-            description: 'You can now proceed to record your collection.'
-          });
-        } else if (newRecord.remarks === 'Rejected') {
-          toast.error(`Request #${newRecord.id} has been rejected`, {
-            duration: 5000,
-            description: newRecord.rejection_reason ? `Reason: ${newRecord.rejection_reason}` : 'No reason provided'
-          });
-        } else if (newRecord.remarks === 'Pending') {
-          toast.info(`Request #${newRecord.id} status has been changed to pending`, {
-            duration: 5000
-          });
+          toast.success(`Request #${newRecord.id} approved. You can now proceed to collection.`, { duration: 5000 });
+        } else if (newRecord.remarks === 'Rejected' && oldRecord.remarks !== 'Rejected') {
+          toast.error(`Request #${newRecord.id} rejected.`, { duration: 5000, description: newRecord.rejection_reason ? `Reason: ${newRecord.rejection_reason}` : undefined });
+        } else if (oldRecord.remarks === 'Approved' && newRecord.remarks === 'Pending') {
+          toast.info(`Request #${newRecord.id} reverted.`, { duration: 5000, description: 'The request has been reverted to pending.' });
         }
+        return;
       }
-      
-      // Check if recording status changed
-      if (newRecord.is_recorded !== oldRecord.is_recorded) {
+
+      // Only show recording status notification if that's the only change AND not deleted
+      if (newRecord.is_recorded !== oldRecord.is_recorded && newRecord.deleted_at === null) {
         if (newRecord.is_recorded) {
-          // Changed from unrecorded to recorded
           toast.success(`Request #${newRecord.id} has been recorded!`, {
             duration: 5000,
             description: 'Your collection has been successfully recorded in the system.',
@@ -89,8 +114,7 @@ const handleRealtimeUpdate = (payload) => {
             }
           });
         } else {
-          // Changed from recorded to unrecorded
-          toast.info(`Request #${newRecord.id} recording status has been reset`, {
+          toast.info(`Request #${newRecord.id} recording status has been reset.`, {
             duration: 5000,
             description: 'The recording status has been reset to unrecorded.'
           });
@@ -130,19 +154,57 @@ onUnmounted(() => {
 const fetchAllRequests = async () => {
   loading.value = true; // Set loading to true before fetching
   const user = getUser();
-  let { data, error: fetchError } = await supabase
-    .from('collection_requests')
-    .select('*')
-    .eq('user_id', user.id)
-    .is('deleted_at', null)
-    .order('id', { ascending: false }); // Add sorting by requested_at in descending order
-
-  if (fetchError) {
-    error.value = fetchError.message;
-  } else {
-    requests.value = data;
-    paginateRequests();
+  
+  // First, get IDs of requests that are referenced in deleted collection records
+  const { data: excludedRequestIds, error: excludedError } = await supabase
+    .from('collection_records')
+    .select('collection_request_id')
+    .not('deleted_at', 'is', null)
+    .not('collection_request_id', 'is', null);
+  
+  if (excludedError) {
+    console.error('Error fetching excluded request IDs:', excludedError);
+    error.value = excludedError.message;
+    loading.value = false;
+    return;
   }
+  
+  // Extract the IDs to exclude
+  const requestIdsToExclude = excludedRequestIds.map(record => record.collection_request_id);
+  console.log('Excluding request IDs:', requestIdsToExclude);
+  
+  try {
+    // Then fetch requests that aren't in the excluded list
+    let query = supabase
+      .from('collection_requests')
+      .select('*')
+      .eq('user_id', user.id)
+      .is('deleted_at', null);
+    
+    // Add filter to exclude requests referenced in deleted collection records
+    // Use a different approach for filtering with arrays
+    if (requestIdsToExclude.length > 0) {
+      // Using .filter() instead of .not() with 'in'
+      query = query.filter('id', 'not.in', `(${requestIdsToExclude.join(',')})`);
+    }
+    
+    // Always add the ordering at the end
+    query = query.order('id', { ascending: false });
+    
+    const { data, error: fetchError } = await query;
+
+    if (fetchError) {
+      console.error('Error fetching requests:', fetchError);
+      error.value = fetchError.message;
+    } else {
+      requests.value = data;
+      paginateRequests();
+    }
+  } catch (err) {
+    console.error('Exception in fetchAllRequests:', err);
+    error.value = err.message;
+  }
+  
   loading.value = false; // Set loading to false after fetching
 };
 

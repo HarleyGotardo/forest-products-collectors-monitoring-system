@@ -152,11 +152,14 @@ const approveRequest = async () => {
 
   if (approveError) {
     error.value = approveError.message;
+    toast.error('Error approving request: ' + approveError.message, { duration: 3000 });
   } else {
-    fetchAllRequests();
+    // We need to fetch all requests to properly update the UI
+    await fetchAllRequests();
     toast.success('Request approved successfully', { duration: 2000 });
   }
   showDialog.value = false;
+  requestToApprove.value = null;
 };
 
 const rejectRequest = async () => {
@@ -179,7 +182,8 @@ const rejectRequest = async () => {
   if (rejectError) {
     error.value = rejectError.message;
   } else {
-    fetchAllRequests();
+    // We need to fetch all requests to properly update the UI
+    await fetchAllRequests();
     toast.success('Request rejected successfully', { duration: 2000 });
   }
   showDialog.value = false;
@@ -199,7 +203,8 @@ const revertRequest = async () => {
   if (revertError) {
     error.value = revertError.message;
   } else {
-    fetchAllRequests();
+    // Add back fetchAllRequests to ensure the UI is properly updated
+    await fetchAllRequests();
     toast.success('Request reverted successfully', { duration: 2000 });
   }
   showDialog.value = false;
@@ -223,7 +228,56 @@ watch(currentPage, () => {
 // Function to handle real-time updates
 const handleRealtimeUpdate = async (payload) => {
   const { eventType, new: newRecord, old: oldRecord } = payload;
+  console.log(`Received ${eventType} event:`, payload);
+  console.log('Old deleted_at:', oldRecord?.deleted_at, 'New deleted_at:', newRecord?.deleted_at);
   
+  // Track if we've shown a notification for this event
+  let notificationShown = false;
+
+  // First, check if this is a deleted_at change (moved to recycle bin)
+  if (eventType === 'UPDATE' && 
+      oldRecord?.deleted_at === null && 
+      newRecord?.deleted_at !== null) {
+    
+    console.log(`Request #${newRecord.id} moved to recycle bin, refetching all requests`);
+    await fetchAllRequests(); // This will refresh the entire list, removing the deleted item
+    toast.info(`Request #${newRecord.id} has been moved to recycle bin.`, { duration: 5000 });
+    notificationShown = true;
+    return;
+  }
+  
+  // Then check if this is SPECIFICALLY a restore operation (deleted_at from value to null)
+  // We need to ensure we're not catching approve/revert operations here
+  if (eventType === 'UPDATE' && 
+      oldRecord?.deleted_at !== null && 
+      newRecord?.deleted_at === null) {
+    
+    // This is a real restore from recycle bin, not a regular update
+    console.log(`Request #${newRecord.id} restored from recycle bin`);
+    
+    // Check if this request is already in our list (to prevent duplicates)
+    const existingIndex = requests.value.findIndex(r => r.id === newRecord.id);
+    if (existingIndex === -1) {
+      // Only fetch and add if it doesn't already exist
+      const { data: completeRequest, error: fetchError } = await supabase
+        .from('collection_requests')
+        .select('*, profiles!collection_requests_user_id_fkey (first_name, last_name)')
+        .eq('id', newRecord.id)
+        .single();
+      
+      if (!fetchError && completeRequest) {
+        requests.value.unshift(completeRequest);
+        paginateRequests();
+        toast.success(`Request #${newRecord.id} restored.`, { duration: 5000 });
+        notificationShown = true;
+      }
+    } else {
+      console.log(`Request #${newRecord.id} already exists in the list, not adding duplicate`);
+    }
+    return;
+  }
+
+  // Handle other types of updates below
   if (eventType === 'INSERT') {
     // Fetch the complete request data including profile information
     const { data: completeRequest, error: fetchError } = await supabase
@@ -236,24 +290,37 @@ const handleRealtimeUpdate = async (payload) => {
       .single();
 
     if (!fetchError && completeRequest) {
-      // Add the new request to the beginning of the array
-      requests.value.unshift(completeRequest);
-      paginateRequests();
-      
-      // Show notification for new request
-      toast.info('New Collection Request Received', {
-        duration: 5000,
-        description: `Request #${newRecord.id} from ${completeRequest.profiles.first_name} ${completeRequest.profiles.last_name}`,
-        action: {
-          label: 'View',
-          onClick: () => viewRequest(newRecord.id)
+      // Check for duplicates before adding
+      const existingIndex = requests.value.findIndex(r => r.id === newRecord.id);
+      if (existingIndex === -1) {
+        // Add the new request to the beginning of the array
+        requests.value.unshift(completeRequest);
+        paginateRequests();
+        
+        // Show notification for new request
+        if (!notificationShown) {
+          toast.info('New Collection Request Received', {
+            duration: 5000,
+            description: `Request #${newRecord.id} from ${completeRequest.profiles.first_name} ${completeRequest.profiles.last_name}`,
+            action: {
+              label: 'View',
+              onClick: () => viewRequest(newRecord.id)
+            }
+          });
+          notificationShown = true;
         }
-      });
+      } else {
+        console.log(`Request #${newRecord.id} already exists, not adding duplicate`);
+      }
     }
   } else if (eventType === 'UPDATE') {
-    // Update the request in the local array
+    // For approve, reject or revert operations, just update the UI silently
+    // without showing notifications (those are handled by their specific functions)
     const index = requests.value.findIndex(r => r.id === newRecord.id);
     if (index !== -1) {
+      // Update the existing request in the array
+      console.log(`Updating existing request #${newRecord.id} at index ${index}`);
+      
       // Fetch the complete updated request data
       const { data: completeRequest, error: fetchError } = await supabase
         .from('collection_requests')
@@ -281,6 +348,7 @@ const handleRealtimeUpdate = async (payload) => {
 
 // Subscribe to real-time updates
 const subscribeToChanges = () => {
+  // Main subscription for collection_requests changes
   subscription.value = supabase
     .channel('collection-requests-changes')
     .on(
@@ -293,6 +361,48 @@ const subscribeToChanges = () => {
       handleRealtimeUpdate
     )
     .subscribe();
+
+  // Additional subscription for collection_request_items changes
+  const itemsSubscription = supabase
+    .channel('collection-request-items-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',  // Listen for all events (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'collection_request_items'
+      },
+      async (payload) => {
+        console.log('Collection request items change detected:', payload);
+        const { eventType, new: newRecord, old: oldRecord } = payload;
+        
+        // Log detailed information about the change
+        console.log(`${eventType} event on collection_request_items:`, {
+          eventType,
+          oldRecord,
+          newRecord,
+          collection_request_id: newRecord?.collection_request_id || oldRecord?.collection_request_id
+        });
+        
+        // For any type of change to collection_request_items, refetch all requests
+        // This ensures the UI stays in sync with the latest data
+        console.log('Refetching all requests due to changes in collection_request_items');
+        await fetchAllRequests();
+        
+        // Show a notification about the update (optional)
+        const requestId = newRecord?.collection_request_id || oldRecord?.collection_request_id;
+        if (requestId) {
+          if (eventType === 'INSERT') {
+            toast.info(`Items added to Request #${requestId}`, { duration: 3000 });
+          } else if (eventType === 'UPDATE') {
+            toast.info(`Items updated for Request #${requestId}`, { duration: 3000 });
+          } else if (eventType === 'DELETE') {
+            toast.info(`Items removed from Request #${requestId}`, { duration: 3000 });
+          }
+        }
+      }
+    )
+    .subscribe();
 };
 
 // Unsubscribe when component is unmounted
@@ -300,6 +410,9 @@ onUnmounted(() => {
   if (subscription.value) {
     subscription.value.unsubscribe();
   }
+  
+  // Also unsubscribe from the items channel
+  supabase.removeChannel('collection-request-items-changes');
 });
 
 onMounted(() => {
