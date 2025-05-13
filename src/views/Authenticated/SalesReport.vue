@@ -195,8 +195,8 @@ const calculateStatistics = () => {
     return sum + record.totalAmount
   }, 0).toFixed(2)
   
-  // Calculate total collections
-  totalCollections.value = filteredData.length
+  // Calculate total collections (only paid ones)
+  totalCollections.value = filteredData.filter(record => record.isPaid).length
   
   // Calculate average sale amount
   averageSaleAmount.value = filteredData.length > 0 
@@ -746,7 +746,7 @@ onMounted(() => {
           <div class="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-500 mb-1">Total Collections</p>
+              <p class="text-sm font-medium text-gray-500 mb-1">Total Paid Collections</p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">{{ totalCollections }}</p>
             </div>
             <div class="p-3 bg-emerald-100 rounded-lg"> <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
