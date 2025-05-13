@@ -185,7 +185,7 @@ onMounted(async () => {
       <div class="flex flex-col h-full">
         <!-- Enhanced Header with tagline and close button for mobile -->
         <div
-          class="p-5 border-b border-gray-100 relative"
+          class="p-5 border-b border-gray-300 relative"
         >
           <div class="flex flex-col">
             <div class="flex items-center gap-3">

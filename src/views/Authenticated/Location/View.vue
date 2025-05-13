@@ -70,7 +70,16 @@ const fetchAvailableForestProducts = async () => {
     // Fetch products not already linked, not deleted, and not soft-deleted
     const { data, error } = await supabase
       .from('forest_products')
-      .select('id, name, measurement_unit_id')
+      .select(`
+        id,
+        name,
+        measurement_unit_id,
+        description,
+        created_at,
+        measurement_units (
+          unit_name
+        )
+      `)
       .is('deleted_at', null)
       .not('id', 'in', `(${existingIds.length > 0 ? existingIds.join(',') : '0'})`)
 
@@ -490,6 +499,20 @@ const deleteLocation = async () => {
     toast.error('Failed to delete location: ' + err.message)
   }
 }
+
+// Add this new function to handle input validation
+const handleQuantityInput = (event) => {
+  // Remove any 'e' or 'E' characters
+  let value = event.target.value.replace(/[eE]/g, '')
+  
+  // Only allow numbers and one decimal point
+  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+    quantityInput.value = value
+  } else {
+    // If invalid input, revert to previous valid value
+    event.target.value = quantityInput.value
+  }
+}
 </script>
 
 <template>
@@ -655,7 +678,7 @@ const deleteLocation = async () => {
         >
           <path
             fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 101.414 1.414L10 11.414l1.293 1.293a1 1 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
             clip-rule="evenodd"
           />
         </svg>
@@ -1063,7 +1086,12 @@ const deleteLocation = async () => {
     <AlertDialog v-model:open="showAddDialog">
       <AlertDialogContent class="dialog-content">
         <AlertDialogHeader>
-          <AlertDialogTitle>Add Forest Product</AlertDialogTitle>
+          <AlertDialogTitle class="flex items-center gap-2 text-lg">
+            <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Forest Product
+          </AlertDialogTitle>
         </AlertDialogHeader>
         
         <div class="space-y-4">
@@ -1088,18 +1116,76 @@ const deleteLocation = async () => {
             </p>
           </div>
           
+          <div v-if="selectedProduct">
+            <div class="bg-gray-100 rounded-lg p-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <p class="text-sm font-bold text-emerald-700 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Product ID
+                  </p>
+                  <p class="text-lg font-normal text-gray-900">{{ selectedProduct }}</p>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-emerald-700 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    Product Name
+                  </p>
+                  <p class="text-lg font-normal text-gray-900">{{ availableForestProducts.find(p => p.id === selectedProduct)?.name }}</p>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-emerald-700 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                    </svg>
+                    Measurement Unit
+                  </p>
+                  <p class="text-lg font-normal text-gray-900">{{ availableForestProducts.find(p => p.id === selectedProduct)?.measurement_units?.unit_name }}</p>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-emerald-700 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    Description
+                  </p>
+                  <div class="max-h-24 overflow-y-auto pr-2 custom-scrollbar">
+                    <p class="text-lg font-normal text-gray-900">{{ availableForestProducts.find(p => p.id === selectedProduct)?.description || 'N/A' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Quantity 
+              <span v-if="selectedProduct" class="text-gray-500">
+                (in {{ availableForestProducts.find(p => p.id === selectedProduct)?.measurement_units?.unit_name }})
+              </span>
+            </label>
             <input
-              v-model.number="quantityInput"
-              type="number"
-              step="0.01"
-              min="0"
+              :value="quantityInput"
+              @input="handleQuantityInput"
+              type="text"
+              inputmode="decimal"
               class="w-full border rounded-md p-2"
-              :class="{ 'border-red-500': showAddDialog && (!quantityInput || quantityInput <= 0) }"
+              :disabled="!selectedProduct"
+              :class="{ 
+                'border-red-500': showAddDialog && (!quantityInput || parseFloat(quantityInput) <= 0),
+                'bg-gray-100': !selectedProduct,
+                'cursor-not-allowed': !selectedProduct
+              }"
             >
-            <p v-if="showAddDialog && (!quantityInput || quantityInput <= 0)" class="mt-1 text-sm text-red-500">
+            <p v-if="showAddDialog && (!quantityInput || parseFloat(quantityInput) <= 0)" class="mt-1 text-sm text-red-500">
               Please enter a valid quantity greater than 0
+            </p>
+            <p v-if="!selectedProduct" class="mt-1 text-sm text-gray-500">
+              Please select a product first
             </p>
           </div>
         </div>
@@ -1217,5 +1303,24 @@ const deleteLocation = async () => {
 
 :deep(.cursor-not-allowed) {
   cursor: not-allowed;
+}
+
+/* Custom scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>

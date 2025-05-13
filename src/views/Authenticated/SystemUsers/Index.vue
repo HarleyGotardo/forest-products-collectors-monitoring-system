@@ -889,7 +889,7 @@ onMounted(async () => {
           aria-hidden="true"
         ></div>
         <div
-          class="relative bg-white rounded-lg p-6 max-w-5xl w-full shadow-xl"
+          class="relative bg-white rounded-lg p-6 max-w-7xl w-full shadow-xl"
         >
           <button
             type="button"
