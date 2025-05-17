@@ -165,7 +165,10 @@ const fetchForestProducts = async () => {
   }
 };
 
+const isLoadingRequests = ref(false);
+
 const fetchCollectionRequests = async () => {
+  isLoadingRequests.value = true;
   const { data, error } = await supabase
     .from('collection_requests')
     .select(`
@@ -184,6 +187,7 @@ const fetchCollectionRequests = async () => {
   } else {
     collectionRequests.value = data;
   }
+  isLoadingRequests.value = false;
 };
 
 const fetchRequestDetails = async (requestId) => {
@@ -584,12 +588,18 @@ onMounted(() => {
                 {{ request.id }}
                 </option>
               </select>
-              <p v-if="collectionRequests.length === 0" class="text-sm text-orange-400 mt-2">
+                <div v-if="isLoadingRequests" class="flex items-center gap-2 mt-2">
+                  <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                  <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse [animation-delay:.2s]"></div>
+                  <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse [animation-delay:.4s]"></div>
+                  <span class="text-sm text-yellow-600 ml-2">Loading collection requests...</span>
+                </div>
+                <p v-else-if="collectionRequests.length === 0" class="text-sm text-orange-400 mt-2">
                 You cannot record a forest product collection because a request number is required, and there are no approved and unrecorded collection requests available.
-              </p>
-              <p v-else="collectionRequests.length === 0" class="text-sm text-emerald-700 mt-2">
+                </p>
+                <p v-else class="text-sm text-emerald-700 mt-2">
                 Select a request number to record a forest product collection.
-              </p>
+                </p>
               </div>
 
               <!-- Collector Selection -->
