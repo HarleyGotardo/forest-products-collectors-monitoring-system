@@ -1102,9 +1102,9 @@ const formatDateTime = (dateTimeString) => {
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="text-sm font-medium text-gray-900">
-                    {{ item.requested_quantity }}
-                  </div>
+                    <div class="text-sm font-medium text-gray-900">
+                    {{ new Intl.NumberFormat().format(item.requested_quantity) }}
+                    </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-500">{{ item.unit_name }}</div>

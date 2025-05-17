@@ -1566,12 +1566,12 @@ const hasAssociatedRecords = computed(() => {
                   >
                     Locations Available
                   </p>
-                  <p class="text-gray-900 font-semibold">
-                    {{ locations.length }}
+                    <p class="text-gray-900 font-semibold">
+                    {{ new Intl.NumberFormat().format(locations.length) }}
                     <span class="text-sm font-normal text-gray-500"
                       >Location{{ locations.length !== 1 ? 's' : '' }}</span
                     >
-                  </p>
+                    </p>
                 </div>
               </div>
             </div>
@@ -1860,13 +1860,15 @@ const hasAssociatedRecords = computed(() => {
                       <span class="font-medium text-gray-700">Quantity:</span>
                       <span
                         :class="{
-                'text-red-600 font-semibold': !location.quantity || location.quantity === 0,
-                'text-orange-600 font-semibold': location.quantity > 0 && location.quantity <= 10,
-                'text-green-600 font-semibold': location.quantity > 0 && location.quantity > 10
-              }"
+                          'text-red-600 font-semibold': !location.quantity || location.quantity === 0,
+                          'text-orange-600 font-semibold': location.quantity > 0 && location.quantity <= 10,
+                          'text-green-600 font-semibold': location.quantity > 0 && location.quantity > 10
+                        }"
                       >
-                        {{ location.quantity ? location.quantity : 'N/A' }}
-                        {{ location.quantity ? ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') : '' }}
+                        {{ location.quantity ? new Intl.NumberFormat().format(location.quantity) : 'N/A' }}
+                        <template v-if="location.quantity">
+                          {{ ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') }}
+                        </template>
                       </span>
                       <span
                         v-if="!location.quantity || location.quantity === 0"

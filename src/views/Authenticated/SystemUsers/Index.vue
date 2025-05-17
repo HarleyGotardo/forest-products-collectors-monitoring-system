@@ -371,7 +371,7 @@ onMounted(async () => {
             v-if="unapprovedUsers.length > 0"
             class="absolute -top-2 -right-2 flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full"
           >
-            {{ unapprovedUsers.length }}
+            {{ new Intl.NumberFormat().format(unapprovedUsers.length) }}
           </span>
         </div>
       </button>

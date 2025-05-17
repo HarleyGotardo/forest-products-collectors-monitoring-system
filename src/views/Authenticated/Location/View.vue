@@ -987,7 +987,7 @@ const handleQuantityInput = (event) => {
                       (Out of Stock)
                     </span>
                     <span v-else>
-                      {{ product.quantity }}
+                      {{ new Intl.NumberFormat().format(product.quantity) }}
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">

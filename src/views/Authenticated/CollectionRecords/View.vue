@@ -706,24 +706,21 @@ onMounted(async () => {
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="item in recordItems" :key="item.id">
                   <td class="px-4 py-4 text-sm text-gray-800 align-top">
-                    <span
-                      class="font-medium"
-                      >{{ item.fp_and_location?.forest_product?.name || 'N/A' }}</span
-                    >
+                    <span class="font-medium">
+                      {{ item.fp_and_location?.forest_product?.name || 'N/A' }}
+                    </span>
                     <div class="mt-1 text-xs text-gray-500 space-y-0.5">
                       <p>
-                        Collected: {{ item.deducted_quantity }}
+                        Collected: {{ new Intl.NumberFormat().format(item.deducted_quantity) }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                       </p>
                       <p v-if="item.quantity_during_purchase !== null">
-                        Initial Qty: {{ item.quantity_during_purchase }}
+                        Initial Qty: {{ new Intl.NumberFormat().format(item.quantity_during_purchase) }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                       </p>
-                      <p
-                        v-if="item.remaining_quantity_during_purchase !== null"
-                      >
+                      <p v-if="item.remaining_quantity_during_purchase !== null">
                         Remaining:
-                        {{ item.remaining_quantity_during_purchase }}
+                        {{ new Intl.NumberFormat().format(item.remaining_quantity_during_purchase) }}
                         {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}
                       </p>
                     </div>
@@ -731,12 +728,12 @@ onMounted(async () => {
                   <td class="px-4 py-4 text-sm text-gray-600 align-top">
                     {{ item.fp_and_location?.location?.name || 'N/A' }}
                   </td>
-                  <td
+                    <td
                     class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap"
-                  >
-                    {{ item.deducted_quantity }}
+                    >
+                    {{ new Intl.NumberFormat().format(item.deducted_quantity) }}
                     {{ item.fp_and_location?.forest_product?.measurement_unit?.unit_name || 'units' }}(s)
-                  </td>
+                    </td>
                     <td
                     class="px-4 py-4 text-sm text-gray-800 text-right align-top whitespace-nowrap"
                     >
@@ -866,11 +863,25 @@ onMounted(async () => {
                 <div v-if="isVSUAdmin && !record.is_paid" class="pt-4">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                      >
+                        <Button
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center"
+                        >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-4 w-4 mr-1.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M5 13l4 4L19 7"
+                          />
+                        </svg>
                         Mark as Paid
-                      </Button>
+                        </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>

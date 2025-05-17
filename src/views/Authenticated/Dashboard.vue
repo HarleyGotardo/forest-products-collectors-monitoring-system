@@ -836,7 +836,7 @@ onMounted(() => {
             <div class="flex-1">
               <p class="text-sm font-bold text-gray-500 mb-1">Total Collectors</p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">
-                {{ totalCollectors }}
+                {{ new Intl.NumberFormat().format(totalCollectors) }}
               </p>
             </div>
             <div class="p-3 bg-blue-100 rounded-lg">
@@ -887,7 +887,7 @@ onMounted(() => {
                 Registered Locations
               </p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">
-                {{ totalLocations }}
+                {{ new Intl.NumberFormat().format(totalLocations) }}
               </p>
             </div>
             <div class="p-3 bg-purple-100 rounded-lg">
@@ -919,7 +919,7 @@ onMounted(() => {
                 Total Forest Products
               </p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900">
-                {{ totalProducts }}
+                {{ new Intl.NumberFormat().format(totalProducts) }}
               </p>
             </div>
             <div class="p-3 bg-yellow-100 rounded-lg">
@@ -1000,7 +1000,7 @@ onMounted(() => {
                     :key="index"
                     class="inline-flex items-center px-2 py-1 bg-gray-100 rounded-full"
                   >
-                    {{ item.productName }}: {{ item.quantity }}
+                    {{ item.productName }}: {{ new Intl.NumberFormat().format(item.quantity) }}
                     {{ item.unitName }}
                   </span>
                   <span v-if="request.items.length > 2" class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
@@ -1076,7 +1076,7 @@ onMounted(() => {
                       'bg-yellow-100 text-yellow-700': product.quantity > 5
                     }"
                   >
-                    {{ product.quantity }} {{ product.measurementUnit }}
+                    {{ new Intl.NumberFormat().format(product.quantity) }} {{ product.measurementUnit }}
                   </span>
                 </div>
               </li>
@@ -1165,7 +1165,7 @@ onMounted(() => {
                 <div class="flex flex-col items-end">
                   <span class="text-sm font-medium text-gray-900 flex items-center">
                     <span class="w-3 h-3 rounded-full bg-emerald-500 mr-2"></span>
-                    {{ item.quantity }} {{ item.measurementUnit }}(s)
+                    {{ new Intl.NumberFormat().format(item.quantity) }} {{ item.measurementUnit }}(s)
                   </span>
                   <span 
                     v-if="item.hasPendingRequests" 
