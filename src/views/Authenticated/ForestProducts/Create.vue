@@ -165,6 +165,9 @@ const handleSubmit = async () => {
     return;
   }
 
+  // Show creating toast
+  const toastId = toast.loading('Creating...');
+
   const currentDate = new Date();
   const formattedDate = format(currentDate, CommonConstant.DATE_FORMAT.ISO_8601);
 
@@ -249,10 +252,10 @@ const handleSubmit = async () => {
 
     if (fpLocationError) {
       error.value = fpLocationError.message;
-      return;
-    }
+      return;    }
   }
 
+  toast.dismiss(toastId); // Dismiss the loading toast
   toast.success('Forest product created successfully', { duration: 2000 });
   router.push(RouterNamesConstant.FOREST_PRODUCTS);
 };
