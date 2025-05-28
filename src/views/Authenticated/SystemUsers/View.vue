@@ -62,6 +62,9 @@ const fetchUser = async () => {
     if (isFPUAdmin(user.value.role.id) || isForestRanger(user.value.role.id)) {
       fetchCreatedByRecords()
     }
+    if (isFPUAdmin(user.value.role.id) || isForestRanger(user.value.role.id)) {
+      fetchApprovedByRecords()
+    }
   }
 }
 
