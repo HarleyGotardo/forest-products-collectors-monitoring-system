@@ -559,7 +559,6 @@ onMounted(async () => {
                   :class="{
                     'bg-red-100 text-red-800': user.role.name === 'Forest Ranger',
                     'bg-amber-100 text-amber-800': user.role.name === 'Forest Product Collector',
-                    'bg-gray-100 text-gray-800': user.role.name === 'VSU Cash Division',
                     'bg-emerald-100 text-emerald-800': user.role.name === 'FPU Administrator'
                   }"
                 >
