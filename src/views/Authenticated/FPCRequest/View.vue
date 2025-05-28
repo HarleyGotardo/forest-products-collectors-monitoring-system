@@ -3,7 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'vue-sonner';
-import { getUser, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin } from '@/router/routeGuard';
+import { getUser, isFPUAdmin, isForestRanger, isFPCollector } from '@/router/routeGuard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -352,7 +352,7 @@ onMounted(async () => {
 
   if (error || !request) {
     // If request doesn't exist or there's an error, redirect to index
-    if (isFPUAdmin || isForestRanger || isVSUAdmin) {
+    if (isFPUAdmin || isForestRanger) {
       router.push('/authenticated/collection-requests/all');
     } else {
       router.push('/authenticated/collection-requests');

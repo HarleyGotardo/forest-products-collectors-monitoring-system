@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
-import { getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
+import { getUser, isFPCollector, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -690,7 +690,7 @@ onMounted(async () => {
                 class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-right">
                   <div class="flex justify-end space-x-2">
                     <Button
-                      :disabled="user.id === getUser().id || isForestRanger || isVSUAdmin"
+                      :disabled="user.id === getUser().id || isForestRanger"
                       class="inline-flex items-center justify-center px-3 py-1.5 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                       @click="user.id !== getUser().id ? unapproveUser(user.id) : null"
                     >

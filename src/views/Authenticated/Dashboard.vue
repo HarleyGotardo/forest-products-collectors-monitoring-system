@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'vue-sonner'
 import Chart from 'chart.js/auto'
-import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
+import { getName, getUser, isFPCollector, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
 import { nextTick } from 'vue'
 import * as XLSX from 'xlsx'
 import {
@@ -652,7 +652,7 @@ onMounted(() => {
         <h1 class="text-2xl sm:text-3xl font-extrabold text-green-800 tracking-tight">Dashboard</h1>
       </div>
       <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <AlertDialog v-if="isVSUAdmin || isFPUAdmin">
+        <AlertDialog v-if="isFPUAdmin">
           <AlertDialogTrigger asChild>
             <button
               :disabled="isExporting || loading || !isApprovalChecked"

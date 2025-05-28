@@ -62,18 +62,11 @@ const fetchUser = async () => {
     if (isFPUAdmin(user.value.role.id) || isForestRanger(user.value.role.id)) {
       fetchCreatedByRecords()
     }
-    if (isVSUAdmin(user.value.role.id)) {
-      fetchApprovedByRecords()
-    }
   }
 }
 
 const isForestProductCollector = (roleId) => {
   return roleId === 2
-}
-
-const isVSUAdmin = (roleId) => {
-  return roleId === 3
 }
 
 const isFPUAdmin = (roleId) => {
@@ -1170,7 +1163,7 @@ onMounted(async () => {
       </div>
 
       <!-- Approved Records Section - VSU Admin -->
-      <div v-if="isVSUAdmin(user?.role?.id)" class="max-w-5xl mx-auto mt-8">
+      <div v-if="isFPUAdmin(user?.role?.id)" class="max-w-5xl mx-auto mt-8">
         <div class="flex items-center space-x-2 mb-4">
           <div class="w-1.5 h-6 bg-gray-900 rounded-full"></div>
           <h3 class="text-xl font-bold text-gray-800">

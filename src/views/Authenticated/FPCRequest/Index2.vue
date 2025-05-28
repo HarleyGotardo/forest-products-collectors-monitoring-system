@@ -14,7 +14,7 @@ import AlertDialogAction from '@/components/ui/alert-dialog/AlertDialogAction.vu
 import AlertDialogCancel from '@/components/ui/alert-dialog/AlertDialogCancel.vue';
 import AlertDialogHeader from '@/components/ui/alert-dialog/AlertDialogHeader.vue';
 import AlertDialogFooter from '@/components/ui/alert-dialog/AlertDialogFooter.vue';
-import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard';
+import { isFPCollector, isFPUAdmin, isForestRanger } from '@/router/routeGuard';
 import {
   Pagination,
   PaginationList,
@@ -794,7 +794,7 @@ onMounted(() => {
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
             Recording
           </th>
-          <th v-if="isFPUAdmin || isForestRanger || isVSUAdmin" scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+          <th v-if="isFPUAdmin || isForestRanger" scope="col" class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
             Action
           </th>
         </tr>

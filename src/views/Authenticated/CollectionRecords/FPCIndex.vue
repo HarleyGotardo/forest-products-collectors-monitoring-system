@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
 import { toast, Toaster } from 'vue-sonner'
-import { user, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, getUser } from '@/router/routeGuard'
+import { user, isFPCollector, isFPUAdmin, isForestRanger, fetchUserDetails, getUser } from '@/router/routeGuard'
 import Button from '@/components/ui/button/Button.vue'
 import {
   Pagination,

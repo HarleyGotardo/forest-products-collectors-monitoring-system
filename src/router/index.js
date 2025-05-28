@@ -5,7 +5,6 @@ import {
   isFPUAdmin,
   isForestRanger,
   isFPCollector,
-  isVSUAdmin,
   user,
 } from "@/router/routeGuard";
 import Index from "@/views/Index.vue";

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
-import { isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
+import { isFPCollector, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
 import { toast, Toaster } from 'vue-sonner'
 import Button from '@/components/ui/button/Button.vue';
 import {

@@ -70,10 +70,6 @@ const isFPCollector = computed(() => {
   return user.value && user.value.role_id === 2
 })
 
-const isVSUAdmin = computed(() => {
-  return user.value && user.value.role_id === 3
-})
-
 const getName = () => {
   if (user && user.value) {
     return `${user.value.first_name} ${user.value.last_name}`
@@ -96,4 +92,4 @@ const getUserRole = () => {
 fetchUserDetails()
 subscribeToUserChanges()
 
-export { getUser, user, getName, fetchUserDetails, subscribeToUserChanges, isFPUAdmin, isForestRanger, isFPCollector, isVSUAdmin, getUserRole }
+export { getUser, user, getName, fetchUserDetails, subscribeToUserChanges, isFPUAdmin, isForestRanger, isFPCollector, getUserRole }

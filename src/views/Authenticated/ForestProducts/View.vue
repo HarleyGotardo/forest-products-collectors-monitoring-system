@@ -8,7 +8,7 @@ import 'leaflet/dist/leaflet.css'
 import Swal from 'sweetalert2'
 import { toast, Toaster } from 'vue-sonner'
 import { format } from 'date-fns'
-import {isFPCollector ,isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
+import {isFPCollector, isFPUAdmin, isForestRanger, fetchUserDetails } from '@/router/routeGuard';
 import {
   AlertDialog,
   AlertDialogAction,

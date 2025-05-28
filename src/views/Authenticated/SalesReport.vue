@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'vue-sonner'
 import Chart from 'chart.js/auto'
-import { getName, isVSUAdmin, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
+import { getName, isFPUAdmin, isForestRanger } from '@/router/routeGuard'
 import { nextTick } from 'vue'
 import {
   Pagination,

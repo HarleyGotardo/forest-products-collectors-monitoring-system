@@ -18,7 +18,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { toast } from 'vue-sonner'
-import { isFPUAdmin, isForestRanger, isVSUAdmin } from '@/router/routeGuard'
+import { isFPUAdmin, isForestRanger } from '@/router/routeGuard'
 
 const route = useRoute()
 const router = useRouter()
@@ -398,7 +398,7 @@ onMounted(async () => {
           Unpaid
         </div>
         <Button
-          v-if="record?.is_paid && (isFPUAdmin || isForestRanger || isVSUAdmin)"
+          v-if="record?.is_paid && (isFPUAdmin || isForestRanger)"
           @click="downloadPermit"
           size="sm"
           class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -860,7 +860,7 @@ onMounted(async () => {
                   </div>
                 </template>
 
-                <div v-if="isVSUAdmin && !record.is_paid" class="pt-4">
+                <div v-if="isFPUAdmin && !record.is_paid" class="pt-4">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button

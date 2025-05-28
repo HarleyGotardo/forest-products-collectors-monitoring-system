@@ -11,7 +11,7 @@ import defaultProfileImage from '@/assets/profile.png'
 import requestImage from '@/assets/request.png'
 import logoutIcon from '@/assets/logout.png'
 import { supabase } from '@/lib/supabaseClient'
-import { getName, getUser, isFPCollector, isVSUAdmin, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
+import { getName, getUser, isFPCollector, isFPUAdmin, isForestRanger, fetchUserDetails, subscribeToUserChanges, getUserRole } from '@/router/routeGuard'
 import { Toaster } from 'vue-sonner'
 import {
   AlertDialog,
@@ -258,7 +258,7 @@ onMounted(async () => {
             </router-link>
 
             <router-link
-              v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
+              v-if="isFPUAdmin || isForestRanger"
               to="/authenticated/sales-report"
               class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
               @click="closeSidebar"
@@ -284,7 +284,7 @@ onMounted(async () => {
             </router-link>
 
             <router-link
-              v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
+              v-if="isFPUAdmin || isForestRanger"
               to="/authenticated/system-users"
               class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
               @click="closeSidebar"
@@ -325,7 +325,7 @@ onMounted(async () => {
               class="rounded-xl overflow-hidden"
             >
               <router-link
-                v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
+                v-if="isFPUAdmin || isForestRanger"
                 to="/authenticated/collection-requests/all"
                 class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
                 @click="closeSidebar"
@@ -411,14 +411,14 @@ onMounted(async () => {
             </FPC_Request>
 
             <Records
-              v-if="isFPUAdmin || isForestRanger || isVSUAdmin || isFPCollector"
+              v-if="isFPUAdmin || isForestRanger || isFPCollector"
               :isDropdownOpen="isRecordsDropdownOpen"
               @toggleDropdown="toggleRecordsDropdown"
               label="Collection Records"
               class="rounded-xl overflow-hidden"
             >
               <router-link
-                v-if="isFPUAdmin || isForestRanger || isVSUAdmin"
+                v-if="isFPUAdmin || isForestRanger"
                 to="/authenticated/collection-records"
                 class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
                 @click="closeSidebar"

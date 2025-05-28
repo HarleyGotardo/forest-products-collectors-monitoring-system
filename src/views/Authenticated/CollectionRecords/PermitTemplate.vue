@@ -124,9 +124,9 @@
           <p class="text-xs m-0">Forest Protection Unit Personnel</p>
         </div>
         <div class="w-5/12">
-          <p class="text-xs m-0">Inspected by:</p>
+          <p class="text-xs m-0">Approved by:</p>
           <p class=" underline mt-4 mb-1 text-sm">{{ permitData.inspectedBy }}</p>
-          <p class="text-xs m-0">VSU Cash Division</p>
+          <p class="text-xs m-0">Forest Protection Unit Personnel</p>
         </div>
       </div>
 

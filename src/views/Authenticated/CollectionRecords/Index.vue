@@ -5,7 +5,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'vue-sonner'
-import { isFPUAdmin, isForestRanger, isVSUAdmin } from '@/router/routeGuard'
+import { isFPUAdmin, isForestRanger } from '@/router/routeGuard'
 import router from '@/router'
 import Button from '@/components/ui/button/Button.vue'
 import {
@@ -1046,7 +1046,7 @@ watch(paymentFilter, () => {
               >
                 <div class="flex items-center justify-end space-x-3">
                   <!-- Mark as Paid Button or Paid At Message -->
-                  <template v-if="isVSUAdmin">
+                  <template v-if="isFPUAdmin">
                     <span v-if="record.is_paid" class="text-green-700 text-xs font-semibold">
                       Paid at {{ record.approved_at ? record.approved_at : 'N/A' }}
                     </span>
@@ -1068,7 +1068,7 @@ watch(paymentFilter, () => {
                               d="M5 13l4 4L19 7"
                             />
                           </svg>
-                          <span>Mark as Paid</span>
+                          <span>Paid</span>
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -1271,7 +1271,7 @@ watch(paymentFilter, () => {
             @click.stop
             >
             <!-- Mark as Paid Button or Paid At Message -->
-            <template v-if="isVSUAdmin">
+            <template v-if="isFPUAdmin">
               <span v-if="record.is_paid" class="text-green-700 text-xs font-semibold">
                 Paid at {{ record.approved_at ? record.approved_at : 'N/A' }}
               </span>
