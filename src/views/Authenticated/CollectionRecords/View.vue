@@ -2,6 +2,7 @@
 import { createApp } from 'vue';
 import html2pdf from 'html2pdf.js';
 import PermitTemplate from './PermitTemplate.vue';
+import InvoiceTemplate from './InvoiceTemplate.vue';
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
@@ -225,6 +226,41 @@ const downloadPermit = async () => {
   }
 };
 
+const downloadInvoice = async () => {
+  try {
+    // Create a temporary element for the invoice
+    const invoiceElement = document.createElement('div');
+    document.body.appendChild(invoiceElement);
+
+    // Mount the invoice template
+    const app = createApp(InvoiceTemplate, {
+      record: record.value,
+      recordItems: recordItems.value
+    });
+    app.mount(invoiceElement);
+
+    // Configure PDF options
+    const options = {
+      margin: [0.3, 0.3, 0.3, 0.3],
+      filename: `Collection_Record_${record.value.id}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Generate and save the PDF
+    await html2pdf().from(invoiceElement).set(options).save();
+
+    // Clean up
+    app.unmount();
+    document.body.removeChild(invoiceElement);
+
+    toast.success('Invoice downloaded successfully.');
+  } catch (err) {
+    console.error('Error downloading invoice:', err);
+    toast.error('Failed to download invoice.');
+  }
+};
+
 const markAsPaid = async () => {
   try {
     // Get the current user's ID from the auth session
@@ -401,7 +437,7 @@ onMounted(async () => {
           v-if="record?.is_paid && (isFPUAdmin || isForestRanger)"
           @click="downloadPermit"
           size="sm"
-          class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white"
+          class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-full"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -418,6 +454,28 @@ onMounted(async () => {
             />
           </svg>
           Download Permit
+        </Button>
+        <Button
+          v-if="record && !record.is_paid"
+          @click="downloadInvoice"
+          size="sm"
+          class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-full"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          Download Invoice
         </Button>
         <div class="flex items-center space-x-2">
           <!-- <Button
@@ -864,7 +922,7 @@ onMounted(async () => {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center"
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center rounded-full"
                         >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

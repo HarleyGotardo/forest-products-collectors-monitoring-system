@@ -834,7 +834,7 @@ onMounted(() => {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
         <!-- Total Collectors Card -->
         <div
-          class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
+          class="bg-white rounded-2xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
         >
           <div class="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
           <div class="flex items-center justify-between">
@@ -864,7 +864,7 @@ onMounted(() => {
         
         <!-- Most Collected Product Card -->
         <div
-          class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
+          class="bg-white rounded-2xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
           :title="mostCollectedProduct"
         >
           <div class="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
@@ -883,7 +883,7 @@ onMounted(() => {
         
         <!-- Total Records Card -->
         <div
-          class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
+          class="bg-white rounded-2xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
         >
           <div class="absolute top-0 left-0 w-2 h-full bg-purple-500"></div>
           <div class="flex items-center justify-between">
@@ -915,7 +915,7 @@ onMounted(() => {
         
         <!-- Total Forest Products Card -->
         <div
-          class="bg-white rounded-xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
+          class="bg-white rounded-2xl shadow-md p-5 transform hover:scale-102 hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative"
         >
           <div class="absolute top-0 left-0 w-2 h-full bg-yellow-500"></div>
           <div class="flex items-center justify-between">
@@ -1127,7 +1127,7 @@ onMounted(() => {
       class="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-gray-50 bg-opacity-90 backdrop-blur-sm"
     >
       <img
-        src="@/assets/chill.png"
+        src="@/assets/file.png"
         alt="No Data"
         class="w-32 h-32 mb-6 opacity-80 drop-shadow-sm"
       />

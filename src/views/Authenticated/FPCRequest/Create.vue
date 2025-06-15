@@ -705,7 +705,7 @@ onMounted(() => {
                 <span>Preferred Collection Date</span>
               </div>
               <span class="text-orange-400 text-xs mt-1">
-                Note: The selected date is your preferred collection date. Actual collection may occur on or after this date depending on the Forest Protection Unit's approval timeline.
+                Note: The selected date is your preferred collection date. Actual collection may occur on or after this date depending on the Forest Protection Unit's approval timeline. So make sure your time is flexible.
               </span>
             </label>
             <input

@@ -353,7 +353,7 @@ onMounted(() => {
 
     <!-- Header Section with subtle gradient background -->
     <div
-      class="mb-8 bg-gradient-to-r bg-gray-100 rounded-xl p-6 shadow-sm border border-green-100"
+      class="mb-8 bg-gradient-to-r bg-emerald-100 rounded-xl sm:rounded-full p-6 shadow-sm border border-green-100"
     >
       <div class="flex flex-col sm:flex-row items-center sm:items-start">
         <div

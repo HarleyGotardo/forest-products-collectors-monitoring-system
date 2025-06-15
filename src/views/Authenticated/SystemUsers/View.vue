@@ -515,7 +515,7 @@ onMounted(async () => {
       <div class="max-w-5xl mx-auto mb-4">
         <button
           @click="router.push('/authenticated/system-users')"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
         >
           <svg 
             class="mr-2 -ml-1 h-5 w-5" 
@@ -555,7 +555,7 @@ onMounted(async () => {
             
             <!-- User Name and Role -->
             <div class="ml-28 sm:ml-36 pt-3">
-              <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ user.first_name }} {{ user.last_name }}</h2>
+              <h2 class="text-2xl sm:text-3xl font-bold text-green-900">{{ user.first_name }} {{ user.last_name }}</h2>
               <div class="flex flex-wrap items-center gap-2 mt-1">
                 <span
                   class="px-2 py-1 inline-flex text-xs font-medium rounded-full"
@@ -796,19 +796,7 @@ onMounted(async () => {
                 <tr v-if="paginatedCreatedByRecords.length === 0">
                   <td colspan="6" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center">
-                      <svg
-                        class="w-16 h-16 text-gray-300 mb-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.5"
-                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
-                      </svg>
+                      <img src="@/assets/records.png" alt="Records" class="w-10 h-10">
                       <p class="text-gray-500 mb-1">No records found</p>
                       <p class="text-sm text-gray-400">
                         Created collection records will appear here
@@ -1046,19 +1034,7 @@ onMounted(async () => {
                 <tr v-if="paginatedRecords.length === 0">
                   <td colspan="6" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center">
-                      <svg
-                        class="w-16 h-16 text-gray-300 mb-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.5"
-                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
-                      </svg>
+                      <img src="@/assets/records.png" alt="Records" class="w-10 h-10">
                       <p class="text-gray-500 mb-1">No records found</p>
                       <p class="text-sm text-gray-400">
                         Collection records will appear here
@@ -1188,19 +1164,7 @@ onMounted(async () => {
           <div class="block sm:hidden">
             <div v-if="paginatedApprovedByRecords.length === 0" class="p-8 text-center">
               <div class="flex flex-col items-center">
-                <svg
-                  class="w-12 h-12 text-gray-300 mb-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
+                <img src="@/assets/records.png" alt="Records" class="w-10 h-10">
                 <p class="text-gray-500 mb-1 text-sm">No records found</p>
                 <p class="text-xs text-gray-400">
                   Approved records will appear here
@@ -1284,19 +1248,7 @@ onMounted(async () => {
                 <tr v-if="paginatedApprovedByRecords.length === 0">
                   <td colspan="6" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center">
-                      <svg
-                        class="w-16 h-16 text-gray-300 mb-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.5"
-                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
-                      </svg>
+                      <img src="@/assets/records.png" alt="Records" class="w-10 h-10">
                       <p class="text-gray-500 mb-1">No records found</p>
                       <p class="text-sm text-gray-400">
                         Approved collection records will appear here

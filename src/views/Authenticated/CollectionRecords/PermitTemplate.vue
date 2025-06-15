@@ -14,9 +14,13 @@
           <p class="text-xs m-0">Visca, Baybay, Leyte</p>
         </div>
         <div class="mt-3 w-full text-center">
+                    <h2 class="text-sm m-0 inline-block pb-1">
+        Forest Product Collectors Monitoring System
+          </h2><br>
           <h2 class="text-base uppercase m-0 inline-block border-b border-gray-900 pb-1">
         Forest Conservation Permit
-          </h2>
+          </h2> 
+
         </div>
       </div>
 

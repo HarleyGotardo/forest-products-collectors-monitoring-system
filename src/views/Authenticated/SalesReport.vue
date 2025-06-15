@@ -932,7 +932,7 @@ onMounted(() => {
             class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 rounded-lg"
           >
             <img
-              src="@/assets/chill.png"
+              src="@/assets/file.png"
               alt="No Data"
               class="w-24 h-24 mb-4 opacity-50"
             />
