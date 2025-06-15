@@ -646,7 +646,7 @@ onMounted(async () => {
                   <select
                     :value="user.role.id"
                     @change="changeRole(user, $event)"
-                    class="block w-full px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition appearance-none"
+                    class="block w-full px-3 py-2 text-sm rounded-full border border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition appearance-none"
                   >
                     <option value="1">Forest Ranger</option>
                     <option value="2">Forest Product Collector</option>
