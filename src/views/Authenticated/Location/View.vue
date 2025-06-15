@@ -903,7 +903,7 @@ const handleQuantityInput = (event) => {
           <Button 
             v-if="isFPUAdmin || isForestRanger"
             @click="openAddDialog" 
-            class="ml-4 bg-emerald-800 text-white hover:bg-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-md shadow-sm px-4 py-2 text-sm font-medium"
+            class="ml-4 bg-emerald-800 text-white hover:bg-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-full shadow-sm px-4 py-2 text-sm font-medium"
           >
             + Add Forest Product
           </Button>
@@ -995,10 +995,10 @@ const handleQuantityInput = (event) => {
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex justify-end space-x-2" v-if="isForestRanger || isFPUAdmin">
-                      <Button variant="outline" size="sm" @click.stop="openEditDialog(product)">
+                      <Button variant="outline" size="sm" @click.stop="openEditDialog(product)" class="rounded-full">
                       Edit Quantity
                       </Button>
-                      <Button variant="destructive" size="sm" @click.stop="confirmDelete(product)">
+                      <Button variant="destructive" size="sm" @click.stop="confirmDelete(product)" class="rounded-full">
                       Remove
                       </Button>
                     </div>
@@ -1205,28 +1205,61 @@ const handleQuantityInput = (event) => {
 
     <!-- Edit Quantity Dialog -->
     <AlertDialog v-model:open="showEditDialog">
-      <AlertDialogContent class="dialog-content">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Edit Quantity</AlertDialogTitle>
-          <AlertDialogDescription v-if="currentProduct">
-            Editing {{ currentProduct.name }}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-          <input
-            v-model.number="quantityInput"
-            type="number"
-            step="0.01"
-            class="w-full border rounded-md p-2"
-          >
+      <AlertDialogContent class="dialog-content bg-white rounded-2xl shadow-xl border-0">
+      <AlertDialogHeader>
+        <AlertDialogTitle class="flex items-center gap-2 text-lg">
+        <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+        Edit Quantity
+        </AlertDialogTitle>
+        <AlertDialogDescription v-if="currentProduct" class="mt-3">
+        <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+          <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          <span class="text-gray-700 font-medium">{{ currentProduct.name }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+          </svg>
+          <span class="text-gray-500">Measured in {{ currentProduct.unit_name }}</span>
+          </div>
         </div>
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      
+      <div class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">New Quantity</label>
+        <div class="relative">
+        <input
+          v-model.number="quantityInput"
+          type="number"
+          step="0.01"
+          class="w-full px-4 py-3 rounded-full border border-gray-200 focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 transition-all duration-200 outline-none"
+          placeholder="Enter new quantity..."
+        >
+        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+          <span class="text-gray-400">{{ currentProduct?.unit_name }}</span>
+        </div>
+        </div>
+      </div>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel @click="showEditDialog = false">Cancel</AlertDialogCancel>
-          <AlertDialogAction @click="updateForestProduct">Update</AlertDialogAction>
-        </AlertDialogFooter>
+      <AlertDialogFooter class="mt-6 space-x-3">
+        <AlertDialogCancel 
+        class="px-6 py-2.5 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+        >
+        Cancel
+        </AlertDialogCancel>
+        <AlertDialogAction 
+        @click="updateForestProduct"
+        class="px-6 py-2.5 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 transition-colors duration-200"
+        >
+        Update Quantity
+        </AlertDialogAction>
+      </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
 

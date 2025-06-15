@@ -1301,7 +1301,7 @@ watch(paymentFilter, () => {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span>Mark as Paid</span>
+                    <span>Paid</span>
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>

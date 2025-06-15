@@ -1128,7 +1128,7 @@ const hasAssociatedRecords = computed(() => {
             class="w-8 h-8 sm:w-10 sm:h-10"
           />
           <h2
-            class="text-xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left"
+            class="text-xl sm:text-3xl font-bold text-gray-900 sm:text-left"
           >
             Forest Product Details
           </h2>

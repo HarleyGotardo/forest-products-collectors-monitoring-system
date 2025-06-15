@@ -500,7 +500,7 @@ const getCurrentLocation = () => {
           id="name"
           v-model="name"
           type="text"
-          class="w-full focus:ring-green-500 focus:border-green-500"
+          class="w-full focus:ring-green-500 focus:border-green-500 rounded-full"
           placeholder="Enter a descriptive name for this location"
           autocomplete="off"
         />
@@ -518,7 +518,7 @@ const getCurrentLocation = () => {
           <button
             type="button"
             @click="openModal('coordinates')"
-            class="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 transition-colors flex justify-between items-center"
+            class="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-left focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 transition-colors flex justify-between items-center"
           >
             <span class="block truncate">
               {{ coordinates || "Click to set location coordinates" }}
@@ -544,7 +544,7 @@ const getCurrentLocation = () => {
               type="button"
               @click="getCurrentLocation"
               :disabled="isGettingLocation || !isMobileDevice"
-              class="mt-2 sm:mt-0 px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+              class="mt-2 sm:mt-0 px-4 py-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
             >
               <svg
                 v-if="isGettingLocation"
@@ -593,13 +593,13 @@ const getCurrentLocation = () => {
             </button>
             <div
               v-if="!isMobileDevice"
-              class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-100 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
+              class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-full opacity-100 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
             >
               This feature is only available on mobile devices
             </div>
             <div
               v-else
-              class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
+              class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
             >
               Works best on mobile devices with GPS
             </div>
@@ -614,7 +614,7 @@ const getCurrentLocation = () => {
       <!-- Replace the existing preview section -->
       <div
         v-if="coordinates"
-        class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 relative z-0"
+        class="mt-4 p-4 bg-gray-50 rounded-full border border-gray-200 relative z-0"
       >
         <h3 class="text-sm font-medium text-gray-700 mb-2">
           Selected Location Preview
@@ -676,7 +676,7 @@ const getCurrentLocation = () => {
             <button
               type="button"
               :disabled="!isFormValid"
-              class="inline-flex items-center px-5 py-2.5 bg-emerald-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              class="inline-flex items-center px-5 py-2.5 bg-emerald-600 border border-transparent rounded-full font-medium text-sm text-white hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <svg
                 class="w-5 h-5 mr-2"
@@ -837,7 +837,7 @@ const getCurrentLocation = () => {
           <button
             type="button"
             @click="closeModal"
-            class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-5 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            class="mt-3 inline-flex w-full justify-center rounded-full border border-gray-300 bg-white px-5 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
           >
             Cancel
           </button>
