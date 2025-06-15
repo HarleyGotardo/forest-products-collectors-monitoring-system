@@ -519,7 +519,12 @@ onMounted(() => {
           <!-- Info Notes -->
           <div class="mb-6">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+                <h3 class="text-lg font-medium text-gray-900 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Important Information
+                </h3>
               <button
                 @click="showNotes = !showNotes"
                 class="flex items-center text-sm text-gray-500 hover:text-gray-700"
@@ -580,7 +585,7 @@ onMounted(() => {
               <select
                 id="requestNumber"
                 v-model="selectedRequest"
-                class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                class="form-select w-full p-2.5 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 :disabled="collectionRequests.length === 0"
               >
                 <option value="" disabled>Select a request number</option>
@@ -605,7 +610,7 @@ onMounted(() => {
               <!-- Collector Selection -->
               <div class="space-y-2">
               <Label for="collector" class="text-sm font-medium text-gray-700">Forest Product Collector</Label>
-              <div v-if="isRequestSelected" class="p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+              <div v-if="isRequestSelected" class="p-2.5 border border-gray-300 rounded-full bg-gray-100 text-gray-700">
                 {{ requestDetails?.profiles?.first_name }} {{ requestDetails?.profiles?.last_name }}
               </div>
               <select
@@ -672,7 +677,7 @@ onMounted(() => {
             <!-- Selected Products Summary -->
             <div v-if="selectedForestProducts.length > 0" class="space-y-2">
               <Label class="text-sm font-medium text-gray-700">Selected Products ({{ selectedForestProducts.length }})</Label>
-              <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <div class="bg-gray-50 p-3 rounded-full border border-gray-200">
                 <div v-for="product in selectedForestProducts" :key="product.id" class="text-sm">
                   {{ product.forest_product_name }} - {{ product.purchased_quantity > 0 ? product.purchased_quantity : 'No' }} {{ product.unit_name }}(s)
                 </div>
@@ -686,7 +691,7 @@ onMounted(() => {
             <button
               type="submit"
               :disabled="!isFormComplete"
-              class="w-full bg-emerald-900 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all text-white rounded-lg py-3 font-medium"
+              class="w-full bg-emerald-900 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all text-white rounded-full py-3 font-medium"
             >
               Create Collection Record
             </button>
@@ -942,13 +947,13 @@ onMounted(() => {
     <!-- Footer with improved buttons -->
     <div class="flex flex-col-reverse sm:flex-row sm:justify-end space-y-reverse space-y-3 sm:space-y-0 sm:space-x-4 p-4 sm:p-5 border-t border-gray-100">
       <button
-        class="w-full sm:w-auto px-4 sm:px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+        class="w-full sm:w-auto px-4 sm:px-5 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
         @click="cancelSubmit"
       >
         Cancel
       </button>
       <button
-        class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 sm:px-6 py-2 font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-4 sm:px-6 py-2 font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
         @click="confirmSubmit"
         :disabled="isSubmitting"
       >

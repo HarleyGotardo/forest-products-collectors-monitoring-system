@@ -277,7 +277,7 @@ watch(
           
           <div class="px-6 py-5">
             <!-- Error Alert -->
-            <div v-if="error" class="mb-5 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-300 text-sm">
+            <div v-if="error" class="mb-5 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-full text-red-800 dark:text-red-300 text-sm">
               <div class="flex items-center">
                 <svg class="h-5 w-5 text-red-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -298,7 +298,7 @@ watch(
               <!-- User Type Display (non-editable) -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">User Type</label>
-                <div class="px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-lg text-gray-700 dark:text-gray-300 font-medium">
+                <div class="px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-full text-gray-700 dark:text-gray-300 font-medium">
                   {{ profileForm.user_type }}
                 </div>
               </div>
@@ -316,7 +316,7 @@ watch(
                       type="text"
                       v-model="profileForm.first_name"
                       @blur="validateField('first_name')"
-                      class="block w-full px-4 py-2.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      class="block w-full px-4 py-2.5 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       :class="validationErrors.first_name ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
                       required
                     />
@@ -334,7 +334,7 @@ watch(
                       type="text"
                       v-model="profileForm.last_name"
                       @blur="validateField('last_name')"
-                      class="block w-full px-4 py-2.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      class="block w-full px-4 py-2.5 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       :class="validationErrors.last_name ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
                       required
                     />
@@ -358,7 +358,7 @@ watch(
                       type="tel"
                       v-model="profileForm.phone_number"
                       @blur="validateField('phone_number')"
-                      class="block w-full px-4 py-2.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      class="block w-full px-4 py-2.5 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       :class="validationErrors.phone_number ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
                       required
                     />
@@ -376,7 +376,7 @@ watch(
                       v-model="profileForm.full_address"
                       @blur="validateField('full_address')"
                       rows="3"
-                      class="block w-full px-4 py-2.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      class="block w-full px-4 py-2.5 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       :class="validationErrors.full_address ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
                       placeholder="Street address, city, state, postal code"
                       required
@@ -401,7 +401,7 @@ watch(
                       id="sex"
                       v-model="profileForm.sex"
                       @blur="validateField('sex')"
-                      class="block w-full px-4 py-2.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      class="block w-full px-4 py-2.5 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       :class="validationErrors.sex ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
                       required
                     >
@@ -421,7 +421,7 @@ watch(
                       id="civil-status"
                       v-model="profileForm.civil_status"
                       @blur="validateField('civil_status')"
-                      class="block w-full px-4 py-2.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      class="block w-full px-4 py-2.5 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       :class="validationErrors.civil_status ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
                       required
                     >
@@ -442,7 +442,7 @@ watch(
                       type="date"
                       v-model="profileForm.birthdate"
                       @blur="validateField('birthdate')"
-                      class="block w-full px-4 py-2.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      class="block w-full px-4 py-2.5 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       :class="validationErrors.birthdate ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
                       required
                     />
@@ -461,14 +461,14 @@ watch(
               <button
                 type="button"
                 @click="handleClose"
-                class="px-5 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                class="px-5 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 @click="handleProfileUpdate"
-                class="px-5 py-2.5 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                class="px-5 py-2.5 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 :class="[isSaveEnabled ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed']"
                 :disabled="!isSaveEnabled"
               >

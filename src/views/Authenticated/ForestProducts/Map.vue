@@ -376,7 +376,7 @@ onUnmounted(() => {
       v-model="searchQuery"
       type="text"
       placeholder="Search locations..."
-      class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 pr-10 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors duration-200"
+      class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 pl-11 pr-10 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors duration-200"
       @keydown="handleKeyDown"
     />
     <div
@@ -420,7 +420,7 @@ onUnmounted(() => {
     
       @click="searchLocation"
       :disabled="isSearching"
-      class="flex-1 sm:flex-none transition-all duration-200 bg-emerald-900 text-white hover:bg-emerald-600"
+      class="flex-1 sm:flex-none transition-all duration-200 bg-emerald-900 text-white hover:bg-emerald-600 rounded-full"
     >
       <span v-if="isSearching" class="flex items-center">
         <svg
@@ -449,7 +449,7 @@ onUnmounted(() => {
     </Button class="bg-emerald-900 text-white hover:bg-emerald-600">
     <Button  
     v-if="isFPUAdmin || isForestRanger"
-    @click="createLocation" class="flex-1 sm:flex-none bg-emerald-900 text-white hover:bg-emerald-600"> + Create Location </Button>
+    @click="createLocation" class="flex-1 sm:flex-none bg-emerald-900 text-white hover:bg-emerald-600 rounded-full"> + Create Location </Button>
   </div>
 </div>
     </div>

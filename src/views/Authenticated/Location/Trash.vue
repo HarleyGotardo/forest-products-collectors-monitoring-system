@@ -133,7 +133,7 @@ watch(currentPage, () => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto p-6">
+  <div class="max-w-7xl mx-auto p-3">
     <!-- Header Section -->
     <div
       class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2"
@@ -155,7 +155,7 @@ watch(currentPage, () => {
             v-model="searchQuery"
             type="text"
             placeholder="Search locations..."
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+            class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
           />
           <div
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"

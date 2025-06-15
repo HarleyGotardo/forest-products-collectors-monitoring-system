@@ -495,22 +495,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto p-6">
+  <div class="max-w-7xl mx-auto p-3">
     <!-- Header Section -->
     <div
       class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2"
     >
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-3">
         <img
-          src="@/assets/request2.png"
-          alt="Request Icon"
-          class="w-12 h-12 group-hover:scale-110 transition-transform"
+          src="@/assets/letter.png"
+          alt="Users icon"
+          class="w-10 h-10 transition-transform group-hover:scale-105"
         />
         <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-green-900">
-            All Collection Requests
-          </h2>
-          <p class="mt-1 text-sm text-green-900">View and manage all collection requests</p>
+          <h1 class="text-xl sm:text-2xl font-bold text-green-900">
+            Collection Requests
+          </h1>
+          <p class="text-sm text-green-900">View and manage all collection requests</p>
         </div>
       </div>
       <div
@@ -521,7 +521,7 @@ onMounted(() => {
             v-model="searchQuery"
             type="text"
             placeholder="Search by ID..."
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+            class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
           />
           <div
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
@@ -555,7 +555,7 @@ onMounted(() => {
         <select
           id="statusFilter"
           v-model="statusFilter"
-          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
         >
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
@@ -573,7 +573,7 @@ onMounted(() => {
         <select
           id="recordedFilter"
           v-model="recordedFilter"
-          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
         >
           <option value="all">All</option>
           <option value="recorded">Recorded</option>
@@ -585,7 +585,12 @@ onMounted(() => {
     <!-- Info Notes -->
     <div class="mb-6">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        <div class="flex items-center space-x-2">
+          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        </div>
         <button
           @click="showNotes = !showNotes"
           class="flex items-center text-sm text-gray-500 hover:text-gray-700"
@@ -811,7 +816,7 @@ onMounted(() => {
         <tr v-for="request in paginatedRequests" :key="request.id" 
             :class="[
               'transition-colors duration-200 cursor-pointer',
-              request.remarked_at === null ? 'bg-emerald-50 hover:bg-gray-100' : 'hover:bg-gray-50'
+              request.remarked_at === null ? 'bg-gray-100 hover:bg-emerald-50' : 'hover:bg-emerald-50'
             ]" 
             @click="viewRequest(request.id)">
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -849,7 +854,7 @@ onMounted(() => {
                   <AlertDialogTrigger asChild>
                     <Button 
                       title="Revert the request so that it can be editable"
-                      class="bg-gray-600 text-white hover:bg-gray-700 text-sm px-3 py-2"
+                      class="bg-gray-600 text-white hover:bg-gray-700 text-sm px-3 py-2 rounded-full"
                       v-if="isFPUAdmin || isForestRanger"
                       @click="confirmRevertRequest(request.id)"
                     >
@@ -877,7 +882,7 @@ onMounted(() => {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
-                    class="bg-emerald-900 text-white hover:bg-emerald-700 text-sm px-3 py-2"
+                    class="bg-emerald-900 text-white hover:bg-emerald-700 text-sm px-3 py-2 rounded-full"
                     v-if="isFPUAdmin || isForestRanger" @click="confirmApproveRequest(request.id)">
                       <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -902,7 +907,7 @@ onMounted(() => {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
-                    class="bg-red-600 text-white hover:bg-red-700 text-sm px-3 py-2"
+                    class="bg-red-600 text-white hover:bg-red-700 text-sm px-3 py-2 rounded-full"
                     v-if="isFPUAdmin || isForestRanger" @click="confirmRejectRequest(request.id)">
                       <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -1014,7 +1019,7 @@ onMounted(() => {
       <div v-if="(request.remarks === 'Pending' || !request.remarks) && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button class="w-full justify-center text-sm mb-2" @click="confirmApproveRequest(request.id)">
+            <Button class="w-full justify-center text-sm mb-2 bg-green-800 hover:bg-green-600" @click="confirmApproveRequest(request.id)">
               <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
@@ -1030,7 +1035,7 @@ onMounted(() => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="approveRequest">Approve</AlertDialogAction>
+              <AlertDialogAction class="bg-green-800 hover:bg-green-600" @click="approveRequest">Approve</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

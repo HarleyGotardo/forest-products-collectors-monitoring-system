@@ -638,18 +638,23 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
+  <div class="relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-6">
     <!-- Header Section - Always visible -->
     <div
       class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
     >
-      <div class="flex items-center gap-3">
+      <div class="flex items-center space-x-3">
         <img
           src="@/assets/dashboard.png"
-          alt="Dashboard"
-          class="w-8 h-8 group-hover:scale-110 transition-transform"
+          alt="Users icon"
+          class="w-10 h-10 transition-transform group-hover:scale-105"
         />
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-green-800 tracking-tight">Dashboard</h1>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-green-900">
+            Dashboard
+          </h1>
+          <p class="text-sm text-green-900">System overview and summary statistics</p>
+        </div>
       </div>
       <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <AlertDialog v-if="isFPUAdmin">
@@ -716,7 +721,7 @@ onMounted(() => {
           v-if="isForestRanger || isFPUAdmin"
           @click="createCollectionRoute"
           :disabled="loading || !isApprovalChecked"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -738,7 +743,7 @@ onMounted(() => {
           v-if="isForestRanger || isFPUAdmin"
           @click="createNewProduct"
           :disabled="loading || !isApprovalChecked"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -759,7 +764,7 @@ onMounted(() => {
         <button
           @click="refreshData"
           :disabled="loading || !isApprovalChecked"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-full hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             class="w-5 h-5 mr-2 text-gray-600"
@@ -1102,7 +1107,7 @@ onMounted(() => {
 <div class="bg-white rounded-2xl shadow-lg p-6 transform hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-emerald-100 overflow-hidden">
   <div class="flex items-center justify-between mb-6">
     <div class="flex items-center">
-      <div class="p-3 bg-emerald-100 rounded-full shadow-sm">
+      <div class="p-3 bg-emerald-100 rounded-lg shadow-sm">
         <img
           src="@/assets/graph.png"
           alt="Forest Logo"
@@ -1137,7 +1142,7 @@ onMounted(() => {
         <!-- Forest Products Available Card -->
         <div class="bg-white rounded-xl shadow-md p-5 transform hover:shadow-lg transition-all duration-300 border border-gray-100">
           <div class="flex items-center mb-6">
-            <div class="p-2 bg-emerald-100 rounded-full">
+            <div class="p-2 bg-emerald-100 rounded-lg">
               <img
                 src="@/assets/stocks.png"
                 alt="Forest Logo"

@@ -291,7 +291,7 @@ onMounted(async () => {
             <p
               class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2"
             >
-              Main
+              MAIN NAVIGATION
             </p>
 
             <router-link
@@ -378,7 +378,7 @@ onMounted(async () => {
             >
               <div class="relative">
               <div
-                class="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 group-hover:bg-purple-200 transition-all"
+                class="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-50 group-hover:bg-yellow-100 transition-all"
               >
                 <img
                 src="@/assets/letter.png"
@@ -395,7 +395,7 @@ onMounted(async () => {
               </div>
               <div>
               <span
-                class="font-bold text-emerald-700 group-hover:text-emerald-600"
+                class="font-bold text-gray-700 group-hover:text-emerald-600"
                 >Collection Requests</span
               >
               <p class="text-xs text-gray-500 mt-0.5">
@@ -410,7 +410,7 @@ onMounted(async () => {
             <p
               class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2"
             >
-              Requests & Records
+              Requests / Records
             </p>
 
             <FPC_Request
@@ -772,6 +772,7 @@ onMounted(async () => {
               <AlertDialogTrigger asChild>
                 <button
                   class="p-2 transition-all rounded-lg bg-gray-100 hover:bg-emerald-50 active:scale-95"
+                  title="Logout"
                 >
                   <img src="@/assets/logout.png" alt="Logout" class="w-4 h-4" />
                 </button>

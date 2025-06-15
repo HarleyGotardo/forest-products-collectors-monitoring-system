@@ -641,17 +641,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
+  <div class="relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-6">
     <div
       class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
     >
-      <div class="flex items-center gap-3">
+      <div class="flex items-center space-x-3">
         <img
           src="@/assets/sales-report-2.png"
-          alt="Sales Report"
-          class="w-8 h-8 group-hover:scale-110 transition-transform"
+          alt="Users icon"
+          class="w-10 h-10 transition-transform group-hover:scale-105"
         />
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-green-800 tracking-tight">Sales Report</h1>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-green-900">
+            Sales Report
+          </h1>
+          <p class="text-sm text-green-900">Track revenue and collection metrics</p>
+        </div>
       </div>
       <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <AlertDialog>
@@ -683,7 +688,7 @@ onMounted(() => {
         </AlertDialog>
         <button 
           @click="fetchSalesReportData"
-          class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
+          class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-full hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
         >
           <svg
             class="w-5 h-5 mr-2 text-gray-600"
@@ -804,7 +809,7 @@ onMounted(() => {
               type="date"
               id="start-date"
               v-model="dateRange.start"
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
           </div>
           <div class="space-y-2">
@@ -813,7 +818,7 @@ onMounted(() => {
             type="date"
               id="end-date"
               v-model="dateRange.end"
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
           </div>
           
@@ -823,7 +828,7 @@ onMounted(() => {
             <select
               id="month-filter"
               v-model="monthFilter"
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
               <option value="">All Months</option>
               <option v-for="month in availableMonths" :key="month.value" :value="month.value">{{ month.label }}</option>
@@ -836,7 +841,7 @@ onMounted(() => {
             <select
               id="year-filter"
               v-model="yearFilter"
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
               <option value="">All Years</option>
               <option v-for="year in availableYears" :key="year.value" :value="year.value">{{ year.label }}</option>
@@ -849,7 +854,7 @@ onMounted(() => {
             <select
               id="product-filter"
               v-model="productFilter"
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
               <option value="">All Products</option>
               <option v-for="product in availableProducts" :key="product.value" :value="product.value">{{ product.label }}</option>
@@ -884,7 +889,7 @@ onMounted(() => {
         <!-- Top Products Chart -->
         <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-4 sm:p-6">
           <div class="flex items-center justify-center mb-6">
-            <div class="p-2 bg-emerald-100 rounded-full">
+            <div class="p-2 bg-emerald-100 rounded-lg">
               <img
                 src="@/assets/trend2.png"
                 alt="Forest Logo"

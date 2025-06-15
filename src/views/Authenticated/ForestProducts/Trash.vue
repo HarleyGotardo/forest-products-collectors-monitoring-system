@@ -179,7 +179,7 @@ watch(selectedType, () => {
             v-model="searchQuery"
             type="text"
             placeholder="ID, name, location"
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+            class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
           />
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,7 +190,7 @@ watch(selectedType, () => {
         <div class="flex space-x-4">
           <select
             v-model="selectedType"
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+            class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
           >
             <option value="">All Types</option>
             <option value="Timber">Timber</option>

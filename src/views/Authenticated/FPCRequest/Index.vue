@@ -349,7 +349,7 @@ watch(currentPage, () => {
         v-model="searchQuery"
         type="text"
         placeholder="Search by ID..."
-        class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+        class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
         />
         <div
         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
@@ -392,7 +392,7 @@ watch(currentPage, () => {
         <select
           id="statusFilter"
           v-model="statusFilter"
-          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
         >
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
@@ -410,7 +410,7 @@ watch(currentPage, () => {
         <select
           id="recordedFilter"
           v-model="recordedFilter"
-          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+          class="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
         >
           <option value="all">All</option>
           <option value="recorded">Recorded</option>

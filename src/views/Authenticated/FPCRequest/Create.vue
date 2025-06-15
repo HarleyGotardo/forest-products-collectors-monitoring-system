@@ -546,7 +546,7 @@ onMounted(() => {
             <button
               type="button"
               @click="showModal = true"
-              class="w-full flex items-center justify-between bg-white border border-gray-300 rounded-lg py-3 px-4 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="w-full flex items-center justify-between bg-white border border-gray-300 rounded-full py-3 px-4 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <span class="text-gray-700">
                 {{ selectedForestProducts.length ? `${selectedForestProducts.length} products selected` : 'Select forest products' }}
@@ -713,7 +713,7 @@ onMounted(() => {
               v-model="collectionDate"
               id="collectionDate"
               :min="new Date().toISOString().split('T')[0]"
-              class="block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              class="block w-full border border-gray-300 rounded-full py-3 px-4 focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
             </div>
 
@@ -722,7 +722,7 @@ onMounted(() => {
             type="submit"
             :disabled="!isFormComplete || !isCollectionDateValid"
             :class="[isFormComplete && isCollectionDateValid ? 'bg-emerald-900 hover:bg-emerald-700' : 'bg-gray-400 cursor-not-allowed']"
-            class="w-full py-3 px-4 rounded-lg transition-all text-white font-medium flex items-center justify-center"
+            class="w-full py-3 px-4 rounded-full transition-all text-white font-medium flex items-center justify-center"
           >
             Submit Collection Request
           </button>

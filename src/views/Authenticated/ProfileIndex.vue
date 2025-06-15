@@ -262,7 +262,7 @@ onMounted(async () => {
   <div class="min-h-screen bg-gray-50">
     <!-- Header Section with Profile Overview -->
     <div class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-emerald-50">
         <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
           <!-- Profile Picture Section -->
           <div class="relative group">
@@ -274,6 +274,7 @@ onMounted(async () => {
               />
             </div>
             <button
+              title="Edit profile picture"
               @click="showImageModal = true"
               class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             >
@@ -331,7 +332,7 @@ onMounted(async () => {
             <div class="flex flex-wrap gap-3 justify-center md:justify-start">
               <button
                 @click="showEditProfileModal = true"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -347,7 +348,7 @@ onMounted(async () => {
               </button>
               <button
                 @click="showPasswordModal = true"
-                class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors duration-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -595,15 +596,20 @@ onMounted(async () => {
     >
       <div class="flex items-center justify-center min-h-screen p-4">
         <div
-          class="bg-white rounded-lg overflow-hidden shadow-xl w-full max-w-md p-6"
+          class="bg-white rounded-xl overflow-hidden shadow-xl w-full max-w-md p-6"
         >
           <div class="flex justify-between items-center mb-4">
-            <h3
+            <div class="flex items-center gap-2">
+              <svg class="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <h3
               class="text-xl font-semibold text-gray-900"
               id="password-modal-title"
-            >
+              >
               Update Password
-            </h3>
+              </h3>
+            </div>
             <button
               @click="showPasswordModal = false"
               class="text-gray-400 hover:text-gray-500"
@@ -635,7 +641,7 @@ onMounted(async () => {
                 id="current-password"
                 type="password"
                 v-model="currentPassword"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 required
               />
             </div>
@@ -650,7 +656,7 @@ onMounted(async () => {
                 id="new-password"
                 type="password"
                 v-model="newPassword"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 required
                 minlength="8"
               />
@@ -698,7 +704,7 @@ onMounted(async () => {
                 id="confirm-password"
                 type="password"
                 v-model="confirmPassword"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 required
               />
               <p
@@ -739,14 +745,14 @@ onMounted(async () => {
               <button
                 type="button"
                 @click="showPasswordModal = false"
-                class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 :disabled="!passwordsMatch || !currentPassword || passwordStrength.score < 5"
-                class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 bg-emerald-600 text-white rounded-full text-sm font-medium hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Update Password
               </button>

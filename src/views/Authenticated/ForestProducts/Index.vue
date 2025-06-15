@@ -193,7 +193,7 @@ watch(selectedType, () => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto p-6">
+  <div class="max-w-7xl mx-auto p-3">
     <!-- Header Section -->
     <div
       class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2"
@@ -221,7 +221,7 @@ watch(selectedType, () => {
             v-model="searchQuery"
             type="text"
             placeholder="ID, name, location"
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+            class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
           />
           <div
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
@@ -244,7 +244,7 @@ watch(selectedType, () => {
         <div class="flex space-x-4">
           <select
             v-model="selectedType"
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+            class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
           >
             <option value="">All Types</option>
             <option value="Timber">Timber</option>
@@ -264,7 +264,12 @@ watch(selectedType, () => {
     <!-- Info Notes -->
     <div v-if="isForestRanger || isFPUAdmin" class="mb-6">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        <div class="flex items-center space-x-2">
+          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        </div>
         <button
           @click="showNotes = !showNotes"
           class="flex items-center text-sm text-gray-500 hover:text-gray-700"

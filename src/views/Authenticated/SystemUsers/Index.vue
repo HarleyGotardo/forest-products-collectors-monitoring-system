@@ -327,7 +327,7 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <div class="max-w-7xl mx-auto p-4 sm:p-6">
+  <div class="max-w-7xl mx-auto p-3 sm:p-6">
     <!-- Header Section -->
     <div
       class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0"
@@ -388,7 +388,7 @@ onMounted(async () => {
           <select
             id="role"
             v-model="selectedRole"
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 appearance-none transition"
+            class="block w-full px-4 py-2 rounded-full bg-white border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 appearance-none transition"
             aria-label="Filter users by role"
           >
             <option value="">All Roles</option>
@@ -427,7 +427,7 @@ onMounted(async () => {
             v-model="searchQuery"
             type="text"
             placeholder="Search by name or email..."
-            class="block w-full px-4 py-2 pl-10 rounded-lg bg-white border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+            class="block w-full px-4 py-2 pl-10 rounded-full bg-white border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
             aria-label="Search users by name or email"
           />
           <div

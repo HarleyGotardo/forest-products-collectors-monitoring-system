@@ -625,7 +625,7 @@ watch(paymentFilter, () => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto p-4 sm:p-6">
+  <div class="max-w-7xl mx-auto p-3 sm:p-6">
     <!-- Header Section -->
     <div
       class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0 mt-2"
@@ -653,7 +653,7 @@ watch(paymentFilter, () => {
             v-model="searchQuery"
             type="text"
             placeholder="Search records..."
-            class="block w-full px-4 py-2 rounded-lg bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+            class="block w-full px-4 py-2 rounded-full bg-white border border-gray-200 pl-11 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
             title="Search Collection Record"
           />
           <div
@@ -700,7 +700,7 @@ watch(paymentFilter, () => {
         <!-- Payment Status Filter -->
         <select
           v-model="paymentFilter"
-          class="block w-full sm:w-40 px-3 py-2 rounded-lg bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
+          class="block w-full sm:w-40 px-3 py-2 rounded-full bg-white border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200"
         >
           <option value="all">All Records</option>
           <option value="paid">Paid</option>
@@ -712,7 +712,12 @@ watch(paymentFilter, () => {
     <!-- Info Notes -->
     <div class="mb-6">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        <div class="flex items-center space-x-2">
+          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900">Important Information</h3>
+        </div>
         <button
           @click="showNotes = !showNotes"
           class="flex items-center text-sm text-gray-500 hover:text-gray-700"
@@ -1053,7 +1058,7 @@ watch(paymentFilter, () => {
                     <AlertDialog v-else>
                       <AlertDialogTrigger>
                         <Button
-                          class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white sm:inline-flex sm:items-center sm:space-x-1"
+                          class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white sm:inline-flex sm:items-center sm:space-x-1 rounded-full"
                         >
                           <svg
                             class="w-4 h-4 sm:mr-1"
@@ -1087,9 +1092,12 @@ watch(paymentFilter, () => {
                       </AlertDialogContent>
                     </AlertDialog>
                   </template>
-                  <span v-else-if="record.is_paid" class="text-green-700 text-xs font-semibold">
-                    Paid
-                  </span>
+                    <span v-else-if="record.is_paid" class="text-green-700 text-xs font-semibold rounded-full bg-green-50 p-2 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    This collection record is already paid
+                    </span>
                   <span v-else class="inline-block w-[40px]"></span>
 
                   <!-- Revert Button -->
@@ -1097,7 +1105,7 @@ watch(paymentFilter, () => {
                     <AlertDialogTrigger>
                       <Button
                         v-if="isFPUAdmin || isForestRanger"
-                        class="p-2 bg-gray-500 text-white hover:bg-gray-400"
+                        class="p-2 bg-gray-500 text-white hover:bg-gray-400 rounded-full"
                         title="Revert Collection Record"
                       >
                         <svg
@@ -1139,7 +1147,7 @@ watch(paymentFilter, () => {
                     <AlertDialogTrigger>
                       <Button
                         v-if="isFPUAdmin || isForestRanger"
-                        class="p-2 bg-red-900 text-white hover:bg-red-600"
+                        class="p-2 bg-red-900 text-white hover:bg-red-600 rounded-full"
                         title="Delete Collection Record"
                       >
                         <svg
