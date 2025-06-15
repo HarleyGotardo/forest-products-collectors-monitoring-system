@@ -1012,7 +1012,7 @@ onMounted(async () => {
                   <tr
                     v-for="user in paginatedUnapprovedUsers"
                     :key="user.id"
-                    class="hover:bg-gray-50 transition-colors"
+                    class="bg-gray-100 hover:bg-gray-50 transition-colors"
                   >
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center">

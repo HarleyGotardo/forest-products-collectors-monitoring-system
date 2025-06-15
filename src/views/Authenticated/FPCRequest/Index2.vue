@@ -808,7 +808,12 @@ onMounted(() => {
             </div>
           </td>
         </tr>
-        <tr v-for="request in paginatedRequests" :key="request.id" class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer" @click="viewRequest(request.id)">
+        <tr v-for="request in paginatedRequests" :key="request.id" 
+            :class="[
+              'transition-colors duration-200 cursor-pointer',
+              request.remarked_at === null ? 'bg-emerald-50 hover:bg-gray-100' : 'hover:bg-gray-50'
+            ]" 
+            @click="viewRequest(request.id)">
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             #{{ request.id }}
           </td>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NatureCartLogo from '@/components/logo/NatureCartLogo.vue'
 import Records from '@/components/SideBarItems/Records.vue'
@@ -30,6 +30,8 @@ const activeDropdown = ref(null) // Track active dropdown
 const isSidebarOpen = ref(false)
 const isLoading = ref(true) // Track loading state
 const isLoggingOut = ref(false) // Track logout state
+const pendingRequestsCount = ref(0) // Track pending requests count
+let pendingRequestsSubscription = null; // Add this line to store subscription reference
 
 // Computed properties for dropdown states
 const isRecordsDropdownOpen = computed(() => activeDropdown.value === 'records')
@@ -38,6 +40,65 @@ const isFPCRequestDropdownOpen = computed(() => activeDropdown.value === 'fpc_re
 const isCollectorsDropdownOpen = computed(() => activeDropdown.value === 'collectors')
 const isSystemUsersDropdownOpen = computed(() => activeDropdown.value === 'systemUsers')
 const isLocationDropdownOpen = computed(() => activeDropdown.value === 'locations')
+
+const fetchPendingRequestsCount = async () => {
+  try {
+    const { count, error } = await supabase
+      .from('collection_requests')
+      .select('id', { count: 'exact', head: true })
+      .is('remarked_at', null)
+      .is('deleted_at', null);
+
+    if (error) {
+      console.error('Error fetching pending requests count:', error);
+      return;
+    }
+
+    pendingRequestsCount.value = count || 0;
+  } catch (error) {
+    console.error('Error in fetchPendingRequestsCount:', error);
+  }
+};
+
+const setupPendingRequestsSubscription = () => {
+  // Unsubscribe from any existing subscription
+  if (pendingRequestsSubscription) {
+    pendingRequestsSubscription.unsubscribe();
+  }
+
+  // Subscribe to collection_requests changes
+  pendingRequestsSubscription = supabase
+    .channel('pending-requests-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'collection_requests'
+      },
+      async (payload) => {
+        // Refetch count when any change occurs
+        await fetchPendingRequestsCount();
+      }
+    )
+    .subscribe();
+};
+
+// Update onMounted to include subscription setup
+onMounted(async () => {
+  await fetchUserDetails();
+  await fetchPendingRequestsCount();
+  setupPendingRequestsSubscription();
+  isLoading.value = false;
+  subscribeToUserChanges();
+});
+
+// Add onUnmounted to clean up subscription
+onUnmounted(() => {
+  if (pendingRequestsSubscription) {
+    pendingRequestsSubscription.unsubscribe();
+  }
+});
 
 const profilePictureUrl = computed(() => {
   return getUser() && getUser().profile_picture ? getUser().profile_picture : defaultProfileImage
@@ -95,6 +156,7 @@ const goToProfile = () => {
 
 onMounted(async () => {
   await fetchUserDetails()
+  await fetchPendingRequestsCount() // Add this line
   isLoading.value = false
   subscribeToUserChanges()
 })
@@ -308,6 +370,39 @@ onMounted(async () => {
                 </p>
               </div>
             </router-link>
+            <router-link
+              v-if="isFPUAdmin || isForestRanger" 
+              to="/authenticated/collection-requests/all"
+              class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
+              @click="closeSidebar"
+            >
+              <div class="relative">
+              <div
+                class="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 group-hover:bg-purple-200 transition-all"
+              >
+                <img
+                src="@/assets/letter.png"
+                alt="Users"
+                class="w-5 h-5 group-hover:scale-110 transition-transform"
+                />
+              </div>
+              <div
+                v-if="pendingRequestsCount > 0"
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"
+              >
+                {{ pendingRequestsCount }}
+              </div>
+              </div>
+              <div>
+              <span
+                class="font-bold text-emerald-700 group-hover:text-emerald-600"
+                >Collection Requests</span
+              >
+              <p class="text-xs text-gray-500 mt-0.5">
+                View and manage all collection requests
+              </p>
+              </div>
+            </router-link>
           </div>
 
           <!-- Collection Requests Section -->
@@ -319,32 +414,12 @@ onMounted(async () => {
             </p>
 
             <FPC_Request
+              v-if="isFPCollector"
               :isDropdownOpen="isFPCRequestDropdownOpen"
               @toggleDropdown="toggleFPCRequestDropdown"
               label="Collection Requests"
               class="rounded-xl overflow-hidden"
-            >
-              <router-link
-                v-if="isFPUAdmin || isForestRanger"
-                to="/authenticated/collection-requests/all"
-                class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 group"
-                @click="closeSidebar"
-              >
-                <img
-                  src="@/assets/request2.png"
-                  alt="All Requests"
-                  class="w-6 h-6 group-hover:scale-110 transition-transform"
-                />
-                <div>
-                  <span
-                    class="font-bold text-emerald-700 group-hover:text-emerald-600"
-                    >All Requests</span
-                  >
-                  <p class="text-xs text-gray-500 mt-0.5">
-                    View and manage all collection requests
-                  </p>
-                </div>
-              </router-link>
+            >              
               <router-link
                 v-if="isFPCollector"
                 to="/authenticated/collection-requests"
