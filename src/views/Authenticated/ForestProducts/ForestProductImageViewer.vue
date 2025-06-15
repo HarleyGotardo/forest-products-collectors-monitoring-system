@@ -1,7 +1,7 @@
 <template>
     <div
       v-if="showExtraImageModal"
-      class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 bg-black/75"
+      class="fixed inset-0 z-50 flex items-center justify-center"
       @keydown.esc="closeImageModal"
       tabindex="0"
       role="dialog"

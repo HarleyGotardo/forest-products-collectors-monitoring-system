@@ -641,10 +641,10 @@ const initializeModalMap = () => {
             direction: 'top',
             className: 'bg-white px-2 py-1 rounded shadow-lg'
           })
-          
+
         // Mark as existing location
         marker._existingLocation = true
-        
+
         marker.bindPopup(`
           <div class="text-sm p-2">
             <strong class="block mb-1">${loc.name}</strong>
@@ -661,7 +661,7 @@ const initializeModalMap = () => {
           // Check if the location is already added for the forest product
           const existingLocation = locations.value.find(l => l.id === loc.id)
           if (existingLocation) {
-            toast.error('Location already added for this forest product', { 
+            toast.error('Location already added for this forest product', {
               duration: 2000,
               description: 'Please select a different location or add a new one.'
             })
@@ -777,7 +777,7 @@ const reloadMap = () => {
 
 onMounted(async () => {
   loading.value = true;
-  
+
   try {
     // Check if forest product exists
     const { data: forestProduct, error } = await supabase
@@ -963,7 +963,7 @@ const getCurrentLocation = () => {
           }
         });
 
-        toast.success('Location coordinates retrieved successfully!', { 
+        toast.success('Location coordinates retrieved successfully!', {
           duration: 3000,
           description: 'The map has been centered on your current location.'
         });
@@ -977,7 +977,7 @@ const getCurrentLocation = () => {
     (error) => {
       console.error('Geolocation error:', error);
       isGettingLocation.value = false;
-      
+
       switch (error.code) {
         case error.PERMISSION_DENIED:
           locationError.value = "Location access was denied";
@@ -1009,7 +1009,7 @@ const reverseGeocode = async (lat, lng) => {
   try {
     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
     const data = await response.json();
-    
+
     if (data && data.display_name) {
       // Extract a shorter, more relevant name from the address
       const relevantParts = [];
@@ -1021,8 +1021,8 @@ const reverseGeocode = async (lat, lng) => {
         if (town) relevantParts.push(town);
         if (city) relevantParts.push(city);
       }
-      
-      const suggestedName = relevantParts.length > 0 
+
+      const suggestedName = relevantParts.length > 0
         ? relevantParts.slice(0, 2).join(', ')
         : data.display_name.split(',').slice(0, 2).join(',');
 
@@ -1039,25 +1039,25 @@ const maxImages = 4 // Maximum number of images allowed
 // In the handleImageUpload function
 const handleImageUpload = async (event) => {
   const files = Array.from(event.target.files)
-  
+
   // Check if adding new files would exceed the limit
   if (newLocation.value.images.length + files.length > maxImages) {
     toast.error(`You can only upload up to ${maxImages} images`)
     return
   }
-  
+
   // Check file types and sizes
   const invalidFiles = files.filter(file => {
     const isValidType = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type)
     const isValidSize = file.size <= 5 * 1024 * 1024 // 5MB
     return !isValidType || !isValidSize
   })
-  
+
   if (invalidFiles.length > 0) {
     toast.error('Please upload only JPG, PNG, or GIF files under 5MB')
     return
   }
-  
+
   // Process valid files
   for (const file of files) {
     try {
@@ -1088,8 +1088,8 @@ watch(() => locations.value, (newLocations) => {
 // Add this computed property after other refs
 const hasAssociatedRecords = computed(() => {
   if (!forestProduct.value) return false;
-  return forestProduct.value.fp_and_locations?.some(fp => 
-    (fp.collection_request_items?.length > 0) || 
+  return forestProduct.value.fp_and_locations?.some(fp =>
+    (fp.collection_request_items?.length > 0) ||
     (fp.collection_record_items?.length > 0)
   );
 });
@@ -1097,7 +1097,7 @@ const hasAssociatedRecords = computed(() => {
 
 <template>
   <div class="max-w-4xl mx-auto p-3">
-    <!-- Header Section -->
+    <!-- Header Section with Actions -->
     <div
       class="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 mt-2 space-y-3 sm:space-y-0"
     >
@@ -1127,9 +1127,7 @@ const hasAssociatedRecords = computed(() => {
             alt="Forest Product"
             class="w-8 h-8 sm:w-10 sm:h-10"
           />
-          <h2
-            class="text-xl sm:text-3xl font-bold text-gray-900 sm:text-left"
-          >
+          <h2 class="text-xl sm:text-3xl font-bold text-gray-900 sm:text-left">
             Forest Product Details
           </h2>
         </div>
@@ -1184,8 +1182,8 @@ const hasAssociatedRecords = computed(() => {
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button 
-                  class="p-2" 
+                <Button
+                  class="p-2"
                   title="Delete forest product"
                   :disabled="hasAssociatedRecords"
                   :class="{ 'opacity-50 cursor-not-allowed': hasAssociatedRecords }"
@@ -1220,7 +1218,8 @@ const hasAssociatedRecords = computed(() => {
                     class="bg-red-900 hover:bg-red-700"
                     @click="deleteProduct"
                     :disabled="hasAssociatedRecords"
-                  >Delete</AlertDialogAction>
+                    >Delete</AlertDialogAction
+                  >
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -1399,14 +1398,44 @@ const hasAssociatedRecords = computed(() => {
         <div class="p-4 bg-white rounded-lg shadow-sm">
           <!-- Header Section -->
           <div
-            class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5"
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-100 shadow-sm"
           >
-            <h3 class="text-2xl font-semibold text-gray-800">
-              {{ forestProduct.name }}
-            </h3>
-            <span class="text-sm text-gray-500 mt-1 sm:mt-0"
-              >ID: {{ forestProduct.id }}</span
+            <div class="flex items-center space-x-4">
+              <div
+                class="p-3 bg-white rounded-lg shadow-sm border border-green-100"
+              >
+                <svg
+                  class="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3
+                  class="text-2xl font-bold bg-gradient-to-r from-green-800 to-emerald-700 bg-clip-text text-transparent"
+                >
+                  {{ forestProduct.name }}
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Forest Product Details</p>
+              </div>
+            </div>
+            <div
+              class="mt-3 sm:mt-0 px-3 py-1.5 bg-white rounded-full border border-gray-200 shadow-sm"
             >
+              <span class="text-sm font-medium text-gray-600">ID: </span>
+              <span
+                class="text-sm font-semibold text-emerald-600"
+                >{{ forestProduct.id }}</span
+              >
+            </div>
           </div>
 
           <!-- Image Section -->
@@ -1414,12 +1443,12 @@ const hasAssociatedRecords = computed(() => {
             <img
               :src="forestProduct.image_url || defaultForestProductImage"
               alt="Forest Product Image"
-              class="w-full h-auto rounded-lg shadow-sm object-cover"
+              class="w-full h-auto rounded-2xl shadow-sm object-cover"
             />
             <button
               v-if="isForestRanger || (isFPUAdmin && forestProduct.deleted_at === null)"
               @click="showImageModal = true"
-              class="absolute top-3 right-3 p-2 bg-white bg-opacity-90 rounded-md shadow hover:bg-gray-100 focus:outline-none transition duration-150"
+              class="absolute top-3 right-3 p-2 bg-white bg-opacity-90 rounded-full shadow hover:bg-gray-100 focus:outline-none transition duration-150"
             >
               <div class="flex items-center">
                 <img src="@/assets/edit.png" alt="Edit" class="w-4 h-4" />
@@ -1431,163 +1460,231 @@ const hasAssociatedRecords = computed(() => {
           </div>
 
           <!-- Info Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <!-- Left Column -->
-            <div class="space-y-4">
+            <div class="space-y-6">
+              <!-- Created At -->
               <div
-                class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg transition hover:bg-gray-100"
+                class="group bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-200 hover:shadow-md"
               >
-                <div class="p-2 bg-white rounded-full">
-                  <svg
-                    class="w-5 h-5 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p
-                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
-                  >
-                    Created At
-                  </p>
-                  <p class="text-gray-900 font-medium">
-                    {{ forestProduct.created_at }}
-                  </p>
+                <div class="flex items-center gap-4 p-4">
+                  <div class="p-3 bg-gray-50 rounded-lg">
+                    <svg
+                      class="w-6 h-6 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p
+                      class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                    >
+                      Created At
+                    </p>
+                    <p class="text-gray-900 font-medium">
+                      {{ forestProduct.created_at }}
+                    </p>
+                  </div>
                 </div>
               </div>
 
+              <!-- Updated At -->
               <div
-                class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg transition hover:bg-gray-100"
+                class="group bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-200 hover:shadow-md"
               >
-                <div class="p-2 bg-white rounded-full">
-                  <svg
-                    class="w-5 h-5 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p
-                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
-                  >
-                    Updated At
-                  </p>
-                  <p class="text-gray-900 font-medium">
-                    {{ forestProduct.updated_at }}
-                  </p>
+                <div class="flex items-center gap-4 p-4">
+                  <div class="p-3 bg-gray-50 rounded-lg">
+                    <svg
+                      class="w-6 h-6 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p
+                      class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                    >
+                      Last Updated
+                    </p>
+                    <p class="text-gray-900 font-medium">
+                      {{ forestProduct.updated_at }}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Right Column -->
-            <div class="space-y-4">
+            <div class="space-y-6">
+              <!-- Price -->
               <div
-                class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg transition hover:bg-gray-100"
+                class="group bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-200 hover:shadow-md"
               >
-                <div class="p-2 bg-white rounded-full">
-                  <svg
-                    class="w-5 h-5 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p
-                  class="text-xs font-medium text-gray-500 uppercase tracking-wide"
-                  >
-                  Price
-                  </p>
-                  <p
-                  class="text-gray-900 font-semibold"
-                  :class="{
-                  'text-green-600': !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
-                  }"
-                  >
-                  {{
-                  !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
+                <div class="flex items-center gap-4 p-4">
+                  <div class="p-3 bg-gray-50 rounded-lg">
+                    <svg
+                      class="w-6 h-6 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p
+                      class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                    >
+                      Price
+                    </p>
+                    <p
+                      class="text-gray-900 font-medium"
+                      :class="{'text-green-600': !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0}"
+                    >
+                      {{ !forestProduct.price_based_on_measurement_unit || forestProduct.price_based_on_measurement_unit === 0
                   ? 'Free'
                   : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(forestProduct.price_based_on_measurement_unit)
-                  }}
-                  <span
-                    v-if="forestProduct.price_based_on_measurement_unit && forestProduct.price_based_on_measurement_unit !== 0"
-                    class="text-sm font-normal text-gray-500"
-                  >
-                    per {{ forestProduct.measurement_units.unit_name }}
-                  </span>
-                  </p>
+                      }}
+                      <span
+                        v-if="forestProduct.price_based_on_measurement_unit && forestProduct.price_based_on_measurement_unit !== 0"
+                        class="text-sm text-gray-500"
+                      >
+                        per {{ forestProduct.measurement_units.unit_name }}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
+              <!-- Locations -->
               <div
-                class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg transition hover:bg-gray-100"
+                class="group bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-200 hover:shadow-md"
               >
-                <div class="p-2 bg-white rounded-full">
-                  <svg
-                    class="w-5 h-5 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p
-                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
-                  >
-                    Locations Available
-                  </p>
-                    <p class="text-gray-900 font-semibold">
-                    {{ new Intl.NumberFormat().format(locations.length) }}
-                    <span class="text-sm font-normal text-gray-500"
-                      >Location{{ locations.length !== 1 ? 's' : '' }}</span
+                <div class="flex items-center gap-4 p-4">
+                  <div class="p-3 bg-gray-50 rounded-lg">
+                    <svg
+                      class="w-6 h-6 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p
+                      class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                    >
+                      Available Locations
                     </p>
+                    <p class="text-gray-900 font-medium">
+                      {{ new Intl.NumberFormat().format(locations.length) }}
+                      <span class="text-sm text-gray-500"
+                        >Location{{ locations.length !== 1 ? 's' : '' }}</span
+                      >
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Description Section -->
-          <div class="mt-4 pt-4 border-t border-gray-100">
-            <h4
-              class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2"
+          <div class="mt-6 pt-6 border-t border-gray-100">
+            <div class="flex items-center space-x-3 mb-4">
+              <div class="p-2 bg-emerald-50 rounded-lg">
+                <svg
+                  class="w-5 h-5 text-emerald-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <h4 class="text-lg font-semibold text-gray-900">
+                About this Forest Product
+              </h4>
+            </div>
+
+            <div class="relative">
+              <div
+                class="absolute inset-0 flex items-center"
+                aria-hidden="true"
+              >
+                <div class="w-full border-t border-gray-200"></div>
+              </div>
+              <div class="relative flex justify-start">
+                <span class="pr-3 bg-white text-sm text-gray-500">Details</span>
+              </div>
+            </div>
+
+            <div
+              class="mt-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-6 shadow-sm border border-emerald-100"
             >
-              Description
-            </h4>
-            <div class="p-3 bg-gray-50 rounded-lg">
-              <p class="text-gray-700 leading-relaxed">
-                {{ forestProduct.description || 'No description available' }}
-              </p>
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 mt-1">
+                  <svg
+                    class="w-5 h-5 text-emerald-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <p
+                  v-if="forestProduct.description"
+                  class="text-gray-700 leading-relaxed whitespace-pre-line"
+                >
+                  {{ forestProduct.description }}
+                </p>
+                <p v-else class="text-gray-500 italic">
+                  No description has been provided for this forest product yet.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1597,14 +1694,49 @@ const hasAssociatedRecords = computed(() => {
         class="mt-10 pt-8 border-t bg-white rounded-xl shadow-sm border border-gray-100 p-6"
       >
         <!-- Section Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-bold text-gray-800">Additional Images</h3>
-          <span
-            class="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full"
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 shadow-sm"
+        >
+          <!-- Left side content -->
+          <div class="flex items-start space-x-4 mb-4 sm:mb-0">
+            <div class="p-3 bg-white rounded-lg shadow-sm flex-shrink-0">
+              <svg
+                class="w-5 h-5 text-indigo-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3
+                class="text-lg font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent truncate"
+              >
+                Gallery Images
+              </h3>
+              <p
+                class="text-sm text-gray-500 mt-0.5 line-clamp-2 sm:line-clamp-none"
+              >
+                Visual documentation of the forest product
+              </p>
+            </div>
+          </div>
+
+          <!-- Image counter badge -->
+          <div
+            class="self-start sm:self-center px-3 py-1.5 bg-white rounded-full border border-gray-200 shadow-sm"
           >
-            {{ additionalImages.length }}
-            image{{ additionalImages.length !== 1 ? 's' : '' }}
-          </span>
+            <span class="text-sm font-medium text-gray-600">Images: </span>
+            <span class="text-sm font-semibold text-indigo-600"
+              >{{ additionalImages.length }}/4</span
+            >
+          </div>
         </div>
 
         <!-- Image Gallery -->
@@ -1723,14 +1855,14 @@ const hasAssociatedRecords = computed(() => {
               <div class="flex gap-3">
                 <button
                   v-if="isForestRanger || isFPUAdmin"
-                  class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+                  class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
                   @click="closeImageModal"
                 >
                   Cancel
                 </button>
                 <button
                   v-if="isForestRanger || isFPUAdmin"
-                  class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                  class="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                   @click="deleteImage(currentImageIndex)"
                 >
                   Delete Image
@@ -1743,55 +1875,70 @@ const hasAssociatedRecords = computed(() => {
       <div
         class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
       >
-        <div class="px-6 py-5 border-b border-gray-200">
+        <div
+          class="px-6 py-5 border-b border-gray-200 bg-emerald-50 to-blue-50"
+        >
           <div
             class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0"
           >
-            <div class="flex items-center space-x-3">
-              <svg
-                class="w-6 h-6 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+            <div class="flex items-center space-x-4">
+              <div
+                class="p-3 bg-white rounded-xl shadow-sm border border-indigo-100"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                ></path>
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                ></path>
-              </svg>
-              <h3 class="text-xl font-semibold text-gray-800">
-                Product Locations
-              </h3>
+                <svg
+                  class="w-6 h-6 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3
+                  class="text-xl font-bold bg-gradient-to-r from-indigo-800 to-blue-700 bg-clip-text text-transparent"
+                >
+                  Product Locations
+                </h3>
+                <p class="text-sm text-gray-500 mt-0.5">
+                  Manage forest product location points
+                </p>
+              </div>
             </div>
 
             <button
               v-if="isForestRanger || isFPUAdmin && forestProduct.deleted_at === null"
               @click="openAddLocationModal"
-              class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+              class="group inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-medium rounded-full shadow-sm hover:from-indigo-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out"
             >
-              <svg
-                class="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+              <div
+                class="p-1 bg-white/20 rounded-lg mr-2 group-hover:bg-white/30 transition-colors"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                ></path>
-              </svg>
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </div>
               Add Location
             </button>
           </div>
@@ -1824,76 +1971,86 @@ const hasAssociatedRecords = computed(() => {
             v-for="location in paginatedLocations"
             :key="location.id"
             @click="goToLocation(location)"
-            class="p-5 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+            class="group relative p-6 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-300 cursor-pointer border-b border-gray-100 last:border-b-0"
           >
-            <div
-              class="flex flex-col sm:flex-row items-start sm:items-center justify-between"
-            >
-              <div class="flex items-start flex-grow mb-3 sm:mb-0">
-                <svg
-                  class="w-5 h-5 text-gray-500 mr-4 flex-shrink-0 mt-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+            <div class="flex flex-col sm:flex-row items-start gap-4">
+              <!-- Location Icon & Details -->
+              <div class="flex-grow flex items-start space-x-4">
+                <div
+                  class="p-3 bg-indigo-50 rounded-xl group-hover:bg-white transition-colors duration-300"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  ></path>
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  ></path>
-                </svg>
+                  <svg
+                    class="w-6 h-6 text-indigo-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    ></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    ></path>
+                  </svg>
+                </div>
 
                 <div class="flex-grow">
-                  <h4 class="font-medium text-gray-900">{{ location.name }}</h4>
-                  <div
-                    class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600"
+                  <h4
+                    class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200"
                   >
-                    <div class="flex items-center space-x-1">
-                      <span class="font-medium text-gray-700">Quantity:</span>
+                    {{ location.name }}
+                  </h4>
+
+                  <!-- Quantity Section -->
+                  <div class="mt-2 flex items-center space-x-3">
+                    <div class="flex items-center space-x-2">
+                      <span class="text-sm font-medium text-gray-600"
+                        >Quantity:</span
+                      >
                       <span
+                        class="px-3 py-1 rounded-full text-sm font-semibold"
                         :class="{
-                          'text-red-600 font-semibold': !location.quantity || location.quantity === 0,
-                          'text-orange-600 font-semibold': location.quantity > 0 && location.quantity <= 10,
-                          'text-green-600 font-semibold': location.quantity > 0 && location.quantity > 10
+                          'bg-red-100 text-red-800': !location.quantity || location.quantity === 0,
+                          'bg-orange-100 text-orange-800': location.quantity > 0 && location.quantity <= 10,
+                          'bg-emerald-100 text-emerald-800': location.quantity > 10
                         }"
                       >
-                        {{ location.quantity ? new Intl.NumberFormat().format(location.quantity) : 'N/A' }}
-                        <template v-if="location.quantity">
-                          {{ ' ' + forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') }}
-                        </template>
-                      </span>
-                      <span
-                        v-if="!location.quantity || location.quantity === 0"
-                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-                      >
-                        Out of Stock
-                      </span>
-                      <span
-                        v-else-if="location.quantity > 0 && location.quantity <= 10"
-                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
-                      >
-                        Almost Out of Stock
+                        {{ location.quantity ? new Intl.NumberFormat().format(location.quantity) : '0' }}
+                        {{ location.quantity ? forestProduct.measurement_units.unit_name + (location.quantity !== 1 ? 's' : '') : '' }}
                       </span>
                     </div>
+
+                    <!-- Stock Status Badge -->
+                    <span
+                      v-if="!location.quantity || location.quantity === 0"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200"
+                    >
+                      Out of Stock
+                    </span>
+                    <span
+                      v-else-if="location.quantity > 0 && location.quantity <= 10"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200"
+                    >
+                      Low Stock
+                    </span>
                   </div>
                 </div>
               </div>
 
+              <!-- Action Buttons -->
               <div
-                class="flex items-center space-x-2 flex-shrink-0 sm:ml-4"
                 v-if="forestProduct.deleted_at === null && (isForestRanger || isFPUAdmin)"
+                class="flex items-center space-x-2 sm:self-start"
               >
                 <button
                   @click.stop="editLocation(location)"
-                  class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                  class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group-hover:shadow-sm"
                   title="Edit Location Quantity"
                 >
                   <svg
@@ -1901,7 +2058,6 @@ const hasAssociatedRecords = computed(() => {
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       stroke-linecap="round"
@@ -1910,14 +2066,13 @@ const hasAssociatedRecords = computed(() => {
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                     ></path>
                   </svg>
-                  <span class="sr-only">Edit Location</span>
                 </button>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <button
                       @click.stop="confirmDeleteLocation(location.id)"
-                      class="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500"
+                      class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 group-hover:shadow-sm"
                       title="Delete Location"
                     >
                       <svg
@@ -1925,7 +2080,6 @@ const hasAssociatedRecords = computed(() => {
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
                       >
                         <path
                           stroke-linecap="round"
@@ -1934,30 +2088,34 @@ const hasAssociatedRecords = computed(() => {
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                         ></path>
                       </svg>
-                      <span class="sr-only">Delete Location</span>
                     </button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle
-                        >Are you sure you want to delete this
-                        location?</AlertDialogTitle
-                      >
+                      <AlertDialogTitle>Delete Location?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete the location record for this forest product.
+                        This will permanently remove this location from the
+                        forest product. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction @click="deleteLocation"
-                        >Delete Location</AlertDialogAction
+                      <AlertDialogAction
+                        @click="deleteLocation"
+                        class="bg-red-500 hover:bg-red-600"
                       >
+                        Delete
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
             </div>
+
+            <!-- Hover Effect Gradient Border -->
+            <div
+              class="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
+            ></div>
           </div>
         </div>
 
@@ -2109,7 +2267,7 @@ const hasAssociatedRecords = computed(() => {
                       type="number"
                       id="edit-quantity"
                       v-model="editLocationQuantity"
-                      class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pl-3 pr-16"
+                      class="block w-full rounded-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pl-3 pr-16"
                       placeholder="Enter quantity"
                       min="0"
                       step="any"
@@ -2132,14 +2290,14 @@ const hasAssociatedRecords = computed(() => {
                 <button
                   type="button"
                   @click="updateLocationQuantity"
-                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                  class="w-full inline-flex justify-center rounded-full border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   Save Changes
                 </button>
                 <button
                   type="button"
                   @click="showEditLocationModal = false"
-                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
+                  class="mt-3 w-full inline-flex justify-center rounded-full border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
                 >
                   Cancel
                 </button>
@@ -2149,35 +2307,73 @@ const hasAssociatedRecords = computed(() => {
         </div>
 
         <div v-if="locations.length > 0" class="px-4 sm:px-6 pt-6 pb-4">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center space-x-3">
-              <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              <h3 class="text-lg font-medium text-gray-800">
-                {{ forestProduct.name }} Map Locations
-              </h3>
-            </div>
-            <button
-              @click="reloadMap"
-              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md transition-colors"
+          <div
+            class="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 mb-6 border border-emerald-100 shadow-sm"
+          >
+            <div
+              class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0"
             >
-              <svg
-                class="w-4 h-4 mr-1.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <div class="flex items-center space-x-4 w-full sm:w-auto">
+                <div
+                  class="p-2 sm:p-3 bg-white rounded-lg shadow-sm border border-emerald-100 flex-shrink-0"
+                >
+                  <svg
+                    class="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3
+                    class="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-800 to-green-700 bg-clip-text text-transparent truncate"
+                  >
+                    {{ forestProduct.name }} Locations
+                  </h3>
+                  <p
+                    class="text-xs sm:text-sm text-gray-500 mt-0.5 line-clamp-2 sm:line-clamp-1"
+                  >
+                    Interactive map view of all registered locations
+                  </p>
+                </div>
+              </div>
+
+              <button
+                @click="reloadMap"
+                class="group flex items-center w-full sm:w-auto justify-center px-4 py-2 bg-white rounded-full shadow-sm border border-gray-200 hover:border-emerald-200 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-200"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Reload Map
-            </button>
+                <svg
+                  class="w-4 h-4 mr-2 text-emerald-600 group-hover:rotate-180 transition-transform duration-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                <span
+                  class="text-sm font-medium text-gray-700 group-hover:text-emerald-700"
+                  >Refresh Map</span
+                >
+              </button>
+            </div>
           </div>
           <div
             v-if="!loading"
@@ -2246,7 +2442,7 @@ const hasAssociatedRecords = computed(() => {
               </div>
               <button
                 @click="closeAddLocationModal"
-                class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full transition-colors"
+                class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
               >
                 <svg
                   class="h-6 w-6"
@@ -2317,7 +2513,7 @@ const hasAssociatedRecords = computed(() => {
                       type="button"
                       @click="getCurrentLocation"
                       :disabled="isGettingLocation || !isMobileDevice"
-                      class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                      class="px-4 py-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                     >
                       <svg
                         v-if="isGettingLocation"
@@ -2337,7 +2533,7 @@ const hasAssociatedRecords = computed(() => {
                         <path
                           class="opacity-75"
                           fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          d="M4 12a8 8 0 008-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
                       <svg
@@ -2443,6 +2639,8 @@ const hasAssociatedRecords = computed(() => {
                   <label class="block text-sm font-medium text-gray-700 mb-1"
                     >Quantity ({{ forestProduct?.measurement_units?.unit_name || 'units'
 
+
+
                     }})</label
                   >
                   <div class="relative rounded-md shadow-sm">
@@ -2525,14 +2723,14 @@ const hasAssociatedRecords = computed(() => {
             <div class="flex justify-end space-x-3">
               <button
                 @click="closeAddLocationModal"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Cancel
               </button>
               <button
                 @click="saveLocation"
                 :disabled="!newLocation.name || !newLocation.latitude || !newLocation.longitude || !newLocation.quantity"
-                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg
                   class="-ml-1 mr-2 h-5 w-5"
@@ -2647,12 +2845,25 @@ const hasAssociatedRecords = computed(() => {
                   </div>
                   <div v-else class="flex flex-col items-center">
                     <div class="flex items-center gap-2 text-emerald-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clip-rule="evenodd"
+                        />
                       </svg>
-                      <span class="font-medium">File uploaded successfully</span>
+                      <span class="font-medium"
+                        >File uploaded successfully</span
+                      >
                     </div>
-                    <p class="text-sm text-gray-600 mt-1">{{ newImage.name }}</p>
+                    <p class="text-sm text-gray-600 mt-1">
+                      {{ newImage.name }}
+                    </p>
                     <button
                       type="button"
                       @click="newImage = null"
@@ -2686,15 +2897,14 @@ const hasAssociatedRecords = computed(() => {
       </div>
     </div>
     <Toaster
-  theme="light"
-  :toastOptions="{
+      theme="light"
+      :toastOptions="{
     class: 'bg-[#ecfdf5] text-gray-800 border border-green-200 rounded-lg shadow-md',
     style: {
       padding: '1rem',
     }
   }"
-/>
-
+    />
   </div>
 </template>
 
