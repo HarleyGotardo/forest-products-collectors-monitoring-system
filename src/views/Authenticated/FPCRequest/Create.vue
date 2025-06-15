@@ -1062,7 +1062,7 @@ onMounted(() => {
           class="rounded-lg shadow-lg border border-gray-200 max-h-[80vh] flex flex-col"
         >
           <AlertDialogHeader
-            class="bg-gray-900 text-white px-6 py-4 rounded-t-lg"
+            class="bg-emerald-900 text-white px-6 py-4 rounded-t-lg"
           >
             <AlertDialogTitle class="text-lg font-bold"
               >Confirm Collection Request</AlertDialogTitle
