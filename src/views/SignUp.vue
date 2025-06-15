@@ -21,6 +21,7 @@ const formData = reactive({
 })
 
 const emailError = ref('')
+const showPassword = ref(false)
 
 // Password strength checker
 const passwordStrength = ref({
@@ -251,7 +252,7 @@ const goToLoginPage = () => {
               <select
                 id="userType"
                 v-model="formData.userType"
-                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 required
               >
                 <option value="" disabled>Select user type</option>
@@ -278,7 +279,7 @@ const goToLoginPage = () => {
                 id="entityName"
                 type="text"
                 v-model="formData.entityName"
-                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                 placeholder="Enter organization name"
                 required
@@ -298,7 +299,7 @@ const goToLoginPage = () => {
                   id="firstName"
                   type="text"
                   v-model="formData.firstName"
-                  class="appearance-none block w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  class="appearance-none block w-full pl-3 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                   :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                   placeholder="First name"
                   required
@@ -316,7 +317,7 @@ const goToLoginPage = () => {
                   id="lastName"
                   type="text"
                   v-model="formData.lastName"
-                  class="appearance-none block w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  class="appearance-none block w-full pl-3 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                   :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                   placeholder="Last name"
                   required
@@ -341,7 +342,7 @@ const goToLoginPage = () => {
                 id="email"
                 type="email"
                 v-model="formData.email"
-                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected, 'border-red-500': emailError }"
                 placeholder="your@email.com"
                 required
@@ -369,14 +370,57 @@ const goToLoginPage = () => {
               </div>
               <input
                 id="password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 v-model="formData.password"
-                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                class="appearance-none block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                 placeholder="••••••••"
                 required
                 :disabled="!isUserTypeSelected"
               />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                :disabled="!isUserTypeSelected"
+              >
+                <svg
+                  v-if="showPassword"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 text-gray-400 hover:text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 text-gray-400 hover:text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                  />
+                </svg>
+              </button>
             </div>
             
             <!-- Password strength indicator -->
@@ -434,7 +478,7 @@ const goToLoginPage = () => {
                 id="phoneNumber"
                 type="text"
                 v-model="formData.phoneNumber"
-                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                 placeholder="Phone number"
                 required
@@ -460,7 +504,7 @@ const goToLoginPage = () => {
                 id="fullAddress"
                 v-model="formData.fullAddress"
                 rows="3"
-                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                 placeholder="Enter your full address"
                 required
@@ -485,7 +529,7 @@ const goToLoginPage = () => {
                   <select
                     id="sex"
                     v-model="formData.sex"
-                    class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                    class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                     :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                     required
                     :disabled="!isUserTypeSelected"
@@ -510,7 +554,7 @@ const goToLoginPage = () => {
                   <select
                     id="civilStatus"
                     v-model="formData.civilStatus"
-                    class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                    class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                     :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                     required
                     :disabled="!isUserTypeSelected"
@@ -539,7 +583,7 @@ const goToLoginPage = () => {
                   id="birthdate"
                   type="date"
                   v-model="formData.birthdate"
-                  class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  class="appearance-none block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                   :class="{ 'bg-gray-50 cursor-not-allowed': !isUserTypeSelected }"
                   required
                   :disabled="!isUserTypeSelected"
@@ -551,7 +595,7 @@ const goToLoginPage = () => {
           <button
             type="submit"
             :disabled="isLoading || !isFormComplete"
-            class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-full shadow-md text-base font-medium text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
