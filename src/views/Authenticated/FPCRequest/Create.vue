@@ -418,9 +418,14 @@ onMounted(() => {
         <!-- Info Notes Toggle -->
         <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-gray-900">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-gray-700" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+              <h3 class="text-lg font-medium text-gray-900">
               Important Information
-            </h3>
+              </h3>
+            </div>
             <button
               @click="showNotes = !showNotes"
               class="flex items-center text-sm text-gray-500 hover:text-gray-700"
@@ -520,9 +525,7 @@ onMounted(() => {
               <div class="ml-3">
                 <p class="text-sm text-amber-700">
                   <span class="font-medium">Collection Date:</span> Choose a
-                  date for collection. Same-day collections must be requested
-                  before 4:00 PM. Future dates can be selected up to 30 days in
-                  advance.
+                  date for collection. Same-day collections must be requested before 4:00 PM. (This is a tentative date)
                 </p>
               </div>
             </div>
@@ -535,9 +538,11 @@ onMounted(() => {
           <div>
             <label
               for="forestProducts"
-              class="block text-sm font-medium text-gray-700 mb-2"
-              >Forest Products</label
+              class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2"
             >
+              <img src="@/assets/forest-product.png" class="w-5 h-5" alt="Forest Product Icon" />
+              Forest Products
+            </label>
             <button
               type="button"
               @click="showModal = true"
@@ -690,12 +695,19 @@ onMounted(() => {
           </div>
 
           <!-- Collection Date Input -->
-          <div>
+            <div>
             <label
               for="collectionDate"
-              class="block text-sm font-medium text-gray-700 mb-2"
-              >Collection Date</label
+              class="flex flex-col text-sm font-medium text-gray-700 mb-2"
             >
+              <div class="flex items-center gap-2">
+                <img src="@/assets/calendar.png" class="w-5 h-5" alt="Calendar Icon" />
+                <span>Preferred Collection Date</span>
+              </div>
+              <span class="text-orange-400 text-xs mt-1">
+                Note: The selected date is your preferred collection date. Actual collection may occur on or after this date depending on the Forest Protection Unit's approval timeline.
+              </span>
+            </label>
             <input
               type="date"
               v-model="collectionDate"
@@ -703,7 +715,7 @@ onMounted(() => {
               :min="new Date().toISOString().split('T')[0]"
               class="block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
-          </div>
+            </div>
 
           <!-- Submit Button -->
           <button
