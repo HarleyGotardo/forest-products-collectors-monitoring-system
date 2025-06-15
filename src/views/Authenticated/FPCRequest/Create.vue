@@ -1111,13 +1111,13 @@ onMounted(() => {
           >
             <AlertDialogCancel
               @click="showConfirmDialog = false"
-              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               @click="confirmSubmit"
-              class="px-4 py-2 bg-gray-900 border border-transparent rounded-lg text-white hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="px-4 py-2 bg-emerald-900 border border-transparent rounded-full text-white hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               Submit
             </AlertDialogAction>
