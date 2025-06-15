@@ -678,7 +678,7 @@ watch(paymentFilter, () => {
           <Button
             v-if="isFPUAdmin || isForestRanger"
             @click="createCollectionRecord"
-            class="min-w-10 bg-emerald-900 text-white hover:bg-emerald-700"
+            class="min-w-10 bg-emerald-900 text-white hover:bg-emerald-700 rounded-full"
             title="Create New Collection Record"
           >
             +
@@ -686,7 +686,7 @@ watch(paymentFilter, () => {
           <Button
             v-if="isFPUAdmin"
             @click="showEditSignatureDialog = true"
-            class="bg-emerald-900 text-white hover:bg-emerald-700"
+            class="bg-emerald-900 text-white hover:bg-emerald-700 rounded-full"
           >
             Edit Forest Conservation Officer
           </Button>

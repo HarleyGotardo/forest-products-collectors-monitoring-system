@@ -617,7 +617,7 @@ onMounted(() => {
                 v-else
                 id="collector"
                 v-model="selectedCollector"
-                class="form-select w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                class="form-select w-full p-2.5 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 :disabled="!selectedRequest"
               >
                 <option value="" disabled>Select a collector</option>

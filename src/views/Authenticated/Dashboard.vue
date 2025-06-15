@@ -661,7 +661,7 @@ onMounted(() => {
           <AlertDialogTrigger asChild>
             <button
               :disabled="isExporting || loading || !isApprovalChecked"
-              class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-full hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg
                 v-if="!isExporting"

@@ -662,7 +662,7 @@ onMounted(() => {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
-              class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
+              class="inline-flex items-center justify-center px-4 py-2.5 bg-white text-black border border-gray-300 rounded-full hover:bg-gray-100 hover:border-gray-400 transition-all shadow-sm w-full sm:w-auto"
               v-if="isFPUAdmin"
             >
               <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
