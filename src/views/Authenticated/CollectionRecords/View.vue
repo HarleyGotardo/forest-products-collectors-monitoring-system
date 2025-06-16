@@ -29,6 +29,7 @@ const recordItems = ref([])
 const error = ref(null)
 const forestConservationOfficer = ref(null)
 const loading = ref(false)
+const orNumber = ref('')
 
 const fetchCollectionRecord = async () => {
   // Fetch the main collection record
@@ -45,7 +46,8 @@ const fetchCollectionRecord = async () => {
       approved_by:profiles!collection_records_approved_by_fkey (first_name, last_name),
       purpose,
       collection_request_id,
-      is_paid
+      is_paid,
+      OR_number
     `)
     .eq('id', recordId)
     .single()
@@ -272,6 +274,11 @@ const markAsPaid = async () => {
       return;
     }
 
+    if (!orNumber.value.trim()) {
+      toast.error('Please enter an Official Receipt number');
+      return;
+    }
+
     // Update the record as paid
     const { error: updateError } = await supabase
       .from('collection_records')
@@ -279,6 +286,7 @@ const markAsPaid = async () => {
         is_paid: true,
         approved_by: user.id,
         approved_at: new Date().toISOString(),
+        OR_number: orNumber.value.trim()
       })
       .eq('id', recordId);
 
@@ -905,7 +913,7 @@ onMounted(async () => {
                   <div
                     class="flex justify-between items-center border-t border-gray-200 pt-3"
                   >
-                    <dt class="text-gray-600">Maked Paid By</dt>
+                    <dt class="text-gray-600">Marked Paid By</dt>
                     <dd class="text-gray-800">
                       {{ record.approved_by ? `${record.approved_by.first_name} ${record.approved_by.last_name}` : 'N/A' }}
                     </dd>
@@ -914,6 +922,12 @@ onMounted(async () => {
                     <dt class="text-gray-600">Payment Date</dt>
                     <dd class="text-gray-800">
                       {{ record.approved_at ? new Date(record.approved_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A' }}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <dt class="text-gray-600">OR Number</dt>
+                    <dd class="text-gray-800 font-medium">
+                      {{ record.OR_number || 'N/A' }}
                     </dd>
                   </div>
                 </template>
@@ -949,6 +963,19 @@ onMounted(async () => {
                           as paid? This action cannot be undone easily.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
+                      <div class="py-4">
+                        <label for="orNumber" class="block text-sm font-medium text-gray-700 mb-1">
+                          Official Receipt Number
+                        </label>
+                        <input
+                          type="text"
+                          id="orNumber"
+                          v-model="orNumber"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                          placeholder="Enter OR number"
+                          required
+                        />
+                      </div>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction

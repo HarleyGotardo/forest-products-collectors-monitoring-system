@@ -46,7 +46,7 @@ const calculateTotalCost = (items) => {
         </div>
         <div class="info-item">
           <h3>Purpose</h3>
-          <p>{{ record.purpose || 'N/A' }}</p>q
+          <p>{{ record.purpose || 'N/A' }}</p>
         </div>
       </div>
     </div>

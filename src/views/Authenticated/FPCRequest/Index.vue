@@ -37,6 +37,8 @@ const searchQuery = ref('');
 const requestToDelete = ref(null);
 const loading = ref(true); // Add loading state
 const showNotes = ref(true); // Add showNotes state
+const requestToRevert = ref(null); // Add state for revert request
+const revertRequests = ref([]); // Add state to store existing revert requests
 
 // Add subscription channel
 const subscription = ref(null);
@@ -50,6 +52,17 @@ const handleRealtimeUpdate = (payload) => {
   const { eventType, new: newRecord, old: oldRecord } = payload;
   console.log(`Received ${eventType} event:`, payload);
 
+  // Handle request_for_revert changes
+  if (payload.table === 'request_for_revert') {
+    if (eventType === 'INSERT') {
+      revertRequests.value.push(newRecord.collection_request_id);
+    } else if (eventType === 'DELETE') {
+      revertRequests.value = revertRequests.value.filter(id => id !== oldRecord.collection_request_id);
+    }
+    return;
+  }
+
+  // Handle collection_requests changes
   if (eventType === 'DELETE') {
     // Remove the request from the local array
     const index = requests.value.findIndex(r => r.id === oldRecord.id);
@@ -139,6 +152,7 @@ const handleRealtimeUpdate = (payload) => {
 const subscribeToChanges = () => {
   const user = getUser();
   if (user) {
+    // Subscribe to collection_requests changes
     subscription.value = supabase
       .channel('collection-requests-changes')
       .on(
@@ -152,6 +166,21 @@ const subscribeToChanges = () => {
         handleRealtimeUpdate
       )
       .subscribe();
+
+    // Subscribe to request_for_revert changes
+    const revertSubscription = supabase
+      .channel('request-for-revert-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'request_for_revert',
+          filter: `user_id=eq.${user.id}`
+        },
+        handleRealtimeUpdate
+      )
+      .subscribe();
   }
 };
 
@@ -160,6 +189,7 @@ onUnmounted(() => {
   if (subscription.value) {
     subscription.value.unsubscribe();
   }
+  supabase.removeChannel('request-for-revert-changes');
 });
 
 const fetchAllRequests = async () => {
@@ -306,10 +336,72 @@ const deleteRequest = async () => {
   }
 };
 
+// Add method to check for existing revert requests
+const checkExistingRevertRequests = async () => {
+  const user = getUser();
+  if (!user) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('request_for_revert')
+      .select('collection_request_id')
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+    revertRequests.value = data.map(item => item.collection_request_id);
+  } catch (err) {
+    console.error('Error checking revert requests:', err);
+  }
+};
+
+// Modify the requestForRevert method
+const requestForRevert = async () => {
+  if (!requestToRevert.value) return;
+  
+  const user = getUser();
+  if (!user) {
+    toast.error('User not authenticated');
+    return;
+  }
+
+  try {
+    const { error } = await supabase
+      .from('request_for_revert')
+      .insert({
+        user_id: user.id,
+        collection_request_id: requestToRevert.value
+      });
+
+    if (error) throw error;
+
+    // Update local state
+    revertRequests.value.push(requestToRevert.value);
+    
+    toast.success('Request for revert submitted successfully', {
+      duration: 5000,
+      description: 'Your request will be reviewed by the administrator.'
+    });
+  } catch (err) {
+    console.error('Error requesting revert:', err);
+    toast.error('Failed to submit request for revert', {
+      duration: 5000,
+      description: err.message
+    });
+  } finally {
+    requestToRevert.value = null;
+  }
+};
+
+// Add method to initiate revert request
+const initiateRevertRequest = (requestId) => {
+  requestToRevert.value = requestId;
+};
+
 onMounted(() => {
   fetchUserDetails();
   fetchAllRequests();
-  subscribeToChanges(); // Add subscription when component mounts
+  subscribeToChanges();
+  checkExistingRevertRequests(); // Add this line
 });
 
 // Reset page when filters change
@@ -743,6 +835,46 @@ watch(currentPage, () => {
                 @click.stop
               >
                 <div class="flex items-center justify-end space-x-3">
+                  <AlertDialog v-if="request.remarks === 'Approved' && !request.is_recorded">
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        class="bg-yellow-900 text-white hover:bg-yellow-700"
+                        :disabled="revertRequests.includes(request.id)"
+                        @click="initiateRevertRequest(request.id)"
+                      >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Request for Revert?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to request a revert for this approved request? This will notify the FPU Personnel and will have the option to revert your request.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          class="bg-yellow-900 hover:bg-yellow-700"
+                          @click="requestForRevert"
+                        >
+                          Request Revert
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   <Button
                     class="bg-emerald-900 text-white hover:bg-emerald-600"
                     @click="editRequest(request.id, $event)"
@@ -795,8 +927,9 @@ watch(currentPage, () => {
                         <AlertDialogAction
                           class="bg-red-900 hover:bg-red-700"
                           @click="deleteRequest"
-                          >Delete</AlertDialogAction
                         >
+                          Delete
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -902,11 +1035,53 @@ watch(currentPage, () => {
 
           <!-- Card actions -->
           <div
-            v-if="request.remarks === 'Pending' || request.remarks === 'Rejected'"
+            v-if="request.remarks === 'Pending' || request.remarks === 'Rejected' || (request.remarks === 'Approved' && !request.is_recorded)"
             class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between"
             @click.stop
           >
+            <AlertDialog v-if="request.remarks === 'Approved' && !request.is_recorded">
+              <AlertDialogTrigger asChild>
+                <Button
+                  class="bg-yellow-900 text-white hover:bg-yellow-700 text-sm"
+                  :disabled="revertRequests.includes(request.id)"
+                  @click="initiateRevertRequest(request.id)"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  {{ revertRequests.includes(request.id) ? 'Revert Requested' : 'Request Revert' }}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Request for Revert?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to request a revert for this approved request? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    class="bg-yellow-900 hover:bg-yellow-700"
+                    @click="requestForRevert"
+                  >
+                    Request Revert
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
+              v-if="request.remarks === 'Pending' || request.remarks === 'Rejected'"
               class="bg-emerald-900 text-white hover:bg-emerald-600 text-sm"
               @click="editRequest(request.id, $event)"
             >

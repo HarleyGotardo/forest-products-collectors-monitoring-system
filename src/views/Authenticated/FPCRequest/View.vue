@@ -548,9 +548,9 @@ const formatDateTime = (dateTimeString) => {
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reject Request</AlertDialogTitle>
+            <AlertDialogTitle>Disapprove Request</AlertDialogTitle>
             <AlertDialogDescription>
-          Please provide a reason for rejecting this request.
+          Please provide a reason for disapproving this request.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div class="mt-4">
@@ -558,7 +558,7 @@ const formatDateTime = (dateTimeString) => {
           v-model="rejectionReason"
           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           rows="3"
-          placeholder="Enter rejection reason..."
+          placeholder="Enter disapproval reason..."
             ></textarea>
           </div>
           <AlertDialogFooter>
@@ -568,7 +568,7 @@ const formatDateTime = (dateTimeString) => {
             <AlertDialogAction
           class="bg-red-600 hover:bg-red-700"
           @click="rejectRequest"
-          >Reject</AlertDialogAction
+          >Disapprove</AlertDialogAction
             >
           </AlertDialogFooter>
         </AlertDialogContent>

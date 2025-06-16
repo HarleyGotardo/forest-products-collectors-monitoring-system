@@ -270,193 +270,7 @@ const updateForestConservationOfficer = async () => {
   }
 };
 
-const markAsPaid = async (recordId) => {
-  try {
-    // Get the current user's ID from the auth session
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error('User authentication error:', userError);
-      error.value = 'Failed to authenticate user';
-      return;
-    }
-
-    // Update the record as paid
-    const { error: updateError } = await supabase
-      .from('collection_records')
-      .update({
-        is_paid: true,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      })
-      .eq('id', recordId);
-
-    if (updateError) {
-      console.error('Supabase update error:', updateError);
-      error.value = 'Failed to update collection record';
-      return;
-    }
-
-    // Fetch the updated record to get the approved_by information
-    const { data: updatedRecord, error: fetchError } = await supabase
-      .from('collection_records')
-      .select(`
-        id,
-        created_at,
-        purpose,
-        collection_request_id,
-        created_by:profiles!collection_records_created_by_fkey (first_name, last_name),
-        approved_by:profiles!collection_records_approved_by_fkey (first_name, last_name)
-      `)
-      .eq('id', recordId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching updated record:', fetchError);
-      error.value = 'Failed to fetch updated record';
-      return;
-    }
-
-    // Fetch the collection record items
-    const { data: recordItems, error: itemsError } = await supabase
-      .from('collection_record_items')
-      .select(`
-        id,
-        purchased_quantity,
-        fp_and_location_id,
-        deducted_quantity,
-        quantity_during_purchase,
-        price_per_unit_during_purchase,
-        total_cost,
-        fp_and_location:fp_and_locations (
-          id,
-          forest_product:forest_products (
-            name,
-            measurement_unit_id,
-            measurement_unit:measurement_units (unit_name)
-          ),
-          location:locations (name)
-        )
-      `)
-      .eq('collection_record_id', recordId);
-
-    if (itemsError) {
-      console.error('Error fetching record items:', itemsError);
-      error.value = 'Failed to fetch record items';
-      return;
-    }
-
-    // Update collection_record_items with initial and remaining quantities
-    for (const item of recordItems) {
-      if (!item || !item.fp_and_location_id) {
-        console.error('Invalid item data:', item);
-        continue;
-      }
-
-      // Get current quantity from fp_and_locations
-      const { data: fpLocationData, error: fpLocationError } = await supabase
-        .from('fp_and_locations')
-        .select('quantity')
-        .eq('id', item.fp_and_location_id)
-        .single();
-
-      if (fpLocationError) {
-        console.error('Error fetching fp_and_location:', fpLocationError);
-        continue;
-      }
-
-      const currentQuantity = fpLocationData.quantity;
-      const remainingQuantity = currentQuantity - (item.deducted_quantity || 0);
-
-      // Update the collection_record_items with initial and remaining quantities
-      const { error: updateItemError } = await supabase
-        .from('collection_record_items')
-        .update({
-          quantity_during_purchase: currentQuantity,
-          remaining_quantity_during_purchase: remainingQuantity,
-          price_per_unit_during_purchase: item.price_per_unit_during_purchase
-        })
-        .eq('id', item.id);
-
-      if (updateItemError) {
-        console.error('Error updating collection record item:', updateItemError);
-        continue;
-      }
-
-      // Update the fp_and_locations table with new quantity
-      const { error: updateFpLocationError } = await supabase
-        .from('fp_and_locations')
-        .update({ quantity: remainingQuantity })
-        .eq('id', item.fp_and_location_id);
-
-      if (updateFpLocationError) {
-        console.error('Error updating fp_and_location quantity:', updateFpLocationError);
-      }
-    }
-
-    // Format the list of forest products for the permit
-    const forestProductsList = recordItems.map((item) => {
-      if (!item || !item.fp_and_location) return null;
-      return {
-        productName: item.fp_and_location.forest_product?.name || 'Unknown Product',
-        locationName: item.fp_and_location.location?.name || 'Unknown Location',
-        quantity: `${item.purchased_quantity || 0} ${item.fp_and_location.forest_product?.measurement_unit?.unit_name || ''}`.trim(),
-        totalCost: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(item.total_cost || 0)
-      };
-    }).filter(Boolean);
-
-    // Check if any product is firewood
-    const firewoodNote = recordItems.some((item) =>
-      item?.fp_and_location?.forest_product?.name?.toLowerCase() === 'firewood'
-    )
-      ? 'Firewood Permits are intended for family consumption but not for sale. It is limited to dead branches up to 10cm diameter, 1 meter length.'
-      : '';
-
-    // Prepare permit data
-    const permitData = {
-      permitNo: recordId,
-      dateIssued: new Date().toLocaleDateString(),
-      name: recordItems[0]?.user_name || 'N/A',
-      permission: forestProductsList,
-      purpose: updatedRecord.purpose || 'N/A',
-      collectionRequestId: updatedRecord.collection_request_id || 'N/A',
-      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString(),
-      chargesPaid: recordItems.reduce((sum, item) => sum + (item?.total_cost || 0), 0).toFixed(2),
-      issuedBy: `${updatedRecord.created_by.first_name} ${updatedRecord.created_by.last_name}`,
-      inspectedBy: `${updatedRecord.approved_by.first_name} ${updatedRecord.approved_by.last_name}`,
-      note: firewoodNote,
-      forestConservationOfficer: forestConservationOfficer.value?.full_name || 'DENNIS P. PEQUE',
-    };
-
-    // Generate the PDF
-    const permitElement = document.createElement('div');
-    document.body.appendChild(permitElement);
-
-    const app = createApp(PermitTemplate, { permitData });
-    app.mount(permitElement);
-
-    const options = {
-      margin: [0.3, 0.3, 0.3, 0.3],
-      filename: `Forest_Conservation_Permit_${recordId}.pdf`,
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-    };
-
-    await html2pdf().from(permitElement).set(options).save();
-
-    app.unmount();
-    document.body.removeChild(permitElement);
-
-    // Show success message
-    toast.success('Collection record marked as paid successfully. Check your downloads to see the permit.', { duration: 2000 });
-
-    // Refresh the records
-    fetchCollectionRecords();
-  } catch (err) {
-    console.error('Error marking as paid:', err);
-    error.value = 'Failed to mark as paid';
-  }
-};
+// Removed markAsPaid functionality
 
 const deleteCollectionRecord = async (recordId) => {
   const currentDate = new Date().toISOString()
@@ -948,238 +762,85 @@ watch(paymentFilter, () => {
       v-else
       class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 overflow-hidden"
     >
-      <!-- Desktop view (table) - hidden on small screens -->
+      <!-- Desktop view (table) -->
       <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-emerald-900">
             <tr>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                ID
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Date
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                COLLECTOR
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Total Cost
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Processed By
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white"
-              >
-                Action
-              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Collector</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Created By</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Action</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="paginatedRecords.length === 0">
-              <td colspan="7" class="px-6 py-12 text-center">
-                <div class="flex flex-col items-center">
-                  <img
-                    src="@/assets/records2.png"
-                    alt=""
-                    class="w-12 h-12 mb-4"
-                  />
-                  <p class="text-gray-500 text-sm">
-                    No collection records found matching your criteria
-                  </p>
-                </div>
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                No collection records found
               </td>
             </tr>
-            <tr
-              v-for="record in paginatedRecords"
-              :key="record.id"
-              class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-              @click="viewCollectionRecord(record.id)"
-            >
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                #{{ record.id }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ record.formatted_created_at }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ record.user_name }}
-              </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ record.total_cost }}
-                </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ record.created_by_name }}
-              </td>
+            <tr v-for="record in paginatedRecords" 
+                :key="record.id"
+                class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                @click="viewCollectionRecord(record.id)">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ record.id }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.formatted_created_at }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.user_name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.created_by_name }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  :class="[
-              'px-2.5 py-0.5 rounded-full text-xs font-medium',
-              record.is_paid 
-                ? 'bg-emerald-100 text-green-800'
-                : 'bg-yellow-100 text-yellow-800'
-            ]"
-                >
+                <span :class=" [
+                  'px-2.5 py-0.5 rounded-full text-xs font-medium',
+                  record.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                ]">
                   {{ record.is_paid ? 'Paid' : 'Unpaid' }}
                 </span>
               </td>
-              <td
-                class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                @click.stop
-              >
-                <div class="flex items-center justify-end space-x-3">
-                  <!-- Mark as Paid Button or Paid At Message -->
-                  <template v-if="isFPUAdmin">
-                    <span v-if="record.is_paid" class="text-green-700 text-xs font-semibold">
-                      Paid at {{ record.approved_at ? record.approved_at : 'N/A' }}
-                    </span>
-                    <AlertDialog v-else>
-                      <AlertDialogTrigger>
-                        <Button
-                          class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white sm:inline-flex sm:items-center sm:space-x-1 rounded-full"
-                        >
-                          <svg
-                            class="w-4 h-4 sm:mr-1"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span>Paid</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will mark the collection record as paid.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction class="bg-emerald-700 hover:bg-emerald-900" @click="markAsPaid(record.id)">
-                            Mark as Paid
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </template>
-                    <span v-else-if="record.is_paid" class="text-green-700 text-xs font-semibold rounded-full bg-green-50 p-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    This collection record is already paid
-                    </span>
-                  <span v-else class="inline-block w-[40px]"></span>
-
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
+                <div class="flex space-x-2">
                   <!-- Revert Button -->
                   <AlertDialog v-if="!record.is_paid">
-                    <AlertDialogTrigger>
-                      <Button
-                        v-if="isFPUAdmin || isForestRanger"
-                        class="p-2 bg-gray-500 text-white hover:bg-gray-400 rounded-full"
-                        title="Revert Collection Record"
-                      >
-                        <svg
-                          class="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                          />
-                        </svg>
+                    <AlertDialogTrigger asChild>
+                      <Button class="text-sm bg-gray-500 text-white hover:bg-gray-400 rounded-full">
                         Revert
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Revert Collection Record?</AlertDialogTitle>
+                        <AlertDialogTitle>Revert Collection Record</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This will permanently delete the collection record and revert the associated request to unrecorded status.
+                          This will permanently delete this collection record and mark the associated request as unrecorded. This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          class="bg-gray-500 hover:bg-gray-400"
-                          @click="revertCollectionRecord(record.id, record.collection_request_id)"
-                          >Revert</AlertDialogAction
-                        >
+                        <AlertDialogAction @click="revertCollectionRecord(record.id, record.collection_request_id)" class="bg-red-500 hover:bg-red-600">
+                          Revert
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
 
                   <!-- Delete Button -->
-                  <AlertDialog v-if="!record.is_paid">
-                    <AlertDialogTrigger>
-                      <Button
-                        v-if="isFPUAdmin || isForestRanger"
-                        class="p-2 bg-red-900 text-white hover:bg-red-600 rounded-full"
-                        title="Delete Collection Record"
-                      >
-                        <svg
-                          class="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
+                  <AlertDialog v-if="!record.is_paid && (isFPUAdmin || isForestRanger)">
+                    <AlertDialogTrigger asChild>
+                      <Button class="text-sm bg-red-800 rounded-full hover:bg-red-600">
                         Delete
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Collection Record?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete Collection Record</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This collection record will be transferred to the recycle bin.
+                          Are you sure you want to delete this collection record? This action can be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          class="bg-red-900 hover:bg-red-700"
-                          @click="deleteCollectionRecord(record.id)"
-                          >Delete</AlertDialogAction
-                        >
+                        <AlertDialogAction @click="deleteCollectionRecord(record.id)" class="bg-red-500 hover:bg-red-600">
+                          Delete
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -1190,7 +851,7 @@ watch(paymentFilter, () => {
         </table>
       </div>
 
-      <!-- Mobile view (cards) - only shown on small screens -->
+      <!-- Mobile view (cards) -->
       <div class="sm:hidden px-4 py-4 space-y-4">
         <!-- Empty state when no records are found -->
         <div
@@ -1278,58 +939,12 @@ watch(paymentFilter, () => {
             class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between"
             @click.stop
             >
-            <!-- Mark as Paid Button or Paid At Message -->
-            <template v-if="isFPUAdmin">
-              <span v-if="record.is_paid" class="text-green-700 text-xs font-semibold">
-                Paid at {{ record.approved_at ? record.approved_at : 'N/A' }}
-              </span>
-              <AlertDialog v-else>
-                <AlertDialogTrigger>
-                  <Button
-                    class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white sm:inline-flex sm:items-center sm:space-x-1"
-                  >
-                    <svg
-                      class="w-4 h-4 sm:mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>Paid</span>
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will mark the collection record as paid.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction class="bg-emerald-700 hover:bg-emerald-900" @click="markAsPaid(record.id)">
-                      Mark as Paid
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </template>
-            <span v-else-if="record.is_paid" class="text-green-700 text-xs font-semibold">
-              Paid
-            </span>
-
             <!-- Revert Button -->
             <AlertDialog v-if="!record.is_paid">
               <AlertDialogTrigger asChild>
               <Button
                 v-if="isFPUAdmin || isForestRanger"
-                class="text-sm bg-gray-500 text-white hover:bg-gray-400 sm:inline-flex sm:items-center sm:space-x-1"
+                class="text-sm bg-gray-500 text-white hover:bg-gray-400 sm:inline-flex sm:items-center sm:space-x-1 rounded-full"
               >
                 <svg
                 class="w-4 h-4 sm:mr-1"
@@ -1370,7 +985,7 @@ watch(paymentFilter, () => {
               v-if="!record.is_paid && (isFPUAdmin || isForestRanger)"
             >
               <AlertDialogTrigger asChild>
-              <Button class="text-sm sm:inline-flex sm:items-center sm:space-x-1 bg-red-800 hover:bg-red-600">
+              <Button class="text-sm sm:inline-flex sm:items-center sm:space-x-1 bg-red-800 hover:bg-red-600 rounded-full">
                 <svg
                 class="w-4 h-4 sm:mr-1"
                 fill="none"

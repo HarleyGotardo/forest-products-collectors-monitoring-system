@@ -38,8 +38,12 @@ const requestToApprove = ref(null);
 const requestToReject = ref(null);
 const requestToRevert = ref(null);
 const rejectionReason = ref('');
+const requestToDelete = ref(null);
 const loading = ref(true); // Add loading state
 const showNotes = ref(true); // Add showNotes state
+const revertRequests = ref([]); // Add state to store existing revert requests
+const notifications = ref([]);
+const showNotifications = ref(false);
 
 // Add filter states
 const statusFilter = ref('all'); // 'all', 'approved', 'pending', 'rejected'
@@ -190,24 +194,43 @@ const rejectRequest = async () => {
 };
 
 const revertRequest = async () => {
-  const { error: revertError } = await supabase
-    .from('collection_requests')
-    .update({
-      remarks: 'Pending',
-      remarked_at: null,
-      remarked_by: null,
-      rejection_reason: null
-    })
-    .eq('id', requestToRevert.value);
+  if (!requestToRevert.value) return;
 
-  if (revertError) {
-    error.value = revertError.message;
-  } else {
-    // Add back fetchAllRequests to ensure the UI is properly updated
+  try {
+    // First, revert the collection request
+    const { error: revertError } = await supabase
+      .from('collection_requests')
+      .update({
+        remarks: 'Pending',
+        remarked_at: null,
+        remarked_by: null,
+        rejection_reason: null
+      })
+      .eq('id', requestToRevert.value);
+
+    if (revertError) throw revertError;
+
+    // Then, delete the revert request
+    const { error: deleteError } = await supabase
+      .from('request_for_revert')
+      .delete()
+      .eq('collection_request_id', requestToRevert.value);
+
+    if (deleteError) throw deleteError;
+
+    // Update local state
+    revertRequests.value = revertRequests.value.filter(id => id !== requestToRevert.value);
+    
+    // Refresh the requests list
     await fetchAllRequests();
     toast.success('Request reverted successfully', { duration: 2000 });
+  } catch (err) {
+    console.error('Error reverting request:', err);
+    toast.error('Failed to revert request: ' + err.message, { duration: 3000 });
+  } finally {
+    showDialog.value = false;
+    requestToRevert.value = null;
   }
-  showDialog.value = false;
 };
 
 const confirmRevertRequest = (requestId) => {
@@ -225,12 +248,66 @@ watch(currentPage, () => {
   paginateRequests();
 });
 
-// Function to handle real-time updates
+// Add method to fetch revert requests with user details
+const fetchRevertRequests = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('request_for_revert')
+      .select(`
+        *,
+        profiles!request_for_revert_user_id_fkey (first_name, last_name),
+        collection_requests!request_for_revert_collection_request_id_fkey (id)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    revertRequests.value = data.map(item => item.collection_request_id);
+    notifications.value = data;
+  } catch (err) {
+    console.error('Error fetching revert requests:', err);
+  }
+};
+
+// Modify handleRealtimeUpdate to handle request_for_revert changes
 const handleRealtimeUpdate = async (payload) => {
   const { eventType, new: newRecord, old: oldRecord } = payload;
   console.log(`Received ${eventType} event:`, payload);
-  console.log('Old deleted_at:', oldRecord?.deleted_at, 'New deleted_at:', newRecord?.deleted_at);
-  
+
+  // Handle request_for_revert changes
+  if (payload.table === 'request_for_revert') {
+    if (eventType === 'INSERT') {
+      // Fetch the complete data for the new revert request
+      const { data: completeData, error } = await supabase
+        .from('request_for_revert')
+        .select(`
+          *,
+          profiles!request_for_revert_user_id_fkey (first_name, last_name),
+          collection_requests!request_for_revert_collection_request_id_fkey (id)
+        `)
+        .eq('id', newRecord.id)
+        .single();
+
+      if (!error && completeData) {
+        notifications.value.unshift(completeData);
+        revertRequests.value.push(newRecord.collection_request_id);
+        
+        // Show toast notification
+        toast.info('New Revert Request', {
+          duration: 5000,
+          description: `${completeData.profiles.first_name} ${completeData.profiles.last_name} wants to revert collection request #${completeData.collection_requests.id}`,
+          action: {
+            label: 'View',
+            onClick: () => viewRequest(completeData.collection_requests.id)
+          }
+        });
+      }
+    } else if (eventType === 'DELETE') {
+      notifications.value = notifications.value.filter(n => n.id !== oldRecord.id);
+      revertRequests.value = revertRequests.value.filter(id => id !== oldRecord.collection_request_id);
+    }
+    return;
+  }
+
   // Track if we've shown a notification for this event
   let notificationShown = false;
 
@@ -346,7 +423,7 @@ const handleRealtimeUpdate = async (payload) => {
   }
 };
 
-// Subscribe to real-time updates
+// Modify subscribeToChanges to include request_for_revert
 const subscribeToChanges = () => {
   // Main subscription for collection_requests changes
   subscription.value = supabase
@@ -475,22 +552,55 @@ const subscribeToChanges = () => {
       }
     )
     .subscribe();
+
+  // Add subscription for request_for_revert
+  const revertSubscription = supabase
+    .channel('request-for-revert-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'request_for_revert'
+      },
+      handleRealtimeUpdate
+    )
+    .subscribe();
 };
 
-// Unsubscribe when component is unmounted
+// Modify onMounted
+onMounted(() => {
+  fetchAllRequests();
+  subscribeToChanges();
+  fetchRevertRequests(); // Add this line
+});
+
+// Modify onUnmounted
 onUnmounted(() => {
   if (subscription.value) {
     subscription.value.unsubscribe();
   }
-  
-  // Unsubscribe from all channels
-  supabase.removeChannel('deleted-at-changes');
-  supabase.removeChannel('collection-request-items-changes');
+  supabase.removeChannel('request-for-revert-changes');
 });
+
+// Add method to check for existing revert requests
+const checkExistingRevertRequests = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('request_for_revert')
+      .select('collection_request_id');
+
+    if (error) throw error;
+    revertRequests.value = data.map(item => item.collection_request_id);
+  } catch (err) {
+    console.error('Error checking revert requests:', err);
+  }
+};
 
 onMounted(() => {
   fetchAllRequests();
-  subscribeToChanges(); // Add subscription when component mounts
+  subscribeToChanges();
+  checkExistingRevertRequests(); // Add this line
 });
 </script>
 
@@ -541,6 +651,64 @@ onMounted(() => {
             </svg>
           </div>
         </div>
+        
+        <!-- Notification Bell -->
+        <div class="relative">
+          <button
+            @click="showNotifications = !showNotifications"
+            class="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span
+              v-if="notifications.length > 0"
+              class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full"
+            >
+              {{ notifications.length }}
+            </span>
+          </button>
+
+          <!-- Notification Dropdown -->
+          <div
+            v-if="showNotifications"
+            class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg overflow-hidden z-50"
+          >
+            <div class="p-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900">Request revert notifications</h3>
+            </div>
+            <div class="max-h-96 overflow-y-auto">
+              <div v-if="notifications.length === 0" class="p-4 text-center text-gray-500">
+                No notifications
+              </div>
+              <div
+                v-for="notification in notifications"
+                :key="notification.id"
+                class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                @click="viewRequest(notification.collection_requests.id)"
+              >
+                <div class="flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div class="ml-3 w-0 flex-1">
+                    <p class="text-sm font-medium text-gray-900">
+                      {{ notification.profiles.first_name }} {{ notification.profiles.last_name }}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                      wants to revert collection request #{{ notification.collection_requests.id }}
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1">
+                      {{ new Date(notification.created_at).toLocaleString() }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -560,7 +728,7 @@ onMounted(() => {
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
+          <option value="rejected">Disapproved</option>
         </select>
       </div>
 
@@ -850,7 +1018,7 @@ onMounted(() => {
               <template v-if="request.remarks && request.remarks !== 'Pending'">
                 <span class="text-sm text-gray-500">{{ request.remarks }} at {{ new Date(request.remarked_at).toLocaleDateString() }}</span>
                 <span v-if="request.remarks === 'Rejected'" class="text-sm text-red-500"></span>
-                <AlertDialog v-if="request.remarks === 'Approved' && !request.is_recorded">
+                <AlertDialog v-if="request.remarks === 'Approved' && !request.is_recorded && revertRequests.includes(request.id)">
                   <AlertDialogTrigger asChild>
                     <Button 
                       title="Revert the request so that it can be editable"
@@ -912,14 +1080,14 @@ onMounted(() => {
                       <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span>Reject</span>
+                      <span>Disapprove</span>
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Reject Request</AlertDialogTitle>
+                      <AlertDialogTitle>Disapprove Request</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Please provide a reason for rejecting this request.
+                        Please provide a reason for disapproving this request.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <div class="mt-4">
@@ -927,12 +1095,12 @@ onMounted(() => {
                         v-model="rejectionReason"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         rows="3"
-                        placeholder="Enter rejection reason..."
+                        placeholder="Enter disapproval reason..."
                       ></textarea>
                     </div>
                     <AlertDialogFooter>
                       <AlertDialogCancel @click="showDialog = false">Cancel</AlertDialogCancel>
-                      <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Reject</AlertDialogAction>
+                      <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Disapprove</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -1046,14 +1214,14 @@ onMounted(() => {
               <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-              Reject Request
+              Disapprove Request
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Reject Request</AlertDialogTitle>
+              <AlertDialogTitle>Disapprove Request</AlertDialogTitle>
               <AlertDialogDescription>
-                Please provide a reason for rejecting this request.
+                Please provide a reason for disapproving this request.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div class="mt-4">
@@ -1061,19 +1229,19 @@ onMounted(() => {
                 v-model="rejectionReason"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 rows="3"
-                placeholder="Enter rejection reason..."
+                placeholder="Enter disapproval reason..."
               ></textarea>
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Reject</AlertDialogAction>
+              <AlertDialogAction class="bg-red-600 hover:bg-red-700" @click="rejectRequest">Disapprove</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
 
       <!-- Revert button for approved/rejected unrecorded requests -->
-      <div v-else-if="request.remarks === 'Approved' && !request.is_recorded && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
+      <div v-else-if="request.remarks === 'Approved' && !request.is_recorded && revertRequests.includes(request.id) && (isFPUAdmin || isForestRanger)" class="px-4 py-3 bg-gray-50 border-t border-gray-100" @click.stop>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button class="w-full justify-center text-sm bg-gray-600 text-white hover:bg-gray-700" @click="confirmRevertRequest(request.id)">
