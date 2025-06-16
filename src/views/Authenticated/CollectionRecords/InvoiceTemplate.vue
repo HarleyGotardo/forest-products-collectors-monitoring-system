@@ -26,7 +26,7 @@ const calculateTotalCost = (items) => {
       </div>
       <div class="header-right">
         <div class="invoice-info">
-          <p><strong>Collection Record ID:</strong> #{{ record.id }}</p>
+          <p><strong>Sales Invoice No.:</strong> #{{ record.id }}</p>
           <p><strong>Date:</strong> {{ new Date(record.created_at).toLocaleDateString() }}</p>
           <p><strong>Status:</strong> {{ record.is_paid ? 'PAID' : 'UNPAID' }}</p>
         </div>
@@ -46,11 +46,7 @@ const calculateTotalCost = (items) => {
         </div>
         <div class="info-item">
           <h3>Purpose</h3>
-          <p>{{ record.purpose || 'N/A' }}</p>
-        </div>
-        <div class="info-item">
-          <h3>Request ID</h3>
-          <p>{{ record.collection_request_id }}</p>
+          <p>{{ record.purpose || 'N/A' }}</p>q
         </div>
       </div>
     </div>
@@ -101,7 +97,6 @@ const calculateTotalCost = (items) => {
     <!-- Footer -->
     <div class="invoice-footer">
       <div class="footer-content">
-        <p>Thank you for your business!</p>
         <p class="generated-date">Generated on: {{ new Date().toLocaleDateString() }}</p>
       </div>
     </div>
