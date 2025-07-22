@@ -226,7 +226,11 @@ const goToLoginPage = () => {
           </div>
           <div>
             <h1 class="text-4xl font-extrabold text-gray-800">Nature Cart</h1>
-            <p class="text-sm text-emerald-700 font-semibold font-style: italic">Forest treasures, tracked with care</p>
+            <p class="text-sm text-emerald-800 font-semibold font-style: italic">Forest treasures, tracked with care</p>
+            <div class="flex items-center mt-2 space-x-2">
+              <img src="@/assets/copyright.png" alt="Copyright Logo" class="w-5 h-5 object-contain" />
+              <span class="text-xs text-gray-500">Copyright Protected</span>
+            </div>
           </div>
         </div>
         

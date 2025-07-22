@@ -260,9 +260,14 @@ onMounted(async () => {
                 Nature Cart
               </h1>
             </div>
+            
             <p class="text-xs text-green-600 mt-2 font-bold italic tracking-wide">
               Forest treasures, tracked with care.
             </p>
+                        <div class="flex items-center mt-2 space-x-2">
+              <img src="@/assets/copyright.png" alt="Copyright Logo" class="w-5 h-5 object-contain" />
+              <span class="text-xs text-gray-500">Copyright Protected</span>
+            </div>
           </div>
           <button
             @click="closeSidebar"
