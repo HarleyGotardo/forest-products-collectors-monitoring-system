@@ -171,10 +171,6 @@ const handleForgotPassword = async () => {
           <div>
             <h1 class="text-4xl font-extrabold text-gray-800">Nature Cart</h1>
             <p class="text-sm text-emerald-800 font-semibold font-style: italic">Forest treasures, tracked with care</p>
-            <div class="flex items-center mt-2 space-x-2">
-              <img src="@/assets/copyright.png" alt="Copyright Logo" class="w-5 h-5 object-contain" />
-              <span class="text-xs text-gray-500">Copyright Protected</span>
-            </div>
           </div>
         </div>
 
@@ -341,6 +337,9 @@ const handleForgotPassword = async () => {
           </div>
         </div>
       </div>
+      <footer class="mt-8 text-center text-xs text-gray-500">
+        <p>© 2025 Visayas State University. All rights reserved.</p>
+      </footer>
     </div>
 
     <!-- Feature Column - Hidden on mobile, visible on desktop -->

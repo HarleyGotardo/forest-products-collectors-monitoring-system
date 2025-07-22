@@ -43,6 +43,7 @@ const showNotes = ref(true);
 const forestConservationOfficer = ref(null);
 const showEditSignatureDialog = ref(false);
 const newSignature = ref('');
+const orNumber = ref('');
 
 const fetchCollectionRecords = async () => {
   loading.value = true; // Start loading
@@ -270,7 +271,86 @@ const updateForestConservationOfficer = async () => {
   }
 };
 
-// Removed markAsPaid functionality
+const markAsPaid = async (recordId) => {
+  try {
+    if (!orNumber.value.trim()) {
+      toast.error('Official Receipt Number is required.');
+      return;
+    }
+    // Get the current user's ID from the auth session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error('User authentication error:', userError);
+      error.value = 'Failed to authenticate user';
+      return;
+    }
+
+    // Update the record as paid
+    const { error: updateError } = await supabase
+      .from('collection_records')
+      .update({
+        is_paid: true,
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+        OR_number: orNumber.value.trim(),
+      })
+      .eq('id', recordId);
+
+    if (updateError) {
+      console.error('Supabase update error:', updateError);
+      error.value = 'Failed to update collection record';
+      return;
+    }
+
+    const permitElement = document.createElement('div');
+    permitElement.innerHTML = PermitTemplate;
+    const app = createApp(PermitTemplate);
+    app.mount(permitElement);
+
+    const { data: permitData, error: permitError } = await supabase
+      .from('forest_conservation_permits')
+      .insert({
+        collection_record_id: recordId,
+        user_id: user.id,
+        created_by: user.id,
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+        OR_number: orNumber.value.trim(),
+      })
+      .select()
+      .single();
+
+    if (permitError) {
+      console.error('Error creating forest conservation permit:', permitError);
+      toast.error('Failed to create forest conservation permit.');
+      return;
+    }
+
+    const pdfBlob = await html2pdf().from(permitElement).output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = `forest_conservation_permit_${permitData.id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    URL.revokeObjectURL(pdfUrl);
+
+    app.unmount();
+    document.body.removeChild(permitElement);
+
+    // Show success message
+    toast.success('Collection record marked as paid successfully. Check your downloads to see the permit.', { duration: 2000 });
+
+    // Refresh the records
+    fetchCollectionRecords();
+    orNumber.value = '';
+  } catch (err) {
+    console.error('Error marking as paid:', err);
+    error.value = 'Failed to mark as paid';
+  }
+};
 
 const deleteCollectionRecord = async (recordId) => {
   const currentDate = new Date().toISOString()
@@ -844,6 +924,39 @@ watch(paymentFilter, () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+
+                  <!-- Mark as Paid Button -->
+                  <AlertDialog v-if="!record.is_paid && (isFPUAdmin || isForestRanger)">
+                    <AlertDialogTrigger asChild>
+                      <Button class="text-sm bg-emerald-700 text-white hover:bg-emerald-900 rounded-full">
+                        Mark as Paid
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will mark the collection record as paid. Please enter the Official Receipt Number.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div class="py-4">
+                        <label for="orNumber" class="block text-sm font-medium text-gray-700 mb-1">Official Receipt Number</label>
+                        <input
+                          id="orNumber"
+                          v-model="orNumber"
+                          type="text"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          placeholder="Enter OR Number"
+                        />
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel @click="orNumber = ''">Cancel</AlertDialogCancel>
+                        <AlertDialogAction class="bg-emerald-700 hover:bg-emerald-900" @click="markAsPaid(record.id)">
+                          Mark as Paid
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </td>
             </tr>
@@ -1016,6 +1129,41 @@ watch(paymentFilter, () => {
                 >Delete</AlertDialogAction
                 >
               </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <!-- Mark as Paid Button -->
+            <AlertDialog v-if="!record.is_paid && (isFPUAdmin || isForestRanger)">
+              <AlertDialogTrigger asChild>
+                <Button
+                  class="text-sm bg-emerald-700 text-white hover:bg-emerald-900 rounded-full"
+                >
+                  Mark as Paid
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will mark the collection record as paid. Please enter the Official Receipt Number.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div class="py-4">
+                  <label for="orNumber" class="block text-sm font-medium text-gray-700 mb-1">Official Receipt Number</label>
+                  <input
+                    id="orNumber"
+                    v-model="orNumber"
+                    type="text"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="Enter OR Number"
+                  />
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel @click="orNumber = ''">Cancel</AlertDialogCancel>
+                  <AlertDialogAction class="bg-emerald-700 hover:bg-emerald-900" @click="markAsPaid(record.id)">
+                    Mark as Paid
+                  </AlertDialogAction>
+                </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
             </div>

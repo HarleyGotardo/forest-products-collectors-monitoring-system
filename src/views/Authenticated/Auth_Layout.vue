@@ -264,10 +264,6 @@ onMounted(async () => {
             <p class="text-xs text-green-600 mt-2 font-bold italic tracking-wide">
               Forest treasures, tracked with care.
             </p>
-                        <div class="flex items-center mt-2 space-x-2">
-              <img src="@/assets/copyright.png" alt="Copyright Logo" class="w-5 h-5 object-contain" />
-              <span class="text-xs text-gray-500">Copyright Protected</span>
-            </div>
           </div>
           <button
             @click="closeSidebar"
@@ -753,7 +749,6 @@ onMounted(async () => {
             </Locations>
           </div>
         </nav>
-
         <!-- Enhanced User Profile Footer -->
         <div class="p-4 border-t border-gray-100 bg-gray-50">
           <div class="flex items-center justify-between">
@@ -801,6 +796,9 @@ onMounted(async () => {
               </AlertDialogContent>
             </AlertDialog>
           </div>
+          <footer class="text-center text-xs text-gray-500 border-t border-gray-100 mt-4">
+          <p class="text-gray-400">© 2025 Visayas State University. All rights reserved.</p>
+        </footer>
         </div>
       </div>
     </aside>
